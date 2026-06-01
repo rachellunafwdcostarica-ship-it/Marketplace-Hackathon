@@ -13,7 +13,6 @@
 | Cliente BD | MySQL Workbench |
 | Autenticación | JWT |
 | IA | Gemini (Google AI Studio) |
-| Fuente de datos | Microsoft Forms → Excel (OneDrive/SharePoint) |
 | Automatización | n8n (vía `npx`, sin Docker) |
 
 ### Exclusiones explícitas
@@ -49,8 +48,8 @@ hackathon/
 │   │   ├── uploads/          Subidas (Multer)
 │   │   └── pptx/             Presentaciones generadas
 │   ├── tests/
-│   ├── .env
-│   ├── .env.example
+│   ├── .env                  Variables locales (no se sube a git)
+│   ├── .env.example          Plantilla de variables
 │   └── .gitignore
 │
 └── frontend/                 React + Tailwind + Recharts
@@ -70,9 +69,28 @@ hackathon/
     │   ├── services/         Lógica frontend
     │   ├── utils/            Utilidades
     │   └── App.jsx
+    ├── .env                  Variables locales (no se sube a git)
+    ├── .env.example          Plantilla de variables
     └── .gitignore
 ```
 
+> Las carpetas vacías incluyen un archivo `.gitkeep` para que git las preserve.
+
+---
+
+## Variables de entorno
+
+Antes de ejecutar, copia las plantillas y completa los valores:
+
+```bash
+# Backend
+cp backend/.env.example backend/.env
+
+# Frontend
+cp frontend/.env.example frontend/.env
+```
+
+---
 
 ## Ejecución
 
@@ -86,4 +104,5 @@ npm run dev
 cd frontend
 npm install
 npm run dev
+```
 
