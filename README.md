@@ -7,16 +7,14 @@
 | Capa | Tecnología |
 |---|---|
 | Backend | Node.js + Express |
-| Backend libs | mysql2 · ExcelJS · PptxGenJS · Multer |
+| Backend libs | mysql2 |
 | Frontend | React + TailwindCSS |
-| Gráficos | Recharts |
 | Base de datos | MySQL Server nativo (Windows) |
 | Cliente BD | MySQL Workbench |
 | Autenticación | JWT |
 | IA | Gemini (Google AI Studio) |
 | Fuente de datos | Microsoft Forms → Excel (OneDrive/SharePoint) |
 | Automatización | n8n (vía `npx`, sin Docker) |
-| Salida | Presentación `.pptx` editable (PptxGenJS) |
 
 ### Exclusiones explícitas
 PHP · Java · phpMyAdmin · Docker · contenedores · cualquier IA distinta de Gemini · cualquier BD distinta de MySQL · PDF como entregable principal.
