@@ -1,0 +1,111 @@
+# =============================================================================
+# FWD Marketplace · .gitignore
+# Cubre Next.js 15 · TypeScript · Supabase · Vercel · Vitest · Playwright
+# =============================================================================
+
+# ---- Dependencias --------------------------------------------------------
+node_modules/
+.pnp
+.pnp.*
+.yarn/install-state.gz
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/sdks
+.yarn/versions
+
+# ---- Logs ----------------------------------------------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+logs/
+
+# ---- Next.js -------------------------------------------------------------
+.next/
+out/
+build/
+dist/
+next-env.d.ts
+.swc/
+
+# ---- TypeScript ----------------------------------------------------------
+*.tsbuildinfo
+.tscache/
+
+# ---- Variables de entorno ------------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+# (la plantilla .env.local.example SÍ se versiona)
+
+# ---- Vercel --------------------------------------------------------------
+.vercel/
+
+# ---- Supabase ------------------------------------------------------------
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/.env.local
+supabase/logs/
+**/.supabase/
+
+# ---- Testing -------------------------------------------------------------
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+playwright/.auth/
+blob-report/
+
+# ---- Caches de tooling ---------------------------------------------------
+.eslintcache
+.stylelintcache
+.prettiercache
+.turbo/
+.cache/
+.parcel-cache/
+.rollup.cache/
+.vite/
+
+# ---- shadcn/ui (los componentes generados SÍ se versionan; nada que ignorar aquí) ----
+
+# ---- IDEs / Editores -----------------------------------------------------
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ---- OS ------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---- Misc ----------------------------------------------------------------
+*.tgz
+*.tar.gz
+*.zip
+.history/
+tmp/
+temp/
