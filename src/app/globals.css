@@ -1,0 +1,78 @@
+@import 'tailwindcss';
+
+:root {
+  --primary: #0a6cb9;
+  --primary-foreground: #ffffff;
+  --secondary: #662d91;
+  --secondary-foreground: #ffffff;
+  --accent: #20bec6;
+  --accent-foreground: #1a1a1a;
+  --highlight: #ffcb05;
+  --highlight-foreground: #1a1a1a;
+  --warning: #f7901e;
+  --warning-foreground: #ffffff;
+  --magenta: #ec008c;
+  --magenta-foreground: #ffffff;
+  --success: #20bec6;
+  --destructive: oklch(0.577 0.245 27.325);
+
+  --canvas: oklch(0.985 0.003 245);
+  --surface: oklch(1 0 0);
+  --surface-sunken: oklch(0.97 0.003 245);
+  --ink-strong: oklch(0.18 0.01 245);
+  --ink: oklch(0.3 0.01 245);
+  --ink-muted: oklch(0.52 0.01 245);
+  --ink-subtle: oklch(0.65 0.008 245);
+  --border: oklch(0.92 0.005 245);
+  --border-strong: oklch(0.85 0.005 245);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 160ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+
+  --shadow-soft: 0 1px 2px oklch(0.55 0.16 245 / 0.04), 0 4px 12px oklch(0.55 0.16 245 / 0.06);
+  --shadow-elevated: 0 4px 8px oklch(0.55 0.16 245 / 0.06), 0 16px 32px oklch(0.55 0.16 245 / 0.1);
+
+  --radius: 1.25rem;
+}
+
+@theme inline {
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink-strong);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-magenta: var(--magenta);
+  --color-magenta-foreground: var(--magenta-foreground);
+  --color-success: var(--success);
+  --color-destructive: var(--destructive);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink-strong: var(--ink-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --font-sans: var(--font-figtree), sans-serif;
+  --font-body: var(--font-figtree), sans-serif;
+  --font-heading: var(--font-archivo-narrow), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+}

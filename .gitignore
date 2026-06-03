@@ -1,9 +1,3 @@
-# =============================================================================
-# FWD Marketplace · .gitignore
-# Cubre Next.js 15 · TypeScript · Supabase · Vercel · Vitest · Playwright
-# =============================================================================
-
-# ---- Dependencias --------------------------------------------------------
 node_modules/
 .pnp
 .pnp.*
@@ -14,7 +8,6 @@ node_modules/
 .yarn/sdks
 .yarn/versions
 
-# ---- Logs ----------------------------------------------------------------
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -23,7 +16,6 @@ lerna-debug.log*
 *.log
 logs/
 
-# ---- Next.js -------------------------------------------------------------
 .next/
 out/
 build/
@@ -31,23 +23,18 @@ dist/
 next-env.d.ts
 .swc/
 
-# ---- TypeScript ----------------------------------------------------------
 *.tsbuildinfo
 .tscache/
 
-# ---- Variables de entorno ------------------------------------------------
 .env
 .env.local
 .env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
-# (la plantilla .env.local.example SÍ se versiona)
 
-# ---- Vercel --------------------------------------------------------------
 .vercel/
 
-# ---- Supabase ------------------------------------------------------------
 supabase/.branches/
 supabase/.temp/
 supabase/.env
@@ -55,7 +42,6 @@ supabase/.env.local
 supabase/logs/
 **/.supabase/
 
-# ---- Testing -------------------------------------------------------------
 coverage/
 *.lcov
 .nyc_output/
@@ -65,7 +51,6 @@ playwright/.cache/
 playwright/.auth/
 blob-report/
 
-# ---- Caches de tooling ---------------------------------------------------
 .eslintcache
 .stylelintcache
 .prettiercache
@@ -75,9 +60,6 @@ blob-report/
 .rollup.cache/
 .vite/
 
-# ---- shadcn/ui (los componentes generados SÍ se versionan; nada que ignorar aquí) ----
-
-# ---- IDEs / Editores -----------------------------------------------------
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -91,7 +73,6 @@ blob-report/
 *.sln
 *.sw?
 
-# ---- OS ------------------------------------------------------------------
 .DS_Store
 .DS_Store?
 ._*
@@ -102,7 +83,6 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 
-# ---- Misc ----------------------------------------------------------------
 *.tgz
 *.tar.gz
 *.zip
