@@ -35,7 +35,7 @@ Lista de instalación canónica: ver §8.2 del brief. No agregar dependencias qu
 
 - `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` habilitados.
 - **Prohibido `any`.** Si es inevitable, `unknown` con type guard explícito.
-- **Prohibido `@ts-ignore` / `@ts-expect-error`.** El brief los permite solo con comentario justificando; como en este repo no se admiten comentarios (ver §12), la consecuencia práctica es: **nunca se usan, se arregla el tipo**.
+- **`@ts-ignore` / `@ts-expect-error`: evitar.** El brief los permite solo con un comentario que justifique el porqué (§4.1). Regla práctica del equipo: por defecto **se arregla el tipo**; solo como último recurso, y siempre con el comentario justificando al lado.
 
 ---
 
@@ -129,8 +129,8 @@ El bloque oklch completo de §5.5 se pega **tal cual** en `src/app/globals.css`,
 
 - Sin código muerto, sin imports sin usar.
 - Sin `console.log`: usar logger estructurado (`lib/logger.ts`).
-- TODOs solo con ticket. Como no se admiten comentarios (§12), los pendientes van al tracker, no al código.
-- Sin código comentado (git guarda el historial).
+- TODOs solo con ticket, en formato `// TODO(issue-N): descripción` (§6.3). Sin ticket, el pendiente va al tracker, no al código.
+- Sin código comentado (código muerto dentro de comentarios): git guarda el historial, se borra.
 - Sin magic numbers / magic strings: extraer a constantes con nombre.
 - Sin `.then()` anidados: siempre `async/await`.
 - Sin `useEffect` como manager de estado: server components, react-query o estado derivado.
@@ -174,9 +174,8 @@ El bloque oklch completo de §5.5 se pega **tal cual** en `src/app/globals.css`,
 
 Estas no salen del brief, son convenciones internas y se respetan igual:
 
-- **Ningún archivo del repo lleva comentarios de ningún tipo** (ni `//`, ni `/* */`, ni JSDoc, ni `#`, ni `<!-- -->`). El código se explica con nombres claros; el contexto va a commits y al tracker. Esto endurece el `@ts-ignore`/TODO del brief: simplemente no se usan.
-- **Archivos protegidos** (nunca se borran ni se vacían; pueden moverse): el brief `README.md`/`readme-global.md`, `Instrucciones.md` y `env.local.example`.
-- **`Instrucciones.md` es local**: vive solo en la máquina del autor, fuera del repo. No se sube a GitHub y no se debe asumir que un clon lo tenga. La guía vigente para cualquiera que clone es este `reglas.md` + el `README.md` del repo.
+- **No se deja código comentado** (código muerto dentro de comentarios): git guarda el historial, se borra (§6.3). Los comentarios explicativos **sí están permitidos**; aun así, se prefiere que el código se explique solo con nombres claros y que el "por qué" viva en commits y en el tracker.
+
 
 ---
 
@@ -244,5 +243,5 @@ Solo se cambia lo **no fijado**. El producto sigue siendo "marketplace de proyec
 3. ¿Agrego color? → token FWD, nunca hex suelto ni `#000`/`#fff`.
 4. ¿Server action? → devuelve `Result<T, E>` y valida entrada con Zod.
 5. ¿Tabla nueva? → RLS habilitado + políticas explícitas, y migración en `supabase/migrations/`.
-6. ¿El cambio mete un comentario en el código? → no. Reescribe con nombres claros.
+6. ¿El cambio deja código comentado (código muerto)? → no, bórralo (git guarda el historial). Comentarios explicativos OK, pero prefiere nombres claros.
 7. ¿Estoy por agregar una dependencia fuera del brief? → no, salvo que lo justifique y lo documente.

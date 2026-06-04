@@ -13,11 +13,6 @@ La única fuente de verdad es el brief oficial `Marketplace_FWD_Brief.pdf` de FW
 - **Identidad visual fijada** (§5): paleta hex, neutrales oklch 245°, Archivo Narrow + Figtree + JetBrains Mono vía `next/font`, motion tokens §5.4, patrón `PageTitle` con punto azul firma, tres registros visuales, voz "Adelante.".
 - **Backend**: server actions devuelven `Result<T, E>` · RLS + políticas en toda tabla · `SUPABASE_SERVICE_ROLE_KEY` solo en servidor.
 
-## Regla local del repo
-
-- **Ningún archivo lleva comentarios de ningún tipo.** El código se explica con nombres claros; el contexto va a los commits y al tracker.
-- Archivos protegidos (no borrar ni vaciar): `readme-global.md`, `Instrucciones.md`, `env.local.example`.
-- `Instrucciones.md` es local (no está en el repo). No asumas que un clon lo tenga; la guía vigente es `reglas.md` + `README.md`.
 
 ## Estado actual
 
