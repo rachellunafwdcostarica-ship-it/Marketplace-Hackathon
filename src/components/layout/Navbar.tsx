@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
+import { useAppState } from '@/lib/stateContext'
 import { Button } from '@/components/ui/button'
 import {
   Laptop,
@@ -30,19 +31,12 @@ interface NavLink {
   isMock?: boolean
 }
 
-interface NavbarProps {
-  /**
-   * Rol del usuario. Placeholder hasta que Supabase Auth provea el rol real
-   * desde la sesión (§4.2). Por ahora se recibe como prop y por defecto es 'junior'.
-   */
-  role?: UserRole
-}
-
-export function Navbar({ role = 'junior' }: NavbarProps) {
+export function Navbar() {
   const t = useTranslations('Nav')
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
+  const { userRole: role, setUserRole } = useAppState()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false)
@@ -94,8 +88,8 @@ export function Navbar({ role = 'junior' }: NavbarProps) {
     router.replace(pathname, { locale: nextLocale })
   }
 
-  // Navega al dashboard del rol. Afordancia de previsualizacion hasta que exista auth real.
   const handleRoleChange = (nextRole: UserRole) => {
+    setUserRole(nextRole)
     setRoleDropdownOpen(false)
     setMobileMenuOpen(false)
     router.push(`/${nextRole}`)

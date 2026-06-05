@@ -4,8 +4,8 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Archivo_Narrow, Figtree, JetBrains_Mono } from 'next/font/google'
 import { routing } from '@/i18n/routing'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
+import { StateProvider } from '@/lib/stateContext'
+import { Toaster } from '@/components/ui/sonner'
 import '../globals.css'
 
 const archivoNarrow = Archivo_Narrow({
@@ -47,13 +47,15 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${archivoNarrow.variable} ${figtree.variable} ${jetbrainsMono.variable}`}
+      className={`${archivoNarrow.variable} ${figtree.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="font-body min-h-screen flex flex-col">
+      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <NextIntlClientProvider messages={messages}>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <StateProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </StateProvider>
         </NextIntlClientProvider>
       </body>
     </html>

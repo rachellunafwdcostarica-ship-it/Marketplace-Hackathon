@@ -1,0 +1,217 @@
+import { Company, Project, Application } from '@/types'
+
+export const MOCK_JUNIOR_NAME = 'Juan Pérez'
+export const MOCK_COMPANY_ID = 'comp-1'
+
+export const mockCompanies: Company[] = [
+  {
+    id: 'comp-1',
+    name: 'TechFlow Solutions',
+    description:
+      'Agencia boutique especializada en desarrollo de software a medida y transformación digital para startups.',
+    logo: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=128&h=128&fit=crop&auto=format',
+    status: 'approved',
+    projectsCount: 2,
+    contactEmail: 'talent@techflow.io',
+    website: 'https://techflow.io',
+    createdAt: '2026-01-15T08:00:00Z',
+  },
+  {
+    id: 'comp-2',
+    name: 'Innovatech Labs',
+    description:
+      'Estudio de innovación tecnológica enfocado en Inteligencia Artificial y soluciones Web3.',
+    logo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=128&h=128&fit=crop&auto=format',
+    status: 'approved',
+    projectsCount: 1,
+    contactEmail: 'hr@innovatech.com',
+    website: 'https://innovatech.com',
+    createdAt: '2026-02-10T09:30:00Z',
+  },
+  {
+    id: 'comp-3',
+    name: 'Global Devs Group',
+    description:
+      'Consultora de TI internacional que conecta talento emergente con grandes corporativos.',
+    logo: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=128&h=128&fit=crop&auto=format',
+    status: 'pending',
+    projectsCount: 0,
+    contactEmail: 'contact@globaldevs.org',
+    website: 'https://globaldevs.org',
+    createdAt: '2026-05-28T14:22:00Z',
+  },
+  {
+    id: 'comp-4',
+    name: 'EduTech Academy',
+    description:
+      'Plataforma educativa en línea que busca modernizar sus herramientas de aprendizaje interactivo.',
+    logo: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=128&h=128&fit=crop&auto=format',
+    status: 'pending',
+    projectsCount: 0,
+    contactEmail: 'projects@edutech.edu',
+    website: 'https://edutech.edu',
+    createdAt: '2026-06-01T11:05:00Z',
+  },
+]
+
+export const mockProjects: Project[] = [
+  {
+    id: 'proj-1',
+    title: 'Desarrollo de Dashboard para Analíticas de Ventas',
+    companyId: 'comp-1',
+    companyName: 'TechFlow Solutions',
+    description:
+      'Buscamos un desarrollador frontend junior para construir un dashboard interactivo de ventas. El diseño ya está definido en Figma. Deberá consumir una API REST existente y mostrar gráficos interactivos utilizando Recharts o Chart.js. Se requiere alto nivel de detalle en la maquetación y animaciones fluidas.',
+    stack: ['React', 'TypeScript', 'Tailwind CSS', 'Recharts', 'REST API'],
+    duration: '4 semanas',
+    budget: 850,
+    mode: 'remoto',
+    startDate: '2026-06-15',
+    status: 'active',
+    createdAt: '2026-06-01T10:00:00Z',
+  },
+  {
+    id: 'proj-2',
+    title: 'Integración de Pasarela de Pagos Stripe',
+    companyId: 'comp-1',
+    companyName: 'TechFlow Solutions',
+    description:
+      'Proyecto de corta duración para integrar suscripciones y pagos únicos de Stripe en una aplicación Next.js. El candidato ideal debe entender webhooks, seguridad básica en transacciones y diseño de formularios accesibles con feedback en tiempo real.',
+    stack: ['Next.js', 'Stripe API', 'Tailwind CSS', 'TypeScript'],
+    duration: '2 semanas',
+    budget: 600,
+    mode: 'hibrido',
+    startDate: '2026-06-20',
+    status: 'active',
+    createdAt: '2026-06-02T08:30:00Z',
+  },
+  {
+    id: 'proj-3',
+    title: 'Componentes de UI para Sistema de Diseño interno',
+    companyId: 'comp-2',
+    companyName: 'Innovatech Labs',
+    description:
+      'Creación de 8-10 componentes React reutilizables siguiendo nuestro sistema de diseño basado en Figma: Botón, Input, Modal, Tabla, Notificaciones, Breadcrumb, Tabs y Acordeón. Incluye Storybook y documentación básica de props.',
+    stack: ['React', 'Storybook', 'CSS Modules', 'TypeScript', 'Figma'],
+    duration: '3 semanas',
+    budget: 700,
+    mode: 'remoto',
+    startDate: '2026-07-01',
+    status: 'active',
+    createdAt: '2026-06-03T11:00:00Z',
+  },
+  {
+    id: 'proj-4',
+    title: 'Landing Page con Animaciones para SaaS B2B',
+    companyId: 'comp-2',
+    companyName: 'Innovatech Labs',
+    description:
+      'Desarrollar una landing page de alta conversión para un producto SaaS B2B. Requiere animaciones con Framer Motion, integración de formulario de contacto y optimización SEO básica. Diseño proporcionado en Figma, completamente responsivo.',
+    stack: ['Next.js', 'Tailwind CSS', 'Framer Motion', 'TypeScript'],
+    duration: '2 semanas',
+    budget: 550,
+    mode: 'remoto',
+    startDate: '2026-06-25',
+    status: 'pending',
+    createdAt: '2026-06-04T09:00:00Z',
+  },
+  {
+    id: 'proj-5',
+    title: 'Migración de Aplicación React a Next.js',
+    companyId: 'comp-1',
+    companyName: 'TechFlow Solutions',
+    description:
+      'Migrar una aplicación React existente (Create React App) a Next.js 15 con App Router. Incluye: configuración de SSR/SSG para las rutas principales, optimización de imágenes, configuración de rutas dinámicas y mantenimiento de todas las funcionalidades actuales.',
+    stack: ['Next.js', 'React', 'TypeScript', 'App Router'],
+    duration: '3 semanas',
+    budget: 900,
+    mode: 'remoto',
+    startDate: '2026-07-07',
+    status: 'active',
+    createdAt: '2026-06-04T15:00:00Z',
+  },
+  {
+    id: 'proj-6',
+    title: 'Bot de Telegram para Notificaciones de E-commerce',
+    companyId: 'comp-2',
+    companyName: 'Innovatech Labs',
+    description:
+      'Desarrollar un bot de Telegram que envíe notificaciones automáticas de nuevos pedidos, cambios de estado y alertas de stock bajo para un e-commerce. Integración con webhook de Shopify y base de datos simple en Supabase.',
+    stack: [
+      'Node.js',
+      'Telegram Bot API',
+      'Supabase',
+      'TypeScript',
+      'Webhooks',
+    ],
+    duration: '10 días',
+    budget: 420,
+    mode: 'remoto',
+    startDate: '2026-06-18',
+    status: 'closed',
+    createdAt: '2026-05-20T10:00:00Z',
+  },
+]
+
+export const mockApplications: Application[] = [
+  {
+    id: 'app-1',
+    projectId: 'proj-3',
+    projectTitle: 'Componentes de UI para Sistema de Diseño interno',
+    companyId: 'comp-2',
+    companyName: 'Innovatech Labs',
+    candidateName: 'Juan Pérez',
+    candidateEmail: 'juan.perez@fwd.edu',
+    coverLetter:
+      'Tengo experiencia construyendo componentes con React y he trabajado con Storybook en proyectos anteriores. Estoy familiarizado con sistemas de diseño basados en Figma y me apasiona la accesibilidad y la documentación de componentes.',
+    portfolioUrl: 'https://juanperez.dev',
+    cvUrl: 'https://drive.google.com/file/cv-juan-perez',
+    status: 'viewed',
+    createdAt: '2026-06-04T10:00:00Z',
+  },
+  {
+    id: 'app-2',
+    projectId: 'proj-1',
+    projectTitle: 'Desarrollo de Dashboard para Analíticas de Ventas',
+    companyId: 'comp-1',
+    companyName: 'TechFlow Solutions',
+    candidateName: 'Juan Pérez',
+    candidateEmail: 'juan.perez@fwd.edu',
+    coverLetter:
+      'He construido dashboards similares con Recharts y tengo experiencia consumiendo APIs REST. Puedo replicar fielmente el diseño de Figma y agregar micro-animaciones para mejorar la experiencia de usuario.',
+    portfolioUrl: 'https://juanperez.dev',
+    cvUrl: 'https://drive.google.com/file/cv-juan-perez',
+    status: 'accepted',
+    createdAt: '2026-06-03T14:00:00Z',
+  },
+  {
+    id: 'app-3',
+    projectId: 'proj-3',
+    projectTitle: 'Componentes de UI para Sistema de Diseño interno',
+    companyId: 'comp-2',
+    companyName: 'Innovatech Labs',
+    candidateName: 'María García',
+    candidateEmail: 'maria.garcia@fwd.edu',
+    coverLetter:
+      'Tengo 2 años de experiencia con React y un portafolio sólido de componentes documentados. Me especializo en accesibilidad y diseño responsivo.',
+    portfolioUrl: 'https://mariagarcia.dev',
+    cvUrl: 'https://drive.google.com/file/cv-maria',
+    status: 'sent',
+    createdAt: '2026-06-04T08:00:00Z',
+  },
+  {
+    id: 'app-4',
+    projectId: 'proj-2',
+    projectTitle: 'Integración de Pasarela de Pagos Stripe',
+    companyId: 'comp-1',
+    companyName: 'TechFlow Solutions',
+    candidateName: 'Carlos Ruiz',
+    candidateEmail: 'carlos.ruiz@fwd.edu',
+    coverLetter:
+      'Integré Stripe en un proyecto SaaS para mi bootcamp. Entiendo el flujo de webhooks y puedo manejar los estados de pago de forma segura.',
+    portfolioUrl: 'https://carlosruiz.dev',
+    cvUrl: 'https://drive.google.com/file/cv-carlos',
+    status: 'rejected',
+    createdAt: '2026-06-02T16:00:00Z',
+  },
+]
