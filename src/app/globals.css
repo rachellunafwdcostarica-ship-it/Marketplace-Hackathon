@@ -65,10 +65,41 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
 
+  /* Alias compatibles con shadcn/ui mapeados sobre tokens FWD (sin colores nuevos) */
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink-strong);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink-strong);
+  --color-muted: var(--surface-sunken);
+  --color-muted-foreground: var(--ink-muted);
+  --color-input: var(--border);
+  --color-ring: var(--primary);
+  --color-destructive-foreground: var(--primary-foreground);
+
+  /* Escala de radios derivada del radio FWD (§5) */
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 6px);
+  --radius-lg: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) - 2px);
+
+  /* Motion tokens FWD (§5.4) */
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-out);
+
   --font-sans: var(--font-figtree), sans-serif;
   --font-body: var(--font-figtree), sans-serif;
   --font-heading: var(--font-archivo-narrow), sans-serif;
   --font-mono: var(--font-jetbrains-mono), monospace;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 body {

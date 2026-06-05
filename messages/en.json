@@ -3,5 +3,68 @@
     "eyebrow": "FWD Marketplace",
     "title": "Your first project",
     "description": "Find a short, paid, real project and start building a real career."
+  },
+  "Nav": {
+    "dashboard": "Dashboard",
+    "jobs": "Jobs",
+    "applications": "Applications",
+    "publishProject": "Publish project",
+    "companies": "Companies",
+    "projects": "Projects",
+    "favorites": "Favorites",
+    "resources": "Resources",
+    "roleView": "Role view",
+    "roleJunior": "Junior",
+    "roleEmpresa": "Company",
+    "roleAdmin": "Admin",
+    "notifications": "Notifications",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "profile": "Profile",
+    "language": "Language"
+  },
+  "Landing": {
+    "juniorTitle": "For juniors",
+    "companyTitle": "For companies"
+  },
+  "Status": {
+    "draft": "Draft",
+    "sent": "Sent",
+    "viewed": "Viewed",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
+  },
+  "Common": {
+    "search": "Search",
+    "remoto": "Remote",
+    "hibrido": "Hybrid",
+    "presencial": "On-site",
+    "duration": "Duration",
+    "budget": "Budget",
+    "viewDetails": "View details",
+    "clearFilters": "Clear filters",
+    "weeks": "weeks",
+    "months": "months"
+  },
+  "Junior": {
+    "selectStack": "Stack",
+    "selectMode": "Work mode",
+    "selectDuration": "Duration",
+    "selectBudget": "Budget",
+    "coverLetter": "Cover letter",
+    "portfolioUrl": "Portfolio",
+    "cvUrl": "CV"
+  },
+  "Empresa": {
+    "accept": "Accept",
+    "reject": "Reject",
+    "contact": "Contact"
+  },
+  "Admin": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "statusApproved": "Approved",
+    "statusPending": "Pending",
+    "statusRejected": "Rejected"
   }
 }

@@ -4,6 +4,8 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Archivo_Narrow, Figtree, JetBrains_Mono } from 'next/font/google'
 import { routing } from '@/i18n/routing'
+import { Navbar } from '@/components/layout/Navbar'
+import { Footer } from '@/components/layout/Footer'
 import '../globals.css'
 
 const archivoNarrow = Archivo_Narrow({
@@ -47,9 +49,11 @@ export default async function LocaleLayout({
       lang={locale}
       className={`${archivoNarrow.variable} ${figtree.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="font-body">
+      <body className="font-body min-h-screen flex flex-col">
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
         </NextIntlClientProvider>
       </body>
     </html>

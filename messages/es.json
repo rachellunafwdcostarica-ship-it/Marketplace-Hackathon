@@ -3,5 +3,68 @@
     "eyebrow": "Marketplace FWD",
     "title": "Tu primer proyecto",
     "description": "Encontrá un proyecto corto, pagado, real, y empezá a construir tu carrera de verdad."
+  },
+  "Nav": {
+    "dashboard": "Dashboard",
+    "jobs": "Empleos",
+    "applications": "Aplicaciones",
+    "publishProject": "Publicar proyecto",
+    "companies": "Empresas",
+    "projects": "Proyectos",
+    "favorites": "Favoritas",
+    "resources": "Recursos",
+    "roleView": "Vista de rol",
+    "roleJunior": "Junior",
+    "roleEmpresa": "Empresa",
+    "roleAdmin": "Admin",
+    "notifications": "Notificaciones",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "profile": "Perfil",
+    "language": "Idioma"
+  },
+  "Landing": {
+    "juniorTitle": "Para juniors",
+    "companyTitle": "Para empresas"
+  },
+  "Status": {
+    "draft": "Borrador",
+    "sent": "Enviada",
+    "viewed": "Vista",
+    "accepted": "Aceptada",
+    "rejected": "Rechazada"
+  },
+  "Common": {
+    "search": "Buscar",
+    "remoto": "Remoto",
+    "hibrido": "Híbrido",
+    "presencial": "Presencial",
+    "duration": "Duración",
+    "budget": "Presupuesto",
+    "viewDetails": "Ver detalles",
+    "clearFilters": "Limpiar filtros",
+    "weeks": "semanas",
+    "months": "meses"
+  },
+  "Junior": {
+    "selectStack": "Stack",
+    "selectMode": "Modalidad",
+    "selectDuration": "Duración",
+    "selectBudget": "Presupuesto",
+    "coverLetter": "Carta de presentación",
+    "portfolioUrl": "Portafolio",
+    "cvUrl": "CV"
+  },
+  "Empresa": {
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "contact": "Contactar"
+  },
+  "Admin": {
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "statusApproved": "Aprobada",
+    "statusPending": "Pendiente",
+    "statusRejected": "Rechazada"
   }
 }
