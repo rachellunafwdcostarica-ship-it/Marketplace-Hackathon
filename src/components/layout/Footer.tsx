@@ -2,7 +2,8 @@ import { Link } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 
 export function Footer() {
-  const tLanding = useTranslations('Landing')
+  const t = useTranslations('Footer')
+  const year = new Date().getFullYear()
 
   return (
     <footer className="w-full bg-secondary text-secondary-foreground border-t border-secondary-foreground/20 mt-auto">
@@ -12,7 +13,7 @@ export function Footer() {
           <div className="md:col-span-2 space-y-4">
             <Link href="/" className="flex items-center space-x-2.5 group">
               <svg
-                className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform"
+                className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 viewBox="0 0 100 100"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -61,37 +62,35 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-secondary-foreground/70 max-w-sm leading-relaxed">
-              Plataforma de vinculación laboral y proyectos freelance diseñada
-              para egresados de FWD. Conectando oportunidades con talento
-              tecnológico de alto nivel.
+              {t('tagline')}
             </p>
           </div>
 
           {/* Junior Sections */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
-              {tLanding('juniorTitle')}
+              {t('juniorTitle')}
             </h4>
             <ul className="space-y-2 text-sm text-secondary-foreground/70">
               <li>
                 <Link
                   href="/junior/projects"
-                  className="hover:text-secondary-foreground transition-colors"
+                  className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
-                  Buscar Proyectos
+                  {t('searchProjects')}
                 </Link>
               </li>
               <li>
                 <Link
                   href="/junior/applications"
-                  className="hover:text-secondary-foreground transition-colors"
+                  className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
-                  Mis Postulaciones
+                  {t('myApplications')}
                 </Link>
               </li>
               <li>
                 <span className="text-secondary-foreground/50 cursor-not-allowed">
-                  Guías de Carrera
+                  {t('careerGuides')}
                 </span>
               </li>
             </ul>
@@ -100,28 +99,28 @@ export function Footer() {
           {/* Company Sections */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
-              {tLanding('companyTitle')}
+              {t('companyTitle')}
             </h4>
             <ul className="space-y-2 text-sm text-secondary-foreground/70">
               <li>
                 <Link
                   href="/empresa/new-project"
-                  className="hover:text-secondary-foreground transition-colors"
+                  className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
-                  Publicar Proyecto
+                  {t('publishProject')}
                 </Link>
               </li>
               <li>
                 <Link
                   href="/empresa"
-                  className="hover:text-secondary-foreground transition-colors"
+                  className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
-                  Buscar Egresados
+                  {t('searchGraduates')}
                 </Link>
               </li>
               <li>
                 <span className="text-secondary-foreground/50 cursor-not-allowed">
-                  Precios y Membresías
+                  {t('pricing')}
                 </span>
               </li>
             </ul>
@@ -129,16 +128,13 @@ export function Footer() {
         </div>
 
         <div className="border-t border-secondary-foreground/20 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-secondary-foreground/50">
-          <p>
-            © {new Date().getFullYear()} FWD Talent Marketplace. Todos los
-            derechos reservados.
-          </p>
+          <p>{t('rights', { year })}</p>
           <div className="flex space-x-4">
             <span className="hover:text-secondary-foreground/70 cursor-pointer">
-              Términos de Servicio
+              {t('terms')}
             </span>
             <span className="hover:text-secondary-foreground/70 cursor-pointer">
-              Política de Privacidad
+              {t('privacy')}
             </span>
           </div>
         </div>

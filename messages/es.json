@@ -23,9 +23,19 @@
     "profile": "Perfil",
     "language": "Idioma"
   },
-  "Landing": {
+  "Footer": {
+    "tagline": "Plataforma de vinculación laboral y proyectos freelance diseñada para egresados de FWD. Conectando oportunidades con talento tecnológico de alto nivel.",
     "juniorTitle": "Para juniors",
-    "companyTitle": "Para empresas"
+    "companyTitle": "Para empresas",
+    "searchProjects": "Buscar proyectos",
+    "myApplications": "Mis postulaciones",
+    "careerGuides": "Guías de carrera",
+    "publishProject": "Publicar proyecto",
+    "searchGraduates": "Buscar egresados",
+    "pricing": "Precios y membresías",
+    "rights": "© {year} FWD Talent Marketplace. Todos los derechos reservados.",
+    "terms": "Términos de servicio",
+    "privacy": "Política de privacidad"
   },
   "Status": {
     "draft": "Borrador",

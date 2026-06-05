@@ -35,7 +35,7 @@ export function CompanyCard({
   }
 
   return (
-    <Card className="flex flex-col h-full border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-md transition-all duration-300">
+    <Card className="flex flex-col h-full border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-md transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)]">
       <CardHeader className="p-6 pb-4">
         <div className="flex gap-4 items-center">
           {/* Company Logo mock */}

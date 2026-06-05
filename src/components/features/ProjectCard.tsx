@@ -32,7 +32,7 @@ export function ProjectCard({ project, actionButton }: ProjectCardProps) {
   }
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 group">
+    <Card className="flex flex-col h-full overflow-hidden border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-md hover:border-primary/40 transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)] group">
       <CardHeader className="p-6 pb-4">
         <div className="flex justify-between items-start gap-4 mb-2">
           <Badge

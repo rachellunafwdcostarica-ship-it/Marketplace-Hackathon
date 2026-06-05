@@ -23,9 +23,19 @@
     "profile": "Profile",
     "language": "Language"
   },
-  "Landing": {
+  "Footer": {
+    "tagline": "Job-matching platform and freelance projects built for FWD graduates. Connecting opportunities with high-level tech talent.",
     "juniorTitle": "For juniors",
-    "companyTitle": "For companies"
+    "companyTitle": "For companies",
+    "searchProjects": "Browse projects",
+    "myApplications": "My applications",
+    "careerGuides": "Career guides",
+    "publishProject": "Post a project",
+    "searchGraduates": "Find graduates",
+    "pricing": "Pricing & memberships",
+    "rights": "© {year} FWD Talent Marketplace. All rights reserved.",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy"
   },
   "Status": {
     "draft": "Draft",

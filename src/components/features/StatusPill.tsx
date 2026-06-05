@@ -25,7 +25,7 @@ export function StatusPill({ status, className }: StatusPillProps) {
     <Badge
       variant="outline"
       className={cn(
-        'px-2.5 py-0.5 text-xs font-semibold rounded-full border transition-all duration-300',
+        'px-2.5 py-0.5 text-xs font-semibold rounded-full border transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)]',
         styles[status],
         className,
       )}

@@ -29,12 +29,12 @@ export function DashboardStats({ stats, className }: DashboardStatsProps) {
         return (
           <Card
             key={index}
-            className="overflow-hidden border border-border bg-card/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 group"
+            className="overflow-hidden border border-border bg-card/60 backdrop-blur-sm hover:shadow-lg hover:border-primary/30 transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)] group"
           >
             <CardContent className="p-6 flex items-center space-x-4">
               <div
                 className={cn(
-                  'p-3 rounded-xl transition-all duration-300 group-hover:scale-110 ring-4 ring-muted/50 bg-muted text-muted-foreground',
+                  'p-3 rounded-xl transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)] group-hover:scale-110 ring-4 ring-muted/50 bg-muted text-muted-foreground',
                   stat.colorClass,
                 )}
               >

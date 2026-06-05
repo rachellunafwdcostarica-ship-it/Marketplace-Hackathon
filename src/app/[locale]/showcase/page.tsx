@@ -153,9 +153,12 @@ export default function ShowcasePage() {
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="default">Default</Button>
           <Button variant="secondary">Secondary</Button>
+          <Button variant="accent">Accent</Button>
+          <Button variant="magenta">Magenta</Button>
+          <Button variant="warning">Warning</Button>
+          <Button variant="highlight">Highlight</Button>
           <Button variant="outline">Outline</Button>
           <Button variant="ghost">Ghost</Button>
-          <Button variant="destructive">Destructive</Button>
           <Button variant="link">Link</Button>
         </div>
         <div className="flex flex-wrap items-center gap-3">

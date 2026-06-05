@@ -240,7 +240,7 @@ export function Navbar({ role = 'junior' }: NavbarProps) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center gap-1.5 ${
+                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -261,7 +261,7 @@ export function Navbar({ role = 'junior' }: NavbarProps) {
                 <button
                   type="button"
                   onClick={() => setRoleDropdownOpen((o) => !o)}
-                  className="flex items-center gap-2 bg-muted/60 hover:bg-muted border border-border/80 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-foreground transition-all duration-200 cursor-pointer select-none"
+                  className="flex items-center gap-2 bg-muted/60 hover:bg-muted border border-border/80 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-foreground transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] cursor-pointer select-none"
                 >
                   <Laptop className="w-3.5 h-3.5 text-primary shrink-0" />
                   <span
@@ -269,7 +269,7 @@ export function Navbar({ role = 'junior' }: NavbarProps) {
                   />
                   <span>{activeRole.label}</span>
                   <ChevronDown
-                    className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${roleDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`w-3 h-3 text-muted-foreground transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)] ${roleDropdownOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
 
@@ -284,7 +284,7 @@ export function Navbar({ role = 'junior' }: NavbarProps) {
                             key={key}
                             type="button"
                             onClick={() => handleRoleChange(key)}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-150 ${
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
                               selected
                                 ? cfg.text
                                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -438,7 +438,7 @@ export function Navbar({ role = 'junior' }: NavbarProps) {
                     key={key}
                     type="button"
                     onClick={() => handleRoleChange(key)}
-                    className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-xs font-semibold border transition-all duration-200 ${
+                    className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-xs font-semibold border transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] ${
                       selected
                         ? `${cfg.text} border-current bg-muted/40`
                         : 'text-muted-foreground border-border/60 hover:border-border hover:bg-muted'

@@ -27,7 +27,7 @@ export function SearchBar({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder || t('search') + '...'}
-        className="pl-9 pr-4 h-10 w-full bg-card/60 backdrop-blur-sm border-border hover:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
+        className="pl-9 pr-4 h-10 w-full bg-card/60 backdrop-blur-sm border-border hover:border-primary/40 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all duration-[var(--duration-base)] ease-[var(--ease-out)]"
       />
     </div>
   )

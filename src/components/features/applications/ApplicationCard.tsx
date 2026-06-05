@@ -32,7 +32,7 @@ export function ApplicationCard({
   const tEmpresa = useTranslations('Empresa')
 
   return (
-    <Card className="border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-sm transition-all duration-300">
+    <Card className="border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-sm transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)]">
       <CardHeader className="p-6 pb-4 flex flex-col sm:flex-row justify-between items-start gap-4">
         <div className="space-y-1 min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
