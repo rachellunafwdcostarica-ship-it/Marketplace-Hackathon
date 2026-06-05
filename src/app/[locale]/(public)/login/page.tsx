@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from '@/i18n/routing'
 import { useAppState } from '@/lib/stateContext'
@@ -23,22 +23,33 @@ import * as zod from 'zod'
 import { toast } from 'sonner'
 import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
 
-const loginSchema = zod.object({
-  email: zod
-    .string()
-    .email({ message: 'Debe ingresar un correo electrónico válido.' }),
-})
+interface LoginFormValues {
+  email: string
+}
 
-type LoginFormValues = zod.infer<typeof loginSchema>
+function createLoginSchema(
+  t: ReturnType<typeof useTranslations<'Validation'>>,
+) {
+  return zod.object({
+    email: zod.string().email({ message: t('emailInvalid') }),
+  })
+}
 
 export default function LoginPage() {
   const tLogin = useTranslations('Login')
   const tCommon = useTranslations('Common')
+  const tNav = useTranslations('Nav')
+  const tValidation = useTranslations('Validation')
   const router = useRouter()
   const { setUserRole } = useAppState()
 
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+
+  const loginSchema = useMemo(
+    () => createLoginSchema(tValidation),
+    [tValidation],
+  )
 
   const {
     register,
@@ -63,7 +74,7 @@ export default function LoginPage() {
   }
 
   const handleOAuthLogin = (provider: 'Google' | 'GitHub') => {
-    toast.info(`Simulando login con ${provider}...`)
+    toast.info(tLogin('simulatingOAuth', { provider }))
     setTimeout(() => {
       setUserRole('junior')
       router.push('/junior')
@@ -91,14 +102,14 @@ export default function LoginPage() {
 
             {success ? (
               <CardContent className="p-8 flex flex-col items-center text-center space-y-4">
-                <div className="p-4 rounded-full bg-emerald-100 text-emerald-600">
+                <div className="p-4 rounded-full bg-accent/15 text-accent">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <h2 className="text-lg font-bold text-foreground">
                   {tLogin('success')}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Redirigiendo a tu panel en unos segundos...
+                  {tLogin('redirecting')}
                 </p>
               </CardContent>
             ) : (
@@ -146,7 +157,7 @@ export default function LoginPage() {
                     </div>
                     <div className="relative flex justify-center text-xs">
                       <span className="bg-card px-2 text-muted-foreground">
-                        o continúa con
+                        {tLogin('orContinueWith')}
                       </span>
                     </div>
                   </div>
@@ -179,7 +190,7 @@ export default function LoginPage() {
                       }}
                       className="text-secondary hover:underline font-semibold"
                     >
-                      Empresa
+                      {tNav('roleEmpresa')}
                     </button>{' '}
                     /{' '}
                     <button
@@ -190,7 +201,7 @@ export default function LoginPage() {
                       }}
                       className="text-magenta hover:underline font-semibold"
                     >
-                      Admin
+                      {tNav('roleAdmin')}
                     </button>
                   </p>
                 </CardFooter>

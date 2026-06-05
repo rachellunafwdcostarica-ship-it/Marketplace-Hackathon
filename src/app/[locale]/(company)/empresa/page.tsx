@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link } from '@/i18n/routing'
 import { toast } from 'sonner'
+import { MOCK_COMPANY_ID } from '@/constants/mockData'
 import {
   Dialog,
   DialogContent,
@@ -44,7 +45,7 @@ export default function CompanyDashboard() {
     updateProjectStatus,
   } = useAppState()
 
-  const myProjects = projects.filter((p) => p.companyId === 'comp-1')
+  const myProjects = projects.filter((p) => p.companyId === MOCK_COMPANY_ID)
   const activeProjects = myProjects.filter((p) => p.status === 'active')
   const myProjectIds = myProjects.map((p) => p.id)
   const receivedApps = applications.filter((app) =>
@@ -63,22 +64,22 @@ export default function CompanyDashboard() {
       title: tEmpresa('statsActiveProjects'),
       value: activeProjects.length,
       icon: Briefcase,
-      description: 'Proyectos recibiendo postulantes',
+      description: tEmpresa('statsActiveProjectsDesc'),
       colorClass: 'text-primary bg-primary/10',
     },
     {
       title: tEmpresa('statsTotalApplications'),
       value: receivedApps.length,
       icon: Users,
-      description: 'Postulaciones totales recibidas',
+      description: tEmpresa('statsTotalAppsDesc'),
       colorClass: 'text-secondary bg-secondary/10',
     },
     {
       title: tEmpresa('statsHired'),
       value: receivedApps.filter((app) => app.status === 'accepted').length,
       icon: UserCheck,
-      description: 'Candidatos seleccionados',
-      colorClass: 'text-emerald-600 bg-emerald-100/50',
+      description: tEmpresa('statsHiredDesc'),
+      colorClass: 'text-accent bg-accent/10',
     },
   ]
 
@@ -94,19 +95,19 @@ export default function CompanyDashboard() {
     const { type, targetId } = confirmDialog
     if (type === 'accept') {
       updateApplicationStatus(targetId, 'accepted')
-      toast.success('¡Candidato aceptado para el proyecto exitosamente!')
+      toast.success(tEmpresa('acceptSuccess'))
     } else if (type === 'reject') {
       updateApplicationStatus(targetId, 'rejected')
-      toast.error('Postulación rechazada.')
+      toast.error(tEmpresa('rejectSuccess'))
     } else if (type === 'close-project') {
       updateProjectStatus(targetId, 'closed')
-      toast.success('Proyecto cerrado. Ya no recibirá más postulaciones.')
+      toast.success(tEmpresa('closeProjectSuccess'))
     }
     setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
   }
 
   const handleContactCandidate = (email: string) => {
-    toast.info(`Abriendo correo para: ${email}`)
+    toast.info(tEmpresa('contactEmailInfo', { email }))
     window.location.assign(
       `mailto:${email}?subject=Contacto%20FWD%20Talent%20Marketplace`,
     )
@@ -119,7 +120,7 @@ export default function CompanyDashboard() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
           title={tEmpresa('dashboard')}
-          description="Publica ofertas, administra postulaciones y conecta con el talento de FWD."
+          description={tEmpresa('dashboardDesc')}
           dotColor="text-secondary"
           action={
             <Link
@@ -137,13 +138,14 @@ export default function CompanyDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-10">
           <div className="lg:col-span-6 space-y-6">
             <h2 className="text-xl font-bold tracking-tight text-foreground font-heading pb-2 border-b border-border/60">
-              Mis Proyectos Publicados<span className="text-secondary">.</span>
+              {tEmpresa('myPublishedProjects')}
+              <span className="text-secondary">.</span>
             </h2>
 
             {myProjects.length === 0 ? (
               <EmptyState
                 title={tEmpresa('noProjects')}
-                description="Publica tu primer proyecto freelance para empezar a recibir postulaciones de nuestros egresados calificados."
+                description={tEmpresa('noProjectsDesc')}
                 icon={Briefcase}
               />
             ) : (
@@ -167,19 +169,21 @@ export default function CompanyDashboard() {
                             }
                             className={`text-[10px] font-semibold px-2 rounded-full ${
                               project.status === 'active'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : 'bg-zinc-100 text-zinc-700 border border-zinc-200'
+                                ? 'bg-accent/10 text-accent border border-accent/20'
+                                : 'bg-muted text-muted-foreground border border-border'
                             }`}
                           >
-                            {project.status === 'active' ? 'Activo' : 'Cerrado'}
+                            {project.status === 'active'
+                              ? tCommon('statusActive')
+                              : tCommon('statusClosed')}
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Presupuesto:{' '}
+                          {tCommon('budget')}:{' '}
                           <span className="font-bold text-foreground">
                             ${project.budget} USD
                           </span>{' '}
-                          • Duración:{' '}
+                          • {tCommon('duration')}:{' '}
                           <span className="font-semibold text-foreground">
                             {project.duration}
                           </span>
@@ -211,7 +215,7 @@ export default function CompanyDashboard() {
                               project.title,
                             )
                           }
-                          className="text-muted-foreground hover:text-destructive hover:bg-rose-50 rounded-lg shrink-0"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
                           title="Cerrar Proyecto"
                         >
                           <PowerOff className="w-4 h-4" />
@@ -233,8 +237,7 @@ export default function CompanyDashboard() {
             {receivedApps.length === 0 ? (
               <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
                 <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-                No has recibido postulaciones de candidatos en tus proyectos
-                todavía.
+                {tEmpresa('noApplicationsYet')}
               </div>
             ) : (
               <div className="space-y-6">
@@ -266,10 +269,10 @@ export default function CompanyDashboard() {
               <div
                 className={`p-3 rounded-full mb-3 ${
                   confirmDialog.type === 'accept'
-                    ? 'bg-emerald-100 text-emerald-600'
+                    ? 'bg-accent/15 text-accent'
                     : confirmDialog.type === 'reject'
-                      ? 'bg-rose-100 text-rose-600'
-                      : 'bg-amber-100 text-amber-600'
+                      ? 'bg-destructive/15 text-destructive'
+                      : 'bg-warning/15 text-warning'
                 }`}
               >
                 {confirmDialog.type === 'accept' ? (
@@ -285,14 +288,14 @@ export default function CompanyDashboard() {
                   ? tEmpresa('confirmAccept')
                   : confirmDialog.type === 'reject'
                     ? tEmpresa('confirmReject')
-                    : '¿Cerrar este proyecto de manera permanente?'}
+                    : tEmpresa('confirmCloseProject')}
               </DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground mt-2">
-                Acción sobre:{' '}
+                {tEmpresa('confirmActionOn')}{' '}
                 <span className="font-semibold text-foreground">
                   &ldquo;{confirmDialog.title}&rdquo;
                 </span>
-                . Esta acción no se puede deshacer en la simulación.
+                . {tEmpresa('confirmCannotUndo')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex gap-2 sm:justify-center pt-4 border-t border-border/40 mt-4">
@@ -309,10 +312,10 @@ export default function CompanyDashboard() {
                 onClick={handleConfirmAction}
                 className={`font-semibold flex-1 sm:flex-initial text-white ${
                   confirmDialog.type === 'accept'
-                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    ? 'bg-accent hover:bg-accent/90'
                     : confirmDialog.type === 'reject'
-                      ? 'bg-rose-600 hover:bg-rose-700'
-                      : 'bg-amber-600 hover:bg-amber-700'
+                      ? 'bg-destructive hover:bg-destructive/90'
+                      : 'bg-warning hover:bg-warning/90'
                 }`}
               >
                 {tCommon('confirm')}

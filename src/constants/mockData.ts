@@ -1,5 +1,8 @@
 import { Company, Project, Application } from '@/types'
 
+export const MOCK_JUNIOR_NAME = 'Juan Pérez'
+export const MOCK_COMPANY_ID = 'comp-1'
+
 export const mockCompanies: Company[] = [
   {
     id: 'comp-1',

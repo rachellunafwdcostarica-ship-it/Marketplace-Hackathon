@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Link } from '@/i18n/routing'
 import { useAppState } from '@/lib/stateContext'
@@ -19,39 +19,39 @@ import { toast } from 'sonner'
 import { ArrowLeft, Send, Briefcase, FileText } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
-const applySchema = zod.object({
-  coverLetter: zod
-    .string()
-    .min(30, {
-      message: 'La carta de presentación debe tener al menos 30 caracteres.',
-    }),
-  portfolioUrl: zod
-    .string()
-    .url({
-      message:
-        'Debe ingresar una URL válida para el portafolio (ej. https://miweb.com).',
-    }),
-  cvUrl: zod
-    .string()
-    .url({
-      message:
-        'Debe ingresar una URL válida para el CV (ej. https://drive.google.com/...).',
-    }),
-})
+interface ApplyFormValues {
+  coverLetter: string
+  portfolioUrl: string
+  cvUrl: string
+}
 
-type ApplyFormValues = zod.infer<typeof applySchema>
+function createApplySchema(
+  t: ReturnType<typeof useTranslations<'Validation'>>,
+) {
+  return zod.object({
+    coverLetter: zod.string().min(30, { message: t('coverLetterMin') }),
+    portfolioUrl: zod.string().url({ message: t('urlPortfolio') }),
+    cvUrl: zod.string().url({ message: t('urlCV') }),
+  })
+}
 
 export default function ApplyProjectPage() {
   const params = useParams()
   const router = useRouter()
   const tCommon = useTranslations('Common')
   const tJunior = useTranslations('Junior')
+  const tValidation = useTranslations('Validation')
 
   const { projects, addApplication } = useAppState()
   const id = params['id'] as string
   const project = projects.find((p) => p.id === id)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const applySchema = useMemo(
+    () => createApplySchema(tValidation),
+    [tValidation],
+  )
 
   const {
     register,
@@ -61,8 +61,8 @@ export default function ApplyProjectPage() {
     resolver: zodResolver(applySchema),
     defaultValues: {
       coverLetter: '',
-      portfolioUrl: 'https://juanperez.dev',
-      cvUrl: 'https://drive.google.com/file/cv-juan-perez',
+      portfolioUrl: '',
+      cvUrl: '',
     },
   })
 
@@ -72,12 +72,12 @@ export default function ApplyProjectPage() {
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center p-8">
           <Briefcase className="w-12 h-12 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-bold">Proyecto no encontrado</h2>
+          <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
             className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/95 h-9 px-4"
           >
-            Volver al Marketplace
+            {tJunior('backToMarketplace')}
           </Link>
         </main>
         <Footer />
@@ -114,13 +114,16 @@ export default function ApplyProjectPage() {
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />
-            {tCommon('back')} al Detalle del Proyecto
+            {tJunior('backToProjectDetail')}
           </Link>
         </div>
 
         <PageTitle
           title={tJunior('applyFormTitle')}
-          description={`Proyecto: ${project.title} — ${project.companyName}`}
+          description={tJunior('applyFormProjectInfo', {
+            title: project.title,
+            company: project.companyName,
+          })}
           dotColor="text-primary"
         />
 
@@ -135,7 +138,7 @@ export default function ApplyProjectPage() {
                 >
                   <span>{tJunior('coverLetter')}</span>
                   <span className="text-xs font-normal text-muted-foreground">
-                    Mínimo 30 caracteres
+                    {tCommon('minCharsLabel', { n: 30 })}
                   </span>
                 </Label>
                 <Textarea

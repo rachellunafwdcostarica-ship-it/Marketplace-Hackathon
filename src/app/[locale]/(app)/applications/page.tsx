@@ -10,13 +10,14 @@ import { ApplicationCard } from '@/components/features/applications/ApplicationC
 import { EmptyState } from '@/components/features/EmptyState'
 import { Link } from '@/i18n/routing'
 import { Briefcase } from 'lucide-react'
+import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
 
 export default function JuniorApplicationsPage() {
   const tJunior = useTranslations('Junior')
   const { applications } = useAppState()
 
   const myApps = applications.filter(
-    (app) => app.candidateName === 'Juan Pérez',
+    (app) => app.candidateName === MOCK_JUNIOR_NAME,
   )
 
   return (
@@ -26,7 +27,7 @@ export default function JuniorApplicationsPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
           title={tJunior('applications')}
-          description="Realiza el seguimiento de tus candidaturas enviadas a las distintas empresas."
+          description={tJunior('applicationsDesc')}
           dotColor="text-primary"
         />
 
@@ -34,9 +35,9 @@ export default function JuniorApplicationsPage() {
           {myApps.length === 0 ? (
             <EmptyState
               title={tJunior('emptyApplications')}
-              description="Navega por nuestro catálogo de proyectos, encuentra el que mejor se adapte a tu stack y envíale tu propuesta a la empresa."
+              description={tJunior('emptyApplicationsDesc')}
               icon={Briefcase}
-              actionText="Explorar Marketplace"
+              actionText={tJunior('exploreMarketplace')}
               onAction={() => {}}
             />
           ) : (
@@ -58,7 +59,7 @@ export default function JuniorApplicationsPage() {
               href="/junior/projects"
               className="text-sm font-semibold text-primary hover:underline"
             >
-              Explorar más proyectos en el Marketplace
+              {tJunior('exploreMoreProjects')}
             </Link>
           </div>
         )}

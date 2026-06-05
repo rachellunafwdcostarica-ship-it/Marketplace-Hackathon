@@ -10,6 +10,7 @@ import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
 import { ProjectCard } from '@/components/features/ProjectCard'
 import { InsightSection } from '@/components/features/InsightSection'
 import { Link } from '@/i18n/routing'
+import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
 import {
   Send,
   CheckCircle2,
@@ -23,10 +24,11 @@ import {
 
 export default function JuniorDashboard() {
   const tJunior = useTranslations('Junior')
+  const tCommon = useTranslations('Common')
   const { projects, applications } = useAppState()
 
   const myApps = applications.filter(
-    (app) => app.candidateName === 'Juan Pérez',
+    (app) => app.candidateName === MOCK_JUNIOR_NAME,
   )
   const sentCount = myApps.filter(
     (app) => app.status === 'sent' || app.status === 'viewed',
@@ -39,22 +41,22 @@ export default function JuniorDashboard() {
       title: tJunior('appliedProjects'),
       value: totalCount,
       icon: FileText,
-      description: 'Total de proyectos postulados',
+      description: tJunior('statAppliedDesc'),
       colorClass: 'text-primary bg-primary/10',
     },
     {
       title: tJunior('activeApplications'),
       value: sentCount,
       icon: Send,
-      description: 'Postulaciones en revisión',
+      description: tJunior('statActiveDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
     {
       title: tJunior('acceptedProjects'),
       value: acceptedCount,
       icon: CheckCircle2,
-      description: 'Proyectos aprobados para iniciar',
-      colorClass: 'text-emerald-600 bg-emerald-100/50',
+      description: tJunior('statAcceptedDesc'),
+      colorClass: 'text-accent bg-accent/10',
     },
   ]
 
@@ -65,21 +67,18 @@ export default function JuniorDashboard() {
 
   const insights = [
     {
-      title: 'Optimiza tu CV y portafolio',
-      description:
-        'Las empresas valoran ver enlaces a repositorios reales y demostraciones activas.',
+      title: tJunior('insightTitle1'),
+      description: tJunior('insightDesc1'),
       icon: Lightbulb,
     },
     {
-      title: 'Carta de presentación directa',
-      description:
-        'Enfoca tu carta en cómo tus habilidades resuelven los entregables exactos del proyecto.',
+      title: tJunior('insightTitle2'),
+      description: tJunior('insightDesc2'),
       icon: Target,
     },
     {
-      title: 'Proyectos cortos, gran impacto',
-      description:
-        'Completa proyectos pequeños con éxito para aumentar tu calificación y atraer proyectos más grandes.',
+      title: tJunior('insightTitle3'),
+      description: tJunior('insightDesc3'),
       icon: Rocket,
     },
   ]
@@ -91,7 +90,7 @@ export default function JuniorDashboard() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
           title={tJunior('dashboard')}
-          description="Monitorea tus postulaciones y descubre nuevos proyectos recomendados para ti."
+          description={tJunior('dashboardDesc')}
           dotColor="text-primary"
         />
 
@@ -108,7 +107,7 @@ export default function JuniorDashboard() {
                 href="/junior/projects"
                 className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5"
               >
-                Ver todos
+                {tCommon('viewAll')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -116,8 +115,7 @@ export default function JuniorDashboard() {
             {recommendedProjects.length === 0 ? (
               <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
                 <AlertCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-                No hay nuevas recomendaciones en este momento. ¡Sigue buscando
-                en el Marketplace!
+                {tJunior('emptyRecommendations')}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -129,7 +127,10 @@ export default function JuniorDashboard() {
           </div>
 
           <div className="lg:col-span-4">
-            <InsightSection title="Consejos FWD Talent" insights={insights} />
+            <InsightSection
+              title={tJunior('insightsSectionTitle')}
+              insights={insights}
+            />
           </div>
         </div>
       </main>

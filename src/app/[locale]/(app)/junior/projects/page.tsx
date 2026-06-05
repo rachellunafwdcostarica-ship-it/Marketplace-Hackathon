@@ -15,6 +15,7 @@ import { Briefcase } from 'lucide-react'
 
 export default function JuniorProjectsMarketplace() {
   const tJunior = useTranslations('Junior')
+  const tCommon = useTranslations('Common')
   const { projects } = useAppState()
 
   const [search, setSearch] = useState('')
@@ -108,7 +109,7 @@ export default function JuniorProjectsMarketplace() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
           title={tJunior('marketplace')}
-          description="Encuentra y postúlate a proyectos freelance de corta duración que se adapten a tus habilidades."
+          description={tJunior('marketplaceDesc')}
           dotColor="text-accent"
         />
 
@@ -138,9 +139,9 @@ export default function JuniorProjectsMarketplace() {
             ) : filteredProjects.length === 0 ? (
               <EmptyState
                 title={tJunior('emptyState')}
-                description="Intenta modificando los filtros o los términos de búsqueda para encontrar más proyectos."
+                description={tJunior('emptyStateDesc')}
                 icon={Briefcase}
-                actionText="Limpiar todos los filtros"
+                actionText={tCommon('clearFilters')}
                 onAction={handleClearFilters}
               />
             ) : (

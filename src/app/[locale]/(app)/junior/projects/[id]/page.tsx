@@ -21,6 +21,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
 
 export default function ProjectDetailsPage() {
   const params = useParams()
@@ -37,12 +38,12 @@ export default function ProjectDetailsPage() {
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center p-8">
           <Briefcase className="w-12 h-12 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-bold">Proyecto no encontrado</h2>
+          <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
             className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/95 h-9 px-4"
           >
-            Volver al Marketplace
+            {tJunior('backToMarketplace')}
           </Link>
         </main>
         <Footer />
@@ -51,16 +52,14 @@ export default function ProjectDetailsPage() {
   }
 
   const alreadyApplied = applications.some(
-    (app) => app.projectId === project.id && app.candidateName === 'Juan Pérez',
+    (app) =>
+      app.projectId === project.id && app.candidateName === MOCK_JUNIOR_NAME,
   )
 
   const modeColors: Record<string, string> = {
-    remoto:
-      'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400',
-    hibrido:
-      'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400',
-    presencial:
-      'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-400',
+    remoto: 'bg-accent/10 text-accent border-accent/20',
+    hibrido: 'bg-warning/10 text-warning border-warning/20',
+    presencial: 'bg-secondary/10 text-secondary border-secondary/20',
   }
 
   return (
@@ -74,7 +73,7 @@ export default function ProjectDetailsPage() {
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {tCommon('back')} al Marketplace
+            {tJunior('backToMarketplace')}
           </Link>
         </div>
 
@@ -90,7 +89,7 @@ export default function ProjectDetailsPage() {
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-3">
                   <h3 className="text-lg font-bold tracking-tight text-foreground font-heading">
-                    Descripción del Proyecto
+                    {tJunior('projectDescription')}
                     <span className="text-accent">.</span>
                   </h3>
                   <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
@@ -99,7 +98,7 @@ export default function ProjectDetailsPage() {
                 </div>
                 <div className="space-y-3 pt-4 border-t border-border/60">
                   <h3 className="text-lg font-bold tracking-tight text-foreground font-heading">
-                    {tJunior('requirements')} / Stack
+                    {tJunior('requirementsStack')}
                     <span className="text-accent">.</span>
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -162,7 +161,7 @@ export default function ProjectDetailsPage() {
                       <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide leading-none">
                         {tCommon('budget')}
                       </p>
-                      <p className="text-base font-extrabold text-emerald-600 mt-0.5">
+                      <p className="text-base font-extrabold text-accent mt-0.5">
                         ${project.budget} USD
                       </p>
                     </div>
@@ -187,10 +186,10 @@ export default function ProjectDetailsPage() {
                   {alreadyApplied ? (
                     <Button
                       disabled
-                      className="w-full bg-zinc-200 text-zinc-500 font-semibold h-11 flex items-center justify-center gap-2"
+                      className="w-full bg-muted text-muted-foreground font-semibold h-11 flex items-center justify-center gap-2"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Postulado Exitosamente
+                      {tJunior('alreadyApplied')}
                     </Button>
                   ) : (
                     <Link

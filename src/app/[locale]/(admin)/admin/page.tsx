@@ -24,6 +24,7 @@ import {
 
 export default function AdminDashboard() {
   const tAdmin = useTranslations('Admin')
+  const tCommon = useTranslations('Common')
 
   const {
     projects,
@@ -43,45 +44,45 @@ export default function AdminDashboard() {
       title: tAdmin('statsTotalCompanies'),
       value: totalCompanies,
       icon: Building,
-      description: 'Empresas registradas en la base',
+      description: tAdmin('statsTotalCompaniesDesc'),
       colorClass: 'text-primary bg-primary/10',
     },
     {
       title: tAdmin('statsPendingApprovals'),
       value: pendingCompanies.length,
       icon: ShieldCheck,
-      description: 'Empresas esperando verificación',
+      description: tAdmin('statsPendingDesc'),
       colorClass: 'text-warning bg-warning/10',
     },
     {
       title: tAdmin('statsActiveJobs'),
       value: activeProjects.length,
       icon: Briefcase,
-      description: 'Proyectos visibles en marketplace',
+      description: tAdmin('statsActiveJobsDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
     {
       title: tAdmin('statsApplicationsCount'),
       value: totalApplications,
       icon: Layers,
-      description: 'Candidaturas enviadas en total',
+      description: tAdmin('statsApplicationsDesc'),
       colorClass: 'text-magenta bg-magenta/10',
     },
   ]
 
   const handleApproveCompany = (id: string, name: string) => {
     updateCompanyStatus(id, 'approved')
-    toast.success(`Empresa "${name}" aprobada exitosamente.`)
+    toast.success(tAdmin('companyApproved', { name }))
   }
 
   const handleRejectCompany = (id: string, name: string) => {
     updateCompanyStatus(id, 'rejected')
-    toast.error(`Registro de "${name}" rechazado.`)
+    toast.error(tAdmin('companyRejected', { name }))
   }
 
   const handleHideProject = (id: string, title: string) => {
     updateProjectStatus(id, 'closed')
-    toast.warning(`Proyecto "${title}" ocultado del marketplace.`)
+    toast.warning(tAdmin('projectHidden', { title }))
   }
 
   return (
@@ -91,7 +92,7 @@ export default function AdminDashboard() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
           title={tAdmin('dashboard')}
-          description="Verifica empresas registradas, modera proyectos publicados y analiza métricas generales."
+          description={tAdmin('dashboardDesc')}
           dotColor="text-magenta"
         />
 
@@ -101,22 +102,22 @@ export default function AdminDashboard() {
           <div className="lg:col-span-6 space-y-6">
             <div className="flex justify-between items-center pb-2 border-b border-border/60">
               <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
-                Verificación de Empresas ({pendingCompanies.length})
+                {tAdmin('verifyCompany')} ({pendingCompanies.length})
                 <span className="text-warning">.</span>
               </h2>
               <Link
                 href="/admin/companies"
                 className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
               >
-                Ver todas
+                {tCommon('viewAll')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
             {pendingCompanies.length === 0 ? (
               <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
-                <CheckSquare className="w-8 h-8 mx-auto mb-2 text-emerald-600" />
-                No hay empresas pendientes de aprobación en este momento.
+                <CheckSquare className="w-8 h-8 mx-auto mb-2 text-accent" />
+                {tAdmin('noPendingCompanies')}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -139,14 +140,14 @@ export default function AdminDashboard() {
           <div className="lg:col-span-6 space-y-6">
             <div className="flex justify-between items-center pb-2 border-b border-border/60">
               <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
-                Moderación de Proyectos ({activeProjects.length})
+                {tAdmin('moderateProject')} ({activeProjects.length})
                 <span className="text-accent">.</span>
               </h2>
               <Link
                 href="/admin/projects"
                 className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
               >
-                Ver todos
+                {tCommon('viewAll')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -154,7 +155,7 @@ export default function AdminDashboard() {
             {activeProjects.length === 0 ? (
               <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
                 <AlertOctagon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-                No hay proyectos activos para moderar en este momento.
+                {tAdmin('noPendingCompanies')}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -169,10 +170,10 @@ export default function AdminDashboard() {
                         onClick={() =>
                           handleHideProject(project.id, project.title)
                         }
-                        className="w-full border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 flex items-center justify-center gap-1.5"
+                        className="w-full border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5"
                       >
                         <AlertOctagon className="w-4 h-4" />
-                        {tAdmin('hide')} del Marketplace
+                        {tAdmin('hideFromMarketplace')}
                       </Button>
                     }
                   />

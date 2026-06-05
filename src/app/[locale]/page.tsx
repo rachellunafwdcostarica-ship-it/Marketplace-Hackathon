@@ -21,7 +21,7 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-6 text-left">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                 <Sparkles className="w-3.5 h-3.5" />
-                FWD Talent Marketplace v1.0
+                {tLanding('badgeVersion')}
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1] font-heading">
                 {tLanding('heroTitle')}
@@ -52,9 +52,9 @@ export default function LandingPage() {
               <div className="border border-border/80 rounded-2xl bg-card/75 p-6 shadow-xl backdrop-blur-sm relative overflow-hidden group hover:border-primary/20 transition-all duration-300">
                 <div className="flex justify-between items-center pb-4 border-b border-border/60 mb-6">
                   <div className="flex gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-rose-400" />
-                    <span className="w-3 h-3 rounded-full bg-amber-400" />
-                    <span className="w-3 h-3 rounded-full bg-emerald-400" />
+                    <span className="w-3 h-3 rounded-full bg-magenta" />
+                    <span className="w-3 h-3 rounded-full bg-warning" />
+                    <span className="w-3 h-3 rounded-full bg-accent" />
                   </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     fwd-marketplace.json
@@ -76,21 +76,21 @@ export default function LandingPage() {
         </section>
 
         {/* Stats */}
-        <section className="bg-stone-900 text-stone-200 py-10">
+        <section className="bg-secondary text-secondary-foreground py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="p-4">
               <p className="text-3xl font-extrabold text-accent font-heading">
                 {tLanding('statsProjects').split(' ')[0]}
               </p>
-              <p className="text-sm text-stone-400 mt-1">
+              <p className="text-sm text-secondary-foreground/70 mt-1">
                 {tLanding('statsProjects').split(' ').slice(1).join(' ')}
               </p>
             </div>
-            <div className="p-4 border-y md:border-y-0 md:border-x border-stone-800">
+            <div className="p-4 border-y md:border-y-0 md:border-x border-secondary-foreground/20">
               <p className="text-3xl font-extrabold text-highlight font-heading">
                 {tLanding('statsTalent').split(' ')[0]}
               </p>
-              <p className="text-sm text-stone-400 mt-1">
+              <p className="text-sm text-secondary-foreground/70 mt-1">
                 {tLanding('statsTalent').split(' ').slice(1).join(' ')}
               </p>
             </div>
@@ -98,7 +98,7 @@ export default function LandingPage() {
               <p className="text-3xl font-extrabold text-magenta font-heading">
                 {tLanding('statsCompanies').split(' ')[0]}
               </p>
-              <p className="text-sm text-stone-400 mt-1">
+              <p className="text-sm text-secondary-foreground/70 mt-1">
                 {tLanding('statsCompanies').split(' ').slice(1).join(' ')}
               </p>
             </div>

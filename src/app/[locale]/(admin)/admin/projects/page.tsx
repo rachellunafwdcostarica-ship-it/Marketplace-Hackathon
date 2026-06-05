@@ -19,12 +19,12 @@ export default function AdminProjectsPage() {
 
   const handleHide = (id: string, title: string) => {
     updateProjectStatus(id, 'closed')
-    toast.warning(`Proyecto "${title}" ocultado del marketplace.`)
+    toast.warning(tAdmin('projectHidden', { title }))
   }
 
   const handleApprove = (id: string, title: string) => {
     updateProjectStatus(id, 'active')
-    toast.success(`Proyecto "${title}" aprobado y publicado en el marketplace.`)
+    toast.success(tAdmin('projectApprovedSuccess', { title }))
   }
 
   const activeProjects = projects.filter((p) => p.status === 'active')
@@ -42,7 +42,7 @@ export default function AdminProjectsPage() {
       </h3>
       {list.length === 0 ? (
         <p className="text-sm text-muted-foreground italic px-2">
-          Sin proyectos en esta categoría.
+          {tAdmin('noProjectsInCategory')}
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -62,14 +62,14 @@ export default function AdminProjectsPage() {
                     }
                     className={
                       action === 'hide'
-                        ? 'w-full border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 flex items-center justify-center gap-1.5'
-                        : 'w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50 flex items-center justify-center gap-1.5'
+                        ? 'w-full border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5'
+                        : 'w-full border-accent/20 text-accent hover:bg-accent/10 flex items-center justify-center gap-1.5'
                     }
                   >
                     {action === 'hide' ? (
                       <>
                         <EyeOff className="w-4 h-4" />
-                        {tAdmin('hide')} del Marketplace
+                        {tAdmin('hideFromMarketplace')}
                       </>
                     ) : (
                       <>
@@ -93,33 +93,25 @@ export default function AdminProjectsPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         <PageTitle
           title={tAdmin('moderateProject')}
-          description="Revisa todos los proyectos publicados, aprueba los pendientes u oculta los que incumplan las normas."
+          description={tAdmin('moderateProjectDesc')}
           dotColor="text-magenta"
         />
 
         {projects.length === 0 ? (
           <EmptyState
-            title="No hay proyectos registrados"
-            description="Cuando las empresas publiquen proyectos aparecerán aquí para moderación."
+            title={tAdmin('noProjects')}
+            description={tAdmin('noProjectsDesc')}
             icon={Briefcase}
           />
         ) : (
           <>
+            {renderSection(tAdmin('projectsActive'), activeProjects, 'hide')}
             {renderSection(
-              'Proyectos Activos (Publicados)',
-              activeProjects,
-              'hide',
-            )}
-            {renderSection(
-              'Proyectos Pendientes de Aprobación',
+              tAdmin('projectsPending'),
               pendingProjects,
               'approve',
             )}
-            {renderSection(
-              'Proyectos Cerrados / Ocultos',
-              closedProjects,
-              'none',
-            )}
+            {renderSection(tAdmin('projectsClosed'), closedProjects, 'none')}
           </>
         )}
       </main>

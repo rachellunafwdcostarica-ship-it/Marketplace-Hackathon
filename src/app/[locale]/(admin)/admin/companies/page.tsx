@@ -17,12 +17,12 @@ export default function AdminCompaniesPage() {
 
   const handleApprove = (id: string, name: string) => {
     updateCompanyStatus(id, 'approved')
-    toast.success(`Empresa "${name}" aprobada.`)
+    toast.success(tAdmin('companyApproved', { name }))
   }
 
   const handleReject = (id: string, name: string) => {
     updateCompanyStatus(id, 'rejected')
-    toast.error(`Registro de "${name}" rechazado.`)
+    toast.error(tAdmin('companyRejected', { name }))
   }
 
   const pending = companies.filter((c) => c.status === 'pending')
@@ -40,7 +40,7 @@ export default function AdminCompaniesPage() {
       </h3>
       {list.length === 0 ? (
         <p className="text-sm text-muted-foreground italic px-2">
-          Sin registros en esta categoría.
+          {tAdmin('noRecordsInCategory')}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -71,22 +71,20 @@ export default function AdminCompaniesPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         <PageTitle
           title={tAdmin('verifyCompany')}
-          description="Revisa y aprueba los registros de empresas que desean publicar proyectos en la plataforma."
+          description={tAdmin('verifyCompanyDesc')}
           dotColor="text-magenta"
         />
 
         {companies.length === 0 ? (
           <div className="p-12 border border-dashed border-border rounded-xl text-center text-muted-foreground">
             <Building className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
-            <p className="font-semibold">
-              No hay empresas registradas todavía.
-            </p>
+            <p className="font-semibold">{tAdmin('noCompaniesRegistered')}</p>
           </div>
         ) : (
           <>
-            {renderSection('Empresas Pendientes de Aprobación', pending, true)}
-            {renderSection('Empresas Aprobadas', approved, false)}
-            {renderSection('Empresas Rechazadas', rejected, false)}
+            {renderSection(tAdmin('companiesPending'), pending, true)}
+            {renderSection(tAdmin('companiesApproved'), approved, false)}
+            {renderSection(tAdmin('companiesRejected'), rejected, false)}
           </>
         )}
       </main>

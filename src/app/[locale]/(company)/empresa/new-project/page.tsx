@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter, Link } from '@/i18n/routing'
 import { useAppState } from '@/lib/stateContext'
@@ -26,42 +26,48 @@ import { toast } from 'sonner'
 import { ArrowLeft, Save } from 'lucide-react'
 import { WorkMode } from '@/types'
 
-const projectSchema = zod.object({
-  title: zod
-    .string()
-    .min(10, { message: 'El título debe tener al menos 10 caracteres.' }),
-  description: zod
-    .string()
-    .min(30, {
-      message: 'La descripción del proyecto debe tener al menos 30 caracteres.',
-    }),
-  stackInput: zod
-    .string()
-    .min(2, { message: 'Debe ingresar al menos una tecnología.' }),
-  duration: zod
-    .string()
-    .min(2, { message: 'Debe ingresar la duración estimada (ej. 3 semanas).' }),
-  budget: zod
-    .number({ message: 'El presupuesto debe ser un número válido.' })
-    .positive({ message: 'El presupuesto debe ser mayor a 0.' })
-    .min(50, { message: 'El presupuesto mínimo sugerido es de $50 USD.' }),
-  mode: zod.enum(['remoto', 'hibrido', 'presencial'] as const, {
-    message: 'Debe seleccionar una modalidad válida.',
-  }),
-  startDate: zod
-    .string()
-    .min(1, { message: 'Debe seleccionar una fecha estimada de inicio.' }),
-})
+interface ProjectFormValues {
+  title: string
+  description: string
+  stackInput: string
+  duration: string
+  budget: number
+  mode: 'remoto' | 'hibrido' | 'presencial'
+  startDate: string
+}
 
-type ProjectFormValues = zod.infer<typeof projectSchema>
+function createProjectSchema(
+  t: ReturnType<typeof useTranslations<'Validation'>>,
+) {
+  return zod.object({
+    title: zod.string().min(10, { message: t('titleMin') }),
+    description: zod.string().min(30, { message: t('descriptionMin') }),
+    stackInput: zod.string().min(2, { message: t('stackRequired') }),
+    duration: zod.string().min(2, { message: t('durationRequired') }),
+    budget: zod
+      .number({ message: t('budgetNumber') })
+      .positive({ message: t('budgetPositive') })
+      .min(50, { message: t('budgetMin') }),
+    mode: zod.enum(['remoto', 'hibrido', 'presencial'] as const, {
+      message: t('modeRequired'),
+    }),
+    startDate: zod.string().min(1, { message: t('startDateRequired') }),
+  })
+}
 
 export default function PublishProjectPage() {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
+  const tValidation = useTranslations('Validation')
   const router = useRouter()
   const { addProject } = useAppState()
 
   const [loading, setLoading] = useState(false)
+
+  const projectSchema = useMemo(
+    () => createProjectSchema(tValidation),
+    [tValidation],
+  )
 
   const {
     register,
@@ -116,7 +122,7 @@ export default function PublishProjectPage() {
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />
-            {tCommon('back')} al Panel Empresa
+            {tEmpresa('backToDashboard')}
           </Link>
         </div>
 
@@ -155,7 +161,7 @@ export default function PublishProjectPage() {
                 >
                   <span>{tEmpresa('projectDesc')}</span>
                   <span className="text-xs font-normal text-muted-foreground">
-                    Mínimo 30 caracteres
+                    {tCommon('minCharsLabel', { n: 30 })}
                   </span>
                 </Label>
                 <Textarea
@@ -242,7 +248,9 @@ export default function PublishProjectPage() {
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger className="w-full bg-card/50 border-border focus:ring-primary">
-                          <SelectValue placeholder="Seleccionar Modalidad" />
+                          <SelectValue
+                            placeholder={tEmpresa('selectModePlaceholder')}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="remoto">
