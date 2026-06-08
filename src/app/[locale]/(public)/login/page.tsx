@@ -2,8 +2,6 @@
 
 import React, { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from '@/i18n/routing'
-import { useAppState } from '@/lib/stateContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/button'
@@ -12,7 +10,6 @@ import { Label } from '@/components/ui/label'
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
   CardFooter,
@@ -22,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
 import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 
 interface LoginFormValues {
   email: string
@@ -37,11 +35,7 @@ function createLoginSchema(
 
 export default function LoginPage() {
   const tLogin = useTranslations('Login')
-  const tCommon = useTranslations('Common')
-  const tNav = useTranslations('Nav')
   const tValidation = useTranslations('Validation')
-  const router = useRouter()
-  const { setUserRole } = useAppState()
 
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -60,25 +54,38 @@ export default function LoginPage() {
     defaultValues: { email: '' },
   })
 
-  const onSubmit = (_data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      setSuccess(true)
-      toast.success(tLogin('success'))
-      setTimeout(() => {
-        setUserRole('junior')
-        router.push('/junior')
-      }, 2000)
-    }, 1500)
+    const supabase = createSupabaseBrowserClient()
+    const { error } = await supabase.auth.signInWithOtp({
+      email: data.email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    setLoading(false)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    setSuccess(true)
+    toast.success(tLogin('success'))
   }
 
-  const handleOAuthLogin = (provider: 'Google' | 'GitHub') => {
-    toast.info(tLogin('simulatingOAuth', { provider }))
-    setTimeout(() => {
-      setUserRole('junior')
-      router.push('/junior')
-    }, 1000)
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    const supabase = createSupabaseBrowserClient()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    if (error) {
+      toast.error(error.message)
+      setLoading(false)
+    }
+    // Si no hay error, el browser redirige a Google — no hace falta setLoading(false)
   }
 
   return (
@@ -162,47 +169,22 @@ export default function LoginPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleOAuthLogin('Google')}
-                      className="border-border hover:bg-muted font-semibold text-sm"
-                    >
-                      {tLogin('google')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleOAuthLogin('GitHub')}
-                      className="border-border hover:bg-muted font-semibold text-sm"
-                    >
-                      {tLogin('github')}
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="w-full border-border hover:bg-muted font-semibold text-sm"
+                  >
+                    {tLogin('google')}
+                  </Button>
                 </CardContent>
+
                 <CardFooter className="px-6 pb-6 pt-0">
                   <p className="text-xs text-muted-foreground text-center w-full">
-                    {tCommon('roleSelector')}:{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUserRole('empresa')
-                        router.push('/empresa')
-                      }}
-                      className="text-secondary hover:underline font-semibold"
-                    >
-                      {tNav('roleEmpresa')}
-                    </button>{' '}
-                    /{' '}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUserRole('admin')
-                        router.push('/admin')
-                      }}
-                      className="text-magenta hover:underline font-semibold"
-                    >
-                      {tNav('roleAdmin')}
-                    </button>
+                    {tLogin('noAccount')}{' '}
+                    <span className="text-primary font-semibold">
+                      {tLogin('signUpViaGoogle')}
+                    </span>
                   </p>
                 </CardFooter>
               </>

@@ -71,7 +71,9 @@
     "error": "An error occurred. Please try again.",
     "redirecting": "Redirecting to your dashboard in a few seconds...",
     "orContinueWith": "or continue with",
-    "simulatingOAuth": "Simulating login with {provider}..."
+    "simulatingOAuth": "Simulating login with {provider}...",
+    "noAccount": "No account?",
+    "signUpViaGoogle": "Sign up with Google above."
   },
   "Common": {
     "loading": "Loading...",

@@ -71,7 +71,9 @@
     "error": "Ocurrió un error. Inténtalo de nuevo.",
     "redirecting": "Redirigiendo a tu panel en unos segundos...",
     "orContinueWith": "o continúa con",
-    "simulatingOAuth": "Simulando login con {provider}..."
+    "simulatingOAuth": "Simulando login con {provider}...",
+    "noAccount": "¿Sin cuenta?",
+    "signUpViaGoogle": "Regístrate con Google arriba."
   },
   "Common": {
     "loading": "Cargando...",
