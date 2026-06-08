@@ -91,3 +91,7 @@ tmp/
 temp/
 .claude/
 .mcp.json
+
+# Agent skills (dependencias de IA, se reinstalan con: npx skills add supabase/agent-skills)
+.agents/
+skills-lock.json
