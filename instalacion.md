@@ -9,6 +9,7 @@ Guía para el equipo. Para las reglas del proyecto ver `reglas.md`; la fuente de
 - **Node.js 20 LTS o superior** (§4.8 del brief).
 - **npm** como package manager (no usar yarn ni pnpm).
 - Cuenta de Supabase del equipo para las variables de entorno.
+- **DNS configurado en 8.8.8.8** (ver sección 1.1).
 
 Verificá tu versión:
 
@@ -16,6 +17,41 @@ Verificá tu versión:
 node -v
 npm -v
 ```
+
+---
+
+## 1.1. Configuración de DNS (obligatorio antes de desarrollar)
+
+Supabase usa el TLD `.co` para sus URLs de proyecto. Algunos ISPs y routers en Latinoamérica no resuelven este dominio correctamente, lo que causa `DNS_PROBE_FINISHED_NXDOMAIN` al intentar autenticarse con Google o Magic Link.
+
+**Este paso es obligatorio para todos los miembros del equipo. Sin esto, el login no funciona en local.**
+
+En producción (Vercel) no hay problema — Vercel usa sus propios servidores DNS. El issue es exclusivo del entorno de desarrollo local.
+
+### Pasos en Windows
+
+1. `Win + R` → escribí `ncpa.cpl` → Enter
+2. Clic derecho en tu adaptador activo (Wi-Fi o Ethernet) → **Propiedades**
+3. Seleccioná **"Protocolo de Internet versión 4 (TCP/IPv4)"** → **Propiedades**
+4. Marcá **"Usar las siguientes direcciones de servidor DNS"**
+5. DNS preferido: `8.8.8.8` | DNS alternativo: `8.8.4.4`
+6. Aceptar → Aceptar
+
+### Pasos en macOS
+
+1. Preferencias del Sistema → Red → seleccioná tu conexión activa → Avanzado
+2. Pestaña **DNS** → agregá `8.8.8.8` y `8.8.4.4`
+3. OK → Aplicar
+
+### Verificar que funciona
+
+```bash
+nslookup mgowuyflhiavquztxpqh.supabase.co
+```
+
+Debe devolver una dirección IP (ej. `172.64.149.246`). Si dice `NXDOMAIN`, el DNS todavía no está correcto.
+
+---
 
 ---
 
