@@ -89,3 +89,5 @@ $RECYCLE.BIN/
 .history/
 tmp/
 temp/
+.claude/
+.mcp.json
