@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/stateContext'
 import { Navbar } from '@/components/layout/Navbar'
@@ -8,12 +8,12 @@ import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/PageTitle'
 import { SearchBar } from '@/components/features/SearchBar'
 import { ProjectFilters } from '@/components/features/marketplace/ProjectFilters'
-import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
+import { GridCard } from '@/components/features/marketplace/GridCard'
 import { EmptyState } from '@/components/features/EmptyState'
 import { LoadingSkeleton } from '@/components/features/LoadingSkeleton'
 import { Briefcase } from 'lucide-react'
 
-export default function JuniorProjectsMarketplace() {
+export default function MarketplacePage() {
   const tJunior = useTranslations('Junior')
   const tCommon = useTranslations('Common')
   const { projects } = useAppState()
@@ -145,11 +145,7 @@ export default function JuniorProjectsMarketplace() {
                 onAction={handleClearFilters}
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
+              <GridCard projects={filteredProjects} />
             )}
           </div>
         </div>
