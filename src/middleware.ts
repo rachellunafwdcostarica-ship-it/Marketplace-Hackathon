@@ -2,17 +2,11 @@ import createMiddleware from 'next-intl/middleware'
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
-import type { UserRole } from '@/types'
+import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
 
 const intlMiddleware = createMiddleware(routing)
 
 const PROTECTED_PREFIXES = ['/junior', '/empresa', '/admin']
-
-const ROLE_HOME: Record<UserRole, string> = {
-  junior: '/junior',
-  empresa: '/empresa',
-  admin: '/admin',
-}
 
 function getLocale(pathname: string): string {
   return pathname.startsWith('/en') ? 'en' : 'es'
@@ -25,17 +19,16 @@ function isProtected(pathname: string): boolean {
 }
 
 function isPublicAuthPage(pathname: string): boolean {
-  return /^\/(es|en)\/(login|register|forgot-password|verify-email|role-select)(\/|$)/.test(
+  return /^\/(es|en)\/(login|register|forgot-password|verify-email)(\/|$)/.test(
     pathname,
   )
 }
 
-function getPathRole(pathname: string): string | null {
-  const match = pathname.match(/^\/(es|en)\/(junior|empresa|admin)(\/|$)/)
-  return match ? (match[2] ?? null) : null
+function isOnboardingPath(pathname: string): boolean {
+  return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
 }
 
-function getRouteRole(pathname: string): UserRole | null {
+function getRouteRole(pathname: string): 'junior' | 'empresa' | 'admin' | null {
   if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
   if (/^\/(es|en)\/empresa/.test(pathname)) return 'empresa'
   if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
@@ -79,40 +72,68 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const locale = getLocale(pathname)
-  const roleCookie = request.cookies.get('fwd_role')?.value
 
   // CASO A: Usuario NO autenticado
   if (!user) {
-    // Si intenta acceder a rutas protegidas o a role-select, redirigir a login
-    if (
-      isProtected(pathname) ||
-      pathname.match(new RegExp(`^/(es|en)/role-select`))
-    ) {
+    // Rutas protegidas y /onboarding requieren sesión
+    if (isProtected(pathname) || isOnboardingPath(pathname)) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
     }
     return intlResponse
   }
 
-  // Ruta protegida con sesión → verificar rol
-  if (isProtected(pathname) && user) {
-    const { data: role } = await supabase.rpc('get_my_role')
+  // A partir de aquí: usuario autenticado
+
+  // CASO B: Ruta protegida
+  if (isProtected(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw as string | null)
 
     if (!role) {
-      // TODO: redirigir a onboarding cuando el equipo defina el flujo (Q1, Q2)
-      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+      // Sin rol asignado → onboarding obligatorio
+      return NextResponse.redirect(
+        new URL(`/${locale}/onboarding`, request.url),
+      )
     }
 
     const routeRole = getRouteRole(pathname)
-    if (routeRole && routeRole !== (role as UserRole)) {
-      return NextResponse.redirect(new URL(`/${locale}/403`, request.url))
+    if (routeRole && routeRole !== role) {
+      // Rol incorrecto → redirect silencioso al home propio (Q5)
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+      )
     }
+
+    return intlResponse
   }
 
-  // Usuario autenticado intenta acceder al login → su home según rol
-  if (isPublicAuthPage(pathname) && user) {
-    const { data: role } = await supabase.rpc('get_my_role')
-    const home = role ? (ROLE_HOME[role as UserRole] ?? '/junior') : '/junior'
-    return NextResponse.redirect(new URL(`/${locale}${home}`, request.url))
+  // CASO C: Página pública de auth (login, register, etc.)
+  if (isPublicAuthPage(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw as string | null)
+
+    if (role) {
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+      )
+    }
+    // Sin rol → onboarding (ya tiene sesión pero aún no eligió rol)
+    return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url))
+  }
+
+  // CASO D: /onboarding con usuario autenticado
+  if (isOnboardingPath(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw as string | null)
+
+    if (role) {
+      // Ya tiene rol → rebotar a home (refuerza permanencia Q6)
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+      )
+    }
+    // Sin rol → onboarding normal
+    return intlResponse
   }
 
   return intlResponse
