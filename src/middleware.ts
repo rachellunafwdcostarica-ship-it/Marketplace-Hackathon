@@ -2,10 +2,17 @@ import createMiddleware from 'next-intl/middleware'
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
+import type { UserRole } from '@/types'
 
 const intlMiddleware = createMiddleware(routing)
 
 const PROTECTED_PREFIXES = ['/junior', '/empresa', '/admin']
+
+const ROLE_HOME: Record<UserRole, string> = {
+  junior: '/junior',
+  empresario: '/empresa',
+  admin: '/admin',
+}
 
 function getLocale(pathname: string): string {
   return pathname.startsWith('/en') ? 'en' : 'es'
@@ -19,6 +26,13 @@ function isProtected(pathname: string): boolean {
 
 function isAuthPage(pathname: string): boolean {
   return /^\/(es|en)\/login/.test(pathname)
+}
+
+function getRouteRole(pathname: string): UserRole | null {
+  if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
+  if (/^\/(es|en)\/empresa/.test(pathname)) return 'empresario'
+  if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
+  return null
 }
 
 export async function middleware(request: NextRequest) {
@@ -64,9 +78,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
   }
 
-  // Usuario ya autenticado intenta entrar al login → dashboard
+  // Ruta protegida con sesión → verificar rol
+  if (isProtected(pathname) && user) {
+    const { data: role } = await supabase.rpc('get_my_role')
+
+    if (!role) {
+      // TODO: redirigir a onboarding cuando el equipo defina el flujo (Q1, Q2)
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+    }
+
+    const routeRole = getRouteRole(pathname)
+    if (routeRole && routeRole !== (role as UserRole)) {
+      return NextResponse.redirect(new URL(`/${locale}/403`, request.url))
+    }
+  }
+
+  // Usuario autenticado intenta acceder al login → su home según rol
   if (isAuthPage(pathname) && user) {
-    return NextResponse.redirect(new URL(`/${locale}/junior`, request.url))
+    const { data: role } = await supabase.rpc('get_my_role')
+    const home = role ? (ROLE_HOME[role as UserRole] ?? '/junior') : '/junior'
+    return NextResponse.redirect(new URL(`/${locale}${home}`, request.url))
   }
 
   return intlResponse
