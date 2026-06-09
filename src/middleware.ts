@@ -17,8 +17,15 @@ function isProtected(pathname: string): boolean {
   )
 }
 
-function isAuthPage(pathname: string): boolean {
-  return /^\/(es|en)\/login/.test(pathname)
+function isPublicAuthPage(pathname: string): boolean {
+  return /^\/(es|en)\/(login|register|forgot-password|verify-email|role-select)(\/|$)/.test(
+    pathname,
+  )
+}
+
+function getPathRole(pathname: string): string | null {
+  const match = pathname.match(/^\/(es|en)\/(junior|empresa|admin)(\/|$)/)
+  return match ? (match[2] ?? null) : null
 }
 
 export async function middleware(request: NextRequest) {
@@ -58,15 +65,45 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const locale = getLocale(pathname)
+  const roleCookie = request.cookies.get('fwd_role')?.value
 
-  // Ruta protegida sin sesión → login
-  if (isProtected(pathname) && !user) {
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+  // CASO A: Usuario NO autenticado
+  if (!user) {
+    // Si intenta acceder a rutas protegidas o a role-select, redirigir a login
+    if (
+      isProtected(pathname) ||
+      pathname.match(new RegExp(`^/(es|en)/role-select`))
+    ) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+    }
+    return intlResponse
   }
 
-  // Usuario ya autenticado intenta entrar al login → dashboard
-  if (isAuthPage(pathname) && user) {
-    return NextResponse.redirect(new URL(`/${locale}/junior`, request.url))
+  // CASO B: Usuario autenticado
+  // B.1. Usuario ya tiene un rol seleccionado
+  if (roleCookie && ['junior', 'empresa', 'admin'].includes(roleCookie)) {
+    // Si intenta acceder a páginas públicas de auth (login, register, role-select, etc)
+    if (isPublicAuthPage(pathname)) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/${roleCookie}`, request.url),
+      )
+    }
+    // Si intenta acceder al dashboard de OTRO rol (ej: es junior e intenta entrar a /empresa)
+    const pathRole = getPathRole(pathname)
+    if (pathRole && pathRole !== roleCookie) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/${roleCookie}`, request.url),
+      )
+    }
+  }
+  // B.2. Usuario NO tiene un rol seleccionado aún
+  else {
+    // Si intenta acceder a un área protegida sin haber seleccionado rol, forzar a /role-select
+    if (isProtected(pathname)) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/role-select`, request.url),
+      )
+    }
   }
 
   return intlResponse

@@ -1,13 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
 import { useAppState } from '@/lib/stateContext'
 import { Button } from '@/components/ui/button'
 import {
-  Laptop,
   Menu,
   X,
   Briefcase,
@@ -18,7 +17,6 @@ import {
   PlusCircle,
   Building2,
   Bell,
-  ChevronDown,
   User,
   Users,
   ShieldCheck,
@@ -36,11 +34,9 @@ export function Navbar() {
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
-  const { userRole: role, setUserRole } = useAppState()
+  const { userRole: role, resetAll } = useAppState()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false)
-  const roleDropdownRef = useRef<HTMLDivElement>(null)
 
   // Configuracion de rol con tokens FWD (§5.1): junior=primary, empresa=secondary, admin=magenta.
   const roleConfig: Record<
@@ -70,29 +66,8 @@ export function Navbar() {
     },
   }
 
-  // Cierra el dropdown al hacer click fuera.
-  useEffect(() => {
-    function handleOutsideClick(e: MouseEvent) {
-      if (
-        roleDropdownRef.current &&
-        !roleDropdownRef.current.contains(e.target as Node)
-      ) {
-        setRoleDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleOutsideClick)
-    return () => document.removeEventListener('mousedown', handleOutsideClick)
-  }, [])
-
   const handleLocaleChange = (nextLocale: string) => {
     router.replace(pathname, { locale: nextLocale })
-  }
-
-  const handleRoleChange = (nextRole: UserRole) => {
-    setUserRole(nextRole)
-    setRoleDropdownOpen(false)
-    setMobileMenuOpen(false)
-    router.push(`/${nextRole}`)
   }
 
   const mockLinks: NavLink[] = [
@@ -247,60 +222,14 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Desktop Right Side Controls */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Role view switcher (preview navigation hasta que exista auth) */}
+            {/* Rol activo mostrado estáticamente sin opción a cambio */}
             <div className="flex items-center gap-2 border-r border-border/80 pr-3 mr-1">
-              <div className="relative" ref={roleDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setRoleDropdownOpen((o) => !o)}
-                  className="flex items-center gap-2 bg-muted/60 hover:bg-muted border border-border/80 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-foreground transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] cursor-pointer select-none"
-                >
-                  <Laptop className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
-                  />
-                  <span>{activeRole.label}</span>
-                  <ChevronDown
-                    className={`w-3 h-3 text-muted-foreground transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)] ${roleDropdownOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {roleDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-44 bg-card/95 backdrop-blur-xl border border-border/80 rounded-xl shadow-xl overflow-hidden z-50">
-                    <div className="p-1.5 space-y-0.5">
-                      {(Object.keys(roleConfig) as UserRole[]).map((key) => {
-                        const cfg = roleConfig[key]
-                        const selected = role === key
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => handleRoleChange(key)}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
-                              selected
-                                ? cfg.text
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                            }`}
-                          >
-                            <span
-                              className={`p-1 rounded-md transition-colors ${selected ? cfg.chip : 'bg-muted text-muted-foreground'}`}
-                            >
-                              {cfg.icon}
-                            </span>
-                            {cfg.label}
-                            {selected && (
-                              <span
-                                className={`ml-auto w-1.5 h-1.5 rounded-full ${cfg.dot}`}
-                              />
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
+              <div className="flex items-center gap-2 bg-muted/30 border border-border/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-foreground select-none">
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
+                />
+                <span>{activeRole.label}</span>
               </div>
             </div>
 
@@ -344,12 +273,31 @@ export function Navbar() {
               </button>
             </div>
 
-            {/* User Profile Avatar (placeholder) */}
-            <div
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-muted border border-border text-muted-foreground shadow-sm shrink-0"
-              aria-label={t('profile')}
-            >
-              <User className="w-5 h-5" />
+            {/* User Profile Avatar / Logout Dropdown */}
+            <div className="relative group shrink-0">
+              <button
+                type="button"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground shadow-sm transition-colors cursor-pointer"
+                aria-label={t('profile')}
+              >
+                <User className="w-5 h-5" />
+              </button>
+              <div className="absolute right-0 top-full mt-2 w-36 bg-card border border-border rounded-xl shadow-xl py-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const { createSupabaseBrowserClient } =
+                      await import('@/lib/supabase/client')
+                    const supabase = createSupabaseBrowserClient()
+                    await supabase.auth.signOut()
+                    resetAll()
+                    router.push('/login')
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
             </div>
           </div>
 
@@ -418,35 +366,15 @@ export function Navbar() {
             })}
           </div>
 
-          <div className="border-t border-border/80 pt-3 space-y-2 px-3">
+          <div className="border-t border-border/80 pt-3 space-y-1.5 px-3">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Laptop className="w-3.5 h-3.5 text-primary" />
-              {t('roleView')}
+              Rol Activo
             </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {(Object.keys(roleConfig) as UserRole[]).map((key) => {
-                const cfg = roleConfig[key]
-                const selected = role === key
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleRoleChange(key)}
-                    className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-xs font-semibold border transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] ${
-                      selected
-                        ? `${cfg.text} border-current bg-muted/40`
-                        : 'text-muted-foreground border-border/60 hover:border-border hover:bg-muted'
-                    }`}
-                  >
-                    <span
-                      className={`p-1 rounded-md transition-colors ${selected ? cfg.chip : 'bg-muted text-muted-foreground'}`}
-                    >
-                      {cfg.icon}
-                    </span>
-                    {cfg.label}
-                  </button>
-                )
-              })}
+            <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
+              <span
+                className={`w-2.5 h-2.5 rounded-full shrink-0 ${activeRole.dot}`}
+              />
+              <span>{activeRole.label}</span>
             </div>
           </div>
         </div>
