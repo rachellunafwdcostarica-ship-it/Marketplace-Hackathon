@@ -161,51 +161,6 @@ export function Navbar() {
               className="flex items-center space-x-2.5 shrink-0 group"
             >
               <FwdLogo className="w-8 h-8 group-hover:scale-105 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]" />
-              <svg
-                className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform duration-300"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect
-                  x="22"
-                  y="22"
-                  width="56"
-                  height="56"
-                  rx="8"
-                  transform="rotate(0 50 50)"
-                  stroke="#20BEC6"
-                  strokeWidth="4.5"
-                  fill="#FFCB05"
-                />
-                <rect
-                  x="22"
-                  y="22"
-                  width="56"
-                  height="56"
-                  rx="8"
-                  transform="rotate(45 50 50)"
-                  stroke="#20BEC6"
-                  strokeWidth="4.5"
-                  fill="#662D91"
-                />
-                <rect
-                  x="25"
-                  y="25"
-                  width="50"
-                  height="50"
-                  rx="6"
-                  transform="rotate(22.5 50 50)"
-                  stroke="#EC008C"
-                  strokeWidth="3.5"
-                  fill="#0A6CB9"
-                />
-                <path
-                  d="M50 28 L54 42 L68 42 L57 50 L61 64 L50 56 L39 64 L43 50 L32 42 L46 42 Z"
-                  fill="#EC008C"
-                />
-                <circle cx="50" cy="50" r="4.5" fill="#FFCB05" />
-              </svg>
               <span className="font-heading text-xl font-bold tracking-tight text-foreground block">
                 Marketplace FWD<span className="text-primary">.</span>
               </span>
@@ -345,7 +300,7 @@ export function Navbar() {
                   }}
                   className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
-                  Cerrar sesión
+                  {t('logout')}
                 </button>
               </div>
             </div>
@@ -425,7 +380,7 @@ export function Navbar() {
 
             <div className="border-t border-border/80 pt-3 space-y-1.5 px-3">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                Rol Activo
+                {t('activeRole')}
               </span>
               <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
                 <span
