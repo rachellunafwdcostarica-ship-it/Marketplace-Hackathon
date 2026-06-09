@@ -1,29 +1,17 @@
-'use client'
-
 import * as React from 'react'
-import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { XIcon } from 'lucide-react'
 
-import { cn } from '@/lib/utils/cn'
-
-function Dialog({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+export interface DialogProps extends React.HTMLAttributes<HTMLDivElement> {
+  open?: boolean
 }
 
-function DialogTrigger({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
-}
-
-function DialogPortal({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
-}
-
+export const Dialog = React.forwardRef<HTMLDivElement, DialogProps>(
+  ({ className, open, ...props }, ref) => {
+    // TODO: Implement Dialog logic and styling
+    if (!open) return null
+    return <div ref={ref} className={className} {...props} />
+  },
+)
+Dialog.displayName = 'Dialog'
 function DialogClose({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Close>) {
