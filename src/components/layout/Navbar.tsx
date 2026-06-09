@@ -7,7 +7,6 @@ import type { UserRole } from '@/types'
 import { useAppState } from '@/lib/stateContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Menu,
   X,
@@ -142,11 +141,8 @@ export function Navbar() {
     }
   }
   return (
-    <motion.nav
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+    <nav
+      className={`sticky top-0 z-50 w-full animate-slide-down-fade transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] ${
         scrolled
           ? 'border-b border-border/80 bg-background/80 backdrop-blur-xl shadow-md py-2'
           : 'border-b border-border/20 bg-background/40 backdrop-blur-md py-3.5'
@@ -187,23 +183,12 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-300 flex items-center gap-1.5 ${
+                  className={`relative px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
                     isActive
-                      ? 'text-primary'
+                      ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activePill"
-                      className="absolute inset-0 bg-primary/10 rounded-full"
-                      transition={{
-                        type: 'spring',
-                        stiffness: 380,
-                        damping: 30,
-                      }}
-                    />
-                  )}
                   <span className="relative z-10 flex items-center gap-1.5">
                     {renderIcon(link.icon, 'w-4 h-4')}
                     <span>{link.label}</span>
@@ -243,37 +228,23 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => handleLocaleChange('es')}
-                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors font-bold ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] font-bold ${
                   locale === 'es'
-                    ? 'text-primary'
+                    ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {locale === 'es' && (
-                  <motion.div
-                    layoutId="activeLang"
-                    className="absolute inset-0 bg-primary/10 rounded-full -z-10"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
                 ES
               </button>
               <button
                 type="button"
                 onClick={() => handleLocaleChange('en')}
-                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors font-bold ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] font-bold ${
                   locale === 'en'
-                    ? 'text-primary'
+                    ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {locale === 'en' && (
-                  <motion.div
-                    layoutId="activeLang"
-                    className="absolute inset-0 bg-primary/10 rounded-full -z-10"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
                 EN
               </button>
             </div>
@@ -336,15 +307,18 @@ export function Navbar() {
       </div>
 
       {/* Mobile Navigation Drawer */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="md:hidden overflow-hidden border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 pb-4 space-y-3"
-          >
+      <div
+        className={`md:hidden grid transition-[grid-template-rows] duration-[var(--duration-base)] ease-[var(--ease-in-out)] ${
+          mobileMenuOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+      >
+        <div
+          inert={!mobileMenuOpen}
+          className={`overflow-hidden transition-opacity duration-[var(--duration-fast)] ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 pb-4 space-y-3">
             <div className="space-y-1 pt-2">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href
@@ -389,9 +363,9 @@ export function Navbar() {
                 <span>{activeRole.label}</span>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+          </div>
+        </div>
+      </div>
+    </nav>
   )
 }
