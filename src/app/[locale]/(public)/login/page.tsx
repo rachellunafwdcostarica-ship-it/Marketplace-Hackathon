@@ -16,9 +16,6 @@ import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { OAuthButtons } from '@/components/features/auth/OAuthButtons'
 import { AuthFooter } from '@/components/features/auth/AuthFooter'
-import { RoleSelector } from '@/components/features/auth/RoleSelector'
-import { useAppState } from '@/lib/stateContext'
-import type { UserRole } from '@/types'
 
 interface LoginFormValues {
   email: string
@@ -36,11 +33,8 @@ export default function LoginPage() {
   const tLogin = useTranslations('Login')
   const tAuth = useTranslations('Auth')
   const tValidation = useTranslations('Validation')
-  const { setUserRole } = useAppState()
-
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<UserRole>('junior')
 
   const loginSchema = useMemo(
     () => createLoginSchema(tValidation),
@@ -58,7 +52,6 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setLoading(true)
-    setUserRole(selectedRole)
     const supabase = createSupabaseBrowserClient()
     const { error } = await supabase.auth.signInWithOtp({
       email: data.email,
@@ -77,7 +70,6 @@ export default function LoginPage() {
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true)
-    setUserRole(selectedRole)
     const supabase = createSupabaseBrowserClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -115,13 +107,6 @@ export default function LoginPage() {
             welcomeText={tAuth('welcome')}
             title={tAuth('loginTitle')}
             subtitle={tAuth('loginSubtitle')}
-          />
-
-          {/* Role selector */}
-          <RoleSelector
-            selected={selectedRole}
-            onChange={setSelectedRole}
-            label="¿Con qué perfil ingresás?"
           />
 
           <OAuthButtons

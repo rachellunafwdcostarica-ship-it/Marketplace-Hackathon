@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
 import { useAppState } from '@/lib/stateContext'
 import { Button } from '@/components/ui/button'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Menu,
   X,
@@ -37,6 +38,15 @@ export function Navbar() {
   const { userRole: role, resetAll } = useAppState()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Configuracion de rol con tokens FWD (§5.1): junior=primary, empresa=secondary, admin=magenta.
   const roleConfig: Record<
@@ -127,9 +137,17 @@ export function Navbar() {
         return null
     }
   }
-
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/85 backdrop-blur-md shadow-sm">
+    <motion.nav
+      initial={{ y: -50, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        scrolled
+          ? 'border-b border-border/80 bg-background/80 backdrop-blur-xl shadow-md py-2'
+          : 'border-b border-border/20 bg-background/40 backdrop-blur-md py-3.5'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
@@ -139,7 +157,7 @@ export function Navbar() {
               className="flex items-center space-x-2.5 shrink-0 group"
             >
               <svg
-                className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform"
+                className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform duration-300"
                 viewBox="0 0 100 100"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -198,7 +216,7 @@ export function Navbar() {
                   <span
                     key={link.href}
                     aria-disabled="true"
-                    className="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 text-muted-foreground/60 cursor-not-allowed select-none"
+                    className="px-3.5 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 text-muted-foreground/40 cursor-not-allowed select-none"
                   >
                     {renderIcon(link.icon, 'w-4 h-4')}
                     <span>{link.label}</span>
@@ -209,14 +227,27 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
+                  className={`relative px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-300 flex items-center gap-1.5 ${
                     isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {renderIcon(link.icon, 'w-4 h-4')}
-                  <span>{link.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activePill"
+                      className="absolute inset-0 bg-primary/10 rounded-full"
+                      transition={{
+                        type: 'spring',
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {renderIcon(link.icon, 'w-4 h-4')}
+                    <span>{link.label}</span>
+                  </span>
                 </Link>
               )
             })}
@@ -225,7 +256,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center space-x-3">
             {/* Rol activo mostrado estáticamente sin opción a cambio */}
             <div className="flex items-center gap-2 border-r border-border/80 pr-3 mr-1">
-              <div className="flex items-center gap-2 bg-muted/30 border border-border/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-foreground select-none">
+              <div className="flex items-center gap-2 bg-muted/30 border border-border/50 rounded-full px-3 py-1.5 text-xs font-bold text-foreground select-none">
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
                 />
@@ -238,7 +269,7 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               aria-label={t('notifications')}
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground relative shrink-0"
+              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground relative shrink-0 transition-transform hover:scale-105 active:scale-95"
             >
               <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-magenta animate-pulse" />
@@ -246,29 +277,43 @@ export function Navbar() {
 
             {/* Language Selector */}
             <div
-              className="flex items-center border border-border/60 bg-muted/30 rounded-lg p-0.5 shrink-0"
+              className="relative flex items-center border border-border/60 bg-muted/30 rounded-full p-0.5 shrink-0"
               aria-label={t('language')}
             >
               <button
                 type="button"
                 onClick={() => handleLocaleChange('es')}
-                className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors font-bold ${
                   locale === 'es'
-                    ? 'bg-primary/10 text-primary font-bold shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground font-semibold'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
+                {locale === 'es' && (
+                  <motion.div
+                    layoutId="activeLang"
+                    className="absolute inset-0 bg-primary/10 rounded-full -z-10"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
                 ES
               </button>
               <button
                 type="button"
                 onClick={() => handleLocaleChange('en')}
-                className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors font-bold ${
                   locale === 'en'
-                    ? 'bg-primary/10 text-primary font-bold shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground font-semibold'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
+                {locale === 'en' && (
+                  <motion.div
+                    layoutId="activeLang"
+                    className="absolute inset-0 bg-primary/10 rounded-full -z-10"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
                 EN
               </button>
             </div>
@@ -277,7 +322,7 @@ export function Navbar() {
             <div className="relative group shrink-0">
               <button
                 type="button"
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground shadow-sm transition-colors cursor-pointer"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
                 aria-label={t('profile')}
               >
                 <User className="w-5 h-5" />
@@ -306,7 +351,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-lg text-xs font-bold"
+              className="h-9 w-9 rounded-lg text-xs font-bold transition-transform hover:scale-105 active:scale-95"
               onClick={() => handleLocaleChange(locale === 'es' ? 'en' : 'es')}
               aria-label={t('language')}
             >
@@ -316,7 +361,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-lg"
+              className="h-9 w-9 rounded-lg transition-transform hover:scale-105 active:scale-95"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? t('closeMenu') : t('openMenu')}
             >
@@ -331,54 +376,62 @@ export function Navbar() {
       </div>
 
       {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border/80 bg-background/95 backdrop-blur-md px-4 pt-2 pb-4 space-y-3">
-          <div className="space-y-1">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href
-              if (link.isMock) {
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="md:hidden overflow-hidden border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 pb-4 space-y-3"
+          >
+            <div className="space-y-1 pt-2">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href
+                if (link.isMock) {
+                  return (
+                    <span
+                      key={link.href}
+                      aria-disabled="true"
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-base font-semibold text-muted-foreground/40 cursor-not-allowed select-none"
+                    >
+                      {renderIcon(link.icon, 'w-5 h-5')}
+                      <span>{link.label}</span>
+                    </span>
+                  )
+                }
                 return (
-                  <span
+                  <Link
                     key={link.href}
-                    aria-disabled="true"
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-semibold text-muted-foreground/60 cursor-not-allowed select-none"
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-base font-semibold transition-all ${
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-muted/50'
+                    }`}
                   >
                     {renderIcon(link.icon, 'w-5 h-5')}
                     <span>{link.label}</span>
-                  </span>
+                  </Link>
                 )
-              }
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-base font-semibold ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {renderIcon(link.icon, 'w-5 h-5')}
-                  <span>{link.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-
-          <div className="border-t border-border/80 pt-3 space-y-1.5 px-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              Rol Activo
-            </span>
-            <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
-              <span
-                className={`w-2.5 h-2.5 rounded-full shrink-0 ${activeRole.dot}`}
-              />
-              <span>{activeRole.label}</span>
+              })}
             </div>
-          </div>
-        </div>
-      )}
-    </nav>
+
+            <div className="border-t border-border/80 pt-3 space-y-1.5 px-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                Rol Activo
+              </span>
+              <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${activeRole.dot}`}
+                />
+                <span>{activeRole.label}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.nav>
   )
 }
