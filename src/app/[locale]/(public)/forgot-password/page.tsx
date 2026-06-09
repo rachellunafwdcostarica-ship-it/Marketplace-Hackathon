@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
             <div className="text-center">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-xs font-bold text-[#0A6CB9] hover:underline"
+                className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Volver al inicio de sesión
@@ -96,17 +96,17 @@ export default function ForgotPasswordPage() {
               <div className="space-y-1.5">
                 <Label
                   htmlFor="email"
-                  className="text-xs font-bold text-gray-700 uppercase tracking-wider"
+                  className="text-xs font-bold text-ink uppercase tracking-wider"
                 >
                   {tAuth('emailLabel')}
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
                   <Input
                     id="email"
                     type="email"
                     placeholder={tAuth('emailPlaceholder')}
-                    className={`pl-11 h-12 rounded-xl bg-gray-50/50 border-gray-100 focus-visible:ring-1 focus-visible:ring-[#0A6CB9] focus-visible:border-[#0A6CB9] transition-all ${errors.email ? 'border-destructive' : ''}`}
+                    className={`pl-11 h-12 rounded-xl bg-surface-sunken/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all ${errors.email ? 'border-destructive' : ''}`}
                     {...register('email')}
                   />
                 </div>
@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 rounded-xl bg-[#0A6CB9] hover:bg-[#0A6CB9]/95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
+                className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
               >
                 {loading ? 'Enviando...' : tAuth('sendLink')}
                 {!loading && <ArrowRight className="w-4 h-4" />}
@@ -130,7 +130,7 @@ export default function ForgotPasswordPage() {
             <div className="text-center pt-2">
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-xs font-bold text-[#0A6CB9] hover:underline"
+                className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Volver al inicio de sesión

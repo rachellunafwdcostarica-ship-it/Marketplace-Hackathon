@@ -51,8 +51,9 @@ export function ImageCarousel({
         height: '460px',
         borderRadius: '20px',
         overflow: 'hidden',
-        boxShadow: '0 12px 48px rgba(0,0,0,0.15)',
-        backgroundColor: '#f0f0f0',
+        boxShadow:
+          '0 12px 48px color-mix(in oklch, var(--ink-strong) 15%, transparent)',
+        backgroundColor: 'var(--surface-sunken)',
       }}
     >
       {/* Slides */}
@@ -85,7 +86,7 @@ export function ImageCarousel({
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.3) 100%)',
+                'linear-gradient(to bottom, transparent 50%, color-mix(in oklch, var(--ink-strong) 30%, transparent) 100%)',
               pointerEvents: 'none',
             }}
           />
@@ -107,21 +108,23 @@ export function ImageCarousel({
           borderRadius: '50%',
           border: 'none',
           cursor: 'pointer',
-          background: 'rgba(255,255,255,0.88)',
+          background: 'color-mix(in oklch, var(--surface) 88%, transparent)',
           backdropFilter: 'blur(6px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
-          color: '#0a6cb9',
+          boxShadow:
+            '0 2px 12px color-mix(in oklch, var(--ink-strong) 18%, transparent)',
+          color: 'var(--primary)',
           transition: 'background 0.2s, transform 0.2s',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,1)'
+          e.currentTarget.style.background = 'var(--surface)'
           e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.88)'
+          e.currentTarget.style.background =
+            'color-mix(in oklch, var(--surface) 88%, transparent)'
           e.currentTarget.style.transform = 'translateY(-50%)'
         }}
       >
@@ -143,21 +146,23 @@ export function ImageCarousel({
           borderRadius: '50%',
           border: 'none',
           cursor: 'pointer',
-          background: 'rgba(255,255,255,0.88)',
+          background: 'color-mix(in oklch, var(--surface) 88%, transparent)',
           backdropFilter: 'blur(6px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
-          color: '#0a6cb9',
+          boxShadow:
+            '0 2px 12px color-mix(in oklch, var(--ink-strong) 18%, transparent)',
+          color: 'var(--primary)',
           transition: 'background 0.2s, transform 0.2s',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,1)'
+          e.currentTarget.style.background = 'var(--surface)'
           e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)'
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.88)'
+          e.currentTarget.style.background =
+            'color-mix(in oklch, var(--surface) 88%, transparent)'
           e.currentTarget.style.transform = 'translateY(-50%)'
         }}
       >
@@ -189,7 +194,10 @@ export function ImageCarousel({
               border: 'none',
               cursor: 'pointer',
               padding: 0,
-              background: i === current ? '#ffffff' : 'rgba(255,255,255,0.5)',
+              background:
+                i === current
+                  ? 'var(--surface)'
+                  : 'color-mix(in oklch, var(--surface) 50%, transparent)',
               transition: 'width 0.3s ease, background 0.3s ease',
             }}
           />

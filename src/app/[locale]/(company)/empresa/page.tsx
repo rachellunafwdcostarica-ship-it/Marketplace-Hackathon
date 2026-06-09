@@ -124,7 +124,7 @@ export default function CompanyDashboard() {
           action={
             <Link
               href="/empresa/new-project"
-              className="bg-primary hover:bg-primary/95 text-white font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
+              className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               {tEmpresa('publishProject')}
@@ -309,7 +309,7 @@ export default function CompanyDashboard() {
               </Button>
               <Button
                 onClick={handleConfirmAction}
-                className={`font-semibold flex-1 sm:flex-initial text-white ${
+                className={`font-semibold flex-1 sm:flex-initial text-primary-foreground ${
                   confirmDialog.type === 'accept'
                     ? 'bg-accent hover:bg-accent/90'
                     : confirmDialog.type === 'reject'

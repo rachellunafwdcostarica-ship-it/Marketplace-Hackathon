@@ -62,7 +62,7 @@ export default function RoleSelectPage() {
 
         <Button
           onClick={handleContinue}
-          className="w-full h-12 rounded-xl bg-[#0A6CB9] hover:bg-[#0A6CB9]/95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
+          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
         >
           {tAuth('continue')}
           <ArrowRight className="w-4 h-4" />

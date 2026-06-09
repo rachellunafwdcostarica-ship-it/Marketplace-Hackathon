@@ -88,15 +88,15 @@ export default function LoginPage() {
       {success ? (
         <div className="text-center space-y-6 py-6 animate-fade-in">
           <div className="flex justify-center">
-            <div className="p-4 rounded-full bg-[#20BEC6]/10 text-[#20BEC6]">
+            <div className="p-4 rounded-full bg-accent/10 text-accent">
               <CheckCircle2 className="w-16 h-16" />
             </div>
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold font-heading text-black">
+            <h2 className="text-2xl font-bold font-heading text-ink-strong">
               {tLogin('success')}
             </h2>
-            <p className="text-sm text-gray-500 font-medium">
+            <p className="text-sm text-ink-muted font-medium">
               {tLogin('redirecting')}
             </p>
           </div>
@@ -119,10 +119,10 @@ export default function LoginPage() {
 
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-100" />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-white px-3 text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+              <span className="bg-surface px-3 text-ink-subtle font-semibold uppercase tracking-wider text-[10px]">
                 {tLogin('orContinueWith')}
               </span>
             </div>
@@ -132,17 +132,17 @@ export default function LoginPage() {
             <div className="space-y-1.5">
               <Label
                 htmlFor="email"
-                className="text-xs font-bold text-gray-700 uppercase tracking-wider"
+                className="text-xs font-bold text-ink uppercase tracking-wider"
               >
                 {tAuth('emailLabel')}
               </Label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
                 <Input
                   id="email"
                   type="email"
                   placeholder={tAuth('emailPlaceholder')}
-                  className={`pl-11 h-12 rounded-xl bg-gray-50/50 border-gray-100 focus-visible:ring-1 focus-visible:ring-[#0A6CB9] focus-visible:border-[#0A6CB9] transition-all ${errors.email ? 'border-destructive' : ''}`}
+                  className={`pl-11 h-12 rounded-xl bg-surface-sunken/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all ${errors.email ? 'border-destructive' : ''}`}
                   {...register('email')}
                 />
               </div>
@@ -156,14 +156,14 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-[#0A6CB9] hover:bg-[#0A6CB9]/95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
+              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
             >
               {loading ? tLogin('sending') : tAuth('sendLink')}
               {!loading && <ArrowRight className="w-4 h-4" />}
             </Button>
           </form>
 
-          <div className="flex flex-col gap-2.5 pt-2 text-center text-xs font-semibold text-[#0A6CB9]">
+          <div className="flex flex-col gap-2.5 pt-2 text-center text-xs font-semibold text-primary">
             <Link href="/register" className="hover:underline">
               {tAuth('noAccount')}
             </Link>
