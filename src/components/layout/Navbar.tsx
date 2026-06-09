@@ -111,6 +111,7 @@ export function Navbar() {
       { href: '/admin', label: t('dashboard'), icon: 'dashboard' },
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },
+      { href: '/admin/validations', label: t('validations'), icon: 'shield' },
       ...mockLinks,
     ],
   }
@@ -134,6 +135,8 @@ export function Navbar() {
         return <PlusCircle className={className} />
       case 'building':
         return <Building2 className={className} />
+      case 'shield':
+        return <ShieldCheck className={className} />
       default:
         return null
     }

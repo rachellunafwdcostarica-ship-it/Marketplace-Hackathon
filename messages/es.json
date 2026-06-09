@@ -21,7 +21,8 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "profile": "Perfil",
-    "language": "Idioma"
+    "language": "Idioma",
+    "validations": "Validaciones"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -325,7 +326,16 @@
     "noProjectsDesc": "Cuando las empresas publiquen proyectos aparecerán aquí para moderación.",
     "projectsActive": "Proyectos Activos (Publicados)",
     "projectsPending": "Proyectos Pendientes de Aprobación",
-    "projectsClosed": "Proyectos Cerrados / Ocultos"
+    "projectsClosed": "Proyectos Cerrados / Ocultos",
+    "pendingUsers": "Validaciones de Usuarios",
+    "pendingUsersDesc": "Revisá y aprobá las cuentas de usuarios que completaron el onboarding.",
+    "noPendingUsers": "No hay usuarios pendientes de aprobación en este momento.",
+    "noPendingUsersDesc": "Cuando un usuario complete el onboarding, aparecerá aquí para revisión.",
+    "approveUser": "Aprobar",
+    "approving": "Aprobando...",
+    "userApproved": "Cuenta de {name} aprobada exitosamente.",
+    "userApproveError": "Error al aprobar la cuenta. Intentá de nuevo.",
+    "noRoleYet": "sin rol asignado"
   },
   "Errors": {
     "forbidden": "Acceso no autorizado",
@@ -338,5 +348,16 @@
     "viewed": "Vista",
     "accepted": "Aceptada",
     "rejected": "Rechazada"
+  },
+  "Onboarding": {
+    "subtitle": "Elegí cómo querés usar FWD Talent para continuar.",
+    "loading": "Guardando...",
+    "errorGeneric": "Ocurrió un error al guardar tu perfil. Intentá de nuevo."
+  },
+  "Account": {
+    "pendingBanner": "Tu cuenta está pendiente de aprobación por el equipo FWD. Las acciones se habilitarán una vez aprobada.",
+    "actionDisabledPending": "Tu cuenta debe ser aprobada por un administrador para realizar esta acción.",
+    "pendingTitle": "Cuenta pendiente de aprobación",
+    "pendingDesc": "El equipo FWD revisará tu solicitud. Te notificaremos cuando tu cuenta esté activa."
   }
 }
