@@ -22,7 +22,9 @@
     "closeMenu": "Cerrar menú",
     "profile": "Perfil",
     "language": "Idioma",
-    "validations": "Validaciones"
+    "validations": "Validaciones",
+    "activeRole": "Rol Activo",
+    "logout": "Cerrar sesión"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",

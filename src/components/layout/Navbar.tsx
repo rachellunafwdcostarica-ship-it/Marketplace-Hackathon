@@ -7,7 +7,6 @@ import type { UserRole } from '@/types'
 import { useAppState } from '@/lib/stateContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
-import { motion, AnimatePresence } from 'framer-motion'
 import {
   Menu,
   X,
@@ -142,11 +141,8 @@ export function Navbar() {
     }
   }
   return (
-    <motion.nav
-      initial={{ y: -50, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+    <nav
+      className={`sticky top-0 z-50 w-full animate-slide-down-fade transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] ${
         scrolled
           ? 'border-b border-border/80 bg-background/80 backdrop-blur-xl shadow-md py-2'
           : 'border-b border-border/20 bg-background/40 backdrop-blur-md py-3.5'
@@ -161,51 +157,6 @@ export function Navbar() {
               className="flex items-center space-x-2.5 shrink-0 group"
             >
               <FwdLogo className="w-8 h-8 group-hover:scale-105 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]" />
-              <svg
-                className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform duration-300"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect
-                  x="22"
-                  y="22"
-                  width="56"
-                  height="56"
-                  rx="8"
-                  transform="rotate(0 50 50)"
-                  stroke="#20BEC6"
-                  strokeWidth="4.5"
-                  fill="#FFCB05"
-                />
-                <rect
-                  x="22"
-                  y="22"
-                  width="56"
-                  height="56"
-                  rx="8"
-                  transform="rotate(45 50 50)"
-                  stroke="#20BEC6"
-                  strokeWidth="4.5"
-                  fill="#662D91"
-                />
-                <rect
-                  x="25"
-                  y="25"
-                  width="50"
-                  height="50"
-                  rx="6"
-                  transform="rotate(22.5 50 50)"
-                  stroke="#EC008C"
-                  strokeWidth="3.5"
-                  fill="#0A6CB9"
-                />
-                <path
-                  d="M50 28 L54 42 L68 42 L57 50 L61 64 L50 56 L39 64 L43 50 L32 42 L46 42 Z"
-                  fill="#EC008C"
-                />
-                <circle cx="50" cy="50" r="4.5" fill="#FFCB05" />
-              </svg>
               <span className="font-heading text-xl font-bold tracking-tight text-foreground block">
                 Marketplace FWD<span className="text-primary">.</span>
               </span>
@@ -232,23 +183,12 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-300 flex items-center gap-1.5 ${
+                  className={`relative px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
                     isActive
-                      ? 'text-primary'
+                      ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activePill"
-                      className="absolute inset-0 bg-primary/10 rounded-full"
-                      transition={{
-                        type: 'spring',
-                        stiffness: 380,
-                        damping: 30,
-                      }}
-                    />
-                  )}
                   <span className="relative z-10 flex items-center gap-1.5">
                     {renderIcon(link.icon, 'w-4 h-4')}
                     <span>{link.label}</span>
@@ -288,37 +228,23 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => handleLocaleChange('es')}
-                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors font-bold ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] font-bold ${
                   locale === 'es'
-                    ? 'text-primary'
+                    ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {locale === 'es' && (
-                  <motion.div
-                    layoutId="activeLang"
-                    className="absolute inset-0 bg-primary/10 rounded-full -z-10"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
                 ES
               </button>
               <button
                 type="button"
                 onClick={() => handleLocaleChange('en')}
-                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors font-bold ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] font-bold ${
                   locale === 'en'
-                    ? 'text-primary'
+                    ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {locale === 'en' && (
-                  <motion.div
-                    layoutId="activeLang"
-                    className="absolute inset-0 bg-primary/10 rounded-full -z-10"
-                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                  />
-                )}
                 EN
               </button>
             </div>
@@ -345,7 +271,7 @@ export function Navbar() {
                   }}
                   className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
-                  Cerrar sesión
+                  {t('logout')}
                 </button>
               </div>
             </div>
@@ -381,15 +307,18 @@ export function Navbar() {
       </div>
 
       {/* Mobile Navigation Drawer */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="md:hidden overflow-hidden border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 pb-4 space-y-3"
-          >
+      <div
+        className={`md:hidden grid transition-[grid-template-rows] duration-[var(--duration-base)] ease-[var(--ease-in-out)] ${
+          mobileMenuOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+      >
+        <div
+          inert={!mobileMenuOpen}
+          className={`overflow-hidden transition-opacity duration-[var(--duration-fast)] ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 pb-4 space-y-3">
             <div className="space-y-1 pt-2">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href
@@ -425,7 +354,7 @@ export function Navbar() {
 
             <div className="border-t border-border/80 pt-3 space-y-1.5 px-3">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                Rol Activo
+                {t('activeRole')}
               </span>
               <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
                 <span
@@ -434,9 +363,9 @@ export function Navbar() {
                 <span>{activeRole.label}</span>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.nav>
+          </div>
+        </div>
+      </div>
+    </nav>
   )
 }
