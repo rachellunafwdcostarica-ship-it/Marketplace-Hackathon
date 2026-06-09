@@ -42,3 +42,8 @@ Actualmente la aplicación está en fase de **Prototipo Frontend (Mock State)**.
 Recuerda seguir estrictamente las reglas de `reglas.md`
 
 Cuando te pida hacer un cambio, primero analiza el proyecto y dime si estás de acuerdo con el cambio. Si estás de acuerdo, dime cómo lo harás y luego hazlo. Si no estás de acuerdo, dime por qué no estás de acuerdo y qué cambio sugieres. (Si me corriges ten en cuenta las reglas de `CLAUDE.md` y `reglas.md`)
+Revisa los archivos de manera amplia y detallada. Quiero que detectes los archivos marcados con cambios y haz lo siguiente: Usa conventional commit y cuando termines de revisar los cambios haz git add. - git commit -m
+  "(descripcion correspondiente del cambio)" y me avisas para hacerle el git push. no te menciones como autor en el commit. quiero que salga yo solo de propietario,
+  mi nombre, no salgas tu. revisa cada archivo correspondiente a sus cambios y haz los commits correspondientes.
+para describir el problema usa el español, lo que son los "fix, feat, docs y etc" eso si mantenlos en ingles, pero para los problemas usa el lenguaje español. un ejemplo de la respuesta esperada: git commit -m "fix: arreglo en middleware.ts, variables mal declaradas.
+asegurate de estar en mi rama correspondiente, no quiero hacer git push directo al dev. asegurate de que este en mi rama de trabajo. No permitas push al dev. solo pull del mismo.
