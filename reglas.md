@@ -186,12 +186,12 @@ Estas no salen del brief, son convenciones internas y se respetan igual:
 - Listado de proyectos filtrable por stack, duración, modalidad (remoto/híbrido/presencial), salario.
 - Detalle del proyecto (descripción, requisitos, empresa, duración, presupuesto, fechas).
 - Postular con carta corta + link a portfolio/CV, validado con Zod.
-- Mis postulaciones con estado (borrador / enviada / vista / aceptada / rechazada).
+- Mis postulaciones con estado (ej: borrador / enviada / vista / aceptada / rechazada).
 
 **Empresa contratante**
 - Onboarding (nombre, descripción, sitio web, logo opcional, cédula jurídica CR).
 - Publicar proyecto (título, descripción, stack, duración, presupuesto USD/CRC, modalidad, fecha inicio).
-- Ver postulaciones recibidas por proyecto, con perfil del junior y acciones (aceptar/rechazar/contactar).
+- Ver postulaciones recibidas por proyecto, con perfil del junior y acciones (ej: aceptar/rechazar/contactar).
 
 **Admin FWD**
 - Dashboard mínimo (proyectos activos, juniors postulando, top empresas).
