@@ -109,7 +109,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Usuario autenticado intenta acceder al login → su home según rol
-  if (isAuthPage(pathname) && user) {
+  if (isPublicAuthPage(pathname) && user) {
     const { data: role } = await supabase.rpc('get_my_role')
     const home = role ? (ROLE_HOME[role as UserRole] ?? '/junior') : '/junior'
     return NextResponse.redirect(new URL(`/${locale}${home}`, request.url))
