@@ -53,9 +53,12 @@
     "companyBenefit1": "Egresados de FWD listos para aportar valor desde el primer día.",
     "companyBenefit2": "Proyectos de corta duración ágiles y con costos optimizados.",
     "companyBenefit3": "Moderación y filtrado de candidatos para asegurar el perfil ideal.",
-    "statsProjects": "+500 Proyectos Completados",
-    "statsTalent": "+1,200 Desarrolladores Registrados",
-    "statsCompanies": "+150 Empresas Aliadas"
+    "statsProjectsNumber": "+500",
+    "statsProjectsLabel": "Proyectos Completados",
+    "statsTalentNumber": "+1,200",
+    "statsTalentLabel": "Desarrolladores Registrados",
+    "statsCompaniesNumber": "+150",
+    "statsCompaniesLabel": "Empresas Aliadas"
   },
   "Login": {
     "title": "Ingresa a FWD Talent",
@@ -274,6 +277,11 @@
     "projectsActive": "Proyectos Activos (Publicados)",
     "projectsPending": "Proyectos Pendientes de Aprobación",
     "projectsClosed": "Proyectos Cerrados / Ocultos"
+  },
+  "Errors": {
+    "forbidden": "Acceso no autorizado",
+    "forbiddenDesc": "No tienes permiso para ver esta página.",
+    "forbiddenBack": "Volver al inicio"
   },
   "Status": {
     "draft": "Borrador",

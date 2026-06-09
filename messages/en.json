@@ -53,9 +53,12 @@
     "companyBenefit1": "FWD graduates ready to add value from day one.",
     "companyBenefit2": "Agile short-term projects with optimized costs.",
     "companyBenefit3": "Moderated and filtered candidates to ensure the ideal match.",
-    "statsProjects": "+500 Completed Projects",
-    "statsTalent": "+1,200 Registered Developers",
-    "statsCompanies": "+150 Allied Companies"
+    "statsProjectsNumber": "+500",
+    "statsProjectsLabel": "Completed Projects",
+    "statsTalentNumber": "+1,200",
+    "statsTalentLabel": "Registered Developers",
+    "statsCompaniesNumber": "+150",
+    "statsCompaniesLabel": "Allied Companies"
   },
   "Login": {
     "title": "Log in to FWD Talent",
@@ -274,6 +277,11 @@
     "projectsActive": "Active Projects (Published)",
     "projectsPending": "Projects Pending Approval",
     "projectsClosed": "Closed / Hidden Projects"
+  },
+  "Errors": {
+    "forbidden": "Access denied",
+    "forbiddenDesc": "You don't have permission to view this page.",
+    "forbiddenBack": "Back to home"
   },
   "Status": {
     "draft": "Draft",

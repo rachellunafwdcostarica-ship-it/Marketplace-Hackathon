@@ -1,14 +1,11 @@
-'use client'
-
-import React from 'react'
-import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { ArrowRight, CheckCircle2, Users, Award, Sparkles } from 'lucide-react'
 
-export default function LandingPage() {
-  const tLanding = useTranslations('Landing')
+export default async function LandingPage() {
+  const tLanding = await getTranslations('Landing')
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -80,26 +77,26 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="p-4">
               <p className="text-3xl font-extrabold text-accent font-heading">
-                {tLanding('statsProjects').split(' ')[0]}
+                {tLanding('statsProjectsNumber')}
               </p>
               <p className="text-sm text-secondary-foreground/70 mt-1">
-                {tLanding('statsProjects').split(' ').slice(1).join(' ')}
+                {tLanding('statsProjectsLabel')}
               </p>
             </div>
             <div className="p-4 border-y md:border-y-0 md:border-x border-secondary-foreground/20">
               <p className="text-3xl font-extrabold text-highlight font-heading">
-                {tLanding('statsTalent').split(' ')[0]}
+                {tLanding('statsTalentNumber')}
               </p>
               <p className="text-sm text-secondary-foreground/70 mt-1">
-                {tLanding('statsTalent').split(' ').slice(1).join(' ')}
+                {tLanding('statsTalentLabel')}
               </p>
             </div>
             <div className="p-4">
               <p className="text-3xl font-extrabold text-magenta font-heading">
-                {tLanding('statsCompanies').split(' ')[0]}
+                {tLanding('statsCompaniesNumber')}
               </p>
               <p className="text-sm text-secondary-foreground/70 mt-1">
-                {tLanding('statsCompanies').split(' ').slice(1).join(' ')}
+                {tLanding('statsCompaniesLabel')}
               </p>
             </div>
           </div>
