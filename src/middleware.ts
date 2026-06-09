@@ -10,7 +10,7 @@ const PROTECTED_PREFIXES = ['/junior', '/empresa', '/admin']
 
 const ROLE_HOME: Record<UserRole, string> = {
   junior: '/junior',
-  empresario: '/empresa',
+  empresa: '/empresa',
   admin: '/admin',
 }
 
@@ -37,7 +37,7 @@ function getPathRole(pathname: string): string | null {
 
 function getRouteRole(pathname: string): UserRole | null {
   if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
-  if (/^\/(es|en)\/empresa/.test(pathname)) return 'empresario'
+  if (/^\/(es|en)\/empresa/.test(pathname)) return 'empresa'
   if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
   return null
 }
@@ -109,7 +109,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Usuario autenticado intenta acceder al login → su home según rol
-  if (isAuthPage(pathname) && user) {
+  if (isPublicAuthPage(pathname) && user) {
     const { data: role } = await supabase.rpc('get_my_role')
     const home = role ? (ROLE_HOME[role as UserRole] ?? '/junior') : '/junior'
     return NextResponse.redirect(new URL(`/${locale}${home}`, request.url))
