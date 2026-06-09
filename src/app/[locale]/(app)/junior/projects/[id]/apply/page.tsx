@@ -75,7 +75,7 @@ export default function ApplyProjectPage() {
           <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
-            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/95 h-9 px-4"
+            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 h-9 px-4"
           >
             {tJunior('backToMarketplace')}
           </Link>
@@ -209,7 +209,7 @@ export default function ApplyProjectPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-primary hover:bg-primary/95 text-white font-semibold flex items-center gap-1.5 shadow-sm px-6"
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6"
                 >
                   <Send className="w-4 h-4" />
                   {isSubmitting ? tCommon('loading') : tCommon('submit')}

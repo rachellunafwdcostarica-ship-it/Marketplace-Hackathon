@@ -40,7 +40,7 @@ export default async function LandingPage() {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(135deg, rgba(10,30,60,0.72) 0%, rgba(102,45,145,0.50) 60%, rgba(0,0,0,0.35) 100%)',
+                'linear-gradient(135deg, color-mix(in oklch, var(--ink-strong) 72%, transparent) 0%, color-mix(in oklch, var(--secondary) 50%, transparent) 60%, color-mix(in oklch, var(--ink-strong) 35%, transparent) 100%)',
               zIndex: 1,
             }}
           />
@@ -52,9 +52,11 @@ export default async function LandingPage() {
                 <div
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border"
                   style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    color: '#ffffff',
+                    background:
+                      'color-mix(in oklch, var(--surface) 15%, transparent)',
+                    borderColor:
+                      'color-mix(in oklch, var(--surface) 30%, transparent)',
+                    color: 'var(--surface)',
                     backdropFilter: 'blur(6px)',
                   }}
                 >
@@ -65,17 +67,21 @@ export default async function LandingPage() {
                 <h1
                   className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] font-heading"
                   style={{
-                    color: '#ffffff',
-                    textShadow: '0 2px 16px rgba(0,0,0,0.4)',
+                    color: 'var(--surface)',
+                    textShadow:
+                      '0 2px 16px color-mix(in oklch, var(--ink-strong) 40%, transparent)',
                   }}
                 >
                   {tLanding('heroTitle')}
-                  <span style={{ color: '#20bec6' }}>.</span>
+                  <span style={{ color: 'var(--accent)' }}>.</span>
                 </h1>
 
                 <p
                   className="text-lg leading-relaxed max-w-xl"
-                  style={{ color: 'rgba(255,255,255,0.85)' }}
+                  style={{
+                    color:
+                      'color-mix(in oklch, var(--surface) 85%, transparent)',
+                  }}
                 >
                   {tLanding('heroSubtitle')}
                 </p>
@@ -85,8 +91,8 @@ export default async function LandingPage() {
                     href="/login"
                     className="shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     style={{
-                      background: '#0a6cb9',
-                      color: '#ffffff',
+                      background: 'var(--primary)',
+                      color: 'var(--primary-foreground)',
                     }}
                   >
                     {tLanding('ctaFindProjects')}
@@ -96,9 +102,11 @@ export default async function LandingPage() {
                     href="/login"
                     className="transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     style={{
-                      border: '1.5px solid rgba(255,255,255,0.6)',
-                      color: '#ffffff',
-                      background: 'rgba(255,255,255,0.08)',
+                      border:
+                        '1.5px solid color-mix(in oklch, var(--surface) 60%, transparent)',
+                      color: 'var(--surface)',
+                      background:
+                        'color-mix(in oklch, var(--surface) 8%, transparent)',
                       backdropFilter: 'blur(6px)',
                     }}
                   >
