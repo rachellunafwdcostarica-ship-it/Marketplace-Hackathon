@@ -3,6 +3,14 @@ import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { ArrowRight, CheckCircle2, Users, Award, Sparkles } from 'lucide-react'
+import { HeroBgCarousel } from '@/components/ui/HeroBgCarousel'
+
+const CAROUSEL_SLIDES = [
+  { src: '/images/carousel/carousel-1.jpg', alt: 'Equipo FWD trabajando' },
+  { src: '/images/carousel/carousel-2.jpg', alt: 'Espacio de trabajo FWD' },
+  { src: '/images/carousel/carousel-3.png', alt: 'Comunidad FWD' },
+  { src: '/images/carousel/carousel-4.png', alt: 'Talento FWD' },
+]
 
 export default async function LandingPage() {
   const tLanding = await getTranslations('Landing')
@@ -12,60 +20,90 @@ export default async function LandingPage() {
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden bg-radial from-secondary/15 via-transparent to-transparent py-20 lg:py-32 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-7 space-y-6 text-left">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
-                <Sparkles className="w-3.5 h-3.5" />
-                {tLanding('badgeVersion')}
-              </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1] font-heading">
-                {tLanding('heroTitle')}
-                <span className="text-accent">.</span>
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
-                {tLanding('heroSubtitle')}
-              </p>
-              <div className="flex flex-wrap gap-4 pt-2">
-                <Link
-                  href="/login"
-                  className="bg-primary hover:bg-primary/95 text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  {tLanding('ctaFindProjects')}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="/login"
-                  className="border border-secondary text-secondary hover:bg-secondary/5 transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  {tLanding('ctaPublishProject')}
-                </Link>
-              </div>
-            </div>
+        {/* Hero — carrusel de fondo */}
+        <section
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            minHeight: '620px',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+          className="py-20 lg:py-32 px-4 sm:px-6 lg:px-8"
+        >
+          {/* ── Imágenes de fondo en carrusel ── */}
+          <HeroBgCarousel slides={CAROUSEL_SLIDES} interval={5000} />
 
-            <div className="lg:col-span-5 relative">
-              <div className="absolute inset-0 bg-gradient-to-tr from-accent via-secondary to-magenta rounded-3xl blur-2xl opacity-20 -z-10" />
-              <div className="border border-border/80 rounded-2xl bg-card/75 p-6 shadow-xl backdrop-blur-sm relative overflow-hidden group hover:border-primary/20 transition-all duration-300">
-                <div className="flex justify-between items-center pb-4 border-b border-border/60 mb-6">
-                  <div className="flex gap-1.5">
-                    <span className="w-3 h-3 rounded-full bg-magenta" />
-                    <span className="w-3 h-3 rounded-full bg-warning" />
-                    <span className="w-3 h-3 rounded-full bg-accent" />
-                  </div>
-                  <span className="text-xs text-muted-foreground font-mono">
-                    fwd-marketplace.json
-                  </span>
+          {/* ── Overlay degradado para legibilidad ── */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background:
+                'linear-gradient(135deg, rgba(10,30,60,0.72) 0%, rgba(102,45,145,0.50) 60%, rgba(0,0,0,0.35) 100%)',
+              zIndex: 1,
+            }}
+          />
+
+          {/* ── Contenido encima del fondo ── */}
+          <div style={{ position: 'relative', zIndex: 2, width: '100%' }}>
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              <div className="lg:col-span-8 space-y-6 text-left">
+                <div
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border"
+                  style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    color: '#ffffff',
+                    backdropFilter: 'blur(6px)',
+                  }}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {tLanding('badgeVersion')}
                 </div>
-                <div className="space-y-4">
-                  <div className="h-6 bg-muted rounded-md w-1/3" />
-                  <div className="h-10 bg-muted rounded-md w-full" />
-                  <div className="h-20 bg-muted rounded-md w-full" />
-                  <div className="flex gap-2 pt-2">
-                    <div className="h-8 bg-muted rounded-full w-16" />
-                    <div className="h-8 bg-muted rounded-full w-20" />
-                    <div className="h-8 bg-muted rounded-full w-24" />
-                  </div>
+
+                <h1
+                  className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] font-heading"
+                  style={{
+                    color: '#ffffff',
+                    textShadow: '0 2px 16px rgba(0,0,0,0.4)',
+                  }}
+                >
+                  {tLanding('heroTitle')}
+                  <span style={{ color: '#20bec6' }}>.</span>
+                </h1>
+
+                <p
+                  className="text-lg leading-relaxed max-w-xl"
+                  style={{ color: 'rgba(255,255,255,0.85)' }}
+                >
+                  {tLanding('heroSubtitle')}
+                </p>
+
+                <div className="flex flex-wrap gap-4 pt-2">
+                  <Link
+                    href="/login"
+                    className="shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                    style={{
+                      background: '#0a6cb9',
+                      color: '#ffffff',
+                    }}
+                  >
+                    {tLanding('ctaFindProjects')}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href="/login"
+                    className="transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                    style={{
+                      border: '1.5px solid rgba(255,255,255,0.6)',
+                      color: '#ffffff',
+                      background: 'rgba(255,255,255,0.08)',
+                      backdropFilter: 'blur(6px)',
+                    }}
+                  >
+                    {tLanding('ctaPublishProject')}
+                  </Link>
                 </div>
               </div>
             </div>

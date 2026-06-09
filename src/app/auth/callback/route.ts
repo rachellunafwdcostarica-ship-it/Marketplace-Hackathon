@@ -3,10 +3,11 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 
+const VALID_ROLES = ['junior', 'empresa', 'admin']
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/es/junior'
 
   if (!code) {
     return NextResponse.redirect(`${origin}/es/login?error=missing_code`)
@@ -40,5 +41,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/es/login?error=exchange_failed`)
   }
 
-  return NextResponse.redirect(`${origin}${next}`)
+  // Si el usuario ya tiene un rol guardado en cookie, redirigir a ese dashboard
+  const roleCookie = request.cookies.get('fwd_role')?.value
+  const role =
+    roleCookie && VALID_ROLES.includes(roleCookie) ? roleCookie : null
+
+  if (role) {
+    return NextResponse.redirect(`${origin}/es/${role}`)
+  }
+
+  // Si no tiene rol, ir a la pantalla de selección de rol
+  return NextResponse.redirect(`${origin}/es/role-select`)
 }

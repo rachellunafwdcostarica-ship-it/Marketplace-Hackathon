@@ -27,7 +27,6 @@ import {
   Briefcase,
   Users,
   CheckCircle,
-  FileText,
   Plus,
   PowerOff,
   UserCheck,

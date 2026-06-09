@@ -24,8 +24,15 @@ function isProtected(pathname: string): boolean {
   )
 }
 
-function isAuthPage(pathname: string): boolean {
-  return /^\/(es|en)\/login/.test(pathname)
+function isPublicAuthPage(pathname: string): boolean {
+  return /^\/(es|en)\/(login|register|forgot-password|verify-email|role-select)(\/|$)/.test(
+    pathname,
+  )
+}
+
+function getPathRole(pathname: string): string | null {
+  const match = pathname.match(/^\/(es|en)\/(junior|empresa|admin)(\/|$)/)
+  return match ? (match[2] ?? null) : null
 }
 
 function getRouteRole(pathname: string): UserRole | null {
@@ -72,10 +79,18 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const locale = getLocale(pathname)
+  const roleCookie = request.cookies.get('fwd_role')?.value
 
-  // Ruta protegida sin sesión → login
-  if (isProtected(pathname) && !user) {
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+  // CASO A: Usuario NO autenticado
+  if (!user) {
+    // Si intenta acceder a rutas protegidas o a role-select, redirigir a login
+    if (
+      isProtected(pathname) ||
+      pathname.match(new RegExp(`^/(es|en)/role-select`))
+    ) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+    }
+    return intlResponse
   }
 
   // Ruta protegida con sesión → verificar rol
