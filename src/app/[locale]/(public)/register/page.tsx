@@ -143,10 +143,10 @@ export default function RegisterPage() {
 
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-100" />
+            <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-3 text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+            <span className="bg-surface px-3 text-ink-subtle font-semibold uppercase tracking-wider text-[10px]">
               o registrate con tu correo
             </span>
           </div>
@@ -157,17 +157,17 @@ export default function RegisterPage() {
           <div className="space-y-1.5">
             <Label
               htmlFor="fullName"
-              className="text-xs font-bold text-gray-700 uppercase tracking-wider"
+              className="text-xs font-bold text-ink uppercase tracking-wider"
             >
               {tAuth('fullNameLabel')}
             </Label>
             <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
               <Input
                 id="fullName"
                 type="text"
                 placeholder={tAuth('fullNamePlaceholder')}
-                className={`pl-11 h-12 rounded-xl bg-gray-50/50 border-gray-100 focus-visible:ring-1 focus-visible:ring-[#0A6CB9] focus-visible:border-[#0A6CB9] transition-all ${errors.fullName ? 'border-destructive' : ''}`}
+                className={`pl-11 h-12 rounded-xl bg-surface-sunken/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all ${errors.fullName ? 'border-destructive' : ''}`}
                 {...register('fullName')}
               />
             </div>
@@ -182,17 +182,17 @@ export default function RegisterPage() {
           <div className="space-y-1.5">
             <Label
               htmlFor="email"
-              className="text-xs font-bold text-gray-700 uppercase tracking-wider"
+              className="text-xs font-bold text-ink uppercase tracking-wider"
             >
               {tAuth('emailLabel')}
             </Label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
               <Input
                 id="email"
                 type="email"
                 placeholder={tAuth('emailPlaceholder')}
-                className={`pl-11 h-12 rounded-xl bg-gray-50/50 border-gray-100 focus-visible:ring-1 focus-visible:ring-[#0A6CB9] focus-visible:border-[#0A6CB9] transition-all ${errors.email ? 'border-destructive' : ''}`}
+                className={`pl-11 h-12 rounded-xl bg-surface-sunken/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all ${errors.email ? 'border-destructive' : ''}`}
                 {...register('email')}
               />
             </div>
@@ -207,17 +207,17 @@ export default function RegisterPage() {
           <div className="space-y-1.5">
             <Label
               htmlFor="password"
-              className="text-xs font-bold text-gray-700 uppercase tracking-wider"
+              className="text-xs font-bold text-ink uppercase tracking-wider"
             >
               {tAuth('passwordLabel')}
             </Label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
               <Input
                 id="password"
                 type="password"
                 placeholder={tAuth('passwordPlaceholder')}
-                className={`pl-11 h-12 rounded-xl bg-gray-50/50 border-gray-100 focus-visible:ring-1 focus-visible:ring-[#0A6CB9] focus-visible:border-[#0A6CB9] transition-all ${errors.password ? 'border-destructive' : ''}`}
+                className={`pl-11 h-12 rounded-xl bg-surface-sunken/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all ${errors.password ? 'border-destructive' : ''}`}
                 {...register('password')}
               />
             </div>
@@ -233,17 +233,17 @@ export default function RegisterPage() {
           <div className="space-y-1.5">
             <Label
               htmlFor="confirmPassword"
-              className="text-xs font-bold text-gray-700 uppercase tracking-wider"
+              className="text-xs font-bold text-ink uppercase tracking-wider"
             >
               {tAuth('confirmPasswordLabel')}
             </Label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
               <Input
                 id="confirmPassword"
                 type="password"
                 placeholder={tAuth('confirmPasswordPlaceholder')}
-                className={`pl-11 h-12 rounded-xl bg-gray-50/50 border-gray-100 focus-visible:ring-1 focus-visible:ring-[#0A6CB9] focus-visible:border-[#0A6CB9] transition-all ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                className={`pl-11 h-12 rounded-xl bg-surface-sunken/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all ${errors.confirmPassword ? 'border-destructive' : ''}`}
                 {...register('confirmPassword')}
               />
             </div>
@@ -257,14 +257,14 @@ export default function RegisterPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-12 rounded-xl bg-[#0A6CB9] hover:bg-[#0A6CB9]/95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
+            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
           >
             {loading ? 'Registrando...' : tAuth('createAccount')}
             {!loading && <ArrowRight className="w-4 h-4" />}
           </Button>
         </form>
 
-        <div className="text-center text-xs font-semibold pt-2 text-[#0A6CB9]">
+        <div className="text-center text-xs font-semibold pt-2 text-primary">
           <Link href="/login" className="hover:underline">
             {tAuth('haveAccount')} {tAuth('signIn')}
           </Link>

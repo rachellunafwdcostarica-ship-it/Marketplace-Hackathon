@@ -35,7 +35,7 @@ export default function VerifyEmailPage() {
             onClick={handleResend}
             disabled={resending}
             variant="outline"
-            className="w-full h-12 rounded-xl border border-gray-200 hover:bg-gray-50 bg-white font-bold text-gray-700 text-sm flex items-center justify-center gap-2 transition-all duration-200"
+            className="w-full h-12 rounded-xl border border-border-strong hover:bg-surface-sunken bg-surface font-bold text-ink text-sm flex items-center justify-center gap-2 transition-all duration-200"
           >
             <RefreshCw
               className={`w-4 h-4 ${resending ? 'animate-spin' : ''}`}
@@ -46,7 +46,7 @@ export default function VerifyEmailPage() {
           <Link href="/register" className="block w-full">
             <Button
               variant="ghost"
-              className="w-full h-12 rounded-xl hover:bg-gray-50 font-bold text-[#0A6CB9] text-sm flex items-center justify-center gap-2 transition-all duration-200"
+              className="w-full h-12 rounded-xl hover:bg-surface-sunken font-bold text-primary text-sm flex items-center justify-center gap-2 transition-all duration-200"
             >
               <Edit2 className="w-4 h-4" />
               {tAuth('changeEmail')}
@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
         <div className="text-center pt-2">
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 text-xs font-bold text-[#0A6CB9] hover:underline"
+            className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             Volver al inicio de sesión

@@ -1,7 +1,4 @@
-'use client'
-
-import React from 'react'
-import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -15,8 +12,8 @@ const CAROUSEL_SLIDES = [
   { src: '/images/carousel/carousel-4.png', alt: 'Talento FWD' },
 ]
 
-export default function LandingPage() {
-  const tLanding = useTranslations('Landing')
+export default async function LandingPage() {
+  const tLanding = await getTranslations('Landing')
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -43,7 +40,7 @@ export default function LandingPage() {
               position: 'absolute',
               inset: 0,
               background:
-                'linear-gradient(135deg, rgba(10,30,60,0.72) 0%, rgba(102,45,145,0.50) 60%, rgba(0,0,0,0.35) 100%)',
+                'linear-gradient(135deg, color-mix(in oklch, var(--ink-strong) 72%, transparent) 0%, color-mix(in oklch, var(--secondary) 50%, transparent) 60%, color-mix(in oklch, var(--ink-strong) 35%, transparent) 100%)',
               zIndex: 1,
             }}
           />
@@ -55,9 +52,11 @@ export default function LandingPage() {
                 <div
                   className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border"
                   style={{
-                    background: 'rgba(255,255,255,0.15)',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    color: '#ffffff',
+                    background:
+                      'color-mix(in oklch, var(--surface) 15%, transparent)',
+                    borderColor:
+                      'color-mix(in oklch, var(--surface) 30%, transparent)',
+                    color: 'var(--surface)',
                     backdropFilter: 'blur(6px)',
                   }}
                 >
@@ -68,17 +67,21 @@ export default function LandingPage() {
                 <h1
                   className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] font-heading"
                   style={{
-                    color: '#ffffff',
-                    textShadow: '0 2px 16px rgba(0,0,0,0.4)',
+                    color: 'var(--surface)',
+                    textShadow:
+                      '0 2px 16px color-mix(in oklch, var(--ink-strong) 40%, transparent)',
                   }}
                 >
                   {tLanding('heroTitle')}
-                  <span style={{ color: '#20bec6' }}>.</span>
+                  <span style={{ color: 'var(--accent)' }}>.</span>
                 </h1>
 
                 <p
                   className="text-lg leading-relaxed max-w-xl"
-                  style={{ color: 'rgba(255,255,255,0.85)' }}
+                  style={{
+                    color:
+                      'color-mix(in oklch, var(--surface) 85%, transparent)',
+                  }}
                 >
                   {tLanding('heroSubtitle')}
                 </p>
@@ -88,8 +91,8 @@ export default function LandingPage() {
                     href="/login"
                     className="shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     style={{
-                      background: '#0a6cb9',
-                      color: '#ffffff',
+                      background: 'var(--primary)',
+                      color: 'var(--primary-foreground)',
                     }}
                   >
                     {tLanding('ctaFindProjects')}
@@ -99,9 +102,11 @@ export default function LandingPage() {
                     href="/login"
                     className="transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
                     style={{
-                      border: '1.5px solid rgba(255,255,255,0.6)',
-                      color: '#ffffff',
-                      background: 'rgba(255,255,255,0.08)',
+                      border:
+                        '1.5px solid color-mix(in oklch, var(--surface) 60%, transparent)',
+                      color: 'var(--surface)',
+                      background:
+                        'color-mix(in oklch, var(--surface) 8%, transparent)',
                       backdropFilter: 'blur(6px)',
                     }}
                   >
@@ -118,26 +123,26 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="p-4">
               <p className="text-3xl font-extrabold text-accent font-heading">
-                {tLanding('statsProjects').split(' ')[0]}
+                {tLanding('statsProjectsNumber')}
               </p>
               <p className="text-sm text-secondary-foreground/70 mt-1">
-                {tLanding('statsProjects').split(' ').slice(1).join(' ')}
+                {tLanding('statsProjectsLabel')}
               </p>
             </div>
             <div className="p-4 border-y md:border-y-0 md:border-x border-secondary-foreground/20">
               <p className="text-3xl font-extrabold text-highlight font-heading">
-                {tLanding('statsTalent').split(' ')[0]}
+                {tLanding('statsTalentNumber')}
               </p>
               <p className="text-sm text-secondary-foreground/70 mt-1">
-                {tLanding('statsTalent').split(' ').slice(1).join(' ')}
+                {tLanding('statsTalentLabel')}
               </p>
             </div>
             <div className="p-4">
               <p className="text-3xl font-extrabold text-magenta font-heading">
-                {tLanding('statsCompanies').split(' ')[0]}
+                {tLanding('statsCompaniesNumber')}
               </p>
               <p className="text-sm text-secondary-foreground/70 mt-1">
-                {tLanding('statsCompanies').split(' ').slice(1).join(' ')}
+                {tLanding('statsCompaniesLabel')}
               </p>
             </div>
           </div>

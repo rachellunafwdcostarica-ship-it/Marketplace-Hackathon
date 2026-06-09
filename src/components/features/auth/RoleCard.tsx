@@ -26,31 +26,35 @@ export function RoleCard({
       onClick={onClick}
       className={`w-full text-left p-5 rounded-2xl border-2 transition-all duration-300 flex items-start gap-4 focus:outline-none cursor-pointer ${
         selected
-          ? 'border-[#0A6CB9] bg-[#0A6CB9]/5 shadow-md scale-[1.01]'
-          : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50 bg-white'
+          ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+          : 'border-border hover:border-border-strong hover:bg-surface-sunken bg-surface'
       }`}
     >
       <div
         className={`p-3 rounded-xl transition-colors ${
-          selected ? 'bg-[#0A6CB9] text-white' : 'bg-gray-100 text-gray-500'
+          selected
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted text-ink-muted'
         }`}
       >
         {IconComponent && <IconComponent className="w-6 h-6" />}
       </div>
       <div className="flex-1 space-y-1">
-        <h3 className="font-bold text-gray-900 text-base">{title}</h3>
-        <p className="text-xs text-gray-500 font-medium leading-relaxed">
+        <h3 className="font-bold text-ink-strong text-base">{title}</h3>
+        <p className="text-xs text-ink-muted font-medium leading-relaxed">
           {description}
         </p>
       </div>
       <div
         className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
           selected
-            ? 'border-[#0A6CB9] bg-[#0A6CB9]'
-            : 'border-gray-300 bg-white'
+            ? 'border-primary bg-primary'
+            : 'border-border-strong bg-surface'
         }`}
       >
-        {selected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+        {selected && (
+          <div className="w-2.5 h-2.5 rounded-full bg-primary-foreground" />
+        )}
       </div>
     </button>
   )

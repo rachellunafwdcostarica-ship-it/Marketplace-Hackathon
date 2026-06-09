@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
 import { useAppState } from '@/lib/stateContext'
 import { Button } from '@/components/ui/button'
+import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Menu,
@@ -156,6 +157,7 @@ export function Navbar() {
               href="/"
               className="flex items-center space-x-2.5 shrink-0 group"
             >
+              <FwdLogo className="w-8 h-8 group-hover:scale-105 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]" />
               <svg
                 className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform duration-300"
                 viewBox="0 0 100 100"

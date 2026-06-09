@@ -301,7 +301,7 @@ export default function PublishProjectPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-primary hover:bg-primary/95 text-white font-semibold flex items-center gap-1.5 shadow-sm px-6"
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6"
                 >
                   <Save className="w-4 h-4" />
                   {loading ? tCommon('loading') : tEmpresa('publishProject')}

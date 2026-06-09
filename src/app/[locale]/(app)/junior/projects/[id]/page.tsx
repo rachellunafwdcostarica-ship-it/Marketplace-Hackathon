@@ -41,7 +41,7 @@ export default function ProjectDetailsPage() {
           <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
-            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/95 h-9 px-4"
+            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 h-9 px-4"
           >
             {tJunior('backToMarketplace')}
           </Link>
@@ -194,7 +194,7 @@ export default function ProjectDetailsPage() {
                   ) : (
                     <Link
                       href={`/junior/projects/${project.id}/apply`}
-                      className="w-full bg-primary hover:bg-primary/95 text-white font-semibold h-11 shadow-md hover:scale-[1.02] transition-transform inline-flex items-center justify-center rounded-lg text-sm cursor-pointer"
+                      className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold h-11 shadow-md hover:scale-[1.02] transition-transform inline-flex items-center justify-center rounded-lg text-sm cursor-pointer"
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       {tJunior('applyBtn')}

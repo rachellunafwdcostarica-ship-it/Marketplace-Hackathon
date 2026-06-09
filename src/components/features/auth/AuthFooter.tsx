@@ -6,18 +6,18 @@ export function AuthFooter() {
   const t = useTranslations('Auth')
 
   return (
-    <div className="text-center text-xs text-gray-400 mt-6 leading-relaxed">
+    <div className="text-center text-xs text-ink-subtle mt-6 leading-relaxed">
       {t('termsText')}
       <Link
         href="/terms"
-        className="underline hover:text-gray-600 transition-colors"
+        className="underline hover:text-ink-muted transition-colors"
       >
         {t('termsLink')}
       </Link>
       {t('and')}
       <Link
         href="/privacy"
-        className="underline hover:text-gray-600 transition-colors"
+        className="underline hover:text-ink-muted transition-colors"
       >
         {t('privacyLink')}
       </Link>
