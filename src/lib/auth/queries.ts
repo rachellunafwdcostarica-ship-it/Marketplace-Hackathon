@@ -3,6 +3,40 @@ import { cookies } from 'next/headers'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 
+export async function getMyAccountStatus(): Promise<Result<string | null>> {
+  const cookieStore = await cookies()
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            )
+          } catch {
+            // no-op cuando se llama desde un Server Component
+          }
+        },
+      },
+    },
+  )
+
+  const { data, error } = await supabase.rpc('get_my_account_status')
+
+  if (error) {
+    logger.error('getMyAccountStatus failed', { error: error.message })
+    return err(error.message)
+  }
+
+  return ok(data as string | null)
+}
+
 export async function getUserRole(): Promise<Result<string>> {
   const cookieStore = await cookies()
 
