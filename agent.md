@@ -38,3 +38,7 @@ Actualmente la aplicación está en fase de **Prototipo Frontend (Mock State)**.
 3. **Cero imports o código muerto**: Mantén el código limpio y sin comentar.
 4. **Tratamiento directo**: No me halagues ni uses comentarios vacíos. Sé crítico, directo y busca huecos en mi lógica antes de darme la solución (según `CLAUDE.md`).
 5. **No inventes**: Si no estás seguro de si una API o herramienta existe, adviérteme.
+
+Recuerda seguir estrictamente las reglas de `reglas.md`
+
+Cuando te pida hacer un cambio, primero analiza el proyecto y dime si estás de acuerdo con el cambio. Si estás de acuerdo, dime cómo lo harás y luego hazlo. Si no estás de acuerdo, dime por qué no estás de acuerdo y qué cambio sugieres. (Si me corriges ten en cuenta las reglas de `CLAUDE.md` y `reglas.md`)

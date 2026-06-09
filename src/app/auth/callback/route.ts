@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 const VALID_ROLES = ['junior', 'empresa', 'admin']
 
@@ -34,7 +35,9 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    console.error('[auth/callback]', error.message)
+    logger.error('auth/callback: code exchange failed', {
+      message: error.message,
+    })
     return NextResponse.redirect(`${origin}/es/login?error=exchange_failed`)
   }
 

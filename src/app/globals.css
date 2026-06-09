@@ -3,22 +3,22 @@
 
 :root {
   --primary: #0a6cb9;
-  --primary-foreground: #ffffff;
+  --primary-foreground: oklch(0.99 0.004 245);
   --secondary: #662d91;
-  --secondary-foreground: #ffffff;
+  --secondary-foreground: oklch(0.99 0.004 245);
   --accent: #20bec6;
-  --accent-foreground: #1a1a1a;
+  --accent-foreground: oklch(0.18 0.01 245);
   --highlight: #ffcb05;
-  --highlight-foreground: #1a1a1a;
+  --highlight-foreground: oklch(0.18 0.01 245);
   --warning: #f7901e;
-  --warning-foreground: #ffffff;
+  --warning-foreground: oklch(0.99 0.004 245);
   --magenta: #ec008c;
-  --magenta-foreground: #ffffff;
+  --magenta-foreground: oklch(0.99 0.004 245);
   --success: #20bec6;
   --destructive: oklch(0.577 0.245 27.325);
 
   --canvas: oklch(0.985 0.003 245);
-  --surface: oklch(1 0 0);
+  --surface: oklch(1 0.003 245);
   --surface-sunken: oklch(0.97 0.003 245);
   --ink-strong: oklch(0.18 0.01 245);
   --ink: oklch(0.3 0.01 245);

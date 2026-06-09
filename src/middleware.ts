@@ -2,10 +2,17 @@ import createMiddleware from 'next-intl/middleware'
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
+import type { UserRole } from '@/types'
 
 const intlMiddleware = createMiddleware(routing)
 
 const PROTECTED_PREFIXES = ['/junior', '/empresa', '/admin']
+
+const ROLE_HOME: Record<UserRole, string> = {
+  junior: '/junior',
+  empresario: '/empresa',
+  admin: '/admin',
+}
 
 function getLocale(pathname: string): string {
   return pathname.startsWith('/en') ? 'en' : 'es'
@@ -26,6 +33,13 @@ function isPublicAuthPage(pathname: string): boolean {
 function getPathRole(pathname: string): string | null {
   const match = pathname.match(/^\/(es|en)\/(junior|empresa|admin)(\/|$)/)
   return match ? (match[2] ?? null) : null
+}
+
+function getRouteRole(pathname: string): UserRole | null {
+  if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
+  if (/^\/(es|en)\/empresa/.test(pathname)) return 'empresario'
+  if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
+  return null
 }
 
 export async function middleware(request: NextRequest) {
@@ -79,31 +93,26 @@ export async function middleware(request: NextRequest) {
     return intlResponse
   }
 
-  // CASO B: Usuario autenticado
-  // B.1. Usuario ya tiene un rol seleccionado
-  if (roleCookie && ['junior', 'empresa', 'admin'].includes(roleCookie)) {
-    // Si intenta acceder a páginas públicas de auth (login, register, role-select, etc)
-    if (isPublicAuthPage(pathname)) {
-      return NextResponse.redirect(
-        new URL(`/${locale}/${roleCookie}`, request.url),
-      )
+  // Ruta protegida con sesión → verificar rol
+  if (isProtected(pathname) && user) {
+    const { data: role } = await supabase.rpc('get_my_role')
+
+    if (!role) {
+      // TODO: redirigir a onboarding cuando el equipo defina el flujo (Q1, Q2)
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
     }
-    // Si intenta acceder al dashboard de OTRO rol (ej: es junior e intenta entrar a /empresa)
-    const pathRole = getPathRole(pathname)
-    if (pathRole && pathRole !== roleCookie) {
-      return NextResponse.redirect(
-        new URL(`/${locale}/${roleCookie}`, request.url),
-      )
+
+    const routeRole = getRouteRole(pathname)
+    if (routeRole && routeRole !== (role as UserRole)) {
+      return NextResponse.redirect(new URL(`/${locale}/403`, request.url))
     }
   }
-  // B.2. Usuario NO tiene un rol seleccionado aún
-  else {
-    // Si intenta acceder a un área protegida sin haber seleccionado rol, forzar a /role-select
-    if (isProtected(pathname)) {
-      return NextResponse.redirect(
-        new URL(`/${locale}/role-select`, request.url),
-      )
-    }
+
+  // Usuario autenticado intenta acceder al login → su home según rol
+  if (isAuthPage(pathname) && user) {
+    const { data: role } = await supabase.rpc('get_my_role')
+    const home = role ? (ROLE_HOME[role as UserRole] ?? '/junior') : '/junior'
+    return NextResponse.redirect(new URL(`/${locale}${home}`, request.url))
   }
 
   return intlResponse
