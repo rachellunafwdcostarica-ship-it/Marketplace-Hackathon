@@ -53,4 +53,4 @@ export interface Company {
   createdAt: string
 }
 
-export type UserRole = 'junior' | 'empresario' | 'admin'
+export type UserRole = 'junior' | 'empresa' | 'admin'
