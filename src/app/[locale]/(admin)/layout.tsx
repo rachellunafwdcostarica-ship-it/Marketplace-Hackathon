@@ -1,0 +1,39 @@
+import { redirect } from 'next/navigation'
+import { getLocale } from 'next-intl/server'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+
+/**
+ * Layout del grupo (admin).
+ * Verifica que el usuario esté autenticado y tenga rol 'admin'.
+ * Los admins no tienen estado pendiente — se crean via service_role.
+ */
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const locale = await getLocale()
+  const supabase = await createSupabaseServerClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect(`/${locale}/login`)
+  }
+
+  const { data: roleRaw } = await supabase.rpc('get_my_role')
+  const role = normalizeRole(roleRaw as string | null)
+
+  if (!role) {
+    redirect(`/${locale}/onboarding`)
+  }
+
+  if (role !== 'admin') {
+    redirect(`/${locale}${ROLE_HOME[role]}`)
+  }
+
+  return <>{children}</>
+}

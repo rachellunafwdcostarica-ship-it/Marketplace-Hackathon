@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/stateContext'
+import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/PageTitle'
@@ -36,6 +37,8 @@ import {
 export default function CompanyDashboard() {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
+  const tAccount = useTranslations('Account')
+  const { isPending } = useAccountStatus()
 
   const {
     projects,
@@ -122,13 +125,24 @@ export default function CompanyDashboard() {
           description={tEmpresa('dashboardDesc')}
           dotColor="text-secondary"
           action={
-            <Link
-              href="/empresa/new-project"
-              className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              {tEmpresa('publishProject')}
-            </Link>
+            isPending ? (
+              <span
+                aria-disabled="true"
+                title={tAccount('actionDisabledPending')}
+                className="bg-muted text-muted-foreground/50 font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-not-allowed select-none"
+              >
+                <Plus className="w-4 h-4" />
+                {tEmpresa('publishProject')}
+              </span>
+            ) : (
+              <Link
+                href="/empresa/new-project"
+                className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                {tEmpresa('publishProject')}
+              </Link>
+            )
           }
         />
 

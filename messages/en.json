@@ -21,7 +21,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "profile": "Profile",
-    "language": "Language"
+    "language": "Language",
+    "validations": "Validations"
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
@@ -325,7 +326,16 @@
     "noProjectsDesc": "When companies publish projects they will appear here for moderation.",
     "projectsActive": "Active Projects (Published)",
     "projectsPending": "Projects Pending Approval",
-    "projectsClosed": "Closed / Hidden Projects"
+    "projectsClosed": "Closed / Hidden Projects",
+    "pendingUsers": "User Validations",
+    "pendingUsersDesc": "Review and approve accounts of users who completed onboarding.",
+    "noPendingUsers": "No users pending approval at this time.",
+    "noPendingUsersDesc": "When a user completes onboarding they will appear here for review.",
+    "approveUser": "Approve",
+    "approving": "Approving...",
+    "userApproved": "{name}'s account approved successfully.",
+    "userApproveError": "Error approving account. Please try again.",
+    "noRoleYet": "no role assigned"
   },
   "Errors": {
     "forbidden": "Access denied",
@@ -338,5 +348,16 @@
     "viewed": "Viewed",
     "accepted": "Accepted",
     "rejected": "Rejected"
+  },
+  "Onboarding": {
+    "subtitle": "Choose how you want to use FWD Talent to continue.",
+    "loading": "Saving...",
+    "errorGeneric": "An error occurred while saving your profile. Please try again."
+  },
+  "Account": {
+    "pendingBanner": "Your account is pending approval by the FWD team. Actions will be enabled once approved.",
+    "actionDisabledPending": "Your account must be approved by an administrator to perform this action.",
+    "pendingTitle": "Account pending approval",
+    "pendingDesc": "The FWD team will review your request. We will notify you when your account is active."
   }
 }

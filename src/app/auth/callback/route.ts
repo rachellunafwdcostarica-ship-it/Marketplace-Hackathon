@@ -2,8 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
-
-const VALID_ROLES = ['junior', 'empresa', 'admin']
+import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -41,15 +40,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/es/login?error=exchange_failed`)
   }
 
-  // Si el usuario ya tiene un rol guardado en cookie, redirigir a ese dashboard
-  const roleCookie = request.cookies.get('fwd_role')?.value
-  const role =
-    roleCookie && VALID_ROLES.includes(roleCookie) ? roleCookie : null
+  // Detectar si el usuario tiene rol asignado (usuario nuevo vs. recurrente)
+  const { data: roleRaw } = await supabase.rpc('get_my_role')
+  const role = normalizeRole(roleRaw as string | null)
 
   if (role) {
-    return NextResponse.redirect(`${origin}/es/${role}`)
+    // Usuario recurrente → ir a su home
+    return NextResponse.redirect(`${origin}/es${ROLE_HOME[role]}`)
   }
 
-  // Si no tiene rol, ir a la pantalla de selección de rol
-  return NextResponse.redirect(`${origin}/es/role-select`)
+  // Usuario nuevo (sin rol) → onboarding obligatorio
+  return NextResponse.redirect(`${origin}/es/onboarding`)
 }

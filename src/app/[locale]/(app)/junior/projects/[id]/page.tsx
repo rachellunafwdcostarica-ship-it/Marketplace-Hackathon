@@ -4,6 +4,7 @@ import React from 'react'
 import { useParams } from 'next/navigation'
 import { Link } from '@/i18n/routing'
 import { useAppState } from '@/lib/stateContext'
+import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/PageTitle'
@@ -27,8 +28,10 @@ export default function ProjectDetailsPage() {
   const params = useParams()
   const tCommon = useTranslations('Common')
   const tJunior = useTranslations('Junior')
+  const tAccount = useTranslations('Account')
 
   const { projects, applications } = useAppState()
+  const { isPending } = useAccountStatus()
   const id = params['id'] as string
   const project = projects.find((p) => p.id === id)
 
@@ -190,6 +193,15 @@ export default function ProjectDetailsPage() {
                     >
                       <CheckCircle className="w-4 h-4" />
                       {tJunior('alreadyApplied')}
+                    </Button>
+                  ) : isPending ? (
+                    <Button
+                      disabled
+                      title={tAccount('actionDisabledPending')}
+                      className="w-full bg-muted text-muted-foreground/50 font-semibold h-11 flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <FileText className="w-4 h-4" />
+                      {tJunior('applyBtn')}
                     </Button>
                   ) : (
                     <Link
