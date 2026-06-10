@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { Button } from '@/components/ui/button'
+import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import {
-  Laptop,
   Menu,
   X,
   Briefcase,
@@ -18,7 +18,6 @@ import {
   PlusCircle,
   Building2,
   Bell,
-  ChevronDown,
   User,
   Users,
   ShieldCheck,
@@ -36,11 +35,18 @@ export function Navbar() {
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
-  const { userRole: role, setUserRole } = useAppState()
+  const { userRole: role, resetAll } = useAppState()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false)
-  const roleDropdownRef = useRef<HTMLDivElement>(null)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Configuracion de rol con tokens FWD (§5.1): junior=primary, empresa=secondary, admin=magenta.
   const roleConfig: Record<
@@ -70,29 +76,8 @@ export function Navbar() {
     },
   }
 
-  // Cierra el dropdown al hacer click fuera.
-  useEffect(() => {
-    function handleOutsideClick(e: MouseEvent) {
-      if (
-        roleDropdownRef.current &&
-        !roleDropdownRef.current.contains(e.target as Node)
-      ) {
-        setRoleDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleOutsideClick)
-    return () => document.removeEventListener('mousedown', handleOutsideClick)
-  }, [])
-
   const handleLocaleChange = (nextLocale: string) => {
     router.replace(pathname, { locale: nextLocale })
-  }
-
-  const handleRoleChange = (nextRole: UserRole) => {
-    setUserRole(nextRole)
-    setRoleDropdownOpen(false)
-    setMobileMenuOpen(false)
-    router.push(`/${nextRole}`)
   }
 
   const mockLinks: NavLink[] = [
@@ -125,6 +110,7 @@ export function Navbar() {
       { href: '/admin', label: t('dashboard'), icon: 'dashboard' },
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },
+      { href: '/admin/validations', label: t('validations'), icon: 'shield' },
       ...mockLinks,
     ],
   }
@@ -148,13 +134,20 @@ export function Navbar() {
         return <PlusCircle className={className} />
       case 'building':
         return <Building2 className={className} />
+      case 'shield':
+        return <ShieldCheck className={className} />
       default:
         return null
     }
   }
-
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/80 bg-background/85 backdrop-blur-md shadow-sm">
+    <nav
+      className={`sticky top-0 z-50 w-full animate-slide-down-fade transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] ${
+        scrolled
+          ? 'border-b border-border/80 bg-background/80 backdrop-blur-xl shadow-md py-2'
+          : 'border-b border-border/20 bg-background/40 backdrop-blur-md py-3.5'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
@@ -163,51 +156,7 @@ export function Navbar() {
               href="/"
               className="flex items-center space-x-2.5 shrink-0 group"
             >
-              <svg
-                className="w-8 h-8 shrink-0 group-hover:scale-105 transition-transform"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect
-                  x="22"
-                  y="22"
-                  width="56"
-                  height="56"
-                  rx="8"
-                  transform="rotate(0 50 50)"
-                  stroke="#20BEC6"
-                  strokeWidth="4.5"
-                  fill="#FFCB05"
-                />
-                <rect
-                  x="22"
-                  y="22"
-                  width="56"
-                  height="56"
-                  rx="8"
-                  transform="rotate(45 50 50)"
-                  stroke="#20BEC6"
-                  strokeWidth="4.5"
-                  fill="#662D91"
-                />
-                <rect
-                  x="25"
-                  y="25"
-                  width="50"
-                  height="50"
-                  rx="6"
-                  transform="rotate(22.5 50 50)"
-                  stroke="#EC008C"
-                  strokeWidth="3.5"
-                  fill="#0A6CB9"
-                />
-                <path
-                  d="M50 28 L54 42 L68 42 L57 50 L61 64 L50 56 L39 64 L43 50 L32 42 L46 42 Z"
-                  fill="#EC008C"
-                />
-                <circle cx="50" cy="50" r="4.5" fill="#FFCB05" />
-              </svg>
+              <FwdLogo className="w-8 h-8 group-hover:scale-105 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]" />
               <span className="font-heading text-xl font-bold tracking-tight text-foreground block">
                 Marketplace FWD<span className="text-primary">.</span>
               </span>
@@ -223,7 +172,7 @@ export function Navbar() {
                   <span
                     key={link.href}
                     aria-disabled="true"
-                    className="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 text-muted-foreground/60 cursor-not-allowed select-none"
+                    className="px-3.5 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 text-muted-foreground/40 cursor-not-allowed select-none"
                   >
                     {renderIcon(link.icon, 'w-4 h-4')}
                     <span>{link.label}</span>
@@ -234,73 +183,29 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
+                  className={`relative px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
                     isActive
                       ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {renderIcon(link.icon, 'w-4 h-4')}
-                  <span>{link.label}</span>
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {renderIcon(link.icon, 'w-4 h-4')}
+                    <span>{link.label}</span>
+                  </span>
                 </Link>
               )
             })}
           </div>
 
-          {/* Desktop Right Side Controls */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Role view switcher (preview navigation hasta que exista auth) */}
+            {/* Rol activo mostrado estáticamente sin opción a cambio */}
             <div className="flex items-center gap-2 border-r border-border/80 pr-3 mr-1">
-              <div className="relative" ref={roleDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setRoleDropdownOpen((o) => !o)}
-                  className="flex items-center gap-2 bg-muted/60 hover:bg-muted border border-border/80 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-foreground transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] cursor-pointer select-none"
-                >
-                  <Laptop className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
-                  />
-                  <span>{activeRole.label}</span>
-                  <ChevronDown
-                    className={`w-3 h-3 text-muted-foreground transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)] ${roleDropdownOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {roleDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-44 bg-card/95 backdrop-blur-xl border border-border/80 rounded-xl shadow-xl overflow-hidden z-50">
-                    <div className="p-1.5 space-y-0.5">
-                      {(Object.keys(roleConfig) as UserRole[]).map((key) => {
-                        const cfg = roleConfig[key]
-                        const selected = role === key
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => handleRoleChange(key)}
-                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
-                              selected
-                                ? cfg.text
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                            }`}
-                          >
-                            <span
-                              className={`p-1 rounded-md transition-colors ${selected ? cfg.chip : 'bg-muted text-muted-foreground'}`}
-                            >
-                              {cfg.icon}
-                            </span>
-                            {cfg.label}
-                            {selected && (
-                              <span
-                                className={`ml-auto w-1.5 h-1.5 rounded-full ${cfg.dot}`}
-                              />
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )}
+              <div className="flex items-center gap-2 bg-muted/30 border border-border/50 rounded-full px-3 py-1.5 text-xs font-bold text-foreground select-none">
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
+                />
+                <span>{activeRole.label}</span>
               </div>
             </div>
 
@@ -309,7 +214,7 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               aria-label={t('notifications')}
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground relative shrink-0"
+              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground relative shrink-0 transition-transform hover:scale-105 active:scale-95"
             >
               <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-magenta animate-pulse" />
@@ -317,16 +222,16 @@ export function Navbar() {
 
             {/* Language Selector */}
             <div
-              className="flex items-center border border-border/60 bg-muted/30 rounded-lg p-0.5 shrink-0"
+              className="relative flex items-center border border-border/60 bg-muted/30 rounded-full p-0.5 shrink-0"
               aria-label={t('language')}
             >
               <button
                 type="button"
                 onClick={() => handleLocaleChange('es')}
-                className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] font-bold ${
                   locale === 'es'
-                    ? 'bg-primary/10 text-primary font-bold shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground font-semibold'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 ES
@@ -334,22 +239,41 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => handleLocaleChange('en')}
-                className={`px-2.5 py-1 text-xs rounded-md transition-all ${
+                className={`relative z-10 px-3 py-1 text-xs rounded-full transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] font-bold ${
                   locale === 'en'
-                    ? 'bg-primary/10 text-primary font-bold shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground font-semibold'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 EN
               </button>
             </div>
 
-            {/* User Profile Avatar (placeholder) */}
-            <div
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-muted border border-border text-muted-foreground shadow-sm shrink-0"
-              aria-label={t('profile')}
-            >
-              <User className="w-5 h-5" />
+            {/* User Profile Avatar / Logout Dropdown */}
+            <div className="relative group shrink-0">
+              <button
+                type="button"
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+                aria-label={t('profile')}
+              >
+                <User className="w-5 h-5" />
+              </button>
+              <div className="absolute right-0 top-full mt-2 w-36 bg-card border border-border rounded-xl shadow-xl py-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const { createSupabaseBrowserClient } =
+                      await import('@/lib/supabase/client')
+                    const supabase = createSupabaseBrowserClient()
+                    await supabase.auth.signOut()
+                    resetAll()
+                    router.push('/login')
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                >
+                  {t('logout')}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -358,7 +282,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-lg text-xs font-bold"
+              className="h-9 w-9 rounded-lg text-xs font-bold transition-transform hover:scale-105 active:scale-95"
               onClick={() => handleLocaleChange(locale === 'es' ? 'en' : 'es')}
               aria-label={t('language')}
             >
@@ -368,7 +292,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-lg"
+              className="h-9 w-9 rounded-lg transition-transform hover:scale-105 active:scale-95"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? t('closeMenu') : t('openMenu')}
             >
@@ -383,74 +307,65 @@ export function Navbar() {
       </div>
 
       {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border/80 bg-background/95 backdrop-blur-md px-4 pt-2 pb-4 space-y-3">
-          <div className="space-y-1">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href
-              if (link.isMock) {
+      <div
+        className={`md:hidden grid transition-[grid-template-rows] duration-[var(--duration-base)] ease-[var(--ease-in-out)] ${
+          mobileMenuOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+      >
+        <div
+          inert={!mobileMenuOpen}
+          className={`overflow-hidden transition-opacity duration-[var(--duration-fast)] ${
+            mobileMenuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="border-t border-border/80 bg-background/95 backdrop-blur-xl px-4 pb-4 space-y-3">
+            <div className="space-y-1 pt-2">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href
+                if (link.isMock) {
+                  return (
+                    <span
+                      key={link.href}
+                      aria-disabled="true"
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-base font-semibold text-muted-foreground/40 cursor-not-allowed select-none"
+                    >
+                      {renderIcon(link.icon, 'w-5 h-5')}
+                      <span>{link.label}</span>
+                    </span>
+                  )
+                }
                 return (
-                  <span
+                  <Link
                     key={link.href}
-                    aria-disabled="true"
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-semibold text-muted-foreground/60 cursor-not-allowed select-none"
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-base font-semibold transition-all ${
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-muted/50'
+                    }`}
                   >
                     {renderIcon(link.icon, 'w-5 h-5')}
                     <span>{link.label}</span>
-                  </span>
-                )
-              }
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-base font-semibold ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {renderIcon(link.icon, 'w-5 h-5')}
-                  <span>{link.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-
-          <div className="border-t border-border/80 pt-3 space-y-2 px-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <Laptop className="w-3.5 h-3.5 text-primary" />
-              {t('roleView')}
-            </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {(Object.keys(roleConfig) as UserRole[]).map((key) => {
-                const cfg = roleConfig[key]
-                const selected = role === key
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => handleRoleChange(key)}
-                    className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-xs font-semibold border transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] ${
-                      selected
-                        ? `${cfg.text} border-current bg-muted/40`
-                        : 'text-muted-foreground border-border/60 hover:border-border hover:bg-muted'
-                    }`}
-                  >
-                    <span
-                      className={`p-1 rounded-md transition-colors ${selected ? cfg.chip : 'bg-muted text-muted-foreground'}`}
-                    >
-                      {cfg.icon}
-                    </span>
-                    {cfg.label}
-                  </button>
+                  </Link>
                 )
               })}
             </div>
+
+            <div className="border-t border-border/80 pt-3 space-y-1.5 px-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                {t('activeRole')}
+              </span>
+              <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${activeRole.dot}`}
+                />
+                <span>{activeRole.label}</span>
+              </div>
+            </div>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   )
 }

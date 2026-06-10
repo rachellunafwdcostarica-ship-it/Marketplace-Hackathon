@@ -14,7 +14,7 @@ import {
   mockProjects,
   mockApplications,
   mockCompanies,
-} from '@/constants/mockData'
+} from '@/lib/constants/mockData'
 
 interface StateContextType {
   projects: Project[]
@@ -101,6 +101,9 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!initialized) return
     localStorage.setItem('fwd_role', userRole)
+    if (typeof window !== 'undefined') {
+      document.cookie = `fwd_role=${userRole}; path=/; max-age=31536000; SameSite=Lax`
+    }
   }, [userRole, initialized])
 
   const setUserRole = (role: UserRole) => {
@@ -158,6 +161,10 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('fwd_applications')
     localStorage.removeItem('fwd_companies')
     localStorage.removeItem('fwd_role')
+    if (typeof window !== 'undefined') {
+      document.cookie =
+        'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    }
     setProjects(mockProjects)
     setApplications(mockApplications)
     setCompanies(mockCompanies)

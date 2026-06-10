@@ -2,19 +2,20 @@
 
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
+import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { PageTitle } from '@/components/features/PageTitle'
+import { PageTitle } from '@/components/features/brand/PageTitle'
 import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
 import { ApplicationCard } from '@/components/features/applications/ApplicationCard'
-import { EmptyState } from '@/components/features/EmptyState'
+import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link } from '@/i18n/routing'
 import { toast } from 'sonner'
-import { MOCK_COMPANY_ID } from '@/constants/mockData'
+import { MOCK_COMPANY_ID } from '@/lib/constants/mockData'
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,6 @@ import {
   Briefcase,
   Users,
   CheckCircle,
-  FileText,
   Plus,
   PowerOff,
   UserCheck,
@@ -37,6 +37,8 @@ import {
 export default function CompanyDashboard() {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
+  const tAccount = useTranslations('Account')
+  const { isPending } = useAccountStatus()
 
   const {
     projects,
@@ -123,13 +125,24 @@ export default function CompanyDashboard() {
           description={tEmpresa('dashboardDesc')}
           dotColor="text-secondary"
           action={
-            <Link
-              href="/empresa/new-project"
-              className="bg-primary hover:bg-primary/95 text-white font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              {tEmpresa('publishProject')}
-            </Link>
+            isPending ? (
+              <span
+                aria-disabled="true"
+                title={tAccount('actionDisabledPending')}
+                className="bg-muted text-muted-foreground/50 font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-not-allowed select-none"
+              >
+                <Plus className="w-4 h-4" />
+                {tEmpresa('publishProject')}
+              </span>
+            ) : (
+              <Link
+                href="/empresa/new-project"
+                className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                {tEmpresa('publishProject')}
+              </Link>
+            )
           }
         />
 
@@ -310,7 +323,7 @@ export default function CompanyDashboard() {
               </Button>
               <Button
                 onClick={handleConfirmAction}
-                className={`font-semibold flex-1 sm:flex-initial text-white ${
+                className={`font-semibold flex-1 sm:flex-initial text-primary-foreground ${
                   confirmDialog.type === 'accept'
                     ? 'bg-accent hover:bg-accent/90'
                     : confirmDialog.type === 'reject'

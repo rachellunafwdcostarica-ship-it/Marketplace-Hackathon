@@ -21,7 +21,10 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "profile": "Profile",
-    "language": "Language"
+    "language": "Language",
+    "validations": "Validations",
+    "activeRole": "Active role",
+    "logout": "Log out"
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
@@ -53,9 +56,12 @@
     "companyBenefit1": "FWD graduates ready to add value from day one.",
     "companyBenefit2": "Agile short-term projects with optimized costs.",
     "companyBenefit3": "Moderated and filtered candidates to ensure the ideal match.",
-    "statsProjects": "+500 Completed Projects",
-    "statsTalent": "+1,200 Registered Developers",
-    "statsCompanies": "+150 Allied Companies"
+    "statsProjectsNumber": "+500",
+    "statsProjectsLabel": "Completed Projects",
+    "statsTalentNumber": "+1,200",
+    "statsTalentLabel": "Registered Developers",
+    "statsCompaniesNumber": "+150",
+    "statsCompaniesLabel": "Allied Companies"
   },
   "Login": {
     "title": "Log in to FWD Talent",
@@ -75,6 +81,66 @@
     "noAccount": "No account?",
     "signUpViaGoogle": "Sign up with Google above."
   },
+  "Auth": {
+    "welcome": "WELCOME",
+    "loginTitle": "Adelante",
+    "loginSubtitle": "Access your employability platform.",
+    "registerTitle": "Sign Up",
+    "registerSubtitle": "Create your account at FWD Talent.",
+    "roleTitle": "How will you use FWD Talent?",
+    "roleSubtitle": "Select your profile to continue.",
+    "forgotTitle": "Recover password",
+    "forgotSubtitle": "Enter your email address and we'll send you instructions.",
+    "verifyTitle": "Verify your email",
+    "verifySubtitle": "We sent you a verification link. Please check your inbox to continue.",
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "John Doe",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "email@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "confirmPasswordLabel": "Confirm password",
+    "confirmPasswordPlaceholder": "••••••••",
+    "termsText": "By continuing you agree to the ",
+    "termsLink": "terms of use",
+    "privacyLink": "privacy policy",
+    "and": " and ",
+    "createAccount": "Create account",
+    "signIn": "Sign in",
+    "haveAccount": "Already have an account?",
+    "noAccount": "Don't have an account? Create account",
+    "forgotPasswordLink": "Forgot password?",
+    "sendLink": "Send link",
+    "checkInbox": "Check your inbox",
+    "resendEmail": "Resend email",
+    "changeEmail": "Change email address",
+    "roleJuniorTitle": "Junior FWD",
+    "roleJuniorDesc": "I'm looking for projects to build professional experience.",
+    "roleCompanyTitle": "Company",
+    "roleCompanyDesc": "I want to publish projects and hire talent.",
+    "roleAdminTitle": "Administrator",
+    "roleAdminDesc": "I manage the platform.",
+    "continue": "Continue",
+    "passwordStrength": "Password strength",
+    "strengthWeak": "Weak",
+    "strengthMedium": "Medium",
+    "strengthStrong": "Strong",
+    "successSent": "Link sent successfully.",
+    "verifySuccess": "Email verified successfully!",
+    "resending": "Resending...",
+    "resendSuccess": "Verification link resent. Check your inbox.",
+    "resendNoEmail": "We couldn't identify your email. Register again to resend the link.",
+    "resetTitle": "New password",
+    "resetSubtitle": "Choose a new password for your account.",
+    "resetButton": "Save password",
+    "resetSaving": "Saving...",
+    "resetSuccessTitle": "Password updated",
+    "resetSuccessDesc": "Your password was changed successfully. You can now sign in.",
+    "resetInvalidTitle": "Invalid or expired link",
+    "resetInvalidDesc": "The recovery link is invalid or has expired. Request a new one.",
+    "awardText": "AMCHAM Award 2025 — Sustainable Business"
+  },
+
   "Common": {
     "loading": "Loading...",
     "error": "An unexpected error occurred.",
@@ -166,6 +232,8 @@
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",
+    "passwordMin": "Password must be at least 8 characters.",
+    "passwordMismatch": "Passwords do not match.",
     "coverLetterMin": "Cover letter must be at least 30 characters.",
     "urlPortfolio": "Please enter a valid URL for your portfolio (e.g., https://mysite.com).",
     "urlCV": "Please enter a valid URL for your CV (e.g., https://drive.google.com/...).",
@@ -273,7 +341,21 @@
     "noProjectsDesc": "When companies publish projects they will appear here for moderation.",
     "projectsActive": "Active Projects (Published)",
     "projectsPending": "Projects Pending Approval",
-    "projectsClosed": "Closed / Hidden Projects"
+    "projectsClosed": "Closed / Hidden Projects",
+    "pendingUsers": "User Validations",
+    "pendingUsersDesc": "Review and approve accounts of users who completed onboarding.",
+    "noPendingUsers": "No users pending approval at this time.",
+    "noPendingUsersDesc": "When a user completes onboarding they will appear here for review.",
+    "approveUser": "Approve",
+    "approving": "Approving...",
+    "userApproved": "{name}'s account approved successfully.",
+    "userApproveError": "Error approving account. Please try again.",
+    "noRoleYet": "no role assigned"
+  },
+  "Errors": {
+    "forbidden": "Access denied",
+    "forbiddenDesc": "You don't have permission to view this page.",
+    "forbiddenBack": "Back to home"
   },
   "Status": {
     "draft": "Draft",
@@ -281,5 +363,21 @@
     "viewed": "Viewed",
     "accepted": "Accepted",
     "rejected": "Rejected"
+  },
+  "Onboarding": {
+    "subtitle": "Choose how you want to use FWD Talent to continue.",
+    "loading": "Saving...",
+    "errorGeneric": "An error occurred while saving your profile. Please try again."
+  },
+  "Account": {
+    "pendingBanner": "Your account is pending approval by the FWD team. Actions will be enabled once approved.",
+    "actionDisabledPending": "Your account must be approved by an administrator to perform this action.",
+    "pendingTitle": "Account pending approval",
+    "pendingDesc": "The FWD team will review your request. We will notify you when your account is active."
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "You have no notifications."
   }
 }

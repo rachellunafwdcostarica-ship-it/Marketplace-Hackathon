@@ -3,10 +3,11 @@
 import React from 'react'
 import { useParams } from 'next/navigation'
 import { Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
+import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { PageTitle } from '@/components/features/PageTitle'
+import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -21,14 +22,16 @@ import {
   FileText,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
+import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 
 export default function ProjectDetailsPage() {
   const params = useParams()
   const tCommon = useTranslations('Common')
   const tJunior = useTranslations('Junior')
+  const tAccount = useTranslations('Account')
 
   const { projects, applications } = useAppState()
+  const { isPending } = useAccountStatus()
   const id = params['id'] as string
   const project = projects.find((p) => p.id === id)
 
@@ -41,7 +44,7 @@ export default function ProjectDetailsPage() {
           <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
-            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/95 h-9 px-4"
+            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 h-9 px-4"
           >
             {tJunior('backToMarketplace')}
           </Link>
@@ -191,10 +194,19 @@ export default function ProjectDetailsPage() {
                       <CheckCircle className="w-4 h-4" />
                       {tJunior('alreadyApplied')}
                     </Button>
+                  ) : isPending ? (
+                    <Button
+                      disabled
+                      title={tAccount('actionDisabledPending')}
+                      className="w-full bg-muted text-muted-foreground/50 font-semibold h-11 flex items-center justify-center gap-2 cursor-not-allowed"
+                    >
+                      <FileText className="w-4 h-4" />
+                      {tJunior('applyBtn')}
+                    </Button>
                   ) : (
                     <Link
                       href={`/junior/projects/${project.id}/apply`}
-                      className="w-full bg-primary hover:bg-primary/95 text-white font-semibold h-11 shadow-md hover:scale-[1.02] transition-transform inline-flex items-center justify-center rounded-lg text-sm cursor-pointer"
+                      className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold h-11 shadow-md hover:scale-[1.02] transition-transform inline-flex items-center justify-center rounded-lg text-sm cursor-pointer"
                     >
                       <FileText className="w-4 h-4 mr-2" />
                       {tJunior('applyBtn')}

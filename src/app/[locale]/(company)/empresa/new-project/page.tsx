@@ -3,10 +3,11 @@
 import React, { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter, Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
+import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { PageTitle } from '@/components/features/PageTitle'
+import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -59,8 +60,10 @@ export default function PublishProjectPage() {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
   const tValidation = useTranslations('Validation')
+  const tAccount = useTranslations('Account')
   const router = useRouter()
   const { addProject } = useAppState()
+  const { isPending } = useAccountStatus()
 
   const [loading, setLoading] = useState(false)
 
@@ -291,6 +294,12 @@ export default function PublishProjectPage() {
                 </div>
               </div>
 
+              {isPending && (
+                <p className="text-xs font-semibold text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2">
+                  {tAccount('actionDisabledPending')}
+                </p>
+              )}
+
               <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
                 <Link
                   href="/empresa"
@@ -300,8 +309,8 @@ export default function PublishProjectPage() {
                 </Link>
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="bg-primary hover:bg-primary/95 text-white font-semibold flex items-center gap-1.5 shadow-sm px-6"
+                  disabled={loading || isPending}
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
                   {loading ? tCommon('loading') : tEmpresa('publishProject')}

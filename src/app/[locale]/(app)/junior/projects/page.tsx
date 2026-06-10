@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { PageTitle } from '@/components/features/PageTitle'
+import { PageTitle } from '@/components/features/brand/PageTitle'
 import { SearchBar } from '@/components/features/SearchBar'
-import { ProjectFilters } from '@/components/features/ProjectFilters'
-import { ProjectCard } from '@/components/features/ProjectCard'
-import { EmptyState } from '@/components/features/EmptyState'
-import { LoadingSkeleton } from '@/components/features/LoadingSkeleton'
+import { ProjectFilters } from '@/components/features/marketplace/ProjectFilters'
+import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
+import { EmptyState } from '@/components/features/shared/EmptyState'
+import { LoadingSkeleton } from '@/components/features/shared/LoadingSkeleton'
 import { Briefcase } from 'lucide-react'
 
 export default function JuniorProjectsMarketplace() {

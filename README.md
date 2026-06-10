@@ -8,7 +8,7 @@ Stack montado y "hola mundo" navegable en el lenguaje visual FWD (hito Setup del
 
 La estructura de carpetas usa la sección 6.1 del brief como base, más las adiciones que exigen otras secciones del mismo brief: `(company)/` y subpaneles de `(admin)/` (§3.2), `supabase/migrations/` (§7) y `tests/` (§4.6).
 
-Las reglas del proyecto viven en [`reglas.md`](./reglas.md) (destilado del brief oficial). Toda persona o IA debe leerlo antes de implementar; `CLAUDE.md` lo enlaza para las herramientas de IA.
+Las **restricciones** del proyecto (stack, identidad, naming, prohibiciones) viven en [`reglas.md`](./reglas.md), destilado del brief oficial. Las **funciones** de la plataforma las define el SRS (`SRS_Plataforma_Talento_FWD`), fuente de verdad funcional. Toda persona o IA debe leer `reglas.md` antes de implementar; `CLAUDE.md` enlaza ambos para las herramientas de IA.
 
 ## Stack
 
@@ -32,46 +32,54 @@ No se agregan dependencias fuera de esa lista sin justificarlo y documentarlo.
 
 ## Estructura de carpetas
 
-Sección 6.1 del brief como base, más las carpetas que exigen §3.2, §7 y §4.6.
+Refleja la estructura **real** del repo. Base: §6.1 del brief, más las carpetas que exigen §3.2, §7 y §4.6, y los ajustes que el equipo hizo al construir (que difieren del plan original; ver "Decisiones técnicas no obvias").
 
 ```
 src/
   app/
     [locale]/
-      (public)/        landing, login
-      (app)/           app autenticada del junior
-        marketplace/   listado y detalle
-        applications/  mis postulaciones
-      (company)/       área de empresa contratante (§3.2)
-        projects/      publicar y administrar proyectos
-        candidates/    postulaciones recibidas
-      (admin)/         panel admin FWD (§3.2)
-        dashboard/
-        companies/     aprobar empresas
-        moderation/    moderar proyectos
-      layout.tsx       root layout: fuentes + NextIntlClientProvider
-      page.tsx         landing hola mundo
+      (public)/        landing, login, register, onboarding, verify-email, forgot-password
+      (app)/           junior autenticado (layout = guard de rol)
+        junior/        dashboard + projects/[id]/apply
+        applications/
+        marketplace/
+      (company)/       empresa contratante (layout = guard de rol)
+        empresa/       dashboard + new-project
+        candidates/    (placeholder, vacío)
+        projects/      (placeholder, vacío)
+      (admin)/         panel admin FWD (layout = guard de rol)
+        admin/         dashboard + companies + projects + validations
+        dashboard/, companies/, moderation/   (placeholders, vacíos)
+      403/             acceso denegado
+      showcase/        catálogo de design system (dev, no producto)
+      layout.tsx       root layout: fuentes (next/font) + NextIntlClientProvider
+      page.tsx         landing
+    auth/callback/     intercambio de sesión OAuth (sin locale)
   components/
-    ui/                primitivos shadcn
-    features/
-      marketplace/
-      applications/
-      companies/
-      admin/
-      auth/
-      layout/
-      brand/           PageTitle, InsightSection, FwdGeoBackdrop
+    ui/                primitivos shadcn: button, input, select, textarea, card,
+                       dialog, badge, table, tabs, label, skeleton, sonner + carouseles
+    layout/            chrome global (barrel index.ts): Navbar, Footer, SidebarAdmin,
+                       NotificationCenter, JuniorShell, CompanyShell, AdminShell
+    features/          componentes de producto
+      DashboardStats.tsx, SearchBar.tsx   (widgets compuestos, en la raíz por decisión)
+      brand/           identidad (barrel index.ts): PageTitle, InsightSection,
+                       FwdLogo, FwdGeoBackdrop, BrandPatterns
+      shared/          reutilizables (barrel index.ts): StatusPill, EmptyState,
+                       LoadingSkeleton, ModalityChip
+      auth/            cards y flujos de auth (AuthCard, RoleSelector, ...)
+      applications/    tarjeta y estado de postulación
+      companies/       tarjeta de empresa
+      marketplace/     tarjetas y detalle de proyecto, filtros, skill picker
   lib/
-    supabase/          clientes server + browser, helper de middleware
-    marketplace/       lógica pura
-    applications/      lógica pura + server actions
-    auth/              sesión y roles
-    i18n/              helpers de formato (nombre canónico §6.1)
-    constants/
-    utils/
+    supabase/          clientes server + browser, admin, helper de middleware
+    auth/              sesión y roles (normalizeRole, ROLE_HOME)
+    admin/             lógica de administración
+    marketplace/, applications/, constants/, i18n/, utils/
+    result.ts          patrón Result<T, E> (Apéndice B)
+    stateContext.tsx   estado mock en cliente (fase prototipo)
   i18n/                config de next-intl: routing.ts, request.ts
   types/
-  middleware.ts        edge locale routing (next-intl)
+  middleware.ts        guard de locale + sesión (next-intl)
 messages/
   es.json
   en.json
@@ -155,10 +163,10 @@ Commits firmados por cada miembro. Si solo uno commitea, se penaliza al equipo (
 
 - La estructura sigue §6.1 como base, pero §6.1 es un "resumen" del CLAUDE.md madre. Las features obligatorias de empresa y admin (§3.2), las migraciones (§7) y los tests (§4.6) exigen carpetas que §6.1 no lista: por eso existen `(company)/`, los subpaneles de `(admin)/`, `supabase/migrations/` y `tests/`.
 - Hay dos carpetas i18n a propósito: `src/i18n/` para la configuración de next-intl (`routing.ts`, `request.ts`) y `src/lib/i18n/` para helpers de formato (nombre canónico del brief §6.1). Se distinguen por la ruta de import.
-- `components/features/brand/` agrupa `PageTitle`, `InsightSection` y `FwdGeoBackdrop`, que el brief define (§5.6, Apéndice A) sin asignarles ubicación.
+- Organización de `components/` (design system C1/Sol): los primitivos shadcn viven en `components/ui/`; el chrome global de página en `components/layout/` (`Navbar`, `Footer`, `SidebarAdmin`, `NotificationCenter`, `JuniorShell`/`CompanyShell`/`AdminShell`), **separado** de `features/`. Dentro de `components/features/`: `brand/` agrupa la identidad (`PageTitle`, `InsightSection`, `FwdLogo`, `FwdGeoBackdrop`, `BrandPatterns`), `shared/` los reutilizables transversales (`StatusPill`, `EmptyState`, `LoadingSkeleton`, `ModalityChip`), y las subcarpetas por área (`auth/`, `marketplace/`, `applications/`, `companies/`) los componentes específicos. Cada agrupación expone un `index.ts` (barrel): `import { PageTitle } from '@/components/features/brand'`, `import { StatusPill } from '@/components/features/shared'`, `import { Navbar } from '@/components/layout'`. **`DashboardStats` y `SearchBar` se mantienen en la raíz de `features/` por decisión** (no en `shared/`) por dos razones: (1) son **widgets compuestos** con datos/estado (DashboardStats arma tarjetas desde un array de `stats`; SearchBar es un input controlado), no átomos de UI transversales como los de `shared/`; y (2) moverlos obligaría a reescribir imports en páginas de otros roles (3 dashboards + 2 listados, en `app/*`), un churn cross-role que se evita a propósito.
 - Las server actions devuelven `Result<T, E>` tipado (Apéndice B del brief, `src/lib/result.ts`).
 - El schema de DB de §7 es sugerencia. Si el equipo lo diseña distinto, se documenta el porqué aquí (el brief lo exige).
-- Convención de no comentarios: ningún archivo del repo lleva comentarios de ninguna sintaxis. El contexto va a los commits y al tracker.
+- Convención de comentarios (reglas.md §12): se prohíbe el código comentado (código muerto dentro de comentarios); los comentarios explicativos sí se permiten, aunque se prefiere que el código se explique con nombres claros y que el "por qué" viva en los commits y el tracker.
 
 ## Versionado
 

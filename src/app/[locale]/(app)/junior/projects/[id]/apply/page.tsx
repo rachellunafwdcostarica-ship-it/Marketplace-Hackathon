@@ -3,10 +3,11 @@
 import React, { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
+import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { PageTitle } from '@/components/features/PageTitle'
+import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -41,8 +42,10 @@ export default function ApplyProjectPage() {
   const tCommon = useTranslations('Common')
   const tJunior = useTranslations('Junior')
   const tValidation = useTranslations('Validation')
+  const tAccount = useTranslations('Account')
 
   const { projects, addApplication } = useAppState()
+  const { isPending } = useAccountStatus()
   const id = params['id'] as string
   const project = projects.find((p) => p.id === id)
 
@@ -75,7 +78,7 @@ export default function ApplyProjectPage() {
           <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
-            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-white hover:bg-primary/95 h-9 px-4"
+            className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 h-9 px-4"
           >
             {tJunior('backToMarketplace')}
           </Link>
@@ -199,6 +202,12 @@ export default function ApplyProjectPage() {
                 )}
               </div>
 
+              {isPending && (
+                <p className="text-xs font-semibold text-warning bg-warning/10 border border-warning/30 rounded-lg px-3 py-2">
+                  {tAccount('actionDisabledPending')}
+                </p>
+              )}
+
               <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
                 <Link
                   href={`/junior/projects/${project.id}`}
@@ -208,8 +217,8 @@ export default function ApplyProjectPage() {
                 </Link>
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="bg-primary hover:bg-primary/95 text-white font-semibold flex items-center gap-1.5 shadow-sm px-6"
+                  disabled={isSubmitting || isPending}
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4" />
                   {isSubmitting ? tCommon('loading') : tCommon('submit')}

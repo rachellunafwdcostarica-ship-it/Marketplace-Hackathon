@@ -21,7 +21,10 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "profile": "Perfil",
-    "language": "Idioma"
+    "language": "Idioma",
+    "validations": "Validaciones",
+    "activeRole": "Rol Activo",
+    "logout": "Cerrar sesión"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -53,9 +56,12 @@
     "companyBenefit1": "Egresados de FWD listos para aportar valor desde el primer día.",
     "companyBenefit2": "Proyectos de corta duración ágiles y con costos optimizados.",
     "companyBenefit3": "Moderación y filtrado de candidatos para asegurar el perfil ideal.",
-    "statsProjects": "+500 Proyectos Completados",
-    "statsTalent": "+1,200 Desarrolladores Registrados",
-    "statsCompanies": "+150 Empresas Aliadas"
+    "statsProjectsNumber": "+500",
+    "statsProjectsLabel": "Proyectos Completados",
+    "statsTalentNumber": "+1,200",
+    "statsTalentLabel": "Desarrolladores Registrados",
+    "statsCompaniesNumber": "+150",
+    "statsCompaniesLabel": "Empresas Aliadas"
   },
   "Login": {
     "title": "Ingresa a FWD Talent",
@@ -75,6 +81,66 @@
     "noAccount": "¿Sin cuenta?",
     "signUpViaGoogle": "Regístrate con Google arriba."
   },
+  "Auth": {
+    "welcome": "BIENVENIDA/O",
+    "loginTitle": "Adelante",
+    "loginSubtitle": "Accedé a tu plataforma de empleabilidad.",
+    "registerTitle": "Registrate",
+    "registerSubtitle": "Creá tu cuenta en FWD Talent.",
+    "roleTitle": "¿Cómo vas a utilizar FWD Talent?",
+    "roleSubtitle": "Seleccioná tu perfil para continuar.",
+    "forgotTitle": "Recuperar contraseña",
+    "forgotSubtitle": "Ingresá tu correo electrónico y te enviaremos instrucciones.",
+    "verifyTitle": "Verificá tu correo",
+    "verifySubtitle": "Te enviamos un enlace de verificación. Revisá tu bandeja de entrada para continuar.",
+    "fullNameLabel": "Nombre completo",
+    "fullNamePlaceholder": "Juan Pérez",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "correo@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "confirmPasswordPlaceholder": "••••••••",
+    "termsText": "Al continuar aceptás los ",
+    "termsLink": "términos de uso",
+    "privacyLink": "política de privacidad",
+    "and": " y la ",
+    "createAccount": "Crear cuenta",
+    "signIn": "Iniciar sesión",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "noAccount": "¿No tienes cuenta? Crear cuenta",
+    "forgotPasswordLink": "¿Olvidaste tu contraseña?",
+    "sendLink": "Enviar enlace",
+    "checkInbox": "Revisá tu bandeja de entrada",
+    "resendEmail": "Reenviar correo",
+    "changeEmail": "Cambiar dirección de correo",
+    "roleJuniorTitle": "Junior FWD",
+    "roleJuniorDesc": "Busco proyectos para desarrollar experiencia profesional.",
+    "roleCompanyTitle": "Empresa",
+    "roleCompanyDesc": "Quiero publicar proyectos y contratar talento.",
+    "roleAdminTitle": "Administrador",
+    "roleAdminDesc": "Gestiono la plataforma.",
+    "continue": "Continuar",
+    "passwordStrength": "Fuerza de la contraseña",
+    "strengthWeak": "Débil",
+    "strengthMedium": "Media",
+    "strengthStrong": "Fuerte",
+    "successSent": "Enlace enviado exitosamente.",
+    "verifySuccess": "¡Correo verificado con éxito!",
+    "resending": "Reenviando...",
+    "resendSuccess": "Enlace de verificación reenviado. Revisá tu bandeja de entrada.",
+    "resendNoEmail": "No pudimos identificar tu correo. Volvé a registrarte para reenviar el enlace.",
+    "resetTitle": "Nueva contraseña",
+    "resetSubtitle": "Elegí una contraseña nueva para tu cuenta.",
+    "resetButton": "Guardar contraseña",
+    "resetSaving": "Guardando...",
+    "resetSuccessTitle": "Contraseña actualizada",
+    "resetSuccessDesc": "Tu contraseña se cambió correctamente. Ya podés iniciar sesión.",
+    "resetInvalidTitle": "Enlace inválido o expirado",
+    "resetInvalidDesc": "El enlace de recuperación no es válido o ya venció. Solicitá uno nuevo.",
+    "awardText": "Premio AMCHAM 2025 — Negocios Sostenibles"
+  },
+
   "Common": {
     "loading": "Cargando...",
     "error": "Ha ocurrido un error inesperado.",
@@ -166,6 +232,8 @@
   },
   "Validation": {
     "emailInvalid": "Debe ingresar un correo electrónico válido.",
+    "passwordMin": "La contraseña debe tener al menos 8 caracteres.",
+    "passwordMismatch": "Las contraseñas no coinciden.",
     "coverLetterMin": "La carta de presentación debe tener al menos 30 caracteres.",
     "urlPortfolio": "Debe ingresar una URL válida para el portafolio (ej. https://miweb.com).",
     "urlCV": "Debe ingresar una URL válida para el CV (ej. https://drive.google.com/...).",
@@ -273,7 +341,21 @@
     "noProjectsDesc": "Cuando las empresas publiquen proyectos aparecerán aquí para moderación.",
     "projectsActive": "Proyectos Activos (Publicados)",
     "projectsPending": "Proyectos Pendientes de Aprobación",
-    "projectsClosed": "Proyectos Cerrados / Ocultos"
+    "projectsClosed": "Proyectos Cerrados / Ocultos",
+    "pendingUsers": "Validaciones de Usuarios",
+    "pendingUsersDesc": "Revisá y aprobá las cuentas de usuarios que completaron el onboarding.",
+    "noPendingUsers": "No hay usuarios pendientes de aprobación en este momento.",
+    "noPendingUsersDesc": "Cuando un usuario complete el onboarding, aparecerá aquí para revisión.",
+    "approveUser": "Aprobar",
+    "approving": "Aprobando...",
+    "userApproved": "Cuenta de {name} aprobada exitosamente.",
+    "userApproveError": "Error al aprobar la cuenta. Intentá de nuevo.",
+    "noRoleYet": "sin rol asignado"
+  },
+  "Errors": {
+    "forbidden": "Acceso no autorizado",
+    "forbiddenDesc": "No tienes permiso para ver esta página.",
+    "forbiddenBack": "Volver al inicio"
   },
   "Status": {
     "draft": "Borrador",
@@ -281,5 +363,21 @@
     "viewed": "Vista",
     "accepted": "Aceptada",
     "rejected": "Rechazada"
+  },
+  "Onboarding": {
+    "subtitle": "Elegí cómo querés usar FWD Talent para continuar.",
+    "loading": "Guardando...",
+    "errorGeneric": "Ocurrió un error al guardar tu perfil. Intentá de nuevo."
+  },
+  "Account": {
+    "pendingBanner": "Tu cuenta está pendiente de aprobación por el equipo FWD. Las acciones se habilitarán una vez aprobada.",
+    "actionDisabledPending": "Tu cuenta debe ser aprobada por un administrador para realizar esta acción.",
+    "pendingTitle": "Cuenta pendiente de aprobación",
+    "pendingDesc": "El equipo FWD revisará tu solicitud. Te notificaremos cuando tu cuenta esté activa."
+  },
+  "Notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todas como leídas",
+    "empty": "No tienes notificaciones."
   }
 }

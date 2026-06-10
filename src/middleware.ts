@@ -2,6 +2,8 @@ import createMiddleware from 'next-intl/middleware'
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
+import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import type { Database } from '@/types/database'
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -17,8 +19,21 @@ function isProtected(pathname: string): boolean {
   )
 }
 
-function isAuthPage(pathname: string): boolean {
-  return /^\/(es|en)\/login/.test(pathname)
+function isPublicAuthPage(pathname: string): boolean {
+  return /^\/(es|en)\/(login|register|forgot-password|verify-email)(\/|$)/.test(
+    pathname,
+  )
+}
+
+function isOnboardingPath(pathname: string): boolean {
+  return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
+}
+
+function getRouteRole(pathname: string): 'junior' | 'empresa' | 'admin' | null {
+  if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
+  if (/^\/(es|en)\/empresa/.test(pathname)) return 'empresa'
+  if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
+  return null
 }
 
 export async function middleware(request: NextRequest) {
@@ -33,7 +48,7 @@ export async function middleware(request: NextRequest) {
   const intlResponse = intlMiddleware(request)
 
   // Refrescar sesión de Supabase y propagar cookies
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -59,14 +74,67 @@ export async function middleware(request: NextRequest) {
 
   const locale = getLocale(pathname)
 
-  // Ruta protegida sin sesión → login
-  if (isProtected(pathname) && !user) {
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+  // CASO A: Usuario NO autenticado
+  if (!user) {
+    // Rutas protegidas y /onboarding requieren sesión
+    if (isProtected(pathname) || isOnboardingPath(pathname)) {
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+    }
+    return intlResponse
   }
 
-  // Usuario ya autenticado intenta entrar al login → dashboard
-  if (isAuthPage(pathname) && user) {
-    return NextResponse.redirect(new URL(`/${locale}/junior`, request.url))
+  // A partir de aquí: usuario autenticado
+
+  // CASO B: Ruta protegida
+  if (isProtected(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw)
+
+    if (!role) {
+      // Sin rol asignado → onboarding obligatorio
+      return NextResponse.redirect(
+        new URL(`/${locale}/onboarding`, request.url),
+      )
+    }
+
+    const routeRole = getRouteRole(pathname)
+    if (routeRole && routeRole !== role) {
+      // Rol incorrecto → redirect silencioso al home propio (Q5)
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+      )
+    }
+
+    return intlResponse
+  }
+
+  // CASO C: Página pública de auth (login, register, etc.)
+  if (isPublicAuthPage(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw)
+
+    if (role) {
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+      )
+    }
+    // Sin rol → onboarding (ya tiene sesión pero aún no eligió rol)
+    return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url))
+  }
+
+  // CASO D: /onboarding con usuario autenticado
+  if (isOnboardingPath(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw)
+
+    if (role) {
+      // Ya tiene rol → rebotar a home (refuerza permanencia Q6)
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+      )
+    }
+    // Sin rol → onboarding normal
+    return intlResponse
   }
 
   return intlResponse
