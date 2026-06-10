@@ -3,7 +3,7 @@
 import React from 'react'
 import { useParams } from 'next/navigation'
 import { Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -22,7 +22,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
+import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 
 export default function ProjectDetailsPage() {
   const params = useParams()

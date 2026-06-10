@@ -18,7 +18,7 @@ import { OAuthButtons } from '@/components/features/auth/OAuthButtons'
 import { AuthFooter } from '@/components/features/auth/AuthFooter'
 import { PasswordStrengthIndicator } from '@/components/features/auth/PasswordStrengthIndicator'
 import { RoleSelector } from '@/components/features/auth/RoleSelector'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import type { UserRole } from '@/types'
 
 interface RegisterFormValues {

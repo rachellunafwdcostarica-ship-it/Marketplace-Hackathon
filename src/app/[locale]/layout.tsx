@@ -4,7 +4,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Archivo_Narrow, Figtree, JetBrains_Mono } from 'next/font/google'
 import { routing } from '@/i18n/routing'
-import { StateProvider } from '@/lib/stateContext'
+import { StateProvider } from '@/lib/StateContext'
 import { Toaster } from '@/components/ui/sonner'
 import '../globals.css'
 

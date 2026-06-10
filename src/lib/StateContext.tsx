@@ -14,7 +14,7 @@ import {
   mockProjects,
   mockApplications,
   mockCompanies,
-} from '@/constants/mockData'
+} from '@/lib/constants/mockData'
 
 interface StateContextType {
   projects: Project[]

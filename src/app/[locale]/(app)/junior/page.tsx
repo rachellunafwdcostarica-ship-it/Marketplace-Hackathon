@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -10,7 +10,7 @@ import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
 import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
 import { InsightSection } from '@/components/features/brand/InsightSection'
 import { Link } from '@/i18n/routing'
-import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
+import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 import {
   Send,
   CheckCircle2,

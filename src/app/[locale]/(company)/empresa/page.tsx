@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link } from '@/i18n/routing'
 import { toast } from 'sonner'
-import { MOCK_COMPANY_ID } from '@/constants/mockData'
+import { MOCK_COMPANY_ID } from '@/lib/constants/mockData'
 import {
   Dialog,
   DialogContent,

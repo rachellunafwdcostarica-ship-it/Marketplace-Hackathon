@@ -2,7 +2,7 @@
 
 Lee este archivo **completo antes de implementar o cambiar cualquier cosa**. Aplica a personas y a cualquier IA (Claude, Cursor, Copilot, Gemini).
 
-La **única fuente de verdad es el brief oficial** `Marketplace_FWD_Brief.pdf` (FWD Talent, v1.0, 2026-05-27). Este archivo es su destilado para tenerlo dentro del repo. Si algo aquí contradice al PDF, **gana el PDF**. Las referencias entre paréntesis (§4.1, §5.5, etc.) apuntan a las secciones del brief.
+Este archivo destila las **restricciones** del proyecto (stack, identidad visual, naming, prohibiciones, calidad) a partir del brief oficial `Marketplace_FWD_Brief.pdf` (FWD Talent, v1.0, 2026-05-27). Las **funciones** de la plataforma (flujos, roles, alcance) las define el `SRS_Plataforma_Talento_FWD` (v1.0, 2026-06-03), **fuente de verdad funcional vigente**. Resolución de conflictos: en restricciones, stack e identidad gana el brief; en funcionalidad, flujos y alcance gana el SRS. Las referencias entre paréntesis (§4.1, §5.5, etc.) apuntan a las secciones del brief, salvo que se indique "SRS".
 
 Regla previa: el proyecto puede integrarse al producto vivo `jobs.fwdcostarica.com`, así que el código tiene que poder convivir con el de FWD Talent desde el día 1. Por eso el stack y la identidad visual no se negocian.
 
@@ -109,9 +109,9 @@ El bloque oklch completo de §5.5 se pega **tal cual** en `src/app/globals.css`,
 
 - Supabase Postgres con **RLS habilitado en todas las tablas** y políticas explícitas (§7.2).
 - Las migraciones se versionan en `supabase/migrations/` (§13 FAQ).
-- Schema de §7.1 (`companies`, `projects`, `applications`) es **sugerencia, no obligación**. Si se diseña distinto, **explicarlo en el README** (§7).
-- Auth con Supabase Auth, login Google obligatorio para el MVP (GitHub opcional; magic link como mínimo absoluto) (§3.2, §7.3).
-- Rol del usuario (junior / empresa / admin) vía tabla `user_roles` o campo `role` en metadata de `auth.users` (§7.3).
+- El modelo de datos es **sugerencia, no obligación** (el SRS lo da como orientativo, §4 SRS). Si se diseña distinto, **explicarlo en el README** (§7).
+- Auth con **Supabase Auth**. El método de login y los proveedores (Google, email, etc.) los define el SRS, no este archivo.
+- Rol del usuario vía tabla `user_roles` o campo `role` en metadata de `auth.users`, con control de acceso por RLS según rol (§7.3). Los roles concretos los define el SRS.
 - **`SUPABASE_SERVICE_ROLE_KEY` solo en servidor**, nunca expuesta al cliente. El cliente usa `NEXT_PUBLIC_SUPABASE_ANON_KEY` (sometida a RLS) (§13 FAQ).
 
 ---
@@ -179,53 +179,7 @@ Estas no salen del brief, son convenciones internas y se respetan igual:
 
 ---
 
-## 13. Alcance del MVP (§3.2) — obligatorio al 28-jun
-
-**Junior egresado**
-- Login OAuth (Google obligatorio; GitHub opcional).
-- Listado de proyectos filtrable por stack, duración, modalidad (remoto/híbrido/presencial), salario.
-- Detalle del proyecto (descripción, requisitos, empresa, duración, presupuesto, fechas).
-- Postular con carta corta + link a portfolio/CV, validado con Zod.
-- Mis postulaciones con estado (ej: borrador / enviada / vista / aceptada / rechazada).
-
-**Empresa contratante**
-- Onboarding (nombre, descripción, sitio web, logo opcional, cédula jurídica CR).
-- Publicar proyecto (título, descripción, stack, duración, presupuesto USD/CRC, modalidad, fecha inicio).
-- Ver postulaciones recibidas por proyecto, con perfil del junior y acciones (ej: aceptar/rechazar/contactar).
-
-**Admin FWD**
-- Dashboard mínimo (proyectos activos, juniors postulando, top empresas).
-- Aprobar empresas antes de que publiquen.
-- Moderar proyectos (ocultar los que no cumplen reglas).
-
-Un junior tiene que poder postular en **máximo 4 clicks** (§9.1).
-
----
-
-## 14. Fuera de alcance — NO hacer (§3.4)
-
-- Procesamiento de pagos (no Stripe, no PayPal).
-- Contratos firmados digitalmente.
-- Mensajería en tiempo real (WebSockets), salvo como X factor del 2.0 y si tiene sentido.
-- Móvil nativo. Solo web responsive.
-
----
-
-## 15. IA (§13 FAQ)
-
-- Permitida para matching algorítmico, sugerencia de pricing al publicar, autocompletar copy de descripción (Claude / Gemini).
-- **NUNCA generar postulaciones de juniors automáticamente.** El junior siempre escribe su propia carta.
-- Modo oscuro: bienvenido en el 2.0, con tokens FWD invertidos (oklch flipping de lightness, no hardcoded).
-
----
-
-## 16. Pivots permitidos (§13 FAQ)
-
-Solo se cambia lo **no fijado**. El producto sigue siendo "marketplace de proyectos para juniors", el stack sigue igual, la identidad sigue siendo FWD. El pivot mejora la experiencia, no cambia el problema.
-
----
-
-## 17. Descalificaciones y penalizaciones (§9.3, §12)
+## 13. Descalificaciones y penalizaciones (§9.3, §12)
 
 - Plagio de otro equipo o de plataformas existentes (Workana, Upwork, etc.).
 - Hardcoded de strings (cero i18n) o de colores (en vez de tokens).
