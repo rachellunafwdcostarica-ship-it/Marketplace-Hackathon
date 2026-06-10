@@ -127,6 +127,17 @@
     "strengthStrong": "Strong",
     "successSent": "Link sent successfully.",
     "verifySuccess": "Email verified successfully!",
+    "resending": "Resending...",
+    "resendSuccess": "Verification link resent. Check your inbox.",
+    "resendNoEmail": "We couldn't identify your email. Register again to resend the link.",
+    "resetTitle": "New password",
+    "resetSubtitle": "Choose a new password for your account.",
+    "resetButton": "Save password",
+    "resetSaving": "Saving...",
+    "resetSuccessTitle": "Password updated",
+    "resetSuccessDesc": "Your password was changed successfully. You can now sign in.",
+    "resetInvalidTitle": "Invalid or expired link",
+    "resetInvalidDesc": "The recovery link is invalid or has expired. Request a new one.",
     "awardText": "AMCHAM Award 2025 — Sustainable Business"
   },
 
@@ -221,6 +232,8 @@
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",
+    "passwordMin": "Password must be at least 8 characters.",
+    "passwordMismatch": "Passwords do not match.",
     "coverLetterMin": "Cover letter must be at least 30 characters.",
     "urlPortfolio": "Please enter a valid URL for your portfolio (e.g., https://mysite.com).",
     "urlCV": "Please enter a valid URL for your CV (e.g., https://drive.google.com/...).",

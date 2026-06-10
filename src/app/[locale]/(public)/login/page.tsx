@@ -57,6 +57,9 @@ export default function LoginPage() {
       email: data.email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        // No crear cuentas nuevas desde el login: el alta es en /register.
+        // Evita cuentas fantasma para cualquier correo tecleado aquí.
+        shouldCreateUser: false,
       },
     })
     setLoading(false)

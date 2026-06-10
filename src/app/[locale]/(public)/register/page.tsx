@@ -98,7 +98,7 @@ export default function RegisterPage() {
     toast.success(
       '¡Registro exitoso! Revisa tu correo para verificar tu cuenta.',
     )
-    router.push('/verify-email')
+    router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
   }
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {

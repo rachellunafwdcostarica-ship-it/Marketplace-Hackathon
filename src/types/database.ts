@@ -1,0 +1,1465 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '14.5'
+  }
+  public: {
+    Tables: {
+      areas_negocio: {
+        Row: {
+          descripcion: string | null
+          id_area: string
+          is_active: boolean
+          nombre: string
+        }
+        Insert: {
+          descripcion?: string | null
+          id_area?: string
+          is_active?: boolean
+          nombre: string
+        }
+        Update: {
+          descripcion?: string | null
+          id_area?: string
+          is_active?: boolean
+          nombre?: string
+        }
+        Relationships: []
+      }
+      auditoria: {
+        Row: {
+          accion: string
+          entidad: string
+          id_actor: string | null
+          id_auditoria: string
+          id_entidad: string
+          ip_origen: string | null
+          ocurrida_at: string
+          valores_antes: Json | null
+          valores_despues: Json | null
+        }
+        Insert: {
+          accion: string
+          entidad: string
+          id_actor?: string | null
+          id_auditoria?: string
+          id_entidad: string
+          ip_origen?: string | null
+          ocurrida_at?: string
+          valores_antes?: Json | null
+          valores_despues?: Json | null
+        }
+        Update: {
+          accion?: string
+          entidad?: string
+          id_actor?: string | null
+          id_auditoria?: string
+          id_entidad?: string
+          ip_origen?: string | null
+          ocurrida_at?: string
+          valores_antes?: Json | null
+          valores_despues?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'auditoria_id_actor_fkey'
+            columns: ['id_actor']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      categorias_proyecto: {
+        Row: {
+          id_categoria: string
+          is_active: boolean
+          nombre: string
+        }
+        Insert: {
+          id_categoria?: string
+          is_active?: boolean
+          nombre: string
+        }
+        Update: {
+          id_categoria?: string
+          is_active?: boolean
+          nombre?: string
+        }
+        Relationships: []
+      }
+      comentarios_entregables: {
+        Row: {
+          comentado_at: string
+          contenido: string
+          id_autor: string
+          id_comentario_entregable: string
+          id_entregable: string
+          tipo_comentario: Database['public']['Enums']['tipo_comentario_enum']
+        }
+        Insert: {
+          comentado_at?: string
+          contenido: string
+          id_autor: string
+          id_comentario_entregable?: string
+          id_entregable: string
+          tipo_comentario: Database['public']['Enums']['tipo_comentario_enum']
+        }
+        Update: {
+          comentado_at?: string
+          contenido?: string
+          id_autor?: string
+          id_comentario_entregable?: string
+          id_entregable?: string
+          tipo_comentario?: Database['public']['Enums']['tipo_comentario_enum']
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comentarios_entregables_id_autor_fkey'
+            columns: ['id_autor']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+          {
+            foreignKeyName: 'comentarios_entregables_id_entregable_fkey'
+            columns: ['id_entregable']
+            isOneToOne: false
+            referencedRelation: 'entregables'
+            referencedColumns: ['id_entregable']
+          },
+        ]
+      }
+      configuracion_sistema: {
+        Row: {
+          clave: string
+          descripcion: string | null
+          modificado_at: string
+          modificado_por: string | null
+          tipo_dato: Database['public']['Enums']['tipo_dato_enum']
+          valor: string
+        }
+        Insert: {
+          clave: string
+          descripcion?: string | null
+          modificado_at?: string
+          modificado_por?: string | null
+          tipo_dato: Database['public']['Enums']['tipo_dato_enum']
+          valor: string
+        }
+        Update: {
+          clave?: string
+          descripcion?: string | null
+          modificado_at?: string
+          modificado_por?: string | null
+          tipo_dato?: Database['public']['Enums']['tipo_dato_enum']
+          valor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'configuracion_sistema_modificado_por_fkey'
+            columns: ['modificado_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      consentimientos: {
+        Row: {
+          consentimiento_at: string
+          id_consentimiento: string
+          id_usuario: string
+          ip_origen: string | null
+          otorgado: boolean
+          tipo_consentimiento: Database['public']['Enums']['tipo_consentimiento_enum']
+          user_agent: string | null
+          version_documento: string | null
+        }
+        Insert: {
+          consentimiento_at?: string
+          id_consentimiento?: string
+          id_usuario: string
+          ip_origen?: string | null
+          otorgado: boolean
+          tipo_consentimiento: Database['public']['Enums']['tipo_consentimiento_enum']
+          user_agent?: string | null
+          version_documento?: string | null
+        }
+        Update: {
+          consentimiento_at?: string
+          id_consentimiento?: string
+          id_usuario?: string
+          ip_origen?: string | null
+          otorgado?: boolean
+          tipo_consentimiento?: Database['public']['Enums']['tipo_consentimiento_enum']
+          user_agent?: string | null
+          version_documento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'consentimientos_id_usuario_fkey'
+            columns: ['id_usuario']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      contrataciones: {
+        Row: {
+          condiciones_especiales: string | null
+          estado_periodo: Database['public']['Enums']['estado_periodo_enum']
+          fecha_fin_estimada: string | null
+          fecha_fin_real: string | null
+          fecha_inicio: string | null
+          id_contratacion: string
+          id_participacion: string
+          moneda: Database['public']['Enums']['moneda_enum']
+          monto_acordado: number | null
+          motivo_cancelacion: string | null
+          updated_at: string
+        }
+        Insert: {
+          condiciones_especiales?: string | null
+          estado_periodo?: Database['public']['Enums']['estado_periodo_enum']
+          fecha_fin_estimada?: string | null
+          fecha_fin_real?: string | null
+          fecha_inicio?: string | null
+          id_contratacion?: string
+          id_participacion: string
+          moneda?: Database['public']['Enums']['moneda_enum']
+          monto_acordado?: number | null
+          motivo_cancelacion?: string | null
+          updated_at?: string
+        }
+        Update: {
+          condiciones_especiales?: string | null
+          estado_periodo?: Database['public']['Enums']['estado_periodo_enum']
+          fecha_fin_estimada?: string | null
+          fecha_fin_real?: string | null
+          fecha_inicio?: string | null
+          id_contratacion?: string
+          id_participacion?: string
+          moneda?: Database['public']['Enums']['moneda_enum']
+          monto_acordado?: number | null
+          motivo_cancelacion?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'contrataciones_id_participacion_fkey'
+            columns: ['id_participacion']
+            isOneToOne: true
+            referencedRelation: 'participaciones'
+            referencedColumns: ['id_participacion']
+          },
+        ]
+      }
+      conversaciones_ia: {
+        Row: {
+          contexto_inicial: string | null
+          contexto_inicial_pdf_url: string | null
+          estado: Database['public']['Enums']['estado_conv_ia_enum']
+          fecha_fin: string | null
+          fecha_inicio: string
+          historial: Json | null
+          id_conversacion: string
+          id_empresario: string
+          id_proyecto: string | null
+          modelo_ia: string | null
+          nivel_tecnico_empresario:
+            | Database['public']['Enums']['nivel_tecnico_enum']
+            | null
+          propuesta_aprobada: Json | null
+          propuesta_generada: Json | null
+          stack_sugerido: Json | null
+        }
+        Insert: {
+          contexto_inicial?: string | null
+          contexto_inicial_pdf_url?: string | null
+          estado?: Database['public']['Enums']['estado_conv_ia_enum']
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          historial?: Json | null
+          id_conversacion?: string
+          id_empresario: string
+          id_proyecto?: string | null
+          modelo_ia?: string | null
+          nivel_tecnico_empresario?:
+            | Database['public']['Enums']['nivel_tecnico_enum']
+            | null
+          propuesta_aprobada?: Json | null
+          propuesta_generada?: Json | null
+          stack_sugerido?: Json | null
+        }
+        Update: {
+          contexto_inicial?: string | null
+          contexto_inicial_pdf_url?: string | null
+          estado?: Database['public']['Enums']['estado_conv_ia_enum']
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          historial?: Json | null
+          id_conversacion?: string
+          id_empresario?: string
+          id_proyecto?: string | null
+          modelo_ia?: string | null
+          nivel_tecnico_empresario?:
+            | Database['public']['Enums']['nivel_tecnico_enum']
+            | null
+          propuesta_aprobada?: Json | null
+          propuesta_generada?: Json | null
+          stack_sugerido?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'conversaciones_ia_id_empresario_fkey'
+            columns: ['id_empresario']
+            isOneToOne: false
+            referencedRelation: 'empresarios'
+            referencedColumns: ['id_empresario']
+          },
+          {
+            foreignKeyName: 'conversaciones_ia_id_proyecto_fkey'
+            columns: ['id_proyecto']
+            isOneToOne: false
+            referencedRelation: 'proyectos'
+            referencedColumns: ['id_proyecto']
+          },
+        ]
+      }
+      empresarios: {
+        Row: {
+          alcance_operativo: Database['public']['Enums']['alcance_enum'] | null
+          cedula_juridica: string | null
+          ciudad_sede: string | null
+          descripcion: string | null
+          estado_verificacion: Database['public']['Enums']['estado_verif_enum']
+          id_empresario: string
+          id_usuario: string
+          logo: string | null
+          nombre_empresa: string
+          pais_sede: string | null
+          sector: string | null
+          sitio_web: string | null
+          tipo_empresario: Database['public']['Enums']['tipo_empresario_enum']
+          updated_at: string
+          verificado_at: string | null
+          verificado_por: string | null
+        }
+        Insert: {
+          alcance_operativo?: Database['public']['Enums']['alcance_enum'] | null
+          cedula_juridica?: string | null
+          ciudad_sede?: string | null
+          descripcion?: string | null
+          estado_verificacion?: Database['public']['Enums']['estado_verif_enum']
+          id_empresario?: string
+          id_usuario: string
+          logo?: string | null
+          nombre_empresa: string
+          pais_sede?: string | null
+          sector?: string | null
+          sitio_web?: string | null
+          tipo_empresario: Database['public']['Enums']['tipo_empresario_enum']
+          updated_at?: string
+          verificado_at?: string | null
+          verificado_por?: string | null
+        }
+        Update: {
+          alcance_operativo?: Database['public']['Enums']['alcance_enum'] | null
+          cedula_juridica?: string | null
+          ciudad_sede?: string | null
+          descripcion?: string | null
+          estado_verificacion?: Database['public']['Enums']['estado_verif_enum']
+          id_empresario?: string
+          id_usuario?: string
+          logo?: string | null
+          nombre_empresa?: string
+          pais_sede?: string | null
+          sector?: string | null
+          sitio_web?: string | null
+          tipo_empresario?: Database['public']['Enums']['tipo_empresario_enum']
+          updated_at?: string
+          verificado_at?: string | null
+          verificado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'empresarios_id_usuario_fkey'
+            columns: ['id_usuario']
+            isOneToOne: true
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+          {
+            foreignKeyName: 'empresarios_verificado_por_fkey'
+            columns: ['verificado_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      entregables: {
+        Row: {
+          archivo_url: string | null
+          cargado_at: string
+          estado: Database['public']['Enums']['estado_entregable_enum']
+          id_contratacion: string
+          id_entregable: string
+          tipo_entregable: Database['public']['Enums']['tipo_entregable_enum']
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          archivo_url?: string | null
+          cargado_at?: string
+          estado?: Database['public']['Enums']['estado_entregable_enum']
+          id_contratacion: string
+          id_entregable?: string
+          tipo_entregable: Database['public']['Enums']['tipo_entregable_enum']
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          archivo_url?: string | null
+          cargado_at?: string
+          estado?: Database['public']['Enums']['estado_entregable_enum']
+          id_contratacion?: string
+          id_entregable?: string
+          tipo_entregable?: Database['public']['Enums']['tipo_entregable_enum']
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'entregables_id_contratacion_fkey'
+            columns: ['id_contratacion']
+            isOneToOne: false
+            referencedRelation: 'contrataciones'
+            referencedColumns: ['id_contratacion']
+          },
+        ]
+      }
+      estudiante_habilidades: {
+        Row: {
+          id_estudiante: string
+          id_tecnologia: string
+          nivel: Database['public']['Enums']['nivel_habilidad_enum']
+        }
+        Insert: {
+          id_estudiante: string
+          id_tecnologia: string
+          nivel: Database['public']['Enums']['nivel_habilidad_enum']
+        }
+        Update: {
+          id_estudiante?: string
+          id_tecnologia?: string
+          nivel?: Database['public']['Enums']['nivel_habilidad_enum']
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'estudiante_habilidades_id_estudiante_fkey'
+            columns: ['id_estudiante']
+            isOneToOne: false
+            referencedRelation: 'estudiantes'
+            referencedColumns: ['id_estudiante']
+          },
+          {
+            foreignKeyName: 'estudiante_habilidades_id_tecnologia_fkey'
+            columns: ['id_tecnologia']
+            isOneToOne: false
+            referencedRelation: 'tecnologias'
+            referencedColumns: ['id_tecnologia']
+          },
+        ]
+      }
+      estudiantes: {
+        Row: {
+          descripcion: string | null
+          estado_verificacion: Database['public']['Enums']['estado_verif_enum']
+          id_estudiante: string
+          id_usuario: string
+          modalidad_preferida:
+            | Database['public']['Enums']['modalidad_enum']
+            | null
+          participaciones_activas: number
+          portafolio_visible_publicamente: boolean
+          proyectos_completados: number
+          reputacion: number | null
+          titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
+          updated_at: string
+          verificado_at: string | null
+          verificado_por: string | null
+        }
+        Insert: {
+          descripcion?: string | null
+          estado_verificacion?: Database['public']['Enums']['estado_verif_enum']
+          id_estudiante?: string
+          id_usuario: string
+          modalidad_preferida?:
+            | Database['public']['Enums']['modalidad_enum']
+            | null
+          participaciones_activas?: number
+          portafolio_visible_publicamente?: boolean
+          proyectos_completados?: number
+          reputacion?: number | null
+          titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
+          updated_at?: string
+          verificado_at?: string | null
+          verificado_por?: string | null
+        }
+        Update: {
+          descripcion?: string | null
+          estado_verificacion?: Database['public']['Enums']['estado_verif_enum']
+          id_estudiante?: string
+          id_usuario?: string
+          modalidad_preferida?:
+            | Database['public']['Enums']['modalidad_enum']
+            | null
+          participaciones_activas?: number
+          portafolio_visible_publicamente?: boolean
+          proyectos_completados?: number
+          reputacion?: number | null
+          titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
+          updated_at?: string
+          verificado_at?: string | null
+          verificado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'estudiantes_id_usuario_fkey'
+            columns: ['id_usuario']
+            isOneToOne: true
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+          {
+            foreignKeyName: 'estudiantes_verificado_por_fkey'
+            columns: ['verificado_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      evaluaciones: {
+        Row: {
+          comentario: string | null
+          evaluado_at: string
+          id_contratacion: string
+          id_empresario: string
+          id_estudiante: string
+          id_evaluacion: string
+          puntuacion: number
+          respuesta_evaluado: string | null
+        }
+        Insert: {
+          comentario?: string | null
+          evaluado_at?: string
+          id_contratacion: string
+          id_empresario: string
+          id_estudiante: string
+          id_evaluacion?: string
+          puntuacion: number
+          respuesta_evaluado?: string | null
+        }
+        Update: {
+          comentario?: string | null
+          evaluado_at?: string
+          id_contratacion?: string
+          id_empresario?: string
+          id_estudiante?: string
+          id_evaluacion?: string
+          puntuacion?: number
+          respuesta_evaluado?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'evaluaciones_id_contratacion_fkey'
+            columns: ['id_contratacion']
+            isOneToOne: false
+            referencedRelation: 'contrataciones'
+            referencedColumns: ['id_contratacion']
+          },
+          {
+            foreignKeyName: 'evaluaciones_id_empresario_fkey'
+            columns: ['id_empresario']
+            isOneToOne: false
+            referencedRelation: 'empresarios'
+            referencedColumns: ['id_empresario']
+          },
+          {
+            foreignKeyName: 'evaluaciones_id_estudiante_fkey'
+            columns: ['id_estudiante']
+            isOneToOne: false
+            referencedRelation: 'estudiantes'
+            referencedColumns: ['id_estudiante']
+          },
+        ]
+      }
+      mensajes: {
+        Row: {
+          contenido: string
+          fecha_envio: string
+          id_mensaje: string
+          id_proyecto: string
+          id_remitente: string
+          leido: boolean
+        }
+        Insert: {
+          contenido: string
+          fecha_envio?: string
+          id_mensaje?: string
+          id_proyecto: string
+          id_remitente: string
+          leido?: boolean
+        }
+        Update: {
+          contenido?: string
+          fecha_envio?: string
+          id_mensaje?: string
+          id_proyecto?: string
+          id_remitente?: string
+          leido?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'mensajes_id_proyecto_fkey'
+            columns: ['id_proyecto']
+            isOneToOne: false
+            referencedRelation: 'proyectos'
+            referencedColumns: ['id_proyecto']
+          },
+          {
+            foreignKeyName: 'mensajes_id_remitente_fkey'
+            columns: ['id_remitente']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      notificaciones: {
+        Row: {
+          generada_at: string
+          id_notificacion: string
+          id_usuario: string
+          leida: boolean
+          mensaje: string
+          tipo_evento: string
+          url_destino: string | null
+        }
+        Insert: {
+          generada_at?: string
+          id_notificacion?: string
+          id_usuario: string
+          leida?: boolean
+          mensaje: string
+          tipo_evento: string
+          url_destino?: string | null
+        }
+        Update: {
+          generada_at?: string
+          id_notificacion?: string
+          id_usuario?: string
+          leida?: boolean
+          mensaje?: string
+          tipo_evento?: string
+          url_destino?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notificaciones_id_usuario_fkey'
+            columns: ['id_usuario']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      participaciones: {
+        Row: {
+          aceptada_at: string | null
+          adjudicada_at: string | null
+          calificacion_prototipo: number | null
+          carta_postulacion: string | null
+          comentario_prototipo: string | null
+          documentacion_url: string | null
+          estado: Database['public']['Enums']['estado_participacion_enum']
+          fecha_entrega_prototipo: string | null
+          fecha_postulacion: string
+          id_estudiante: string
+          id_participacion: string
+          id_proyecto: string
+          motivo_rechazo: string | null
+          no_seleccionada_at: string | null
+          propuesta: string | null
+          prototipo_url: string | null
+          rechazada_at: string | null
+          revision_iniciada_at: string | null
+          updated_at: string
+          url_repositorio_proyecto: string | null
+        }
+        Insert: {
+          aceptada_at?: string | null
+          adjudicada_at?: string | null
+          calificacion_prototipo?: number | null
+          carta_postulacion?: string | null
+          comentario_prototipo?: string | null
+          documentacion_url?: string | null
+          estado?: Database['public']['Enums']['estado_participacion_enum']
+          fecha_entrega_prototipo?: string | null
+          fecha_postulacion?: string
+          id_estudiante: string
+          id_participacion?: string
+          id_proyecto: string
+          motivo_rechazo?: string | null
+          no_seleccionada_at?: string | null
+          propuesta?: string | null
+          prototipo_url?: string | null
+          rechazada_at?: string | null
+          revision_iniciada_at?: string | null
+          updated_at?: string
+          url_repositorio_proyecto?: string | null
+        }
+        Update: {
+          aceptada_at?: string | null
+          adjudicada_at?: string | null
+          calificacion_prototipo?: number | null
+          carta_postulacion?: string | null
+          comentario_prototipo?: string | null
+          documentacion_url?: string | null
+          estado?: Database['public']['Enums']['estado_participacion_enum']
+          fecha_entrega_prototipo?: string | null
+          fecha_postulacion?: string
+          id_estudiante?: string
+          id_participacion?: string
+          id_proyecto?: string
+          motivo_rechazo?: string | null
+          no_seleccionada_at?: string | null
+          propuesta?: string | null
+          prototipo_url?: string | null
+          rechazada_at?: string | null
+          revision_iniciada_at?: string | null
+          updated_at?: string
+          url_repositorio_proyecto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'participaciones_id_estudiante_fkey'
+            columns: ['id_estudiante']
+            isOneToOne: false
+            referencedRelation: 'estudiantes'
+            referencedColumns: ['id_estudiante']
+          },
+          {
+            foreignKeyName: 'participaciones_id_proyecto_fkey'
+            columns: ['id_proyecto']
+            isOneToOne: false
+            referencedRelation: 'proyectos'
+            referencedColumns: ['id_proyecto']
+          },
+        ]
+      }
+      proyecto_tecnologias: {
+        Row: {
+          id_proyecto: string
+          id_tecnologia: string
+        }
+        Insert: {
+          id_proyecto: string
+          id_tecnologia: string
+        }
+        Update: {
+          id_proyecto?: string
+          id_tecnologia?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'proyecto_tecnologias_id_proyecto_fkey'
+            columns: ['id_proyecto']
+            isOneToOne: false
+            referencedRelation: 'proyectos'
+            referencedColumns: ['id_proyecto']
+          },
+          {
+            foreignKeyName: 'proyecto_tecnologias_id_tecnologia_fkey'
+            columns: ['id_tecnologia']
+            isOneToOne: false
+            referencedRelation: 'tecnologias'
+            referencedColumns: ['id_tecnologia']
+          },
+        ]
+      }
+      proyectos: {
+        Row: {
+          ciudad_proyecto: string | null
+          created_at: string
+          descripcion: string
+          estado: Database['public']['Enums']['estado_proyecto_enum']
+          fecha_cierre: string | null
+          fecha_publicacion: string | null
+          id_area_negocio: string | null
+          id_categoria: string | null
+          id_empresario: string
+          id_proyecto: string
+          is_active: boolean
+          modalidad: Database['public']['Enums']['modalidad_enum']
+          moneda: Database['public']['Enums']['moneda_enum']
+          motivo_cancelacion: string | null
+          pais_proyecto: string | null
+          postulaciones_pendientes_revisar: number
+          presupuesto_max: number | null
+          presupuesto_min: number | null
+          titulo: string
+          updated_at: string
+          usa_ia: boolean
+        }
+        Insert: {
+          ciudad_proyecto?: string | null
+          created_at?: string
+          descripcion: string
+          estado?: Database['public']['Enums']['estado_proyecto_enum']
+          fecha_cierre?: string | null
+          fecha_publicacion?: string | null
+          id_area_negocio?: string | null
+          id_categoria?: string | null
+          id_empresario: string
+          id_proyecto?: string
+          is_active?: boolean
+          modalidad: Database['public']['Enums']['modalidad_enum']
+          moneda?: Database['public']['Enums']['moneda_enum']
+          motivo_cancelacion?: string | null
+          pais_proyecto?: string | null
+          postulaciones_pendientes_revisar?: number
+          presupuesto_max?: number | null
+          presupuesto_min?: number | null
+          titulo: string
+          updated_at?: string
+          usa_ia?: boolean
+        }
+        Update: {
+          ciudad_proyecto?: string | null
+          created_at?: string
+          descripcion?: string
+          estado?: Database['public']['Enums']['estado_proyecto_enum']
+          fecha_cierre?: string | null
+          fecha_publicacion?: string | null
+          id_area_negocio?: string | null
+          id_categoria?: string | null
+          id_empresario?: string
+          id_proyecto?: string
+          is_active?: boolean
+          modalidad?: Database['public']['Enums']['modalidad_enum']
+          moneda?: Database['public']['Enums']['moneda_enum']
+          motivo_cancelacion?: string | null
+          pais_proyecto?: string | null
+          postulaciones_pendientes_revisar?: number
+          presupuesto_max?: number | null
+          presupuesto_min?: number | null
+          titulo?: string
+          updated_at?: string
+          usa_ia?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'proyectos_id_area_negocio_fkey'
+            columns: ['id_area_negocio']
+            isOneToOne: false
+            referencedRelation: 'areas_negocio'
+            referencedColumns: ['id_area']
+          },
+          {
+            foreignKeyName: 'proyectos_id_categoria_fkey'
+            columns: ['id_categoria']
+            isOneToOne: false
+            referencedRelation: 'categorias_proyecto'
+            referencedColumns: ['id_categoria']
+          },
+          {
+            foreignKeyName: 'proyectos_id_empresario_fkey'
+            columns: ['id_empresario']
+            isOneToOne: false
+            referencedRelation: 'empresarios'
+            referencedColumns: ['id_empresario']
+          },
+        ]
+      }
+      reportes_moderacion: {
+        Row: {
+          descripcion: string
+          estado_moderacion: Database['public']['Enums']['estado_moderacion_enum']
+          id_entregable: string | null
+          id_mensaje: string | null
+          id_proyecto: string | null
+          id_reportado: string
+          id_reportante: string
+          id_reporte: string
+          reportado_at: string
+          resolucion: string | null
+          resuelto_at: string | null
+          resuelto_por: string | null
+          tipo_reporte: Database['public']['Enums']['tipo_reporte_enum']
+        }
+        Insert: {
+          descripcion: string
+          estado_moderacion?: Database['public']['Enums']['estado_moderacion_enum']
+          id_entregable?: string | null
+          id_mensaje?: string | null
+          id_proyecto?: string | null
+          id_reportado: string
+          id_reportante: string
+          id_reporte?: string
+          reportado_at?: string
+          resolucion?: string | null
+          resuelto_at?: string | null
+          resuelto_por?: string | null
+          tipo_reporte: Database['public']['Enums']['tipo_reporte_enum']
+        }
+        Update: {
+          descripcion?: string
+          estado_moderacion?: Database['public']['Enums']['estado_moderacion_enum']
+          id_entregable?: string | null
+          id_mensaje?: string | null
+          id_proyecto?: string | null
+          id_reportado?: string
+          id_reportante?: string
+          id_reporte?: string
+          reportado_at?: string
+          resolucion?: string | null
+          resuelto_at?: string | null
+          resuelto_por?: string | null
+          tipo_reporte?: Database['public']['Enums']['tipo_reporte_enum']
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'reportes_moderacion_id_entregable_fkey'
+            columns: ['id_entregable']
+            isOneToOne: false
+            referencedRelation: 'entregables'
+            referencedColumns: ['id_entregable']
+          },
+          {
+            foreignKeyName: 'reportes_moderacion_id_mensaje_fkey'
+            columns: ['id_mensaje']
+            isOneToOne: false
+            referencedRelation: 'mensajes'
+            referencedColumns: ['id_mensaje']
+          },
+          {
+            foreignKeyName: 'reportes_moderacion_id_proyecto_fkey'
+            columns: ['id_proyecto']
+            isOneToOne: false
+            referencedRelation: 'proyectos'
+            referencedColumns: ['id_proyecto']
+          },
+          {
+            foreignKeyName: 'reportes_moderacion_id_reportado_fkey'
+            columns: ['id_reportado']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+          {
+            foreignKeyName: 'reportes_moderacion_id_reportante_fkey'
+            columns: ['id_reportante']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+          {
+            foreignKeyName: 'reportes_moderacion_resuelto_por_fkey'
+            columns: ['resuelto_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          descripcion: string | null
+          id_rol: number
+          nombre_rol: string
+        }
+        Insert: {
+          descripcion?: string | null
+          id_rol?: never
+          nombre_rol: string
+        }
+        Update: {
+          descripcion?: string | null
+          id_rol?: never
+          nombre_rol?: string
+        }
+        Relationships: []
+      }
+      strikes: {
+        Row: {
+          aplicado_at: string
+          aplicado_por: string
+          descripcion: string | null
+          id_proyecto: string | null
+          id_reporte: string | null
+          id_strike: string
+          id_usuario: string
+          motivo: Database['public']['Enums']['motivo_strike_enum']
+          motivo_revocacion: string | null
+          revocado: boolean
+          revocado_at: string | null
+          revocado_por: string | null
+        }
+        Insert: {
+          aplicado_at?: string
+          aplicado_por: string
+          descripcion?: string | null
+          id_proyecto?: string | null
+          id_reporte?: string | null
+          id_strike?: string
+          id_usuario: string
+          motivo: Database['public']['Enums']['motivo_strike_enum']
+          motivo_revocacion?: string | null
+          revocado?: boolean
+          revocado_at?: string | null
+          revocado_por?: string | null
+        }
+        Update: {
+          aplicado_at?: string
+          aplicado_por?: string
+          descripcion?: string | null
+          id_proyecto?: string | null
+          id_reporte?: string | null
+          id_strike?: string
+          id_usuario?: string
+          motivo?: Database['public']['Enums']['motivo_strike_enum']
+          motivo_revocacion?: string | null
+          revocado?: boolean
+          revocado_at?: string | null
+          revocado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'fk_strikes_reporte'
+            columns: ['id_reporte']
+            isOneToOne: false
+            referencedRelation: 'reportes_moderacion'
+            referencedColumns: ['id_reporte']
+          },
+          {
+            foreignKeyName: 'strikes_aplicado_por_fkey'
+            columns: ['aplicado_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+          {
+            foreignKeyName: 'strikes_id_proyecto_fkey'
+            columns: ['id_proyecto']
+            isOneToOne: false
+            referencedRelation: 'proyectos'
+            referencedColumns: ['id_proyecto']
+          },
+          {
+            foreignKeyName: 'strikes_id_usuario_fkey'
+            columns: ['id_usuario']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+          {
+            foreignKeyName: 'strikes_revocado_por_fkey'
+            columns: ['revocado_por']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
+      tecnologias: {
+        Row: {
+          id_tecnologia: string
+          is_active: boolean
+          nombre: string
+        }
+        Insert: {
+          id_tecnologia?: string
+          is_active?: boolean
+          nombre: string
+        }
+        Update: {
+          id_tecnologia?: string
+          is_active?: boolean
+          nombre?: string
+        }
+        Relationships: []
+      }
+      usuarios: {
+        Row: {
+          apellido_1: string
+          apellido_2: string | null
+          bloqueado_hasta: string | null
+          cantidad_strikes: number
+          cedula: string | null
+          correo: string
+          estado_cuenta: Database['public']['Enums']['estado_cuenta_enum']
+          fecha_nacimiento: string | null
+          fecha_registro: string
+          foto_perfil: string | null
+          id_rol: number | null
+          id_usuario: string
+          intentos_fallidos: number
+          is_active: boolean
+          nombre: string
+          suspendido_at: string | null
+          ultimo_login_at: string | null
+          url_cedula: string | null
+        }
+        Insert: {
+          apellido_1: string
+          apellido_2?: string | null
+          bloqueado_hasta?: string | null
+          cantidad_strikes?: number
+          cedula?: string | null
+          correo: string
+          estado_cuenta?: Database['public']['Enums']['estado_cuenta_enum']
+          fecha_nacimiento?: string | null
+          fecha_registro?: string
+          foto_perfil?: string | null
+          id_rol?: number | null
+          id_usuario: string
+          intentos_fallidos?: number
+          is_active?: boolean
+          nombre: string
+          suspendido_at?: string | null
+          ultimo_login_at?: string | null
+          url_cedula?: string | null
+        }
+        Update: {
+          apellido_1?: string
+          apellido_2?: string | null
+          bloqueado_hasta?: string | null
+          cantidad_strikes?: number
+          cedula?: string | null
+          correo?: string
+          estado_cuenta?: Database['public']['Enums']['estado_cuenta_enum']
+          fecha_nacimiento?: string | null
+          fecha_registro?: string
+          foto_perfil?: string | null
+          id_rol?: number | null
+          id_usuario?: string
+          intentos_fallidos?: number
+          is_active?: boolean
+          nombre?: string
+          suspendido_at?: string | null
+          ultimo_login_at?: string | null
+          url_cedula?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'usuarios_id_rol_fkey'
+            columns: ['id_rol']
+            isOneToOne: false
+            referencedRelation: 'roles'
+            referencedColumns: ['id_rol']
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      assign_my_role: { Args: { p_role: string }; Returns: boolean }
+      get_my_account_status: { Args: never; Returns: string }
+      get_my_role: { Args: never; Returns: string }
+    }
+    Enums: {
+      alcance_enum: 'nacional' | 'internacional' | 'ambos'
+      estado_conv_ia_enum: 'en_curso' | 'finalizada' | 'abandonada'
+      estado_cuenta_enum:
+        | 'pendiente'
+        | 'activa'
+        | 'suspendida'
+        | 'suspendida_severa'
+      estado_entregable_enum:
+        | 'enviado'
+        | 'en_revision'
+        | 'aprobado'
+        | 'con_cambios'
+      estado_moderacion_enum:
+        | 'pendiente'
+        | 'en_revision'
+        | 'resuelto_a_favor'
+        | 'resuelto_en_contra'
+        | 'descartado'
+      estado_participacion_enum:
+        | 'postulada'
+        | 'en_revision'
+        | 'rechazada'
+        | 'candidata'
+        | 'no_seleccionada'
+        | 'contratada'
+        | 'finalizada'
+        | 'cancelada'
+        | 'retirada'
+      estado_periodo_enum: 'vigente' | 'pausado' | 'finalizado' | 'cancelado'
+      estado_proyecto_enum:
+        | 'borrador'
+        | 'abierto'
+        | 'en_recepcion'
+        | 'adjudicado'
+        | 'en_desarrollo'
+        | 'finalizado'
+        | 'cancelado'
+      estado_verif_enum: 'pendiente' | 'verificado' | 'rechazado'
+      modalidad_enum: 'remoto' | 'hibrido' | 'presencial'
+      moneda_enum: 'USD' | 'CRC'
+      motivo_strike_enum:
+        | 'no_entrego'
+        | 'abandono_proyecto'
+        | 'conducta_inapropiada'
+        | 'calificacion_baja_repetida'
+        | 'fraude'
+        | 'ghosting'
+        | 'otro'
+      nivel_habilidad_enum: 'basico' | 'intermedio' | 'avanzado'
+      nivel_tecnico_enum: 'no_tecnico' | 'basico' | 'intermedio' | 'avanzado'
+      tipo_comentario_enum:
+        | 'revision_solicitada'
+        | 'aclaracion'
+        | 'aprobacion'
+        | 'rechazo'
+      tipo_consentimiento_enum:
+        | 'ia'
+        | 'cotejo_fwd'
+        | 'terminos_servicio'
+        | 'politica_privacidad'
+      tipo_dato_enum: 'integer' | 'decimal' | 'boolean' | 'string'
+      tipo_empresario_enum: 'empresa_formal' | 'emprendedor'
+      tipo_entregable_enum: 'parcial' | 'final'
+      tipo_reporte_enum:
+        | 'conducta_abusiva'
+        | 'contenido_inapropiado'
+        | 'spam'
+        | 'fraude'
+        | 'otro'
+      titulo_fwd_enum: 'frontend' | 'backend' | 'fullstack'
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema['Tables']
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema['Enums']
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema['CompositeTypes']
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      alcance_enum: ['nacional', 'internacional', 'ambos'],
+      estado_conv_ia_enum: ['en_curso', 'finalizada', 'abandonada'],
+      estado_cuenta_enum: [
+        'pendiente',
+        'activa',
+        'suspendida',
+        'suspendida_severa',
+      ],
+      estado_entregable_enum: [
+        'enviado',
+        'en_revision',
+        'aprobado',
+        'con_cambios',
+      ],
+      estado_moderacion_enum: [
+        'pendiente',
+        'en_revision',
+        'resuelto_a_favor',
+        'resuelto_en_contra',
+        'descartado',
+      ],
+      estado_participacion_enum: [
+        'postulada',
+        'en_revision',
+        'rechazada',
+        'candidata',
+        'no_seleccionada',
+        'contratada',
+        'finalizada',
+        'cancelada',
+        'retirada',
+      ],
+      estado_periodo_enum: ['vigente', 'pausado', 'finalizado', 'cancelado'],
+      estado_proyecto_enum: [
+        'borrador',
+        'abierto',
+        'en_recepcion',
+        'adjudicado',
+        'en_desarrollo',
+        'finalizado',
+        'cancelado',
+      ],
+      estado_verif_enum: ['pendiente', 'verificado', 'rechazado'],
+      modalidad_enum: ['remoto', 'hibrido', 'presencial'],
+      moneda_enum: ['USD', 'CRC'],
+      motivo_strike_enum: [
+        'no_entrego',
+        'abandono_proyecto',
+        'conducta_inapropiada',
+        'calificacion_baja_repetida',
+        'fraude',
+        'ghosting',
+        'otro',
+      ],
+      nivel_habilidad_enum: ['basico', 'intermedio', 'avanzado'],
+      nivel_tecnico_enum: ['no_tecnico', 'basico', 'intermedio', 'avanzado'],
+      tipo_comentario_enum: [
+        'revision_solicitada',
+        'aclaracion',
+        'aprobacion',
+        'rechazo',
+      ],
+      tipo_consentimiento_enum: [
+        'ia',
+        'cotejo_fwd',
+        'terminos_servicio',
+        'politica_privacidad',
+      ],
+      tipo_dato_enum: ['integer', 'decimal', 'boolean', 'string'],
+      tipo_empresario_enum: ['empresa_formal', 'emprendedor'],
+      tipo_entregable_enum: ['parcial', 'final'],
+      tipo_reporte_enum: [
+        'conducta_abusiva',
+        'contenido_inapropiado',
+        'spam',
+        'fraude',
+        'otro',
+      ],
+      titulo_fwd_enum: ['frontend', 'backend', 'fullstack'],
+    },
+  },
+} as const

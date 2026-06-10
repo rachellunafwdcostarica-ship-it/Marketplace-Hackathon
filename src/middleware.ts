@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import type { Database } from '@/types/database'
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -47,7 +48,7 @@ export async function middleware(request: NextRequest) {
   const intlResponse = intlMiddleware(request)
 
   // Refrescar sesión de Supabase y propagar cookies
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -87,7 +88,7 @@ export async function middleware(request: NextRequest) {
   // CASO B: Ruta protegida
   if (isProtected(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
-    const role = normalizeRole(roleRaw as string | null)
+    const role = normalizeRole(roleRaw)
 
     if (!role) {
       // Sin rol asignado → onboarding obligatorio
@@ -110,7 +111,7 @@ export async function middleware(request: NextRequest) {
   // CASO C: Página pública de auth (login, register, etc.)
   if (isPublicAuthPage(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
-    const role = normalizeRole(roleRaw as string | null)
+    const role = normalizeRole(roleRaw)
 
     if (role) {
       return NextResponse.redirect(
@@ -124,7 +125,7 @@ export async function middleware(request: NextRequest) {
   // CASO D: /onboarding con usuario autenticado
   if (isOnboardingPath(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
-    const role = normalizeRole(roleRaw as string | null)
+    const role = normalizeRole(roleRaw)
 
     if (role) {
       // Ya tiene rol → rebotar a home (refuerza permanencia Q6)

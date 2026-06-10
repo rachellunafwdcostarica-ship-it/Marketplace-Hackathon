@@ -1,12 +1,14 @@
+import 'server-only'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
+import type { Database } from '@/types/database'
 
 export async function getMyAccountStatus(): Promise<Result<string | null>> {
   const cookieStore = await cookies()
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -34,13 +36,13 @@ export async function getMyAccountStatus(): Promise<Result<string | null>> {
     return err(error.message)
   }
 
-  return ok(data as string | null)
+  return ok(data)
 }
 
 export async function getUserRole(): Promise<Result<string>> {
   const cookieStore = await cookies()
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -70,5 +72,5 @@ export async function getUserRole(): Promise<Result<string>> {
 
   if (!data) return err('no_role')
 
-  return ok(data as string)
+  return ok(data)
 }
