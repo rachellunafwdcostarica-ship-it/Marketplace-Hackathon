@@ -22,7 +22,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
+import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 
 export default function ProjectDetailsPage() {
   const params = useParams()

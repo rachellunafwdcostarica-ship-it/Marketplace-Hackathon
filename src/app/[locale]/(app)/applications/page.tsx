@@ -10,7 +10,7 @@ import { ApplicationCard } from '@/components/features/applications/ApplicationC
 import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Link } from '@/i18n/routing'
 import { Briefcase } from 'lucide-react'
-import { MOCK_JUNIOR_NAME } from '@/constants/mockData'
+import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 
 export default function JuniorApplicationsPage() {
   const tJunior = useTranslations('Junior')
