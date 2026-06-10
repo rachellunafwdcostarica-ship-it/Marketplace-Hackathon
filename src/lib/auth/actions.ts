@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import type { Database } from '@/types/database'
 import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
@@ -10,6 +11,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { AssignRoleSchema, type AssignRoleInput } from './schemas'
 import { getUserRole } from './queries'
+import { requireRole } from './guards'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
   return getUserRole()
@@ -18,7 +20,7 @@ export async function getCurrentUserRole(): Promise<Result<string>> {
 export async function signOut(): Promise<Result<void>> {
   const cookieStore = await cookies()
 
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -96,12 +98,9 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   }
 
   // Verificar que el caller es admin
-  const roleResult = await getUserRole()
-  if (!roleResult.ok) {
-    return err('unauthenticated')
-  }
-  if (roleResult.data !== 'admin') {
-    return err('forbidden')
+  const authResult = await requireRole('admin')
+  if (!authResult.ok) {
+    return authResult
   }
 
   // Usar service_role para bypassear RLS (admin no pasa por políticas)
