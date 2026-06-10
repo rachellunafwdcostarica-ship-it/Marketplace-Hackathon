@@ -1,0 +1,1 @@
+export { ModalityChip } from './ModalityChip'

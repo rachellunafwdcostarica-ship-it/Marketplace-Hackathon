@@ -57,6 +57,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { ModalityChip } from '@/components/features/shared'
+import { FwdGeoBackdrop } from '@/components/features/brand'
+import {
+  NotificationCenter,
+  SidebarAdmin,
+  JuniorShell,
+  CompanyShell,
+  AdminShell,
+} from '@/components/layout'
 import type { ApplicationStatus } from '@/types'
 
 const logoDataUri =
@@ -358,6 +368,104 @@ export default function ShowcasePage() {
           actionText="Explorar proyectos"
           onAction={() => {}}
         />
+      </Section>
+
+      <Section title="Modalidad (ModalityChip)">
+        <div className="flex flex-wrap items-center gap-2">
+          <ModalityChip mode="remoto" />
+          <ModalityChip mode="hibrido" />
+          <ModalityChip mode="presencial" />
+        </div>
+      </Section>
+
+      <Section title="Tabs">
+        <Tabs defaultValue="resumen" className="max-w-xl">
+          <TabsList label="Secciones de ejemplo">
+            <TabsTrigger value="resumen">Resumen</TabsTrigger>
+            <TabsTrigger value="detalle">Detalle</TabsTrigger>
+            <TabsTrigger value="actividad">Actividad</TabsTrigger>
+          </TabsList>
+          <TabsContent value="resumen">
+            <p className="text-sm text-muted-foreground">
+              Contenido de resumen.
+            </p>
+          </TabsContent>
+          <TabsContent value="detalle">
+            <p className="text-sm text-muted-foreground">
+              Contenido de detalle.
+            </p>
+          </TabsContent>
+          <TabsContent value="actividad">
+            <p className="text-sm text-muted-foreground">
+              Contenido de actividad.
+            </p>
+          </TabsContent>
+        </Tabs>
+      </Section>
+
+      <Section title="Geometría de marca (FwdGeoBackdrop)">
+        <div className="relative h-48 overflow-hidden rounded-2xl bg-secondary">
+          <FwdGeoBackdrop />
+          <div className="relative z-10 flex h-full items-center justify-center">
+            <span className="font-heading text-2xl font-bold text-secondary-foreground">
+              Adelante<span className="text-highlight">.</span>
+            </span>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Centro de notificaciones">
+        <NotificationCenter
+          items={[
+            {
+              id: 'n1',
+              title: 'Tu postulación fue vista por Acme Capital.',
+              read: false,
+            },
+            {
+              id: 'n2',
+              title: 'Nuevo proyecto que coincide con tu stack.',
+              read: false,
+            },
+            {
+              id: 'n3',
+              title: 'Recordatorio: completá tu portafolio.',
+              read: true,
+            },
+          ]}
+        />
+      </Section>
+
+      <Section title="Sidebar admin">
+        <div className="h-64 overflow-hidden rounded-2xl border border-border">
+          <SidebarAdmin className="h-full" />
+        </div>
+      </Section>
+
+      <Section title="Shells de layout">
+        <div className="space-y-4">
+          <div className="h-72 overflow-hidden rounded-2xl border border-border">
+            <JuniorShell>
+              <div className="p-6 text-sm text-muted-foreground">
+                Contenido junior de ejemplo.
+              </div>
+            </JuniorShell>
+          </div>
+          <div className="h-72 overflow-hidden rounded-2xl border border-border">
+            <CompanyShell>
+              <div className="p-6 text-sm text-muted-foreground">
+                Contenido empresa de ejemplo.
+              </div>
+            </CompanyShell>
+          </div>
+          <div className="h-72 overflow-hidden rounded-2xl border border-border">
+            <AdminShell>
+              <div className="p-6 text-sm text-muted-foreground">
+                Contenido admin de ejemplo.
+              </div>
+            </AdminShell>
+          </div>
+        </div>
       </Section>
     </div>
   )

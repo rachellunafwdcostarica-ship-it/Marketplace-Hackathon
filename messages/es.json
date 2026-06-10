@@ -361,5 +361,10 @@
     "actionDisabledPending": "Tu cuenta debe ser aprobada por un administrador para realizar esta acción.",
     "pendingTitle": "Cuenta pendiente de aprobación",
     "pendingDesc": "El equipo FWD revisará tu solicitud. Te notificaremos cuando tu cuenta esté activa."
+  },
+  "Notifications": {
+    "title": "Notificaciones",
+    "markAllRead": "Marcar todas como leídas",
+    "empty": "No tienes notificaciones."
   }
 }
