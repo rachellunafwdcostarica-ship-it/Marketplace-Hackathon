@@ -127,6 +127,17 @@
     "strengthStrong": "Fuerte",
     "successSent": "Enlace enviado exitosamente.",
     "verifySuccess": "¡Correo verificado con éxito!",
+    "resending": "Reenviando...",
+    "resendSuccess": "Enlace de verificación reenviado. Revisá tu bandeja de entrada.",
+    "resendNoEmail": "No pudimos identificar tu correo. Volvé a registrarte para reenviar el enlace.",
+    "resetTitle": "Nueva contraseña",
+    "resetSubtitle": "Elegí una contraseña nueva para tu cuenta.",
+    "resetButton": "Guardar contraseña",
+    "resetSaving": "Guardando...",
+    "resetSuccessTitle": "Contraseña actualizada",
+    "resetSuccessDesc": "Tu contraseña se cambió correctamente. Ya podés iniciar sesión.",
+    "resetInvalidTitle": "Enlace inválido o expirado",
+    "resetInvalidDesc": "El enlace de recuperación no es válido o ya venció. Solicitá uno nuevo.",
     "awardText": "Premio AMCHAM 2025 — Negocios Sostenibles"
   },
 
@@ -221,6 +232,8 @@
   },
   "Validation": {
     "emailInvalid": "Debe ingresar un correo electrónico válido.",
+    "passwordMin": "La contraseña debe tener al menos 8 caracteres.",
+    "passwordMismatch": "Las contraseñas no coinciden.",
     "coverLetterMin": "La carta de presentación debe tener al menos 30 caracteres.",
     "urlPortfolio": "Debe ingresar una URL válida para el portafolio (ej. https://miweb.com).",
     "urlCV": "Debe ingresar una URL válida para el CV (ej. https://drive.google.com/...).",
