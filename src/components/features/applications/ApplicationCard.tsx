@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { StatusPill } from '@/components/features/StatusPill'
+import { StatusPill } from '@/components/features/shared/StatusPill'
 import { Button } from '@/components/ui/button'
 import { Mail, Globe, FileText, Check, X, Calendar } from 'lucide-react'
 import { useTranslations } from 'next-intl'
