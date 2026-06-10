@@ -97,6 +97,14 @@ La diferencia es **por situación**, no por persona.
 
 Si agregás una dependencia, recordá que tiene que estar justificada respecto al brief (§8.2) y documentada (ver `reglas.md` §1).
 
+### 3.1. Dependencias agregadas fuera del set inicial (justificadas)
+
+Estas dependencias no vienen en la lista canónica del brief (§8.2), se agregaron de forma justificada y documentada (requisito de `reglas.md` §1). Son **necesarias para todo el equipo**: después de hacer `pull`, corré `npm ci` para instalarlas (el `package-lock.json` ya las trae).
+
+| Paquete | Tipo | Por qué |
+|---|---|---|
+| `server-only` | runtime | Marca módulos que solo pueden correr en el servidor (`lib/supabase/admin.ts`, `lib/supabase/server.ts`, `lib/auth/queries.ts`, `lib/auth/guards.ts`). Si alguien los importa por error desde un Componente de Cliente, el **build falla** en vez de filtrar la `SUPABASE_SERVICE_ROLE_KEY` o romper en runtime. Hace cumplir `reglas.md` §6 ("service key solo en servidor") a nivel de compilación. Es el patrón oficial de Next.js, pesa ~3 KB y no tiene costo en runtime. |
+
 ---
 
 ## 4. Cómo hacer commits
