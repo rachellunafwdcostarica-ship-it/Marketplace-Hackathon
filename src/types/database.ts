@@ -79,7 +79,7 @@ export type Database = {
           },
         ]
       }
-      categorias_proyecto: {
+      categorias: {
         Row: {
           id_categoria: string
           is_active: boolean
@@ -413,6 +413,7 @@ export type Database = {
         Row: {
           archivo_url: string | null
           cargado_at: string
+          comentario_empresario: string | null
           estado: Database['public']['Enums']['estado_entregable_enum']
           id_contratacion: string
           id_entregable: string
@@ -423,6 +424,7 @@ export type Database = {
         Insert: {
           archivo_url?: string | null
           cargado_at?: string
+          comentario_empresario?: string | null
           estado?: Database['public']['Enums']['estado_entregable_enum']
           id_contratacion: string
           id_entregable?: string
@@ -433,6 +435,7 @@ export type Database = {
         Update: {
           archivo_url?: string | null
           cargado_at?: string
+          comentario_empresario?: string | null
           estado?: Database['public']['Enums']['estado_entregable_enum']
           id_contratacion?: string
           id_entregable?: string
@@ -447,39 +450,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'contrataciones'
             referencedColumns: ['id_contratacion']
-          },
-        ]
-      }
-      estudiante_habilidades: {
-        Row: {
-          id_estudiante: string
-          id_tecnologia: string
-          nivel: Database['public']['Enums']['nivel_habilidad_enum']
-        }
-        Insert: {
-          id_estudiante: string
-          id_tecnologia: string
-          nivel: Database['public']['Enums']['nivel_habilidad_enum']
-        }
-        Update: {
-          id_estudiante?: string
-          id_tecnologia?: string
-          nivel?: Database['public']['Enums']['nivel_habilidad_enum']
-        }
-        Relationships: [
-          {
-            foreignKeyName: 'estudiante_habilidades_id_estudiante_fkey'
-            columns: ['id_estudiante']
-            isOneToOne: false
-            referencedRelation: 'estudiantes'
-            referencedColumns: ['id_estudiante']
-          },
-          {
-            foreignKeyName: 'estudiante_habilidades_id_tecnologia_fkey'
-            columns: ['id_tecnologia']
-            isOneToOne: false
-            referencedRelation: 'tecnologias'
-            referencedColumns: ['id_tecnologia']
           },
         ]
       }
@@ -498,6 +468,7 @@ export type Database = {
           reputacion: number | null
           titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at: string
+          url_portafolio: string | null
           verificado_at: string | null
           verificado_por: string | null
         }
@@ -515,6 +486,7 @@ export type Database = {
           reputacion?: number | null
           titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at?: string
+          url_portafolio?: string | null
           verificado_at?: string | null
           verificado_por?: string | null
         }
@@ -532,6 +504,7 @@ export type Database = {
           reputacion?: number | null
           titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at?: string
+          url_portafolio?: string | null
           verificado_at?: string | null
           verificado_por?: string | null
         }
@@ -607,6 +580,39 @@ export type Database = {
           },
         ]
       }
+      habilidades_tecnicas: {
+        Row: {
+          id_estudiante: string
+          id_tecnologia: string
+          nivel: Database['public']['Enums']['nivel_habilidad_enum']
+        }
+        Insert: {
+          id_estudiante: string
+          id_tecnologia: string
+          nivel: Database['public']['Enums']['nivel_habilidad_enum']
+        }
+        Update: {
+          id_estudiante?: string
+          id_tecnologia?: string
+          nivel?: Database['public']['Enums']['nivel_habilidad_enum']
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'habilidades_tecnicas_id_estudiante_fkey'
+            columns: ['id_estudiante']
+            isOneToOne: false
+            referencedRelation: 'estudiantes'
+            referencedColumns: ['id_estudiante']
+          },
+          {
+            foreignKeyName: 'habilidades_tecnicas_id_tecnologia_fkey'
+            columns: ['id_tecnologia']
+            isOneToOne: false
+            referencedRelation: 'tecnologias'
+            referencedColumns: ['id_tecnologia']
+          },
+        ]
+      }
       mensajes: {
         Row: {
           contenido: string
@@ -656,7 +662,7 @@ export type Database = {
           id_usuario: string
           leida: boolean
           mensaje: string
-          tipo_evento: string
+          tipo_evento: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino: string | null
         }
         Insert: {
@@ -665,7 +671,7 @@ export type Database = {
           id_usuario: string
           leida?: boolean
           mensaje: string
-          tipo_evento: string
+          tipo_evento: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino?: string | null
         }
         Update: {
@@ -674,7 +680,7 @@ export type Database = {
           id_usuario?: string
           leida?: boolean
           mensaje?: string
-          tipo_evento?: string
+          tipo_evento?: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino?: string | null
         }
         Relationships: [
@@ -689,67 +695,64 @@ export type Database = {
       }
       participaciones: {
         Row: {
-          aceptada_at: string | null
           adjudicada_at: string | null
           calificacion_prototipo: number | null
           carta_postulacion: string | null
           comentario_prototipo: string | null
-          documentacion_url: string | null
+          documentacion_tecnica: string | null
           estado: Database['public']['Enums']['estado_participacion_enum']
           fecha_entrega_prototipo: string | null
           fecha_postulacion: string
           id_estudiante: string
           id_participacion: string
           id_proyecto: string
-          motivo_rechazo: string | null
+          motivo_retiro: string | null
           no_seleccionada_at: string | null
-          propuesta: string | null
-          prototipo_url: string | null
-          rechazada_at: string | null
+          planteamiento_solucion: string | null
+          prototipo_enlaces: string[] | null
+          retirada_at: string | null
           revision_iniciada_at: string | null
           updated_at: string
           url_repositorio_proyecto: string | null
         }
         Insert: {
-          aceptada_at?: string | null
           adjudicada_at?: string | null
           calificacion_prototipo?: number | null
           carta_postulacion?: string | null
           comentario_prototipo?: string | null
-          documentacion_url?: string | null
+          documentacion_tecnica?: string | null
           estado?: Database['public']['Enums']['estado_participacion_enum']
           fecha_entrega_prototipo?: string | null
           fecha_postulacion?: string
           id_estudiante: string
           id_participacion?: string
           id_proyecto: string
-          motivo_rechazo?: string | null
+          motivo_retiro?: string | null
           no_seleccionada_at?: string | null
-          propuesta?: string | null
-          prototipo_url?: string | null
-          rechazada_at?: string | null
+          planteamiento_solucion?: string | null
+          prototipo_enlaces?: string[] | null
+          retirada_at?: string | null
           revision_iniciada_at?: string | null
           updated_at?: string
           url_repositorio_proyecto?: string | null
         }
         Update: {
-          aceptada_at?: string | null
           adjudicada_at?: string | null
           calificacion_prototipo?: number | null
           carta_postulacion?: string | null
           comentario_prototipo?: string | null
-          documentacion_url?: string | null
+          documentacion_tecnica?: string | null
           estado?: Database['public']['Enums']['estado_participacion_enum']
           fecha_entrega_prototipo?: string | null
           fecha_postulacion?: string
           id_estudiante?: string
           id_participacion?: string
           id_proyecto?: string
-          motivo_rechazo?: string | null
+          motivo_retiro?: string | null
           no_seleccionada_at?: string | null
-          propuesta?: string | null
-          prototipo_url?: string | null
-          rechazada_at?: string | null
+          planteamiento_solucion?: string | null
+          prototipo_enlaces?: string[] | null
+          retirada_at?: string | null
           revision_iniciada_at?: string | null
           updated_at?: string
           url_repositorio_proyecto?: string | null
@@ -764,6 +767,66 @@ export type Database = {
           },
           {
             foreignKeyName: 'participaciones_id_proyecto_fkey'
+            columns: ['id_proyecto']
+            isOneToOne: false
+            referencedRelation: 'proyectos'
+            referencedColumns: ['id_proyecto']
+          },
+        ]
+      }
+      portafolio_tecnologias: {
+        Row: {
+          id_portafolio: string
+          id_tecnologia: string
+        }
+        Insert: {
+          id_portafolio: string
+          id_tecnologia: string
+        }
+        Update: {
+          id_portafolio?: string
+          id_tecnologia?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'portafolio_tecnologias_id_portafolio_fkey'
+            columns: ['id_portafolio']
+            isOneToOne: false
+            referencedRelation: 'proyectos_portafolio'
+            referencedColumns: ['id_portafolio']
+          },
+          {
+            foreignKeyName: 'portafolio_tecnologias_id_tecnologia_fkey'
+            columns: ['id_tecnologia']
+            isOneToOne: false
+            referencedRelation: 'tecnologias'
+            referencedColumns: ['id_tecnologia']
+          },
+        ]
+      }
+      proyecto_categorias: {
+        Row: {
+          id_categoria: string
+          id_proyecto: string
+        }
+        Insert: {
+          id_categoria: string
+          id_proyecto: string
+        }
+        Update: {
+          id_categoria?: string
+          id_proyecto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'proyecto_categorias_id_categoria_fkey'
+            columns: ['id_categoria']
+            isOneToOne: false
+            referencedRelation: 'categorias'
+            referencedColumns: ['id_categoria']
+          },
+          {
+            foreignKeyName: 'proyecto_categorias_id_proyecto_fkey'
             columns: ['id_proyecto']
             isOneToOne: false
             referencedRelation: 'proyectos'
@@ -810,7 +873,6 @@ export type Database = {
           fecha_cierre: string | null
           fecha_publicacion: string | null
           id_area_negocio: string | null
-          id_categoria: string | null
           id_empresario: string
           id_proyecto: string
           is_active: boolean
@@ -833,7 +895,6 @@ export type Database = {
           fecha_cierre?: string | null
           fecha_publicacion?: string | null
           id_area_negocio?: string | null
-          id_categoria?: string | null
           id_empresario: string
           id_proyecto?: string
           is_active?: boolean
@@ -856,7 +917,6 @@ export type Database = {
           fecha_cierre?: string | null
           fecha_publicacion?: string | null
           id_area_negocio?: string | null
-          id_categoria?: string | null
           id_empresario?: string
           id_proyecto?: string
           is_active?: boolean
@@ -880,18 +940,80 @@ export type Database = {
             referencedColumns: ['id_area']
           },
           {
-            foreignKeyName: 'proyectos_id_categoria_fkey'
-            columns: ['id_categoria']
-            isOneToOne: false
-            referencedRelation: 'categorias_proyecto'
-            referencedColumns: ['id_categoria']
-          },
-          {
             foreignKeyName: 'proyectos_id_empresario_fkey'
             columns: ['id_empresario']
             isOneToOne: false
             referencedRelation: 'empresarios'
             referencedColumns: ['id_empresario']
+          },
+        ]
+      }
+      proyectos_portafolio: {
+        Row: {
+          consentimiento_at: string | null
+          descripcion: string | null
+          estado_consentimiento:
+            | Database['public']['Enums']['estado_consent_portafolio_enum']
+            | null
+          fecha: string | null
+          id_estudiante: string
+          id_participacion: string | null
+          id_portafolio: string
+          imagen_url: string | null
+          is_active: boolean
+          origen: Database['public']['Enums']['origen_portafolio_enum']
+          titulo: string
+          url_demo: string | null
+          url_repositorio: string | null
+        }
+        Insert: {
+          consentimiento_at?: string | null
+          descripcion?: string | null
+          estado_consentimiento?:
+            | Database['public']['Enums']['estado_consent_portafolio_enum']
+            | null
+          fecha?: string | null
+          id_estudiante: string
+          id_participacion?: string | null
+          id_portafolio?: string
+          imagen_url?: string | null
+          is_active?: boolean
+          origen: Database['public']['Enums']['origen_portafolio_enum']
+          titulo: string
+          url_demo?: string | null
+          url_repositorio?: string | null
+        }
+        Update: {
+          consentimiento_at?: string | null
+          descripcion?: string | null
+          estado_consentimiento?:
+            | Database['public']['Enums']['estado_consent_portafolio_enum']
+            | null
+          fecha?: string | null
+          id_estudiante?: string
+          id_participacion?: string | null
+          id_portafolio?: string
+          imagen_url?: string | null
+          is_active?: boolean
+          origen?: Database['public']['Enums']['origen_portafolio_enum']
+          titulo?: string
+          url_demo?: string | null
+          url_repositorio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'proyectos_portafolio_id_estudiante_fkey'
+            columns: ['id_estudiante']
+            isOneToOne: false
+            referencedRelation: 'estudiantes'
+            referencedColumns: ['id_estudiante']
+          },
+          {
+            foreignKeyName: 'proyectos_portafolio_id_participacion_fkey'
+            columns: ['id_participacion']
+            isOneToOne: false
+            referencedRelation: 'participaciones'
+            referencedColumns: ['id_participacion']
           },
         ]
       }
@@ -901,8 +1023,9 @@ export type Database = {
           estado_moderacion: Database['public']['Enums']['estado_moderacion_enum']
           id_entregable: string | null
           id_mensaje: string | null
+          id_portafolio: string | null
           id_proyecto: string | null
-          id_reportado: string
+          id_reportado: string | null
           id_reportante: string
           id_reporte: string
           reportado_at: string
@@ -916,8 +1039,9 @@ export type Database = {
           estado_moderacion?: Database['public']['Enums']['estado_moderacion_enum']
           id_entregable?: string | null
           id_mensaje?: string | null
+          id_portafolio?: string | null
           id_proyecto?: string | null
-          id_reportado: string
+          id_reportado?: string | null
           id_reportante: string
           id_reporte?: string
           reportado_at?: string
@@ -931,8 +1055,9 @@ export type Database = {
           estado_moderacion?: Database['public']['Enums']['estado_moderacion_enum']
           id_entregable?: string | null
           id_mensaje?: string | null
+          id_portafolio?: string | null
           id_proyecto?: string | null
-          id_reportado?: string
+          id_reportado?: string | null
           id_reportante?: string
           id_reporte?: string
           reportado_at?: string
@@ -955,6 +1080,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: 'mensajes'
             referencedColumns: ['id_mensaje']
+          },
+          {
+            foreignKeyName: 'reportes_moderacion_id_portafolio_fkey'
+            columns: ['id_portafolio']
+            isOneToOne: false
+            referencedRelation: 'proyectos_portafolio'
+            referencedColumns: ['id_portafolio']
           },
           {
             foreignKeyName: 'reportes_moderacion_id_proyecto_fkey'
@@ -1109,7 +1241,6 @@ export type Database = {
           apellido_2: string | null
           bloqueado_hasta: string | null
           cantidad_strikes: number
-          cedula: string | null
           correo: string
           estado_cuenta: Database['public']['Enums']['estado_cuenta_enum']
           fecha_nacimiento: string | null
@@ -1119,17 +1250,17 @@ export type Database = {
           id_usuario: string
           intentos_fallidos: number
           is_active: boolean
+          nivel_admin: Database['public']['Enums']['nivel_admin_enum'] | null
           nombre: string
           suspendido_at: string | null
+          tipos_notificacion_silenciados: Database['public']['Enums']['tipo_notificacion_enum'][]
           ultimo_login_at: string | null
-          url_cedula: string | null
         }
         Insert: {
           apellido_1: string
           apellido_2?: string | null
           bloqueado_hasta?: string | null
           cantidad_strikes?: number
-          cedula?: string | null
           correo: string
           estado_cuenta?: Database['public']['Enums']['estado_cuenta_enum']
           fecha_nacimiento?: string | null
@@ -1139,17 +1270,17 @@ export type Database = {
           id_usuario: string
           intentos_fallidos?: number
           is_active?: boolean
+          nivel_admin?: Database['public']['Enums']['nivel_admin_enum'] | null
           nombre: string
           suspendido_at?: string | null
+          tipos_notificacion_silenciados?: Database['public']['Enums']['tipo_notificacion_enum'][]
           ultimo_login_at?: string | null
-          url_cedula?: string | null
         }
         Update: {
           apellido_1?: string
           apellido_2?: string | null
           bloqueado_hasta?: string | null
           cantidad_strikes?: number
-          cedula?: string | null
           correo?: string
           estado_cuenta?: Database['public']['Enums']['estado_cuenta_enum']
           fecha_nacimiento?: string | null
@@ -1159,10 +1290,11 @@ export type Database = {
           id_usuario?: string
           intentos_fallidos?: number
           is_active?: boolean
+          nivel_admin?: Database['public']['Enums']['nivel_admin_enum'] | null
           nombre?: string
           suspendido_at?: string | null
+          tipos_notificacion_silenciados?: Database['public']['Enums']['tipo_notificacion_enum'][]
           ultimo_login_at?: string | null
-          url_cedula?: string | null
         }
         Relationships: [
           {
@@ -1185,6 +1317,7 @@ export type Database = {
     }
     Enums: {
       alcance_enum: 'nacional' | 'internacional' | 'ambos'
+      estado_consent_portafolio_enum: 'pendiente' | 'aprobado' | 'revocado'
       estado_conv_ia_enum: 'en_curso' | 'finalizada' | 'abandonada'
       estado_cuenta_enum:
         | 'pendiente'
@@ -1203,15 +1336,13 @@ export type Database = {
         | 'resuelto_en_contra'
         | 'descartado'
       estado_participacion_enum:
-        | 'postulada'
+        | 'enviada'
         | 'en_revision'
-        | 'rechazada'
-        | 'candidata'
-        | 'no_seleccionada'
         | 'contratada'
+        | 'no_seleccionada'
+        | 'retirada'
         | 'finalizada'
         | 'cancelada'
-        | 'retirada'
       estado_periodo_enum: 'vigente' | 'pausado' | 'finalizado' | 'cancelado'
       estado_proyecto_enum:
         | 'borrador'
@@ -1232,8 +1363,13 @@ export type Database = {
         | 'fraude'
         | 'ghosting'
         | 'otro'
+      nivel_admin_enum: 'superadmin' | 'admin' | 'moderador'
       nivel_habilidad_enum: 'basico' | 'intermedio' | 'avanzado'
       nivel_tecnico_enum: 'no_tecnico' | 'basico' | 'intermedio' | 'avanzado'
+      origen_portafolio_enum:
+        | 'plataforma_no_contratada'
+        | 'plataforma_contratada'
+        | 'independiente'
       tipo_comentario_enum:
         | 'revision_solicitada'
         | 'aclaracion'
@@ -1247,6 +1383,18 @@ export type Database = {
       tipo_dato_enum: 'integer' | 'decimal' | 'boolean' | 'string'
       tipo_empresario_enum: 'empresa_formal' | 'emprendedor'
       tipo_entregable_enum: 'parcial' | 'final'
+      tipo_notificacion_enum:
+        | 'mensaje_nuevo'
+        | 'postulacion_recibida'
+        | 'plazo_vence'
+        | 'participacion_no_seleccionada'
+        | 'participacion_contratada'
+        | 'entregable_aprobado'
+        | 'entregable_rechazado'
+        | 'evaluacion_recibida'
+        | 'cuenta_verificada'
+        | 'cuenta_suspendida'
+        | 'strike_recibido'
       tipo_reporte_enum:
         | 'conducta_abusiva'
         | 'contenido_inapropiado'
@@ -1382,6 +1530,7 @@ export const Constants = {
   public: {
     Enums: {
       alcance_enum: ['nacional', 'internacional', 'ambos'],
+      estado_consent_portafolio_enum: ['pendiente', 'aprobado', 'revocado'],
       estado_conv_ia_enum: ['en_curso', 'finalizada', 'abandonada'],
       estado_cuenta_enum: [
         'pendiente',
@@ -1403,15 +1552,13 @@ export const Constants = {
         'descartado',
       ],
       estado_participacion_enum: [
-        'postulada',
+        'enviada',
         'en_revision',
-        'rechazada',
-        'candidata',
-        'no_seleccionada',
         'contratada',
+        'no_seleccionada',
+        'retirada',
         'finalizada',
         'cancelada',
-        'retirada',
       ],
       estado_periodo_enum: ['vigente', 'pausado', 'finalizado', 'cancelado'],
       estado_proyecto_enum: [
@@ -1435,8 +1582,14 @@ export const Constants = {
         'ghosting',
         'otro',
       ],
+      nivel_admin_enum: ['superadmin', 'admin', 'moderador'],
       nivel_habilidad_enum: ['basico', 'intermedio', 'avanzado'],
       nivel_tecnico_enum: ['no_tecnico', 'basico', 'intermedio', 'avanzado'],
+      origen_portafolio_enum: [
+        'plataforma_no_contratada',
+        'plataforma_contratada',
+        'independiente',
+      ],
       tipo_comentario_enum: [
         'revision_solicitada',
         'aclaracion',
@@ -1452,6 +1605,19 @@ export const Constants = {
       tipo_dato_enum: ['integer', 'decimal', 'boolean', 'string'],
       tipo_empresario_enum: ['empresa_formal', 'emprendedor'],
       tipo_entregable_enum: ['parcial', 'final'],
+      tipo_notificacion_enum: [
+        'mensaje_nuevo',
+        'postulacion_recibida',
+        'plazo_vence',
+        'participacion_no_seleccionada',
+        'participacion_contratada',
+        'entregable_aprobado',
+        'entregable_rechazado',
+        'evaluacion_recibida',
+        'cuenta_verificada',
+        'cuenta_suspendida',
+        'strike_recibido',
+      ],
       tipo_reporte_enum: [
         'conducta_abusiva',
         'contenido_inapropiado',
