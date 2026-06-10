@@ -4,7 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import {
