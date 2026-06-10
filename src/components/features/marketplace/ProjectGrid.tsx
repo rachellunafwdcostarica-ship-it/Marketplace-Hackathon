@@ -12,17 +12,17 @@ const GRID_LAYOUT_CLASS: Record<GridColumns, string> = {
   three: 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6',
 }
 
-interface GridCardProps {
+interface ProjectGridProps {
   projects: Project[]
   columns?: GridColumns
   renderActionButton?: (project: Project) => ReactNode
 }
 
-export function GridCard({
+export function ProjectGrid({
   projects,
   columns = 'two',
   renderActionButton,
-}: GridCardProps) {
+}: ProjectGridProps) {
   const tNav = useTranslations('Nav')
 
   return (
