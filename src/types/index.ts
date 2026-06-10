@@ -11,6 +11,8 @@ export type ApplicationStatus =
 
 export type CompanyStatus = 'pending' | 'approved' | 'rejected'
 
+export type CompanyType = 'formal' | 'emprendedor'
+
 export interface Project {
   id: string
   title: string
@@ -44,6 +46,9 @@ export interface Application {
 export interface Company {
   id: string
   name: string
+  companyType: CompanyType
+  sector: string
+  cedula: string
   description: string
   logo: string
   status: CompanyStatus
