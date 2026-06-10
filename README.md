@@ -8,7 +8,7 @@ Stack montado y "hola mundo" navegable en el lenguaje visual FWD (hito Setup del
 
 La estructura de carpetas usa la sección 6.1 del brief como base, más las adiciones que exigen otras secciones del mismo brief: `(company)/` y subpaneles de `(admin)/` (§3.2), `supabase/migrations/` (§7) y `tests/` (§4.6).
 
-Las reglas del proyecto viven en [`reglas.md`](./reglas.md) (destilado del brief oficial). Toda persona o IA debe leerlo antes de implementar; `CLAUDE.md` lo enlaza para las herramientas de IA.
+Las **restricciones** del proyecto (stack, identidad, naming, prohibiciones) viven en [`reglas.md`](./reglas.md), destilado del brief oficial. Las **funciones** de la plataforma las define el SRS (`SRS_Plataforma_Talento_FWD`), fuente de verdad funcional. Toda persona o IA debe leer `reglas.md` antes de implementar; `CLAUDE.md` enlaza ambos para las herramientas de IA.
 
 ## Stack
 
