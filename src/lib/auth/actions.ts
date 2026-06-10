@@ -56,6 +56,8 @@ export async function signOut(): Promise<Result<void>> {
  * Asigna el rol al usuario actual durante el onboarding.
  *
  * - Solo acepta 'junior' o 'empresario' (Q6: nunca admin).
+ * - En la BD (modelo XXI) el rol del junior se llama 'egresado';
+ *   la traducción ocurre aquí, en la frontera.
  * - El rol es PERMANENTE: si ya tiene uno, retorna err('role_already_assigned').
  * - La permanencia se refuerza también a nivel BD en assign_my_role().
  */
@@ -67,9 +69,11 @@ export async function assignRole(
     return err('invalid_role')
   }
 
+  const dbRole = parsed.data.role === 'junior' ? 'egresado' : parsed.data.role
+
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc('assign_my_role', {
-    p_role: parsed.data.role,
+    p_role: dbRole,
   })
 
   if (error) {

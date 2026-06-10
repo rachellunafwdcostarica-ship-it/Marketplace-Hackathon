@@ -23,7 +23,7 @@ describe('requireRole', () => {
   })
 
   it('devuelve ok con el rol cuando coincide', async () => {
-    mockedGetUserRole.mockResolvedValue(ok('admin'))
+    mockedGetUserRole.mockResolvedValue(ok('administrador'))
 
     const result = await requireRole('admin')
 
@@ -39,7 +39,7 @@ describe('requireRole', () => {
   })
 
   it('devuelve forbidden cuando el rol no coincide', async () => {
-    mockedGetUserRole.mockResolvedValue(ok('junior'))
+    mockedGetUserRole.mockResolvedValue(ok('egresado'))
 
     const result = await requireRole('admin')
 
