@@ -12,6 +12,7 @@ import * as zod from 'zod'
 import { toast } from 'sonner'
 import { Lock, ArrowRight, ArrowLeft } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { updatePassword } from '@/lib/auth/actions'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { VerificationMessage } from '@/components/features/auth/VerificationMessage'
@@ -72,13 +73,16 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: ResetFormValues) => {
     setLoading(true)
-    const supabase = createSupabaseBrowserClient()
-    const { error } = await supabase.auth.updateUser({
-      password: data.password,
-    })
+    const result = await updatePassword(data.password)
     setLoading(false)
-    if (error) {
-      toast.error(error.message)
+    if (!result.ok) {
+      const message =
+        result.error === 'password_breached'
+          ? tAuth('passwordBreached')
+          : result.error === 'pwned_check_failed'
+            ? tAuth('pwnedCheckFailed')
+            : result.error
+      toast.error(message)
       return
     }
     setSuccess(true)

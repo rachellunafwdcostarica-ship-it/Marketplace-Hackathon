@@ -1,7 +1,7 @@
 'use server'
 
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import type { Database } from '@/types/database'
 import { z } from 'zod'
@@ -12,6 +12,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { AssignRoleSchema, type AssignRoleInput } from './schemas'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
+import { checkPwnedPassword } from './check-pwned-password'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
   return getUserRole()
@@ -120,5 +121,84 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   }
 
   revalidatePath('/admin/validations', 'page')
+  return ok(undefined)
+}
+
+export async function signUpWithPassword(input: {
+  email: string
+  password: string
+  fullName: string
+  role: 'junior' | 'empresa'
+}): Promise<Result<void>> {
+  const parsed = z
+    .object({
+      email: z.string().email(),
+      password: z.string().min(6),
+      fullName: z.string().min(2),
+      role: z.enum(['junior', 'empresa']),
+    })
+    .safeParse(input)
+
+  if (!parsed.success) return err('invalid_input')
+
+  let pwnedCount: number
+  try {
+    pwnedCount = await checkPwnedPassword(parsed.data.password)
+  } catch {
+    return err('pwned_check_failed')
+  }
+
+  if (pwnedCount > 0) return err('password_breached')
+
+  const reqHeaders = await headers()
+  const host =
+    reqHeaders.get('x-forwarded-host') ??
+    reqHeaders.get('host') ??
+    'localhost:3000'
+  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+  const redirectTo = `${proto}://${host}/auth/callback`
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: {
+      data: {
+        full_name: parsed.data.fullName,
+        role: parsed.data.role,
+      },
+      emailRedirectTo: redirectTo,
+    },
+  })
+
+  if (error) {
+    logger.error('signUpWithPassword failed', { error: error.message })
+    return err(error.message)
+  }
+
+  return ok(undefined)
+}
+
+export async function updatePassword(password: string): Promise<Result<void>> {
+  const parsed = z.string().min(8).safeParse(password)
+  if (!parsed.success) return err('password_too_short')
+
+  let pwnedCount: number
+  try {
+    pwnedCount = await checkPwnedPassword(parsed.data)
+  } catch {
+    return err('pwned_check_failed')
+  }
+
+  if (pwnedCount > 0) return err('password_breached')
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.updateUser({ password: parsed.data })
+
+  if (error) {
+    logger.error('updatePassword failed', { error: error.message })
+    return err(error.message)
+  }
+
   return ok(undefined)
 }

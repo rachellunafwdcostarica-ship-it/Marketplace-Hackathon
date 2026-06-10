@@ -138,7 +138,9 @@
     "resetSuccessDesc": "Your password was changed successfully. You can now sign in.",
     "resetInvalidTitle": "Invalid or expired link",
     "resetInvalidDesc": "The recovery link is invalid or has expired. Request a new one.",
-    "awardText": "AMCHAM Award 2025 — Sustainable Business"
+    "awardText": "AMCHAM Award 2025 — Sustainable Business",
+    "passwordBreached": "This password has appeared in known data breaches. Please choose a different one.",
+    "pwnedCheckFailed": "We couldn't verify your password's security. Please try again."
   },
 
   "Common": {
