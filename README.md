@@ -57,16 +57,19 @@ src/
     auth/callback/     intercambio de sesión OAuth (sin locale)
   components/
     ui/                primitivos shadcn: button, input, select, textarea, card,
-                       dialog, badge, table, label, skeleton, sonner + carouseles
-    layout/            chrome global: Navbar, Footer
+                       dialog, badge, table, tabs, label, skeleton, sonner + carouseles
+    layout/            chrome global (barrel index.ts): Navbar, Footer, SidebarAdmin,
+                       NotificationCenter, JuniorShell, CompanyShell, AdminShell
     features/          componentes de producto
-      PageTitle, InsightSection, StatusPill, EmptyState,
-      DashboardStats, SearchBar, LoadingSkeleton   (compartidos, en la raíz)
+      DashboardStats.tsx, SearchBar.tsx   (widgets compuestos, en la raíz por decisión)
+      brand/           identidad (barrel index.ts): PageTitle, InsightSection,
+                       FwdLogo, FwdGeoBackdrop, BrandPatterns
+      shared/          reutilizables (barrel index.ts): StatusPill, EmptyState,
+                       LoadingSkeleton, ModalityChip
       auth/            cards y flujos de auth (AuthCard, RoleSelector, ...)
       applications/    tarjeta y estado de postulación
       companies/       tarjeta de empresa
       marketplace/     tarjetas y detalle de proyecto, filtros, skill picker
-      brand/           FwdLogo (marca)
   lib/
     supabase/          clientes server + browser, admin, helper de middleware
     auth/              sesión y roles (normalizeRole, ROLE_HOME)
@@ -160,7 +163,7 @@ Commits firmados por cada miembro. Si solo uno commitea, se penaliza al equipo (
 
 - La estructura sigue §6.1 como base, pero §6.1 es un "resumen" del CLAUDE.md madre. Las features obligatorias de empresa y admin (§3.2), las migraciones (§7) y los tests (§4.6) exigen carpetas que §6.1 no lista: por eso existen `(company)/`, los subpaneles de `(admin)/`, `supabase/migrations/` y `tests/`.
 - Hay dos carpetas i18n a propósito: `src/i18n/` para la configuración de next-intl (`routing.ts`, `request.ts`) y `src/lib/i18n/` para helpers de formato (nombre canónico del brief §6.1). Se distinguen por la ruta de import.
-- Organización de `components/` (difiere del plan original §6.1): los componentes de producto compartidos (`PageTitle`, `InsightSection`, `StatusPill`, `EmptyState`, `DashboardStats`, `SearchBar`, `LoadingSkeleton`) viven en la **raíz** de `components/features/`; los específicos por área van en subcarpetas (`auth/`, `marketplace/`, `applications/`, `companies/`). `components/features/brand/` contiene solo la marca (`FwdLogo`). El chrome global (`Navbar`, `Footer`) vive en `components/layout/`, **separado** de `features/`. Los primitivos shadcn están en `components/ui/`. (Deuda conocida: esta mezcla raíz/subcarpetas no es uniforme; consolidarla exige reescribir imports en muchas páginas, por eso se documenta en vez de mover.)
+- Organización de `components/` (design system C1/Sol): los primitivos shadcn viven en `components/ui/`; el chrome global de página en `components/layout/` (`Navbar`, `Footer`, `SidebarAdmin`, `NotificationCenter`, `JuniorShell`/`CompanyShell`/`AdminShell`), **separado** de `features/`. Dentro de `components/features/`: `brand/` agrupa la identidad (`PageTitle`, `InsightSection`, `FwdLogo`, `FwdGeoBackdrop`, `BrandPatterns`), `shared/` los reutilizables transversales (`StatusPill`, `EmptyState`, `LoadingSkeleton`, `ModalityChip`), y las subcarpetas por área (`auth/`, `marketplace/`, `applications/`, `companies/`) los componentes específicos. Cada agrupación expone un `index.ts` (barrel): `import { PageTitle } from '@/components/features/brand'`, `import { StatusPill } from '@/components/features/shared'`, `import { Navbar } from '@/components/layout'`. **`DashboardStats` y `SearchBar` se mantienen en la raíz de `features/` por decisión** (no en `shared/`) por dos razones: (1) son **widgets compuestos** con datos/estado (DashboardStats arma tarjetas desde un array de `stats`; SearchBar es un input controlado), no átomos de UI transversales como los de `shared/`; y (2) moverlos obligaría a reescribir imports en páginas de otros roles (3 dashboards + 2 listados, en `app/*`), un churn cross-role que se evita a propósito.
 - Las server actions devuelven `Result<T, E>` tipado (Apéndice B del brief, `src/lib/result.ts`).
 - El schema de DB de §7 es sugerencia. Si el equipo lo diseña distinto, se documenta el porqué aquí (el brief lo exige).
 - Convención de no comentarios: ningún archivo del repo lleva comentarios de ninguna sintaxis. El contexto va a los commits y al tracker.

@@ -361,5 +361,10 @@
     "actionDisabledPending": "Your account must be approved by an administrator to perform this action.",
     "pendingTitle": "Account pending approval",
     "pendingDesc": "The FWD team will review your request. We will notify you when your account is active."
+  },
+  "Notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "You have no notifications."
   }
 }
