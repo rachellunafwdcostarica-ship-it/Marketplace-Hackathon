@@ -9,7 +9,12 @@ import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { AssignRoleSchema, type AssignRoleInput } from './schemas'
+import {
+  AssignRoleSchema,
+  SignInSchema,
+  type AssignRoleInput,
+  type SignInInput,
+} from './schemas'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
 import { checkPwnedPassword } from './check-pwned-password'
@@ -187,6 +192,101 @@ export async function signUpWithPassword(input: {
     return err(error.message)
   }
 
+  return ok(undefined)
+}
+
+/**
+ * Login con contraseña + bloqueo por intentos fallidos (RF-03).
+ *
+ * El bloqueo vive solo en el servidor con el cliente admin (service role): un
+ * login fallido no tiene sesión, así que la escritura en `usuarios` no podría
+ * pasar por RLS. OTP y OAuth quedan fuera del contador.
+ *
+ * - Pre-chequea `bloqueado_hasta`; si sigue vigente devuelve err('account_locked').
+ * - En credenciales inválidas incrementa `intentos_fallidos`; al alcanzar
+ *   `intentos_login_max` fija `bloqueado_hasta = now() + tiempo_bloqueo_minutos`.
+ * - En login exitoso resetea el contador.
+ * - El error de credenciales es neutro: no revela si el correo existe.
+ */
+export async function signInWithPassword(
+  input: SignInInput,
+): Promise<Result<void>> {
+  const parsed = SignInSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const { email, password } = parsed.data
+
+  const admin = createSupabaseAdminClient()
+
+  // Configuración del bloqueo (con defaults si faltara alguna fila).
+  const { data: configRows } = await admin
+    .from('configuracion_sistema')
+    .select('clave, valor')
+    .in('clave', ['intentos_login_max', 'tiempo_bloqueo_minutos'])
+
+  const readIntConfig = (clave: string, fallback: number): number => {
+    const row = configRows?.find((r) => r.clave === clave)
+    const value = row ? Number.parseInt(row.valor, 10) : Number.NaN
+    return Number.isFinite(value) ? value : fallback
+  }
+  const maxAttempts = readIntConfig('intentos_login_max', 5)
+  const lockMinutes = readIntConfig('tiempo_bloqueo_minutos', 30)
+
+  // Estado de bloqueo actual del usuario (si la cuenta existe).
+  const { data: usuario } = await admin
+    .from('usuarios')
+    .select('id_usuario, intentos_fallidos, bloqueado_hasta')
+    .eq('correo', email)
+    .maybeSingle()
+
+  if (
+    usuario?.bloqueado_hasta &&
+    new Date(usuario.bloqueado_hasta) > new Date()
+  ) {
+    return err('account_locked')
+  }
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+  if (error) {
+    if (usuario) {
+      const newCount = usuario.intentos_fallidos + 1
+      const updates: { intentos_fallidos: number; bloqueado_hasta?: string } = {
+        intentos_fallidos: newCount,
+      }
+      if (newCount >= maxAttempts) {
+        updates.bloqueado_hasta = new Date(
+          Date.now() + lockMinutes * 60_000,
+        ).toISOString()
+      }
+      const { error: updateError } = await admin
+        .from('usuarios')
+        .update(updates)
+        .eq('id_usuario', usuario.id_usuario)
+      if (updateError) {
+        logger.error('signInWithPassword: fallo al incrementar intentos', {
+          error: updateError.message,
+        })
+      }
+    }
+    return err('invalid_credentials')
+  }
+
+  // Login exitoso: resetear el contador si traía intentos o bloqueo previo.
+  if (usuario && (usuario.intentos_fallidos > 0 || usuario.bloqueado_hasta)) {
+    const { error: resetError } = await admin
+      .from('usuarios')
+      .update({ intentos_fallidos: 0, bloqueado_hasta: null })
+      .eq('id_usuario', usuario.id_usuario)
+    if (resetError) {
+      logger.error('signInWithPassword: fallo al resetear intentos', {
+        error: resetError.message,
+      })
+    }
+  }
+
+  revalidatePath('/', 'layout')
   return ok(undefined)
 }
 

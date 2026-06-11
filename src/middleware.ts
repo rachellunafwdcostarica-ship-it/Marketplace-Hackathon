@@ -85,18 +85,36 @@ export async function middleware(request: NextRequest) {
 
   // A partir de aquí: usuario autenticado
 
-  // Si acceden a la página de inicio (raíz), redirigir a su home correspondiente según su rol
-  if (pathname === `/${locale}` || pathname === `/${locale}/`) {
-    const { data: roleRaw } = await supabase.rpc('get_my_role')
-    const role = normalizeRole(roleRaw)
-    if (role) {
-      return NextResponse.redirect(
-        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
-      )
-    } else {
-      return NextResponse.redirect(
-        new URL(`/${locale}/onboarding`, request.url),
-      )
+  // GATE DE SUSPENSIÓN (RF-65 / #83): una cuenta suspendida no puede usar la
+  // plataforma. Se evalúa en rutas protegidas, de auth y onboarding. Si está
+  // suspendida se cierra la sesión y se rebota a /login?reason=suspended.
+  if (
+    isProtected(pathname) ||
+    isPublicAuthPage(pathname) ||
+    isOnboardingPath(pathname)
+  ) {
+    const { data: accountStatus } = await supabase.rpc('get_my_account_status')
+
+    if (
+      accountStatus === 'suspendida' ||
+      accountStatus === 'suspendida_severa'
+    ) {
+      await supabase.auth.signOut()
+
+      // Si ya está en una página de auth, dejarla renderizar (evita un bucle
+      // de redirecciones contra /login).
+      if (isPublicAuthPage(pathname)) {
+        return intlResponse
+      }
+
+      const loginUrl = new URL(`/${locale}/login`, request.url)
+      loginUrl.searchParams.set('reason', 'suspended')
+      const redirect = NextResponse.redirect(loginUrl)
+      // Propagar las cookies de cierre de sesión escritas por signOut().
+      intlResponse.cookies.getAll().forEach((cookie) => {
+        redirect.cookies.set(cookie)
+      })
+      return redirect
     }
   }
 
