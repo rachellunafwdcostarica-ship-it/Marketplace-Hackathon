@@ -76,6 +76,7 @@
     "success": "Link sent! Check your inbox.",
     "error": "An error occurred. Please try again.",
     "redirecting": "Redirecting to your dashboard in a few seconds...",
+    "suspended": "Your account is suspended. Contact the FWD Talent team for more information.",
     "orContinueWith": "or continue with",
     "simulatingOAuth": "Simulating login with {provider}...",
     "noAccount": "No account?",

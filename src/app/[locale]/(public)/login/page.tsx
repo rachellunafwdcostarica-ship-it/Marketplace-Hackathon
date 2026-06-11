@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { Suspense, useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
+import { useSearchParams } from 'next/navigation'
 import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +11,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
-import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { Mail, ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
@@ -30,9 +31,26 @@ function createLoginSchema(
 }
 
 export default function LoginPage() {
+  // useSearchParams exige un límite de Suspense para no romper el render estático.
+  return (
+    <Suspense
+      fallback={
+        <AuthCard>
+          <div className="h-96" />
+        </AuthCard>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+  )
+}
+
+function LoginContent() {
   const tLogin = useTranslations('Login')
   const tAuth = useTranslations('Auth')
   const tValidation = useTranslations('Validation')
+  const searchParams = useSearchParams()
+  const isSuspended = searchParams.get('reason') === 'suspended'
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
@@ -106,6 +124,18 @@ export default function LoginPage() {
         </div>
       ) : (
         <div className="space-y-5">
+          {isSuspended && (
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 text-destructive"
+            >
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <p className="text-xs font-semibold leading-relaxed">
+                {tLogin('suspended')}
+              </p>
+            </div>
+          )}
+
           <AuthHeader
             welcomeText={tAuth('welcome')}
             title={tAuth('loginTitle')}

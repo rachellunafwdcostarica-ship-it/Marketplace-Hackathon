@@ -76,6 +76,7 @@
     "success": "¡Enlace enviado! Revisa tu bandeja de entrada.",
     "error": "Ocurrió un error. Inténtalo de nuevo.",
     "redirecting": "Redirigiendo a tu panel en unos segundos...",
+    "suspended": "Tu cuenta está suspendida. Escribí al equipo de FWD Talent para más información.",
     "orContinueWith": "o continúa con",
     "simulatingOAuth": "Simulando login con {provider}...",
     "noAccount": "¿Sin cuenta?",
