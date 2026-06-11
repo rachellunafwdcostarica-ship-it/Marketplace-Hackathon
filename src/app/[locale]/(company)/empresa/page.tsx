@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/StateContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
@@ -13,7 +13,7 @@ import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Link } from '@/i18n/routing'
+import { Link, useRouter } from '@/i18n/routing'
 import { toast } from 'sonner'
 import { MOCK_COMPANY_ID } from '@/lib/constants/mockData'
 import {
@@ -44,9 +44,19 @@ export default function CompanyDashboard() {
   const {
     projects,
     applications,
+    companies,
     updateApplicationStatus,
     updateProjectStatus,
   } = useAppState()
+
+  const router = useRouter()
+  const company = companies.find((c) => c.id === MOCK_COMPANY_ID)
+
+  useEffect(() => {
+    if (company && !company.isProfileFilled) {
+      router.replace('/empresa/formulario-empresa')
+    }
+  }, [company, router])
 
   const myProjects = projects.filter((p) => p.companyId === MOCK_COMPANY_ID)
   const activeProjects = myProjects.filter((p) => p.status === 'active')

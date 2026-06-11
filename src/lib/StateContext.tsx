@@ -160,7 +160,9 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
 
   const updateCompany = (id: string, profile: CompanyProfileInput) => {
     setCompanies((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...profile } : c)),
+      prev.map((c) =>
+        c.id === id ? { ...c, ...profile, isProfileFilled: true } : c,
+      ),
     )
   }
 
