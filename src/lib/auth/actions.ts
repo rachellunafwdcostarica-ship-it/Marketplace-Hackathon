@@ -158,6 +158,17 @@ export async function signUpWithPassword(input: {
   const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
   const redirectTo = `${proto}://${host}/auth/callback`
 
+  const adminClient = createSupabaseAdminClient()
+  const { data: existingUser } = await adminClient
+    .from('usuarios')
+    .select('id_usuario')
+    .eq('correo', parsed.data.email)
+    .maybeSingle()
+
+  if (existingUser) {
+    return err('email_already_exists')
+  }
+
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
