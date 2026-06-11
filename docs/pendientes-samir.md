@@ -35,10 +35,14 @@ Doble problema verificado:
 
 **Acción (decidir):** agregar `signInWithPassword` + contador de intentos, o eliminar la contraseña del registro y declarar OTP/OAuth como método único. Cualquiera de las dos cierra la incoherencia.
 
+**RESPUESTA A LA DECISION** Conversando con mi equipo, llegamos a la conclusion de que lo mejor, y lo que queremos es que estén las 2 opcines vigentes, tanto el login con contraseña como el login con magic link OTP, ademas queremos que el registro tenga contraseña y que el usuario pueda elegir si quiere iniciar sesion con contraseña o con magic link OTP. Ahora, con respecto al bloqueo por intentos fallidos, creemos que es una buena medida de seguridad y que deberia estar implementada.
+
 ### 1.4 RF-01 parcial — el rol elegido en /register nunca se aplica
 
 `register` guarda el rol en `options.data.role` (user metadata), pero `handle_new_user` lo ignora y deja `id_rol = NULL`; el usuario debe re-elegir rol en `/onboarding`. Paso duplicado para quien ya eligió.
 **Acción (decidir):** leer el metadata en onboarding como preselección, aplicarlo directo en el trigger, o quitar el `RoleSelector` del registro.
+
+**RESPUESTA A LA DECISION** No veo el sentido de quitar el RoleSelector del registro, ya que es una funcionalidad que deberia estar implementada desde el registro, ademas de que ahorraria tiempo al usuario al no tener que elegir el rol en el onboarding. por lo que recomiendo que se deje el RoleSelector en el registro y que se lea el metadata en onboarding como preselección, de esta manera el usuario podra elegir el rol en el registro y no tendra que elegir el rol en el onboarding. 
 
 ---
 
@@ -49,8 +53,8 @@ Verificado directamente en la BD remota: **siguen faltando** (solo existe la PK;
 1. `UNIQUE(id_proyecto, id_estudiante)` en `participaciones` — hoy un egresado puede postularse dos veces al mismo proyecto.
 2. Trigger `BEFORE UPDATE` que valide la máquina de estados (`enviada → en_revision → contratada | no_seleccionada`, etc.).
 
-**Bloqueado por 2 respuestas de Santiago** (ver `coordinacion-santiago-13.md`): rechazo directo `enviada → no_seleccionada`, y retiro post-`contratada`.
-**Ojo con la numeración:** el doc de coordinación la llama "migración 0008", pero ese número ya lo ocupó `perf_initplan`. La nueva será 0012 o posterior.
+**Bloqueado por 2 respuestas de Santiago** (ver `coordinacion-santiago-13.md`): rechazo directo `enviada → no_seleccionada`, y retiro post-`contratada`. Santiago solo debe esas dos respuestas; **la migración la escribe Samir** (sus tareas son las server actions y queries de `lib/applications/`).
+**Ojo con la numeración:** "migración 0008" en el doc de coordinación es una etiqueta vieja de la v1 — ese número ya lo ocupó `perf_initplan` y **no se renombra ni se edita nada existente** (las migraciones aplicadas son inmutables). La nueva migración simplemente toma la siguiente versión libre: única y mayor que la última aplicada en remoto (hoy `20260611035145`). Si antes se repara el drift de 1.1, lo más limpio es generar el timestamp con `supabase migration new`.
 
 ---
 
