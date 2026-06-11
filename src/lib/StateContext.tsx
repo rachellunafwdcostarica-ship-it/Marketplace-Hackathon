@@ -24,6 +24,7 @@ import {
 } from '@/lib/constants/mockData'
 import type { CompanyProfileInput } from '@/lib/company/schemas'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { normalizeRole } from '@/lib/auth/roles'
 
 import type { User } from '@supabase/supabase-js'
 
@@ -97,10 +98,11 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
 
     // Suscribirse al estado de autenticación de Supabase
     const supabase = createSupabaseBrowserClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         setCurrentUser(user)
-        const role = user.user_metadata?.role as UserRole | undefined
+        const { data: roleRaw } = await supabase.rpc('get_my_role')
+        const role = normalizeRole(roleRaw as string | null)
         if (role) {
           setUserRoleState(role)
         }
@@ -109,11 +111,12 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       const user = session?.user ?? null
       setCurrentUser(user)
       if (user) {
-        const role = user.user_metadata?.role as UserRole | undefined
+        const { data: roleRaw } = await supabase.rpc('get_my_role')
+        const role = normalizeRole(roleRaw as string | null)
         if (role) {
           setUserRoleState(role)
         }
