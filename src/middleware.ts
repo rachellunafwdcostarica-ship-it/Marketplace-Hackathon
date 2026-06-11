@@ -76,14 +76,29 @@ export async function middleware(request: NextRequest) {
 
   // CASO A: Usuario NO autenticado
   if (!user) {
-    // Rutas protegidas y /onboarding requieren sesión
-    if (isProtected(pathname) || isOnboardingPath(pathname)) {
+    // Si no es una página de autenticación pública, redirigir a /login
+    if (!isPublicAuthPage(pathname)) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
     }
     return intlResponse
   }
 
   // A partir de aquí: usuario autenticado
+
+  // Si acceden a la página de inicio (raíz), redirigir a su home correspondiente según su rol
+  if (pathname === `/${locale}` || pathname === `/${locale}/`) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw)
+    if (role) {
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+      )
+    } else {
+      return NextResponse.redirect(
+        new URL(`/${locale}/onboarding`, request.url),
+      )
+    }
+  }
 
   // CASO B: Ruta protegida
   if (isProtected(pathname)) {
