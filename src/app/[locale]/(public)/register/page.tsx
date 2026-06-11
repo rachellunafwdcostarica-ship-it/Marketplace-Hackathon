@@ -12,6 +12,7 @@ import * as zod from 'zod'
 import { toast } from 'sonner'
 import { Mail, User, Lock, ArrowRight } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { signUpWithPassword } from '@/lib/auth/actions'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { OAuthButtons } from '@/components/features/auth/OAuthButtons'
@@ -78,21 +79,21 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormValues) => {
     setLoading(true)
     setUserRole(selectedRole)
-    const supabase = createSupabaseBrowserClient()
-    const { error } = await supabase.auth.signUp({
+    const result = await signUpWithPassword({
       email: data.email,
       password: data.password,
-      options: {
-        data: {
-          full_name: data.fullName,
-          role: selectedRole,
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+      fullName: data.fullName,
+      role: selectedRole as 'junior' | 'empresa',
     })
     setLoading(false)
-    if (error) {
-      toast.error(error.message)
+    if (!result.ok) {
+      const message =
+        result.error === 'password_breached'
+          ? tAuth('passwordBreached')
+          : result.error === 'pwned_check_failed'
+            ? tAuth('pwnedCheckFailed')
+            : result.error
+      toast.error(message)
       return
     }
     toast.success(

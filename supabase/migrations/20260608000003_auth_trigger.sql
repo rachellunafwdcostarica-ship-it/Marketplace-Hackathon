@@ -1,5 +1,5 @@
 -- Trigger: al crear un usuario en auth.users, crea su registro en public.usuarios.
--- Usa 'junior' como rol por defecto; el onboarding lo puede cambiar.
+-- Usa 'egresado' como rol por defecto; el onboarding lo puede cambiar.
 create or replace function handle_new_user()
 returns trigger
 language plpgsql
@@ -33,7 +33,7 @@ begin
     v_apellido,
     new.email,
     new.raw_user_meta_data->>'avatar_url',
-    (select id_rol from public.roles where nombre_rol = 'junior' limit 1),
+    (select id_rol from public.roles where nombre_rol = 'egresado' limit 1),
     'pendiente',
     true
   )

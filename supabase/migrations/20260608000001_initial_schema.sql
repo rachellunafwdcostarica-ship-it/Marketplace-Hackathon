@@ -1,3 +1,7 @@
+-- [RECONCILIADO A XXI] cédula y contrasena_hash fuera; ENUM participacion 7 estados;
+-- categorias_proyecto->categorias; estudiante_habilidades->habilidades_tecnicas;
+-- +3 tablas de portafolio; tipo_evento ENUM; tipos_notificacion_silenciados.
+
 -- ============================================================
 -- MIGRACIÓN INICIAL — Marketplace FWD
 -- Fecha: 2026-06-08
@@ -8,7 +12,7 @@
 --
 -- VIOLACIONES A reglas.md / brief
 -- ─────────────────────────────────────────────────────────────
--- [V1] usuarios.contrasena_hash (~línea 90)
+-- [V1] usuarios.contrasena_hash — RESUELTO (columna eliminada; Auth gestiona credenciales)
 --      Supabase Auth gestiona contraseñas en auth.users — este campo
 --      es redundante y representa un riesgo de seguridad real.
 --      Acción: eliminar la columna cuando Auth esté operativo.
@@ -25,7 +29,7 @@
 --
 -- AMBIGÜEDADES SIN RESOLVER
 -- ─────────────────────────────────────────────────────────────
--- [A1] usuarios.cedula + usuarios.url_cedula (~línea 88)
+-- [A1] usuarios.cedula — RESUELTO (eliminada; cotejo FWD por correo, RF-64)
 --      ¿Todos los usuarios (empresarios Y estudiantes) tienen cédula?
 --      Si solo aplica a estudiantes, mover a tabla estudiantes.
 --
@@ -84,7 +88,7 @@ create type tipo_empresario_enum  as enum ('empresa_formal', 'emprendedor');
 create type alcance_enum          as enum ('nacional', 'internacional', 'ambos');
 create type estado_proyecto_enum  as enum ('borrador', 'abierto', 'en_recepcion', 'adjudicado', 'en_desarrollo', 'finalizado', 'cancelado');
 create type moneda_enum           as enum ('USD', 'CRC');
-create type estado_participacion_enum as enum ('postulada', 'en_revision', 'rechazada', 'candidata', 'no_seleccionada', 'contratada', 'finalizada', 'cancelada', 'retirada');
+create type estado_participacion_enum as enum ('enviada', 'en_revision', 'contratada', 'no_seleccionada', 'retirada', 'finalizada', 'cancelada');
 create type estado_periodo_enum   as enum ('vigente', 'pausado', 'finalizado', 'cancelado');
 create type tipo_entregable_enum  as enum ('parcial', 'final'); -- [BUG CORREGIDO] "fina" → "final"
 create type estado_entregable_enum as enum ('enviado', 'en_revision', 'aprobado', 'con_cambios');
@@ -96,6 +100,10 @@ create type tipo_reporte_enum     as enum ('conducta_abusiva', 'contenido_inapro
 create type estado_moderacion_enum as enum ('pendiente', 'en_revision', 'resuelto_a_favor', 'resuelto_en_contra', 'descartado');
 create type tipo_dato_enum        as enum ('integer', 'decimal', 'boolean', 'string');
 create type tipo_consentimiento_enum as enum ('ia', 'cotejo_fwd', 'terminos_servicio', 'politica_privacidad');
+create type tipo_notificacion_enum   as enum ('mensaje_nuevo', 'postulacion_recibida', 'plazo_vence', 'participacion_no_seleccionada', 'participacion_contratada', 'entregable_aprobado', 'entregable_rechazado', 'evaluacion_recibida', 'cuenta_verificada', 'cuenta_suspendida', 'strike_recibido');
+create type nivel_admin_enum         as enum ('superadmin', 'admin', 'moderador');
+create type origen_portafolio_enum   as enum ('plataforma_no_contratada', 'plataforma_contratada', 'independiente');
+create type estado_consent_portafolio_enum as enum ('pendiente', 'aprobado', 'revocado');
 
 
 -- ============================================================
@@ -115,7 +123,7 @@ create table areas_negocio (
   is_active   boolean     not null default true
 );
 
-create table categorias_proyecto (
+create table categorias (
   id_categoria uuid       primary key default gen_random_uuid(),
   nombre       varchar(80) not null unique,
   is_active    boolean    not null default true
@@ -140,18 +148,7 @@ create table usuarios (
   apellido_2          varchar(80),
   fecha_nacimiento    date,
 
-  -- [A1] AMBIGÜEDAD: ¿cedula aplica a todos los usuarios o solo a estudiantes?
-  --      Si solo aplica a estudiantes, mover estos dos campos a tabla estudiantes.
-  cedula              varchar(50),
-  url_cedula          varchar(150),
-
   correo              varchar(150) not null unique,
-
-  -- [V1] VIOLACIÓN reglas.md §4.2 / §7.3:
-  --      Supabase Auth gestiona contraseñas en auth.users — almacenarlas aquí
-  --      es redundante y un riesgo de seguridad. Eliminar esta columna
-  --      una vez que el flujo de Auth con Google OAuth esté operativo.
-  contrasena_hash     varchar(255),
 
   id_rol              smallint     not null references roles(id_rol),
   foto_perfil         varchar(150),
@@ -162,7 +159,9 @@ create table usuarios (
   bloqueado_hasta     timestamptz,
   fecha_registro      timestamptz  not null default now(),
   ultimo_login_at     timestamptz,
-  suspendido_at       timestamptz
+  suspendido_at       timestamptz,
+  nivel_admin         nivel_admin_enum,
+  tipos_notificacion_silenciados tipo_notificacion_enum[] not null default '{}'
 );
 
 
@@ -190,7 +189,7 @@ create table estudiantes (
 
   -- [BUG CORREGIDO] "PRESENCIAL" → "presencial" para consistencia con el ENUM
   modalidad_preferida            modalidad_enum,
-
+  url_portafolio                 varchar(150),
   portafolio_visible_publicamente boolean   not null default true,
   updated_at                     timestamptz not null default now() -- [A4] agregado
 );
@@ -200,7 +199,7 @@ create trigger trg_estudiantes_updated_at
   for each row execute function set_updated_at();
 
 
-create table estudiante_habilidades (
+create table habilidades_tecnicas (
   id_estudiante  uuid              not null references estudiantes(id_estudiante) on delete cascade,
   id_tecnologia  uuid              not null references tecnologias(id_tecnologia) on delete cascade,
   nivel          nivel_habilidad_enum not null,
@@ -241,7 +240,6 @@ create table proyectos (
   id_proyecto                      uuid       primary key default gen_random_uuid(),
   id_empresario                    uuid       not null references empresarios(id_empresario),
   id_area_negocio                  uuid       references areas_negocio(id_area),
-  id_categoria                     uuid       references categorias_proyecto(id_categoria),
   titulo                           varchar(150) not null,
   descripcion                      text       not null,
   usa_ia                           boolean    not null default false,
@@ -283,21 +281,20 @@ create table participaciones (
   id_participacion           uuid       primary key default gen_random_uuid(),
   id_proyecto                uuid       not null references proyectos(id_proyecto),
   id_estudiante              uuid       not null references estudiantes(id_estudiante),
-  estado                     estado_participacion_enum not null default 'postulada',
+  estado                     estado_participacion_enum not null default 'enviada',
   carta_postulacion          text,
   fecha_postulacion          timestamptz not null default now(),
   revision_iniciada_at       timestamptz,
-  aceptada_at                timestamptz,
-  rechazada_at               timestamptz,
-  motivo_rechazo             text,
-  propuesta                  text,
-  prototipo_url              varchar(150),
-  documentacion_url          varchar(150),
+  planteamiento_solucion     text,
+  prototipo_enlaces          text[],
+  documentacion_tecnica      varchar(150),
   fecha_entrega_prototipo    timestamptz,
   calificacion_prototipo     integer,
   comentario_prototipo       text,
   adjudicada_at              timestamptz,
   no_seleccionada_at         timestamptz,
+  retirada_at                timestamptz,
+  motivo_retiro              text,
   url_repositorio_proyecto   varchar(150),
   updated_at                 timestamptz not null default now() -- [A4] agregado
 );
@@ -351,6 +348,38 @@ create table comentarios_entregables (
   contenido                text       not null,
   tipo_comentario          tipo_comentario_enum not null,
   comentado_at             timestamptz not null default now()
+);
+
+-- ============================================================
+-- 5b. PORTAFOLIO DEL ESTUDIANTE  [NUEVO en XXI]
+-- ============================================================
+
+create table proyectos_portafolio (
+  id_portafolio         uuid       primary key default gen_random_uuid(),
+  id_estudiante         uuid       not null references estudiantes(id_estudiante) on delete cascade,
+  titulo                varchar(150) not null,
+  descripcion           text,
+  imagen_url            varchar(150),
+  fecha                 date,
+  origen                origen_portafolio_enum not null,
+  id_participacion      uuid       references participaciones(id_participacion),
+  url_repositorio       varchar(150),
+  url_demo              varchar(150),
+  estado_consentimiento estado_consent_portafolio_enum,
+  consentimiento_at     timestamptz,
+  is_active             boolean    not null default true
+);
+
+create table portafolio_tecnologias (
+  id_portafolio uuid not null references proyectos_portafolio(id_portafolio) on delete cascade,
+  id_tecnologia uuid not null references tecnologias(id_tecnologia) on delete cascade,
+  primary key (id_portafolio, id_tecnologia)
+);
+
+create table proyecto_categorias (
+  id_proyecto  uuid not null references proyectos(id_proyecto) on delete cascade,
+  id_categoria uuid not null references categorias(id_categoria) on delete cascade,
+  primary key (id_proyecto, id_categoria)
 );
 
 
@@ -411,7 +440,7 @@ create table mensajes (
 create table notificaciones (
   id_notificacion uuid        primary key default gen_random_uuid(),
   id_usuario      uuid        not null references usuarios(id_usuario) on delete cascade,
-  tipo_evento     varchar(80) not null,
+  tipo_evento     tipo_notificacion_enum not null,
   mensaje         varchar(255) not null,
   url_destino     varchar(255),
   leida           boolean     not null default false,
@@ -444,17 +473,19 @@ create table conversaciones_ia (
 create table reportes_moderacion (
   id_reporte          uuid       primary key default gen_random_uuid(),
   id_reportante       uuid       not null references usuarios(id_usuario),
-  id_reportado        uuid       not null references usuarios(id_usuario),
+  id_reportado        uuid                 references usuarios(id_usuario),
   id_proyecto         uuid       references proyectos(id_proyecto),
   id_mensaje          uuid       references mensajes(id_mensaje),
   id_entregable       uuid       references entregables(id_entregable),
+  id_portafolio       uuid       references proyectos_portafolio(id_portafolio),
   tipo_reporte        tipo_reporte_enum not null,
   descripcion         text       not null,
   estado_moderacion   estado_moderacion_enum not null default 'pendiente',
   resolucion          text,
   resuelto_por        uuid       references usuarios(id_usuario),
   reportado_at        timestamptz not null default now(),
-  resuelto_at         timestamptz
+  resuelto_at         timestamptz,
+  check (id_reportado is not null or id_proyecto is not null or id_mensaje is not null or id_entregable is not null or id_portafolio is not null)
 );
 
 -- FK diferida de strikes → reportes_moderacion (creación circular resuelta aquí)
@@ -514,10 +545,10 @@ create table consentimientos (
 alter table roles                    enable row level security;
 alter table usuarios                 enable row level security;
 alter table estudiantes              enable row level security;
-alter table estudiante_habilidades   enable row level security;
+alter table habilidades_tecnicas     enable row level security;
 alter table empresarios              enable row level security;
 alter table areas_negocio            enable row level security;
-alter table categorias_proyecto      enable row level security;
+alter table categorias                  enable row level security;
 alter table tecnologias              enable row level security;
 alter table proyectos                enable row level security;
 alter table proyecto_tecnologias     enable row level security;
@@ -534,11 +565,14 @@ alter table reportes_moderacion      enable row level security;
 alter table auditoria                enable row level security;
 alter table configuracion_sistema    enable row level security;
 alter table consentimientos          enable row level security;
+alter table proyectos_portafolio     enable row level security;
+alter table portafolio_tecnologias   enable row level security;
+alter table proyecto_categorias      enable row level security;
 
 -- [V3] PLACEHOLDER — reemplazar con políticas reales por rol
 create policy "lectura_publica_roles"          on roles                  for select using (true);
 create policy "lectura_publica_areas"          on areas_negocio          for select using (true);
-create policy "lectura_publica_categorias"     on categorias_proyecto    for select using (true);
+create policy "lectura_publica_categorias"     on categorias                for select using (true);
 create policy "lectura_publica_tecnologias"    on tecnologias            for select using (true);
 create policy "lectura_publica_proyectos"      on proyectos              for select using (is_active = true);
 
