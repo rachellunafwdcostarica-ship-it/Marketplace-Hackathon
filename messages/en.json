@@ -78,6 +78,12 @@
     "redirecting": "Redirecting to your dashboard in a few seconds...",
     "suspended": "Your account is suspended. Contact the FWD Talent team for more information.",
     "orContinueWith": "or continue with",
+    "passwordTab": "Password",
+    "magicLinkTab": "Magic link",
+    "signInButton": "Sign in",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Incorrect email or password.",
+    "accountLocked": "Too many failed attempts. Try again in a few minutes.",
     "simulatingOAuth": "Simulating login with {provider}...",
     "noAccount": "No account?",
     "signUpViaGoogle": "Sign up with Google above."
@@ -235,6 +241,7 @@
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",
+    "passwordRequired": "Please enter your password.",
     "passwordMin": "Password must be at least 8 characters.",
     "passwordMismatch": "Passwords do not match.",
     "coverLetterMin": "Cover letter must be at least 30 characters.",
