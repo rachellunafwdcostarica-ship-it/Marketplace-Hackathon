@@ -45,7 +45,6 @@ export function ProjectFilters({
   return (
     <div className="flex flex-col gap-4 p-4 border border-border rounded-xl bg-card/40 backdrop-blur-sm shadow-sm">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Stack filter */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {tJunior('selectStack')}
@@ -70,7 +69,6 @@ export function ProjectFilters({
           </Select>
         </div>
 
-        {/* Mode filter */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {tJunior('selectMode')}
@@ -95,7 +93,6 @@ export function ProjectFilters({
           </Select>
         </div>
 
-        {/* Duration filter */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {tJunior('selectDuration')}
@@ -118,7 +115,6 @@ export function ProjectFilters({
           </Select>
         </div>
 
-        {/* Budget filter */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {tJunior('selectBudget')}
