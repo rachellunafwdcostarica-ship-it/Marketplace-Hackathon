@@ -3,8 +3,6 @@
 -- Fecha: 2026-06-11
 -- Autor: Samir (A1)
 --
--- PENDIENTE DE APLICAR en remoto (junto con 0013).
---
 -- Advisor public_bucket_allows_listing: las policies SELECT amplias
 -- de 0012 permiten a cualquier autenticado listar TODOS los archivos
 -- de fotos-perfil y logos (los paths exponen UUIDs de usuarios).
