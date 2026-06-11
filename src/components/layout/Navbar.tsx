@@ -4,7 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import {
@@ -30,7 +30,11 @@ interface NavLink {
   isMock?: boolean
 }
 
-export function Navbar() {
+interface NavbarProps {
+  heroMode?: boolean
+}
+
+export function Navbar({ heroMode = false }: NavbarProps) {
   const t = useTranslations('Nav')
   const locale = useLocale()
   const pathname = usePathname()
@@ -39,6 +43,9 @@ export function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  // isHero = true solo en la landing page cuando está arriba
+  const isHero = heroMode && !scrolled
 
   useEffect(() => {
     const handleScroll = () => {
@@ -140,15 +147,17 @@ export function Navbar() {
         return null
     }
   }
+
   return (
     <nav
       className={`sticky top-0 z-50 w-full animate-slide-down-fade transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] ${
-        scrolled
-          ? 'border-b border-border/80 bg-background/80 backdrop-blur-xl shadow-md py-2'
-          : 'border-b border-border/20 bg-background/40 backdrop-blur-md py-3.5'
+        isHero
+          ? 'border-b border-transparent bg-transparent py-3.5'
+          : 'border-b border-border/80 bg-background/95 backdrop-blur-xl shadow-md py-2'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        {/* Main row: Logo + Inline links + Right actions */}
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
           <div className="flex items-center gap-6 xl:gap-8">
@@ -157,20 +166,28 @@ export function Navbar() {
               className="flex items-center space-x-2.5 shrink-0 group"
             >
               <FwdLogo className="w-8 h-8 group-hover:scale-105 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]" />
-              <span className="font-heading text-xl font-bold tracking-tight text-foreground block">
+              <span
+                className={`font-heading text-xl font-bold tracking-tight block transition-colors duration-300 ${isHero ? 'text-white' : 'text-foreground'}`}
+              >
                 Marketplace FWD<span className="text-primary">.</span>
               </span>
             </Link>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          {/* Desktop Navigation Links — INLINE when scrolled or not on landing/hero */}
+          <div
+            className={`hidden md:flex items-center space-x-1 lg:space-x-2 transition-all duration-300 ${
+              isHero
+                ? 'opacity-0 invisible absolute pointer-events-none'
+                : 'opacity-100 visible'
+            }`}
+          >
             {navLinks.map((link) => {
               const isActive = pathname === link.href
               if (link.isMock) {
                 return (
                   <span
-                    key={link.href}
+                    key={`inline-${link.href}`}
                     aria-disabled="true"
                     className="px-3.5 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 text-muted-foreground/40 cursor-not-allowed select-none"
                   >
@@ -181,7 +198,7 @@ export function Navbar() {
               }
               return (
                 <Link
-                  key={link.href}
+                  key={`inline-${link.href}`}
                   href={link.href}
                   className={`relative px-3.5 py-2 rounded-full text-sm font-semibold transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
                     isActive
@@ -200,8 +217,12 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center space-x-3">
             {/* Rol activo mostrado estáticamente sin opción a cambio */}
-            <div className="flex items-center gap-2 border-r border-border/80 pr-3 mr-1">
-              <div className="flex items-center gap-2 bg-muted/30 border border-border/50 rounded-full px-3 py-1.5 text-xs font-bold text-foreground select-none">
+            <div
+              className={`flex items-center gap-2 border-r pr-3 mr-1 transition-colors duration-500 ${isHero ? 'border-white/30' : 'border-border/80'}`}
+            >
+              <div
+                className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold select-none transition-all duration-500 ${isHero ? 'bg-white/15 border border-white/25 text-white drop-shadow-sm' : 'bg-muted/30 border border-border/50 text-foreground'}`}
+              >
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
                 />
@@ -214,7 +235,7 @@ export function Navbar() {
               variant="ghost"
               size="icon"
               aria-label={t('notifications')}
-              className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground relative shrink-0 transition-transform hover:scale-105 active:scale-95"
+              className={`h-9 w-9 rounded-full relative shrink-0 transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-magenta animate-pulse" />
@@ -222,7 +243,7 @@ export function Navbar() {
 
             {/* Language Selector */}
             <div
-              className="relative flex items-center border border-border/60 bg-muted/30 rounded-full p-0.5 shrink-0"
+              className={`relative flex items-center rounded-full p-0.5 shrink-0 transition-all duration-500 ${isHero ? 'border border-white/25 bg-white/15' : 'border border-border/60 bg-muted/30'}`}
               aria-label={t('language')}
             >
               <button
@@ -251,13 +272,13 @@ export function Navbar() {
 
             {/* User Profile Avatar / Logout Dropdown */}
             <div className="relative group shrink-0">
-              <button
-                type="button"
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+              <Link
+                href="/empresa/perfil"
+                className={`flex items-center justify-center w-9 h-9 rounded-full shadow-sm transition-all duration-500 hover:scale-105 active:scale-95 cursor-pointer ${isHero ? 'bg-white/15 hover:bg-white/25 border border-white/25 text-white' : 'bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground'}`}
                 aria-label={t('profile')}
               >
                 <User className="w-5 h-5" />
-              </button>
+              </Link>
               <div className="absolute right-0 top-full mt-2 w-36 bg-card border border-border rounded-xl shadow-xl py-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <button
                   type="button"
@@ -282,7 +303,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-lg text-xs font-bold transition-transform hover:scale-105 active:scale-95"
+              className={`h-9 w-9 rounded-lg text-xs font-bold transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'text-white' : ''}`}
               onClick={() => handleLocaleChange(locale === 'es' ? 'en' : 'es')}
               aria-label={t('language')}
             >
@@ -292,7 +313,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-lg transition-transform hover:scale-105 active:scale-95"
+              className={`h-9 w-9 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'text-white' : ''}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? t('closeMenu') : t('openMenu')}
             >
@@ -302,6 +323,49 @@ export function Navbar() {
                 <Menu className="w-5 h-5" />
               )}
             </Button>
+          </div>
+        </div>
+
+        {/* Desktop Navigation Links — FLOATING CAPSULE PROTRUDING FROM THE BOTTOM */}
+        <div
+          className={`hidden md:flex absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 z-20 transition-all duration-300 ${
+            isHero
+              ? 'opacity-100 visible scale-100'
+              : 'opacity-0 invisible pointer-events-none scale-95 translate-y-0'
+          }`}
+        >
+          <div className="flex items-center space-x-1 lg:space-x-2 bg-surface/90 dark:bg-zinc-900/90 backdrop-blur-md border border-border/80 rounded-full py-2.5 px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href
+              if (link.isMock) {
+                return (
+                  <span
+                    key={`float-${link.href}`}
+                    aria-disabled="true"
+                    className="px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 text-ink-subtle/50 cursor-not-allowed select-none"
+                  >
+                    {renderIcon(link.icon, 'w-4 h-4 text-ink-subtle/40')}
+                    <span>{link.label}</span>
+                  </span>
+                )
+              }
+              return (
+                <Link
+                  key={`float-${link.href}`}
+                  href={link.href}
+                  className={`relative px-4 py-2 rounded-full text-xs font-bold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] flex items-center gap-1.5 ${
+                    isActive
+                      ? 'text-ink-strong bg-primary/10'
+                      : 'text-ink hover:text-ink-strong hover:bg-muted/40'
+                  }`}
+                >
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {renderIcon(link.icon, 'w-4 h-4')}
+                    <span>{link.label}</span>
+                  </span>
+                </Link>
+              )
+            })}
           </div>
         </div>
       </div>

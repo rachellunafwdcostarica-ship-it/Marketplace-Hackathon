@@ -4,7 +4,7 @@
 
 **Lee `reglas.md` (en la raíz del repo) y verifica que tu cambio no viole ninguna regla.** Es obligatorio para personas y para cualquier IA.
 
-La única fuente de verdad es el brief oficial `Marketplace_FWD_Brief.pdf` de FWD Talent. `reglas.md` es su destilado y viaja con el repo. Si algo entra en conflicto, gana el brief.
+`reglas.md` destila las **restricciones** (stack, identidad visual, naming, prohibiciones, calidad) del brief oficial `Marketplace_FWD_Brief.pdf` de FWD Talent. Las **funciones** de la plataforma (flujos, roles, alcance) las define el `SRS_Plataforma_Talento_FWD`, fuente de verdad **funcional** vigente. En restricciones e identidad gana el brief; en funcionalidad gana el SRS.
 
 ## No negociables (resumen — el detalle está en `reglas.md`)
 

@@ -107,6 +107,9 @@ const sampleApplication: Application = {
 const sampleCompany: Company = {
   id: 'c1',
   name: 'Acme Capital',
+  companyType: 'formal',
+  sector: 'Fintech',
+  cedula: '3-101-789012',
   description:
     'Fintech de pagos para pequeñas y medianas empresas en Centroamérica.',
   logo: logoDataUri,

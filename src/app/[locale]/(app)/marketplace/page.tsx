@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/stateContext'
+import { useAppState } from '@/lib/StateContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { SearchBar } from '@/components/features/SearchBar'
 import { ProjectFilters } from '@/components/features/marketplace/ProjectFilters'
-import { GridCard } from '@/components/features/marketplace/GridCard'
 import { EmptyState } from '@/components/features/shared/EmptyState'
-import { LoadingSkeleton } from '@/components/features/shared/LoadingSkeleton'
+
 import { Briefcase } from 'lucide-react'
+import { ProjectGrid } from '@/components/features/marketplace/ProjectGrid'
 
 export default function MarketplacePage() {
   const tJunior = useTranslations('Junior')
@@ -23,8 +23,6 @@ export default function MarketplacePage() {
   const [selectedMode, setSelectedMode] = useState('')
   const [selectedDuration, setSelectedDuration] = useState('')
   const [selectedBudget, setSelectedBudget] = useState('')
-  const [loading, setLoading] = useState(false)
-
   const activeProjects = useMemo(
     () => projects.filter((p) => p.status === 'active'),
     [projects],
@@ -35,15 +33,6 @@ export default function MarketplacePage() {
     activeProjects.forEach((p) => p.stack.forEach((s) => stacks.add(s)))
     return Array.from(stacks).sort()
   }, [activeProjects])
-
-  useEffect(() => {
-    const startTimer = setTimeout(() => setLoading(true), 0)
-    const endTimer = setTimeout(() => setLoading(false), 400)
-    return () => {
-      clearTimeout(startTimer)
-      clearTimeout(endTimer)
-    }
-  }, [search, selectedStack, selectedMode, selectedDuration, selectedBudget])
 
   const handleClearFilters = () => {
     setSearch('')
@@ -65,18 +54,18 @@ export default function MarketplacePage() {
       const matchesMode = !selectedMode || project.mode === selectedMode
 
       let matchesDuration = true
+      const durationStr = project.duration.toLowerCase()
       if (selectedDuration === 'short') {
         matchesDuration =
-          (project.duration.toLowerCase().includes('semana') &&
-            (project.duration.includes('1') ||
-              project.duration.includes('2'))) ||
-          project.duration.toLowerCase().includes('día')
+          /(1|2)\s*(semana|week)/.test(durationStr) ||
+          /d(í|i)a|day/.test(durationStr) ||
+          /short/.test(durationStr)
       } else if (selectedDuration === 'medium') {
         matchesDuration =
-          project.duration.toLowerCase().includes('semana') &&
-          (project.duration.includes('3') || project.duration.includes('4'))
+          /(3|4)\s*(semana|week)/.test(durationStr) ||
+          /medium/.test(durationStr)
       } else if (selectedDuration === 'long') {
-        matchesDuration = project.duration.toLowerCase().includes('mes')
+        matchesDuration = /mes|month|long/.test(durationStr)
       }
 
       let matchesBudget = true
@@ -134,9 +123,7 @@ export default function MarketplacePage() {
           />
 
           <div className="pt-4">
-            {loading ? (
-              <LoadingSkeleton type="card" count={4} />
-            ) : filteredProjects.length === 0 ? (
+            {filteredProjects.length === 0 ? (
               <EmptyState
                 title={tJunior('emptyState')}
                 description={tJunior('emptyStateDesc')}
@@ -145,7 +132,7 @@ export default function MarketplacePage() {
                 onAction={handleClearFilters}
               />
             ) : (
-              <GridCard projects={filteredProjects} />
+              <ProjectGrid projects={filteredProjects} />
             )}
           </div>
         </div>

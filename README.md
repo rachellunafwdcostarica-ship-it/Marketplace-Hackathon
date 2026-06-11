@@ -8,7 +8,7 @@ Stack montado y "hola mundo" navegable en el lenguaje visual FWD (hito Setup del
 
 La estructura de carpetas usa la sección 6.1 del brief como base, más las adiciones que exigen otras secciones del mismo brief: `(company)/` y subpaneles de `(admin)/` (§3.2), `supabase/migrations/` (§7) y `tests/` (§4.6).
 
-Las reglas del proyecto viven en [`reglas.md`](./reglas.md) (destilado del brief oficial). Toda persona o IA debe leerlo antes de implementar; `CLAUDE.md` lo enlaza para las herramientas de IA.
+Las **restricciones** del proyecto (stack, identidad, naming, prohibiciones) viven en [`reglas.md`](./reglas.md), destilado del brief oficial. Las **funciones** de la plataforma las define el SRS (`SRS_Plataforma_Talento_FWD`), fuente de verdad funcional. Toda persona o IA debe leer `reglas.md` antes de implementar; `CLAUDE.md` enlaza ambos para las herramientas de IA.
 
 ## Stack
 
@@ -166,7 +166,7 @@ Commits firmados por cada miembro. Si solo uno commitea, se penaliza al equipo (
 - Organización de `components/` (design system C1/Sol): los primitivos shadcn viven en `components/ui/`; el chrome global de página en `components/layout/` (`Navbar`, `Footer`, `SidebarAdmin`, `NotificationCenter`, `JuniorShell`/`CompanyShell`/`AdminShell`), **separado** de `features/`. Dentro de `components/features/`: `brand/` agrupa la identidad (`PageTitle`, `InsightSection`, `FwdLogo`, `FwdGeoBackdrop`, `BrandPatterns`), `shared/` los reutilizables transversales (`StatusPill`, `EmptyState`, `LoadingSkeleton`, `ModalityChip`), y las subcarpetas por área (`auth/`, `marketplace/`, `applications/`, `companies/`) los componentes específicos. Cada agrupación expone un `index.ts` (barrel): `import { PageTitle } from '@/components/features/brand'`, `import { StatusPill } from '@/components/features/shared'`, `import { Navbar } from '@/components/layout'`. **`DashboardStats` y `SearchBar` se mantienen en la raíz de `features/` por decisión** (no en `shared/`) por dos razones: (1) son **widgets compuestos** con datos/estado (DashboardStats arma tarjetas desde un array de `stats`; SearchBar es un input controlado), no átomos de UI transversales como los de `shared/`; y (2) moverlos obligaría a reescribir imports en páginas de otros roles (3 dashboards + 2 listados, en `app/*`), un churn cross-role que se evita a propósito.
 - Las server actions devuelven `Result<T, E>` tipado (Apéndice B del brief, `src/lib/result.ts`).
 - El schema de DB de §7 es sugerencia. Si el equipo lo diseña distinto, se documenta el porqué aquí (el brief lo exige).
-- Convención de no comentarios: ningún archivo del repo lleva comentarios de ninguna sintaxis. El contexto va a los commits y al tracker.
+- Convención de comentarios (reglas.md §12): se prohíbe el código comentado (código muerto dentro de comentarios); los comentarios explicativos sí se permiten, aunque se prefiere que el código se explique con nombres claros y que el "por qué" viva en los commits y el tracker.
 
 ## Versionado
 
