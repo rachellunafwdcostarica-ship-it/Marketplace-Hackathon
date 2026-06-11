@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useRouter } from '@/i18n/routing'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -30,6 +31,7 @@ export function CompanyProfileForm() {
   const tCommon = useTranslations('Common')
   const tValidation = useTranslations('Validation')
   const { companies, updateCompany } = useAppState()
+  const router = useRouter()
 
   const [loading, setLoading] = useState(false)
 
@@ -67,6 +69,7 @@ export function CompanyProfileForm() {
       updateCompany(company.id, data)
       setLoading(false)
       toast.success(tEmpresa('profileSaved'))
+      router.push('/empresa/perfil')
     }, 900)
   }
 
