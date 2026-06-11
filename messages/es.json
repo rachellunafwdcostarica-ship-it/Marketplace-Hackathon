@@ -147,7 +147,9 @@
     "resetInvalidDesc": "El enlace de recuperación no es válido o ya venció. Solicitá uno nuevo.",
     "awardText": "Premio AMCHAM 2025 — Negocios Sostenibles",
     "passwordBreached": "Esta contraseña apareció en filtraciones de datos conocidas. Elegí una diferente.",
-    "pwnedCheckFailed": "No pudimos verificar la seguridad de tu contraseña. Intentá de nuevo."
+    "pwnedCheckFailed": "No pudimos verificar la seguridad de tu contraseña. Intentá de nuevo.",
+    "emailAlreadyExists": "Este correo electrónico ya está registrado.",
+    "emailDuplicateOAuth": "Esta cuenta ya está registrada. Por favor inicia sesión."
   },
 
   "Common": {

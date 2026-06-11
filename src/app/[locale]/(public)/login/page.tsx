@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense, useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { Link, useRouter } from '@/i18n/routing'
@@ -11,13 +11,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
-import {
-  Mail,
-  Lock,
-  ArrowRight,
-  CheckCircle2,
-  AlertTriangle,
-} from 'lucide-react'
+import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { signInWithPassword } from '@/lib/auth/actions'
 import { AuthCard } from '@/components/features/auth/AuthCard'

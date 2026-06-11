@@ -12,7 +12,6 @@ import {
   createCompanyProfileSchema,
   type CompanyProfileInput,
 } from '@/lib/company/schemas'
-import { MOCK_COMPANY_ID } from '@/lib/constants/mockData'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -30,12 +29,10 @@ export function CompanyProfileForm() {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
   const tValidation = useTranslations('Validation')
-  const { companies, updateCompany } = useAppState()
+  const { currentCompany: company, updateCompany } = useAppState()
   const router = useRouter()
 
   const [loading, setLoading] = useState(false)
-
-  const company = companies.find((c) => c.id === MOCK_COMPANY_ID)
 
   const profileSchema = useMemo(
     () => createCompanyProfileSchema(tValidation),

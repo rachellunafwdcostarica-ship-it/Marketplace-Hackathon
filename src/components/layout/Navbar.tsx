@@ -283,10 +283,8 @@ export function Navbar({ heroMode = false }: NavbarProps) {
                 <button
                   type="button"
                   onClick={async () => {
-                    const { createSupabaseBrowserClient } =
-                      await import('@/lib/supabase/client')
-                    const supabase = createSupabaseBrowserClient()
-                    await supabase.auth.signOut()
+                    const { signOut } = await import('@/lib/auth/actions')
+                    await signOut()
                     resetAll()
                     router.push('/login')
                   }}

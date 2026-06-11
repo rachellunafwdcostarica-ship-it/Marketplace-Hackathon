@@ -76,8 +76,8 @@ export async function middleware(request: NextRequest) {
 
   // CASO A: Usuario NO autenticado
   if (!user) {
-    // Rutas protegidas y /onboarding requieren sesión
-    if (isProtected(pathname) || isOnboardingPath(pathname)) {
+    // Si no es una página de autenticación pública, redirigir a /login
+    if (!isPublicAuthPage(pathname)) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
     }
     return intlResponse

@@ -92,7 +92,9 @@ export default function RegisterPage() {
           ? tAuth('passwordBreached')
           : result.error === 'pwned_check_failed'
             ? tAuth('pwnedCheckFailed')
-            : result.error
+            : result.error === 'email_already_exists'
+              ? tAuth('emailAlreadyExists')
+              : result.error
       toast.error(message)
       return
     }

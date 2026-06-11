@@ -1,6 +1,12 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+} from 'react'
 import {
   Project,
   Application,
@@ -9,6 +15,7 @@ import {
   ProjectStatus,
   ApplicationStatus,
   CompanyStatus,
+  CompanyType,
 } from '@/types'
 import {
   mockProjects,
@@ -16,6 +23,10 @@ import {
   mockCompanies,
 } from '@/lib/constants/mockData'
 import type { CompanyProfileInput } from '@/lib/company/schemas'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { normalizeRole } from '@/lib/auth/roles'
+
+import type { User } from '@supabase/supabase-js'
 
 interface StateContextType {
   projects: Project[]
@@ -37,6 +48,8 @@ interface StateContextType {
   updateCompanyStatus: (id: string, status: CompanyStatus) => void
   updateCompany: (id: string, profile: CompanyProfileInput) => void
   resetAll: () => void
+  currentCompany: Company | undefined
+  currentUser: User | null
 }
 
 const StateContext = createContext<StateContextType | undefined>(undefined)
@@ -46,6 +59,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   const [applications, setApplications] = useState<Application[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [userRole, setUserRoleState] = useState<UserRole>('junior')
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -55,14 +69,27 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     const localRole = localStorage.getItem('fwd_role')
 
     const timer = setTimeout(() => {
-      if (localProjects) setProjects(JSON.parse(localProjects) as Project[])
-      else {
+      try {
+        if (localProjects) setProjects(JSON.parse(localProjects) as Project[])
+        else {
+          setProjects(mockProjects)
+          localStorage.setItem('fwd_projects', JSON.stringify(mockProjects))
+        }
+      } catch {
         setProjects(mockProjects)
         localStorage.setItem('fwd_projects', JSON.stringify(mockProjects))
       }
 
-      if (localApps) setApplications(JSON.parse(localApps) as Application[])
-      else {
+      try {
+        if (localApps) setApplications(JSON.parse(localApps) as Application[])
+        else {
+          setApplications(mockApplications)
+          localStorage.setItem(
+            'fwd_applications',
+            JSON.stringify(mockApplications),
+          )
+        }
+      } catch {
         setApplications(mockApplications)
         localStorage.setItem(
           'fwd_applications',
@@ -70,8 +97,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         )
       }
 
-      if (localCompanies) setCompanies(JSON.parse(localCompanies) as Company[])
-      else {
+      try {
+        if (localCompanies)
+          setCompanies(JSON.parse(localCompanies) as Company[])
+        else {
+          setCompanies(mockCompanies)
+          localStorage.setItem('fwd_companies', JSON.stringify(mockCompanies))
+        }
+      } catch {
         setCompanies(mockCompanies)
         localStorage.setItem('fwd_companies', JSON.stringify(mockCompanies))
       }
@@ -82,7 +115,37 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       setInitialized(true)
     }, 0)
 
-    return () => clearTimeout(timer)
+    // Suscribirse al estado de autenticación de Supabase
+    const supabase = createSupabaseBrowserClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user) {
+        setCurrentUser(user)
+        const { data: roleRaw } = await supabase.rpc('get_my_role')
+        const role = normalizeRole(roleRaw as string | null)
+        if (role) {
+          setUserRoleState(role)
+        }
+      }
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user ?? null
+      setCurrentUser(user)
+      if (user) {
+        const { data: roleRaw } = await supabase.rpc('get_my_role')
+        const role = normalizeRole(roleRaw as string | null)
+        if (role) {
+          setUserRoleState(role)
+        }
+      }
+    })
+
+    return () => {
+      clearTimeout(timer)
+      subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -108,6 +171,32 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [userRole, initialized])
 
+  const currentCompany = useMemo(() => {
+    if (!currentUser) return undefined
+    const found = companies.find((c) => c.userId === currentUser.id)
+    if (found) return found
+
+    if (userRole === 'empresa') {
+      return {
+        id: `comp-temp-${currentUser.id}`,
+        name: currentUser.user_metadata?.full_name || '',
+        companyType: 'formal' as const,
+        sector: '',
+        cedula: '',
+        description: '',
+        logo: '',
+        status: 'pending' as const,
+        projectsCount: 0,
+        contactEmail: currentUser.email || '',
+        website: '',
+        createdAt: new Date().toISOString(),
+        isProfileFilled: false,
+        userId: currentUser.id,
+      }
+    }
+    return undefined
+  }, [companies, currentUser, userRole])
+
   const setUserRole = (role: UserRole) => {
     setUserRoleState(role)
   }
@@ -118,8 +207,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     const newProj: Project = {
       ...proj,
       id: `proj-${Date.now()}`,
-      companyId: 'comp-1',
-      companyName: 'TechFlow Solutions',
+      companyId: currentCompany?.id || 'comp-1',
+      companyName: currentCompany?.name || 'TechFlow Solutions',
       createdAt: new Date().toISOString(),
     }
     setProjects((prev) => [newProj, ...prev])
@@ -159,26 +248,62 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateCompany = (id: string, profile: CompanyProfileInput) => {
-    setCompanies((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, ...profile, isProfileFilled: true } : c,
-      ),
-    )
+    setCompanies((prev) => {
+      const exists = prev.some(
+        (c) => c.id === id || (currentUser && c.userId === currentUser.id),
+      )
+      if (exists) {
+        return prev.map((c) => {
+          if (c.id === id || (currentUser && c.userId === currentUser.id)) {
+            return {
+              ...c,
+              ...profile,
+              id: id.startsWith('comp-temp-') ? `comp-${Date.now()}` : c.id,
+              isProfileFilled: true,
+              userId: currentUser?.id,
+            }
+          }
+          return c
+        })
+      } else {
+        const newCompany: Company = {
+          id: `comp-${Date.now()}`,
+          name: profile.name,
+          companyType: profile.companyType as CompanyType,
+          sector: profile.sector,
+          cedula: profile.cedula,
+          description: profile.description || '',
+          logo: profile.logo || '',
+          status: 'approved',
+          projectsCount: 0,
+          contactEmail: profile.contactEmail,
+          website: profile.website || '',
+          createdAt: new Date().toISOString(),
+          isProfileFilled: true,
+          userId: currentUser?.id,
+        }
+        return [newCompany, ...prev]
+      }
+    })
   }
 
   const resetAll = () => {
-    localStorage.removeItem('fwd_projects')
-    localStorage.removeItem('fwd_applications')
-    localStorage.removeItem('fwd_companies')
-    localStorage.removeItem('fwd_role')
-    if (typeof window !== 'undefined') {
-      document.cookie =
-        'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    }
-    setProjects(mockProjects)
-    setApplications(mockApplications)
-    setCompanies(mockCompanies)
-    setUserRoleState('junior')
+    const supabase = createSupabaseBrowserClient()
+    supabase.auth.signOut().then(() => {
+      localStorage.removeItem('fwd_projects')
+      localStorage.removeItem('fwd_applications')
+      localStorage.removeItem('fwd_companies')
+      localStorage.removeItem('fwd_role')
+      if (typeof window !== 'undefined') {
+        document.cookie =
+          'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      }
+      setProjects(mockProjects)
+      setApplications(mockApplications)
+      setCompanies(mockCompanies)
+      setUserRoleState('junior')
+      setCurrentUser(null)
+    })
   }
 
   return (
@@ -196,6 +321,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         updateCompanyStatus,
         updateCompany,
         resetAll,
+        currentCompany,
+        currentUser,
       }}
     >
       {children}

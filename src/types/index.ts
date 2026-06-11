@@ -56,7 +56,8 @@ export interface Company {
   contactEmail: string
   website: string
   createdAt: string
-  isProfileFilled?: boolean
+  isProfileFilled?: boolean | undefined
+  userId?: string | undefined
 }
 
 export type UserRole = 'junior' | 'empresa' | 'admin'

@@ -147,7 +147,9 @@
     "resetInvalidDesc": "The recovery link is invalid or has expired. Request a new one.",
     "awardText": "AMCHAM Award 2025 — Sustainable Business",
     "passwordBreached": "This password has appeared in known data breaches. Please choose a different one.",
-    "pwnedCheckFailed": "We couldn't verify your password's security. Please try again."
+    "pwnedCheckFailed": "We couldn't verify your password's security. Please try again.",
+    "emailAlreadyExists": "This email is already registered.",
+    "emailDuplicateOAuth": "This account is already registered. Please sign in."
   },
 
   "Common": {
