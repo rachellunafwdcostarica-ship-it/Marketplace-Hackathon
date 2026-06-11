@@ -69,14 +69,27 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     const localRole = localStorage.getItem('fwd_role')
 
     const timer = setTimeout(() => {
-      if (localProjects) setProjects(JSON.parse(localProjects) as Project[])
-      else {
+      try {
+        if (localProjects) setProjects(JSON.parse(localProjects) as Project[])
+        else {
+          setProjects(mockProjects)
+          localStorage.setItem('fwd_projects', JSON.stringify(mockProjects))
+        }
+      } catch {
         setProjects(mockProjects)
         localStorage.setItem('fwd_projects', JSON.stringify(mockProjects))
       }
 
-      if (localApps) setApplications(JSON.parse(localApps) as Application[])
-      else {
+      try {
+        if (localApps) setApplications(JSON.parse(localApps) as Application[])
+        else {
+          setApplications(mockApplications)
+          localStorage.setItem(
+            'fwd_applications',
+            JSON.stringify(mockApplications),
+          )
+        }
+      } catch {
         setApplications(mockApplications)
         localStorage.setItem(
           'fwd_applications',
@@ -84,8 +97,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         )
       }
 
-      if (localCompanies) setCompanies(JSON.parse(localCompanies) as Company[])
-      else {
+      try {
+        if (localCompanies)
+          setCompanies(JSON.parse(localCompanies) as Company[])
+        else {
+          setCompanies(mockCompanies)
+          localStorage.setItem('fwd_companies', JSON.stringify(mockCompanies))
+        }
+      } catch {
         setCompanies(mockCompanies)
         localStorage.setItem('fwd_companies', JSON.stringify(mockCompanies))
       }
@@ -269,19 +288,22 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   }
 
   const resetAll = () => {
-    localStorage.removeItem('fwd_projects')
-    localStorage.removeItem('fwd_applications')
-    localStorage.removeItem('fwd_companies')
-    localStorage.removeItem('fwd_role')
-    if (typeof window !== 'undefined') {
-      document.cookie =
-        'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    }
-    setProjects(mockProjects)
-    setApplications(mockApplications)
-    setCompanies(mockCompanies)
-    setUserRoleState('junior')
-    setCurrentUser(null)
+    const supabase = createSupabaseBrowserClient()
+    supabase.auth.signOut().then(() => {
+      localStorage.removeItem('fwd_projects')
+      localStorage.removeItem('fwd_applications')
+      localStorage.removeItem('fwd_companies')
+      localStorage.removeItem('fwd_role')
+      if (typeof window !== 'undefined') {
+        document.cookie =
+          'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      }
+      setProjects(mockProjects)
+      setApplications(mockApplications)
+      setCompanies(mockCompanies)
+      setUserRoleState('junior')
+      setCurrentUser(null)
+    })
   }
 
   return (
