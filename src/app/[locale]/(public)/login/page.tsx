@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
 import { Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
@@ -36,10 +37,23 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
+  const searchParams = useSearchParams()
+
   const loginSchema = useMemo(
     () => createLoginSchema(tValidation),
     [tValidation],
   )
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    if (errorParam) {
+      if (errorParam === 'email_already_exists') {
+        toast.error(tAuth('emailAlreadyExists'))
+      } else {
+        toast.error(tLogin('error'))
+      }
+    }
+  }, [searchParams, tAuth, tLogin])
 
   const {
     register,

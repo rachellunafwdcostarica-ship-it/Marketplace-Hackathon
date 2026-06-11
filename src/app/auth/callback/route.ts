@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 function resolveLocale(value: string | undefined): 'es' | 'en' {
   return value === 'en' ? 'en' : 'es'
@@ -56,6 +57,34 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(
       `${origin}/${locale}/login?error=exchange_failed`,
     )
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user
+
+  if (user?.email) {
+    const adminClient = createSupabaseAdminClient()
+    const { data: duplicateUser } = await adminClient
+      .from('usuarios')
+      .select('id_usuario')
+      .eq('correo', user.email)
+      .neq('id_usuario', user.id)
+      .maybeSingle()
+
+    if (duplicateUser) {
+      logger.warn('auth/callback: OAuth email duplicate block', {
+        email: user.email,
+        existingId: duplicateUser.id_usuario,
+        newId: user.id,
+      })
+      await adminClient.auth.admin.deleteUser(user.id)
+      await supabase.auth.signOut()
+      return NextResponse.redirect(
+        `${origin}/${locale}/login?error=email_already_exists`,
+      )
+    }
   }
 
   // Flujos con destino explícito (p.ej. recuperación de contraseña →
