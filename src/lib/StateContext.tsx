@@ -1,6 +1,12 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+} from 'react'
 import {
   Project,
   Application,
@@ -9,6 +15,7 @@ import {
   ProjectStatus,
   ApplicationStatus,
   CompanyStatus,
+  CompanyType,
 } from '@/types'
 import {
   mockProjects,
@@ -16,6 +23,9 @@ import {
   mockCompanies,
 } from '@/lib/constants/mockData'
 import type { CompanyProfileInput } from '@/lib/company/schemas'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+
+import type { User } from '@supabase/supabase-js'
 
 interface StateContextType {
   projects: Project[]
@@ -37,6 +47,8 @@ interface StateContextType {
   updateCompanyStatus: (id: string, status: CompanyStatus) => void
   updateCompany: (id: string, profile: CompanyProfileInput) => void
   resetAll: () => void
+  currentCompany: Company | undefined
+  currentUser: User | null
 }
 
 const StateContext = createContext<StateContextType | undefined>(undefined)
@@ -46,6 +58,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   const [applications, setApplications] = useState<Application[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [userRole, setUserRoleState] = useState<UserRole>('junior')
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
@@ -82,7 +95,35 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       setInitialized(true)
     }, 0)
 
-    return () => clearTimeout(timer)
+    // Suscribirse al estado de autenticación de Supabase
+    const supabase = createSupabaseBrowserClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setCurrentUser(user)
+        const role = user.user_metadata?.role as UserRole | undefined
+        if (role) {
+          setUserRoleState(role)
+        }
+      }
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const user = session?.user ?? null
+      setCurrentUser(user)
+      if (user) {
+        const role = user.user_metadata?.role as UserRole | undefined
+        if (role) {
+          setUserRoleState(role)
+        }
+      }
+    })
+
+    return () => {
+      clearTimeout(timer)
+      subscription.unsubscribe()
+    }
   }, [])
 
   useEffect(() => {
@@ -108,6 +149,32 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [userRole, initialized])
 
+  const currentCompany = useMemo(() => {
+    if (!currentUser) return undefined
+    const found = companies.find((c) => c.userId === currentUser.id)
+    if (found) return found
+
+    if (userRole === 'empresa') {
+      return {
+        id: `comp-temp-${currentUser.id}`,
+        name: currentUser.user_metadata?.full_name || '',
+        companyType: 'formal' as const,
+        sector: '',
+        cedula: '',
+        description: '',
+        logo: '',
+        status: 'pending' as const,
+        projectsCount: 0,
+        contactEmail: currentUser.email || '',
+        website: '',
+        createdAt: new Date().toISOString(),
+        isProfileFilled: false,
+        userId: currentUser.id,
+      }
+    }
+    return undefined
+  }, [companies, currentUser, userRole])
+
   const setUserRole = (role: UserRole) => {
     setUserRoleState(role)
   }
@@ -118,8 +185,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     const newProj: Project = {
       ...proj,
       id: `proj-${Date.now()}`,
-      companyId: 'comp-1',
-      companyName: 'TechFlow Solutions',
+      companyId: currentCompany?.id || 'comp-1',
+      companyName: currentCompany?.name || 'TechFlow Solutions',
       createdAt: new Date().toISOString(),
     }
     setProjects((prev) => [newProj, ...prev])
@@ -159,11 +226,43 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateCompany = (id: string, profile: CompanyProfileInput) => {
-    setCompanies((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, ...profile, isProfileFilled: true } : c,
-      ),
-    )
+    setCompanies((prev) => {
+      const exists = prev.some(
+        (c) => c.id === id || (currentUser && c.userId === currentUser.id),
+      )
+      if (exists) {
+        return prev.map((c) => {
+          if (c.id === id || (currentUser && c.userId === currentUser.id)) {
+            return {
+              ...c,
+              ...profile,
+              id: id.startsWith('comp-temp-') ? `comp-${Date.now()}` : c.id,
+              isProfileFilled: true,
+              userId: currentUser?.id,
+            }
+          }
+          return c
+        })
+      } else {
+        const newCompany: Company = {
+          id: `comp-${Date.now()}`,
+          name: profile.name,
+          companyType: profile.companyType as CompanyType,
+          sector: profile.sector,
+          cedula: profile.cedula,
+          description: profile.description || '',
+          logo: profile.logo || '',
+          status: 'approved',
+          projectsCount: 0,
+          contactEmail: profile.contactEmail,
+          website: profile.website || '',
+          createdAt: new Date().toISOString(),
+          isProfileFilled: true,
+          userId: currentUser?.id,
+        }
+        return [newCompany, ...prev]
+      }
+    })
   }
 
   const resetAll = () => {
@@ -179,6 +278,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     setApplications(mockApplications)
     setCompanies(mockCompanies)
     setUserRoleState('junior')
+    setCurrentUser(null)
   }
 
   return (
@@ -196,6 +296,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         updateCompanyStatus,
         updateCompany,
         resetAll,
+        currentCompany,
+        currentUser,
       }}
     >
       {children}

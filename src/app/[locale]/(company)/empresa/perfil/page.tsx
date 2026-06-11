@@ -5,7 +5,6 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { useRouter } from '@/i18n/routing'
 import { useAppState } from '@/lib/StateContext'
-import { MOCK_COMPANY_ID } from '@/lib/constants/mockData'
 import { CompanyProfileSidebar } from '@/components/features/companies/CompanyProfileSidebar'
 import { CompanyProfileBanner } from '@/components/features/companies/CompanyProfileBanner'
 import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
@@ -16,8 +15,7 @@ type TabType = 'profile' | 'projects'
 export default function EmpresaPerfilPage() {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const router = useRouter()
-  const { companies } = useAppState()
-  const company = companies.find((c) => c.id === MOCK_COMPANY_ID)
+  const { currentCompany: company } = useAppState()
 
   useEffect(() => {
     if (company && !company.isProfileFilled) {
