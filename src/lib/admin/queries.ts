@@ -1,7 +1,7 @@
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { getUserRole } from '@/lib/auth/queries'
+import { requireRole } from '@/lib/auth/guards'
 
 export interface PendingUser {
   id_usuario: string
@@ -18,13 +18,10 @@ export interface PendingUser {
  * Usa el cliente de servicio para bypassear RLS.
  */
 export async function getPendingUsers(): Promise<Result<PendingUser[]>> {
-  // Verificar que el caller es admin
-  const roleResult = await getUserRole()
-  if (!roleResult.ok) {
-    return err('unauthenticated')
-  }
-  if (roleResult.data !== 'admin') {
-    return err('forbidden')
+  // Verificar que el caller es admin (requireRole normaliza 'administrador' → 'admin')
+  const authResult = await requireRole('admin')
+  if (!authResult.ok) {
+    return authResult
   }
 
   const adminClient = createSupabaseAdminClient()
