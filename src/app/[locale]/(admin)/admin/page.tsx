@@ -21,7 +21,6 @@ import {
   AlertOctagon,
   ArrowRight,
 } from 'lucide-react'
-import { SidebarAdmin } from '@/components/layout/SidebarAdmin'
 
 export default function AdminDashboard() {
   const tAdmin = useTranslations('Admin')
@@ -87,109 +86,103 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        {/* Sidebar modularizado de Admin */}
-        <SidebarAdmin />
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <PageTitle
+          title={tAdmin('dashboard')}
+          description={tAdmin('dashboardDesc')}
+          dotColor="text-magenta"
+        />
 
-        {/* Contenido Principal */}
-        <main className="flex-1 space-y-8">
-          <PageTitle
-            title={tAdmin('dashboard')}
-            description={tAdmin('dashboardDesc')}
-            dotColor="text-magenta"
-          />
+        <DashboardStats stats={stats} />
 
-          <DashboardStats stats={stats} />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-10">
-            <div className="lg:col-span-6 space-y-6">
-              <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
-                  {tAdmin('verifyCompany')} ({pendingCompanies.length})
-                  <span className="text-warning">.</span>
-                </h2>
-                <Link
-                  href="/admin/companies"
-                  className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
-                >
-                  {tCommon('viewAll')}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-
-              {pendingCompanies.length === 0 ? (
-                <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
-                  <CheckSquare className="w-8 h-8 mx-auto mb-2 text-accent" />
-                  {tAdmin('noPendingCompanies')}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {pendingCompanies.slice(0, 2).map((company) => (
-                    <CompanyCard
-                      key={company.id}
-                      company={company}
-                      onApprove={() =>
-                        handleApproveCompany(company.id, company.name)
-                      }
-                      onReject={() =>
-                        handleRejectCompany(company.id, company.name)
-                      }
-                    />
-                  ))}
-                </div>
-              )}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-10">
+          <div className="lg:col-span-6 space-y-6">
+            <div className="flex justify-between items-center pb-2 border-b border-border/60">
+              <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
+                {tAdmin('verifyCompany')} ({pendingCompanies.length})
+                <span className="text-warning">.</span>
+              </h2>
+              <Link
+                href="/admin/companies"
+                className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
+              >
+                {tCommon('viewAll')}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
 
-            <div className="lg:col-span-6 space-y-6">
-              <div className="flex justify-between items-center pb-2 border-b border-border/60">
-                <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
-                  {tAdmin('moderateProject')} ({activeProjects.length})
-                  <span className="text-accent">.</span>
-                </h2>
-                <Link
-                  href="/admin/projects"
-                  className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
-                >
-                  {tCommon('viewAll')}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+            {pendingCompanies.length === 0 ? (
+              <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
+                <CheckSquare className="w-8 h-8 mx-auto mb-2 text-accent" />
+                {tAdmin('noPendingCompanies')}
               </div>
-
-              {activeProjects.length === 0 ? (
-                <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
-                  <AlertOctagon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-                  {tAdmin('noPendingCompanies')}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {activeProjects.slice(0, 2).map((project) => (
-                    <ProjectCard
-                      key={project.id}
-                      project={project}
-                      actionButton={
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            handleHideProject(project.id, project.title)
-                          }
-                          className="w-full border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5"
-                        >
-                          <AlertOctagon className="w-4 h-4" />
-                          {tAdmin('hideFromMarketplace')}
-                        </Button>
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {pendingCompanies.slice(0, 2).map((company) => (
+                  <CompanyCard
+                    key={company.id}
+                    company={company}
+                    onApprove={() =>
+                      handleApproveCompany(company.id, company.name)
+                    }
+                    onReject={() =>
+                      handleRejectCompany(company.id, company.name)
+                    }
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        </main>
-      </div>
+
+          <div className="lg:col-span-6 space-y-6">
+            <div className="flex justify-between items-center pb-2 border-b border-border/60">
+              <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
+                {tAdmin('moderateProject')} ({activeProjects.length})
+                <span className="text-accent">.</span>
+              </h2>
+              <Link
+                href="/admin/projects"
+                className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
+              >
+                {tCommon('viewAll')}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {activeProjects.length === 0 ? (
+              <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
+                <AlertOctagon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
+                {tAdmin('noPendingCompanies')}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {activeProjects.slice(0, 2).map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    actionButton={
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleHideProject(project.id, project.title)
+                        }
+                        className="w-full border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5"
+                      >
+                        <AlertOctagon className="w-4 h-4" />
+                        {tAdmin('hideFromMarketplace')}
+                      </Button>
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
 
       <Footer />
     </div>

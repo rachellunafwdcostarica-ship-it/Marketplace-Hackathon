@@ -502,6 +502,15 @@
     "appsReceived": "{count} recibidas",
     "viewApps": "Ver Postulaciones",
     "priority": "Prioridad",
-    "interviews": "Entrevistas"
+    "interviews": "Entrevistas",
+    "menuExplorar": "Explorar",
+    "menuPostulaciones": "Mis Postulaciones",
+    "menuMensajes": "Mensajes",
+    "menuConfiguracion": "Configuración",
+    "menuAyuda": "Ayuda",
+    "menuActualizarPlan": "Actualizar Plan",
+    "actualizarPlanToast": "Actualización de plan en simulación",
+    "cancelar": "Cancelar",
+    "supportMinCharsInfo": "caracteres mínimo"
   }
 }

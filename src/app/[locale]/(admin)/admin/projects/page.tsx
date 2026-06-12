@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Briefcase, EyeOff, CheckCircle } from 'lucide-react'
 import type { Project } from '@/types'
-import { SidebarAdmin } from '@/components/layout/SidebarAdmin'
 
 export default function AdminProjectsPage() {
   const tAdmin = useTranslations('Admin')
@@ -89,39 +88,33 @@ export default function AdminProjectsPage() {
   )
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        {/* Sidebar modularizado de Admin */}
-        <SidebarAdmin />
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        <PageTitle
+          title={tAdmin('moderateProject')}
+          description={tAdmin('moderateProjectDesc')}
+          dotColor="text-magenta"
+        />
 
-        {/* Contenido Principal */}
-        <main className="flex-1 space-y-12">
-          <PageTitle
-            title={tAdmin('moderateProject')}
-            description={tAdmin('moderateProjectDesc')}
-            dotColor="text-magenta"
+        {projects.length === 0 ? (
+          <EmptyState
+            title={tAdmin('noProjects')}
+            description={tAdmin('noProjectsDesc')}
+            icon={Briefcase}
           />
-
-          {projects.length === 0 ? (
-            <EmptyState
-              title={tAdmin('noProjects')}
-              description={tAdmin('noProjectsDesc')}
-              icon={Briefcase}
-            />
-          ) : (
-            <>
-              {renderSection(tAdmin('projectsActive'), activeProjects, 'hide')}
-              {renderSection(
-                tAdmin('projectsPending'),
-                pendingProjects,
-                'approve',
-              )}
-              {renderSection(tAdmin('projectsClosed'), closedProjects, 'none')}
-            </>
-          )}
-        </main>
-      </div>
+        ) : (
+          <>
+            {renderSection(tAdmin('projectsActive'), activeProjects, 'hide')}
+            {renderSection(
+              tAdmin('projectsPending'),
+              pendingProjects,
+              'approve',
+            )}
+            {renderSection(tAdmin('projectsClosed'), closedProjects, 'none')}
+          </>
+        )}
+      </main>
       <Footer />
     </div>
   )
