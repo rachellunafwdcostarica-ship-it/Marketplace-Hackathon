@@ -50,10 +50,10 @@ export function SidebarEmpresaNuevo() {
   }
 
   const menuItems = [
-    { id: 'explorar', label: 'Explorar', icon: Compass },
-    { id: 'postulaciones', label: 'Mis Postulaciones', icon: Send },
-    { id: 'mensajes', label: 'Mensajes', icon: MessageSquare },
-    { id: 'configuracion', label: 'Configuración', icon: Settings },
+    { id: 'explorar', label: t('menuExplorar'), icon: Compass },
+    { id: 'postulaciones', label: t('menuPostulaciones'), icon: Send },
+    { id: 'mensajes', label: t('menuMensajes'), icon: MessageSquare },
+    { id: 'configuracion', label: t('menuConfiguracion'), icon: Settings },
   ]
 
   return (
@@ -88,7 +88,7 @@ export function SidebarEmpresaNuevo() {
               className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all cursor-pointer"
             >
               <HelpCircle className="w-4 h-4 shrink-0" />
-              <span>Ayuda</span>
+              <span>{t('menuAyuda')}</span>
             </button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px] bg-card border-border">
@@ -117,7 +117,7 @@ export function SidebarEmpresaNuevo() {
                   className="bg-card/50 border-border focus-visible:ring-primary text-sm"
                 />
                 <p className="text-[10px] text-muted-foreground text-right">
-                  {supportDescription.length}/15 caracteres mínimo
+                  {supportDescription.length}/15 {t('supportMinCharsInfo')}
                 </p>
               </div>
               <div className="flex justify-end gap-3 pt-2 border-t border-border/40">
@@ -128,7 +128,7 @@ export function SidebarEmpresaNuevo() {
                   onClick={() => setIsSupportOpen(false)}
                   className="text-xs font-semibold"
                 >
-                  Cancelar
+                  {t('cancelar')}
                 </Button>
                 <Button
                   type="submit"
@@ -152,11 +152,11 @@ export function SidebarEmpresaNuevo() {
         <button
           type="button"
           onClick={() => {
-            toast.info('Actualización de plan en simulación')
+            toast.info(t('actualizarPlanToast'))
           }}
           className="w-full bg-secondary hover:bg-secondary/95 text-secondary-foreground font-bold py-3.5 px-4 rounded-xl text-sm text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
-          Actualizar Plan
+          {t('menuActualizarPlan')}
         </button>
       </div>
     </aside>
