@@ -32,6 +32,19 @@ export function createCompanyProfileSchema(
   })
 }
 
+export const CompanyProfileDbSchema = z.object({
+  name: z.string().min(2),
+  companyType: z.enum(['formal', 'emprendedor'] as const),
+  sector: z.string().min(2),
+  cedula: z.string().regex(CEDULA_CR_REGEX),
+  description: z.string().min(20),
+  contactEmail: z.string().email(),
+  website: z.string().regex(HTTP_URL_REGEX),
+  logo: z
+    .string()
+    .refine((value) => value === '' || HTTP_URL_REGEX.test(value)),
+})
+
 export type CompanyProfileInput = z.infer<
   ReturnType<typeof createCompanyProfileSchema>
 >

@@ -393,7 +393,10 @@
     "approving": "Aprobando...",
     "userApproved": "Cuenta de {name} aprobada exitosamente.",
     "userApproveError": "Error al aprobar la cuenta. Intentá de nuevo.",
-    "noRoleYet": "sin rol asignado"
+    "noRoleYet": "sin rol asignado",
+    "supportTickets": "Problemas y Necesidades de Negocio",
+    "supportTicketsDesc": "Reportes y solicitudes de soporte técnico o ideas de negocio planteadas por empresarios.",
+    "noSupportTickets": "No hay reportes de soporte o necesidades registradas en este momento."
   },
   "Errors": {
     "forbidden": "Acceso no autorizado",
@@ -434,6 +437,13 @@
     "tabAnalytics": "Analíticas",
     "support": "Soporte Técnico",
     "logout": "Cerrar Sesión",
+    "supportModalTitle": "Soporte Técnico y Necesidades",
+    "supportModalDesc": "Describí tu problema técnico o necesidad de negocio. El equipo de administración revisará tu reporte para darte seguimiento.",
+    "supportFieldDesc": "Descripción detallada",
+    "supportPlaceholder": "Describe detalladamente cuál es el problema o la necesidad técnica de tu negocio...",
+    "supportSubmit": "Enviar reporte",
+    "supportSuccess": "Reporte de soporte enviado exitosamente.",
+    "supportMinLength": "La descripción debe tener al menos 15 caracteres.",
     "companyName": "FWD Soluciones Tecnológicas",
     "tagline": "Diseñando el futuro del talento tecnológico distribuido globalmente desde 2018.",
     "statProjects": "Proyectos",
