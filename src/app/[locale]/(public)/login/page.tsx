@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect, Suspense } from 'react'
+import { useState, useMemo, Suspense } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { Link, useRouter } from '@/i18n/routing'
@@ -80,19 +80,9 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  // Errores de OAuth devueltos por el callback (?error=...). El callback no
-  // puede mostrar toasts; aquí los traducimos y mostramos.
-  useEffect(() => {
-    const oauthError = searchParams.get('error')
-    if (!oauthError) return
-    if (oauthError === 'email_already_exists') {
-      toast.error(tLogin('oauthErrorEmailExists'))
-    } else {
-      toast.error(tLogin('oauthError'))
-    }
-    // Limpiar el query param para no repetir el toast al refrescar
-    window.history.replaceState(null, '', window.location.pathname)
-  }, [searchParams, tLogin])
+  // Error de OAuth devuelto por el callback (?error=...). Se deriva del URL y se
+  // renderiza como banner declarativo, igual que el estado de suspensión.
+  const oauthError = searchParams.get('error')
 
   const magicSchema = useMemo(
     () => createMagicSchema(tValidation),
@@ -205,6 +195,20 @@ function LoginContent() {
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <p className="text-xs font-semibold leading-relaxed">
                 {tLogin('suspended')}
+              </p>
+            </div>
+          )}
+
+          {oauthError && (
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 text-destructive"
+            >
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <p className="text-xs font-semibold leading-relaxed">
+                {oauthError === 'email_already_exists'
+                  ? tLogin('oauthErrorEmailExists')
+                  : tLogin('oauthError')}
               </p>
             </div>
           )}
