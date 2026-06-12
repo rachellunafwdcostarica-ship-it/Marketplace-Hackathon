@@ -121,7 +121,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         setCurrentUser(user)
         const { data: roleRaw } = await supabase.rpc('get_my_role')
-        const role = normalizeRole(roleRaw as string | null)
+        const role = normalizeRole(roleRaw)
         if (role) {
           setUserRoleState(role)
         }
@@ -135,7 +135,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(user)
       if (user) {
         const { data: roleRaw } = await supabase.rpc('get_my_role')
-        const role = normalizeRole(roleRaw as string | null)
+        const role = normalizeRole(roleRaw)
         if (role) {
           setUserRoleState(role)
         }
