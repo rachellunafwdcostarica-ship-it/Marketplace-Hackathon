@@ -19,6 +19,7 @@ interface ApplicationCardProps {
   onAccept?: () => void
   onReject?: () => void
   onContact?: () => void
+  onWithdraw?: () => void
 }
 
 export function ApplicationCard({
@@ -27,6 +28,7 @@ export function ApplicationCard({
   onAccept,
   onReject,
   onContact,
+  onWithdraw,
 }: ApplicationCardProps) {
   const tJunior = useTranslations('Junior')
   const tEmpresa = useTranslations('Empresa')
@@ -95,7 +97,7 @@ export function ApplicationCard({
         )}
       </CardContent>
 
-      {/* Action buttons (only for Empresa and if the status is sent/viewed) */}
+      {/* Action buttons para Empresa */}
       {viewMode === 'empresa' &&
         (application.status === 'sent' || application.status === 'viewed') && (
           <CardFooter className="p-6 pt-0 border-t border-border/40 bg-muted/10 flex flex-wrap gap-2 pt-4">
@@ -133,6 +135,21 @@ export function ApplicationCard({
             )}
           </CardFooter>
         )}
+
+      {/* Action buttons para Junior */}
+      {viewMode === 'junior' && onWithdraw && (
+        <CardFooter className="p-6 pt-0 border-t border-border/40 bg-muted/10 flex flex-wrap gap-2 pt-4">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onWithdraw}
+            className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5 px-4"
+          >
+            <X className="w-4 h-4" />
+            {tJunior('withdrawOffer')}
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   )
 }

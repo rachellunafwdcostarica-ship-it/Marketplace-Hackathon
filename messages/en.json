@@ -239,7 +239,16 @@
     "emptyApplications": "You haven't applied to any projects yet. Go explore the marketplace!",
     "emptyApplicationsDesc": "Browse our project catalog, find the one that best fits your stack, and send your proposal.",
     "exploreMarketplace": "Explore Marketplace",
-    "exploreMoreProjects": "Explore more projects in the Marketplace"
+    "exploreMoreProjects": "Explore more projects in the Marketplace",
+    "solutionApproach": "Solution Approach",
+    "solutionApproachPlaceholder": "Explain how you would solve the challenge of this project...",
+    "prototypeLink": "Prototype / external link (Optional)",
+    "uploadPrototype": "Upload Functional Prototype (Optional)",
+    "uploadTechnicalDoc": "Technical Documentation (PDF)",
+    "prototypeUploadError": "Error uploading prototype",
+    "docUploadError": "Error uploading documentation",
+    "unexpectedError": "An unexpected error occurred",
+    "withdrawOffer": "Withdraw Offer"
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",

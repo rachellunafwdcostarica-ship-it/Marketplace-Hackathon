@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/StateContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -17,22 +16,26 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
-import { ArrowLeft, Send, Briefcase, FileText } from 'lucide-react'
+import { ArrowLeft, Send, Briefcase, FileText, UploadCloud } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { postularse } from '@/lib/applications/actions'
 
-interface ApplyFormValues {
-  coverLetter: string
-  portfolioUrl: string
-  cvUrl: string
-}
+type ApplyFormValues = zod.infer<ReturnType<typeof createApplySchema>>
 
 function createApplySchema(
   t: ReturnType<typeof useTranslations<'Validation'>>,
 ) {
   return zod.object({
     coverLetter: zod.string().min(30, { message: t('coverLetterMin') }),
-    portfolioUrl: zod.string().url({ message: t('urlPortfolio') }),
-    cvUrl: zod.string().url({ message: t('urlCV') }),
+    planteamientoSolucion: zod
+      .string()
+      .min(30, { message: t('coverLetterMin') }), // Reusing error message for simplicity
+    enlaceAdicional: zod
+      .string()
+      .url({ message: t('urlPortfolio') })
+      .optional()
+      .or(zod.literal('')),
   })
 }
 
@@ -44,12 +47,49 @@ export default function ApplyProjectPage() {
   const tValidation = useTranslations('Validation')
   const tAccount = useTranslations('Account')
 
-  const { projects, addApplication } = useAppState()
   const { isPending } = useAccountStatus()
   const id = params['id'] as string
-  const project = projects.find((p) => p.id === id)
 
+  interface ProjectData {
+    id: string
+    title: string
+    companyName: string
+  }
+  const [project, setProject] = useState<ProjectData | null>(null)
+  const [loadingProject, setLoadingProject] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [prototypeFile, setPrototypeFile] = useState<File | null>(null)
+  const [technicalDocFile, setTechnicalDocFile] = useState<File | null>(null)
+
+  useEffect(() => {
+    async function fetchProject() {
+      const supabase = createSupabaseBrowserClient()
+      const { data, error } = await supabase
+        .from('proyectos')
+        .select(
+          `
+          id_proyecto, 
+          titulo, 
+          empresarios (nombre_empresa)
+        `,
+        )
+        .eq('id_proyecto', id)
+        .single()
+
+      if (!error && data) {
+        setProject({
+          id: data.id_proyecto,
+          title: data.titulo,
+          companyName: Array.isArray(data.empresarios)
+            ? data.empresarios[0]?.nombre_empresa
+            : data.empresarios?.nombre_empresa || 'Empresa',
+        })
+      }
+      setLoadingProject(false)
+    }
+    fetchProject()
+  }, [id])
 
   const applySchema = useMemo(
     () => createApplySchema(tValidation),
@@ -64,10 +104,22 @@ export default function ApplyProjectPage() {
     resolver: zodResolver(applySchema),
     defaultValues: {
       coverLetter: '',
-      portfolioUrl: '',
-      cvUrl: '',
+      planteamientoSolucion: '',
+      enlaceAdicional: '',
     },
   })
+
+  if (loadingProject) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">{tCommon('loading')}</p>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
 
   if (!project) {
     return (
@@ -88,22 +140,71 @@ export default function ApplyProjectPage() {
     )
   }
 
-  const onSubmit = (data: ApplyFormValues) => {
+  const onSubmit = async (data: ApplyFormValues) => {
     setIsSubmitting(true)
-    setTimeout(() => {
-      addApplication({
-        projectId: project.id,
-        projectTitle: project.title,
-        companyId: project.companyId,
-        companyName: project.companyName,
-        coverLetter: data.coverLetter,
-        portfolioUrl: data.portfolioUrl,
-        cvUrl: data.cvUrl,
+    const supabase = createSupabaseBrowserClient()
+
+    let uploadedPrototypeUrl = ''
+    let uploadedTechDocUrl = ''
+
+    try {
+      if (prototypeFile) {
+        const fileExt = prototypeFile.name.split('.').pop()
+        const fileName = `${project.id}-${Date.now()}-proto.${fileExt}`
+        const { data: uploadData, error } = await supabase.storage
+          .from('prototipos')
+          .upload(fileName, prototypeFile)
+        if (error) throw new Error(tJunior('prototypeUploadError'))
+        if (uploadData) {
+          const { data: publicUrlData } = supabase.storage
+            .from('prototipos')
+            .getPublicUrl(uploadData.path)
+          uploadedPrototypeUrl = publicUrlData.publicUrl
+        }
+      }
+
+      if (technicalDocFile) {
+        const fileExt = technicalDocFile.name.split('.').pop()
+        const fileName = `${project.id}-${Date.now()}-doc.${fileExt}`
+        const { data: uploadData, error } = await supabase.storage
+          .from('prototipos')
+          .upload(fileName, technicalDocFile)
+        if (error) throw new Error(tJunior('docUploadError'))
+        if (uploadData) {
+          const { data: publicUrlData } = supabase.storage
+            .from('prototipos')
+            .getPublicUrl(uploadData.path)
+          uploadedTechDocUrl = publicUrlData.publicUrl
+        }
+      }
+
+      const enlaces = []
+      if (uploadedPrototypeUrl) enlaces.push(uploadedPrototypeUrl)
+      if (data.enlaceAdicional) enlaces.push(data.enlaceAdicional)
+
+      const result = await postularse({
+        id_proyecto: project.id,
+        carta_postulacion: data.coverLetter,
+        planteamiento_solucion: data.planteamientoSolucion,
+        prototipo_enlaces: enlaces.length > 0 ? enlaces : undefined,
+        documentacion_tecnica: uploadedTechDocUrl || undefined,
       })
+
+      if (!result.ok) {
+        toast.error('Error al postularse: ' + result.error)
+      } else {
+        toast.success(tJunior('applySuccess'))
+        router.push('/junior/applications')
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message)
+      } else {
+        toast.error(tJunior('unexpectedError'))
+      }
+    } finally {
       setIsSubmitting(false)
-      toast.success(tJunior('applySuccess'))
-      router.push('/junior/applications')
-    }, 1200)
+    }
   }
 
   return (
@@ -146,7 +247,7 @@ export default function ApplyProjectPage() {
                 </Label>
                 <Textarea
                   id="coverLetter"
-                  rows={6}
+                  rows={4}
                   placeholder={tJunior('coverLetterPlaceholder')}
                   className={`bg-card/50 border-border ${errors.coverLetter ? 'border-destructive' : 'focus-visible:ring-primary'}`}
                   {...register('coverLetter')}
@@ -160,46 +261,79 @@ export default function ApplyProjectPage() {
 
               <div className="space-y-2">
                 <Label
-                  htmlFor="portfolioUrl"
-                  className="text-sm font-bold flex items-center gap-1.5"
+                  htmlFor="planteamientoSolucion"
+                  className="text-sm font-bold flex justify-between"
                 >
-                  <FileText className="w-4 h-4 text-primary" />
-                  {tJunior('portfolioUrl')}
+                  <span>{tJunior('solutionApproach')}</span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {tCommon('minCharsLabel', { n: 30 })}
+                  </span>
                 </Label>
-                <Input
-                  id="portfolioUrl"
-                  type="url"
-                  placeholder={tJunior('portfolioPlaceholder')}
-                  className={`bg-card/50 border-border ${errors.portfolioUrl ? 'border-destructive' : 'focus-visible:ring-primary'}`}
-                  {...register('portfolioUrl')}
+                <Textarea
+                  id="planteamientoSolucion"
+                  rows={4}
+                  placeholder={tJunior('solutionApproachPlaceholder')}
+                  className={`bg-card/50 border-border ${errors.planteamientoSolucion ? 'border-destructive' : 'focus-visible:ring-primary'}`}
+                  {...register('planteamientoSolucion')}
                 />
-                {errors.portfolioUrl && (
+                {errors.planteamientoSolucion && (
                   <p className="text-xs font-semibold text-destructive">
-                    {errors.portfolioUrl.message}
+                    {errors.planteamientoSolucion.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <Label
-                  htmlFor="cvUrl"
+                  htmlFor="enlaceAdicional"
                   className="text-sm font-bold flex items-center gap-1.5"
                 >
-                  <FileText className="w-4 h-4 text-secondary" />
-                  {tJunior('cvUrl')}
+                  <FileText className="w-4 h-4 text-primary" />
+                  {tJunior('prototypeLink')}
                 </Label>
                 <Input
-                  id="cvUrl"
+                  id="enlaceAdicional"
                   type="url"
-                  placeholder={tJunior('cvPlaceholder')}
-                  className={`bg-card/50 border-border ${errors.cvUrl ? 'border-destructive' : 'focus-visible:ring-primary'}`}
-                  {...register('cvUrl')}
+                  placeholder="https://..."
+                  className={`bg-card/50 border-border ${errors.enlaceAdicional ? 'border-destructive' : 'focus-visible:ring-primary'}`}
+                  {...register('enlaceAdicional')}
                 />
-                {errors.cvUrl && (
+                {errors.enlaceAdicional && (
                   <p className="text-xs font-semibold text-destructive">
-                    {errors.cvUrl.message}
+                    {errors.enlaceAdicional.message}
                   </p>
                 )}
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold flex items-center gap-1.5">
+                    <UploadCloud className="w-4 h-4 text-secondary" />
+                    {tJunior('uploadPrototype')}
+                  </Label>
+                  <Input
+                    type="file"
+                    className="cursor-pointer bg-card/50"
+                    onChange={(e) =>
+                      setPrototypeFile(e.target.files?.[0] || null)
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-bold flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-accent" />
+                    {tJunior('uploadTechnicalDoc')}
+                  </Label>
+                  <Input
+                    type="file"
+                    accept=".pdf"
+                    className="cursor-pointer bg-card/50"
+                    onChange={(e) =>
+                      setTechnicalDocFile(e.target.files?.[0] || null)
+                    }
+                  />
+                </div>
               </div>
 
               {isPending && (
