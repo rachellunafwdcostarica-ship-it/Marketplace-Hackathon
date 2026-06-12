@@ -10,6 +10,7 @@ import { CompanyCard } from '@/components/features/companies/CompanyCard'
 import { toast } from 'sonner'
 import { Building } from 'lucide-react'
 import type { Company } from '@/types'
+import { SidebarAdmin } from '@/components/layout/SidebarAdmin'
 
 export default function AdminCompaniesPage() {
   const tAdmin = useTranslations('Admin')
@@ -66,28 +67,34 @@ export default function AdminCompaniesPage() {
   )
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        <PageTitle
-          title={tAdmin('verifyCompany')}
-          description={tAdmin('verifyCompanyDesc')}
-          dotColor="text-magenta"
-        />
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+        {/* Sidebar modularizado de Admin */}
+        <SidebarAdmin />
 
-        {companies.length === 0 ? (
-          <div className="p-12 border border-dashed border-border rounded-xl text-center text-muted-foreground">
-            <Building className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
-            <p className="font-semibold">{tAdmin('noCompaniesRegistered')}</p>
-          </div>
-        ) : (
-          <>
-            {renderSection(tAdmin('companiesPending'), pending, true)}
-            {renderSection(tAdmin('companiesApproved'), approved, false)}
-            {renderSection(tAdmin('companiesRejected'), rejected, false)}
-          </>
-        )}
-      </main>
+        {/* Contenido Principal */}
+        <main className="flex-1 space-y-12">
+          <PageTitle
+            title={tAdmin('verifyCompany')}
+            description={tAdmin('verifyCompanyDesc')}
+            dotColor="text-magenta"
+          />
+
+          {companies.length === 0 ? (
+            <div className="p-12 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
+              <Building className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+              <p className="font-semibold">{tAdmin('noCompaniesRegistered')}</p>
+            </div>
+          ) : (
+            <>
+              {renderSection(tAdmin('companiesPending'), pending, true)}
+              {renderSection(tAdmin('companiesApproved'), approved, false)}
+              {renderSection(tAdmin('companiesRejected'), rejected, false)}
+            </>
+          )}
+        </main>
+      </div>
       <Footer />
     </div>
   )
