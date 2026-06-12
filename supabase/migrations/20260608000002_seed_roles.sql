@@ -1,6 +1,5 @@
 -- Roles iniciales del sistema
 insert into roles (nombre_rol, descripcion) values
-  ('junior',      'Estudiante junior buscando proyectos'),
-  ('empresario',  'Empresa o emprendedor publicando proyectos'),
-  ('moderador',   'Moderador de la plataforma'),
-  ('admin',       'Administrador FWD con acceso total');
+  ('administrador', 'Personal de FWD con permisos elevados; nivel_admin define superadmin/admin/moderador.'),
+  ('egresado',      'Egresado de FWD que ofrece sus servicios tecnicos.'),
+  ('empresario',    'Empresa o emprendedor que publica proyectos.');

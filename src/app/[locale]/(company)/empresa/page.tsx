@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/StateContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
@@ -13,7 +13,7 @@ import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Link } from '@/i18n/routing'
+import { Link, useRouter } from '@/i18n/routing'
 import { toast } from 'sonner'
 import { MOCK_COMPANY_ID } from '@/lib/constants/mockData'
 import {
@@ -32,6 +32,7 @@ import {
   PowerOff,
   UserCheck,
   AlertTriangle,
+  Building2,
 } from 'lucide-react'
 
 export default function CompanyDashboard() {
@@ -43,9 +44,19 @@ export default function CompanyDashboard() {
   const {
     projects,
     applications,
+    companies,
     updateApplicationStatus,
     updateProjectStatus,
   } = useAppState()
+
+  const router = useRouter()
+  const company = companies.find((c) => c.id === MOCK_COMPANY_ID)
+
+  useEffect(() => {
+    if (company && !company.isProfileFilled) {
+      router.replace('/empresa/formulario-empresa')
+    }
+  }, [company, router])
 
   const myProjects = projects.filter((p) => p.companyId === MOCK_COMPANY_ID)
   const activeProjects = myProjects.filter((p) => p.status === 'active')
@@ -125,24 +136,33 @@ export default function CompanyDashboard() {
           description={tEmpresa('dashboardDesc')}
           dotColor="text-secondary"
           action={
-            isPending ? (
-              <span
-                aria-disabled="true"
-                title={tAccount('actionDisabledPending')}
-                className="bg-muted text-muted-foreground/50 font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-not-allowed select-none"
-              >
-                <Plus className="w-4 h-4" />
-                {tEmpresa('publishProject')}
-              </span>
-            ) : (
+            <div className="flex items-center gap-2">
               <Link
-                href="/empresa/new-project"
-                className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
+                href="/empresa/perfil"
+                className="border border-border bg-background text-foreground hover:bg-muted font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
-                {tEmpresa('publishProject')}
+                <Building2 className="w-4 h-4" />
+                {tEmpresa('myProfile')}
               </Link>
-            )
+              {isPending ? (
+                <span
+                  aria-disabled="true"
+                  title={tAccount('actionDisabledPending')}
+                  className="bg-muted text-muted-foreground/50 font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-not-allowed select-none"
+                >
+                  <Plus className="w-4 h-4" />
+                  {tEmpresa('publishProject')}
+                </span>
+              ) : (
+                <Link
+                  href="/empresa/new-project"
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  {tEmpresa('publishProject')}
+                </Link>
+              )}
+            </div>
           }
         />
 

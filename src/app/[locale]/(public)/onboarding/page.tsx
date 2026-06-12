@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from '@/i18n/routing'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,6 @@ export default function OnboardingPage() {
   const tAuth = useTranslations('Auth')
   const tOnboarding = useTranslations('Onboarding')
   const router = useRouter()
-  const locale = useLocale()
 
   const [selected, setSelected] = useState<OnboardingRole>('junior')
   const [loading, setLoading] = useState(false)
@@ -35,7 +34,7 @@ export default function OnboardingPage() {
 
     if (result.ok || result.error === 'role_already_assigned') {
       // Idempotente: si ya tenía rol, ir a su home igualmente
-      router.push(`/${locale}${ROLE_HOME[selected as UserRole]}`)
+      router.push(ROLE_HOME[selected as UserRole])
       return
     }
 

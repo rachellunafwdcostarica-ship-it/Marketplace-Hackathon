@@ -11,17 +11,18 @@ export const ROLE_HOME: Record<UserRole, string> = {
 }
 
 /**
- * Convierte el nombre_rol de la BD al UserRole del frontend.
+ * Convierte el nombre_rol de la BD (modelo XXI) al UserRole del frontend.
  *
- * La BD almacena 'empresario' pero la ruta/UI usa 'empresa'.
- * 'moderador' y cualquier valor desconocido retornan null (sin home propio).
+ * La BD almacena 'egresado' pero la ruta/UI usa 'junior';
+ * 'empresario' mapea a 'empresa' y 'administrador' a 'admin'.
+ * Cualquier valor desconocido retorna null (sin home propio).
  */
 export function normalizeRole(
   dbRole: string | null | undefined,
 ): UserRole | null {
   if (!dbRole) return null
-  if (dbRole === 'junior') return 'junior'
+  if (dbRole === 'egresado') return 'junior'
   if (dbRole === 'empresario') return 'empresa'
-  if (dbRole === 'admin') return 'admin'
+  if (dbRole === 'administrador') return 'admin'
   return null
 }

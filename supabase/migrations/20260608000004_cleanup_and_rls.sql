@@ -22,10 +22,8 @@
 
 
 -- ============================================================
--- 1. CLEANUP [V1] — Eliminar columna de contraseña redundante
--- ============================================================
-alter table public.usuarios
-  drop column if exists contrasena_hash;
+-- 1. CLEANUP [V1] — ya resuelto en 0001 (la columna nunca se crea).
+-- (sin acción aquí)
 
 
 -- ============================================================
@@ -54,7 +52,7 @@ $$;
 -- ============================================================
 drop policy if exists "lectura_publica_roles"        on public.roles;
 drop policy if exists "lectura_publica_areas"        on public.areas_negocio;
-drop policy if exists "lectura_publica_categorias"   on public.categorias_proyecto;
+drop policy if exists "lectura_publica_categorias"   on public.categorias;
 drop policy if exists "lectura_publica_tecnologias"  on public.tecnologias;
 drop policy if exists "lectura_publica_proyectos"    on public.proyectos;
 drop policy if exists "usuario_lee_su_perfil"        on public.usuarios;
@@ -78,13 +76,20 @@ create policy "areas_negocio_select_active"
   on public.areas_negocio for select
   using (is_active = true);
 
-create policy "categorias_proyecto_select_active"
-  on public.categorias_proyecto for select
+create policy "categorias_select_active"
+  on public.categorias for select
   using (is_active = true);
 
 create policy "tecnologias_select_active"
   on public.tecnologias for select
   using (is_active = true);
+
+-- configuracion_sistema: lectura para usuarios autenticados (parámetros del sistema, no secretos).
+-- Escritura: sin policy de write → solo service_role (backend/admin) puede modificar.
+create policy "config_select_authenticated"
+  on public.configuracion_sistema for select
+  to authenticated
+  using (true);
 
 
 -- ============================================================
@@ -135,7 +140,7 @@ create policy "estudiantes_update_own"
 -- ============================================================
 
 create policy "est_hab_select"
-  on public.estudiante_habilidades for select
+  on public.habilidades_tecnicas for select
   using (
     id_estudiante in (
       select id_estudiante from public.estudiantes
@@ -145,7 +150,7 @@ create policy "est_hab_select"
   );
 
 create policy "est_hab_insert_own"
-  on public.estudiante_habilidades for insert
+  on public.habilidades_tecnicas for insert
   with check (
     id_estudiante in (
       select id_estudiante from public.estudiantes
@@ -154,7 +159,7 @@ create policy "est_hab_insert_own"
   );
 
 create policy "est_hab_update_own"
-  on public.estudiante_habilidades for update
+  on public.habilidades_tecnicas for update
   using (
     id_estudiante in (
       select id_estudiante from public.estudiantes
@@ -163,7 +168,7 @@ create policy "est_hab_update_own"
   );
 
 create policy "est_hab_delete_own"
-  on public.estudiante_habilidades for delete
+  on public.habilidades_tecnicas for delete
   using (
     id_estudiante in (
       select id_estudiante from public.estudiantes
@@ -275,7 +280,7 @@ create policy "proy_tec_delete_own"
 -- 11. RLS REAL — PARTICIPACIONES
 -- ============================================================
 
--- Junior ve sus propias postulaciones;
+-- Egresado ve sus propias postulaciones;
 -- empresario ve las postulaciones de sus proyectos
 create policy "participaciones_select"
   on public.participaciones for select
@@ -291,8 +296,8 @@ create policy "participaciones_select"
     )
   );
 
--- Solo juniors (estudiantes) pueden postularse
-create policy "participaciones_insert_junior"
+-- Solo egresados pueden postularse
+create policy "participaciones_insert_egresado"
   on public.participaciones for insert
   with check (
     id_estudiante in (
@@ -556,11 +561,101 @@ create policy "consentimientos_insert_own"
 
 
 -- ============================================================
--- TABLAS SIN POLICIES DE CLIENTE:
+-- 21. RLS REAL — PORTAFOLIO  [NUEVO en XXI]
+-- ============================================================
+
+-- proyectos_portafolio: el estudiante ve todas las suyas; público solo
+-- entradas activas (y con consentimiento aprobado si origen='plataforma_contratada').
+create policy "portafolio_select_own_or_public"
+  on public.proyectos_portafolio for select
+  using (
+    id_estudiante in (
+      select id_estudiante from public.estudiantes where id_usuario = auth.uid()
+    )
+    or (
+      is_active = true
+      and (origen <> 'plataforma_contratada' or estado_consentimiento = 'aprobado')
+    )
+  );
+
+create policy "portafolio_insert_own"
+  on public.proyectos_portafolio for insert
+  with check (
+    id_estudiante in (select id_estudiante from public.estudiantes where id_usuario = auth.uid())
+  );
+
+create policy "portafolio_update_own"
+  on public.proyectos_portafolio for update
+  using (
+    id_estudiante in (select id_estudiante from public.estudiantes where id_usuario = auth.uid())
+  );
+
+create policy "portafolio_delete_own"
+  on public.proyectos_portafolio for delete
+  using (
+    id_estudiante in (select id_estudiante from public.estudiantes where id_usuario = auth.uid())
+  );
+
+-- portafolio_tecnologias: sigue a la entrada de portafolio padre.
+create policy "portafolio_tec_select"
+  on public.portafolio_tecnologias for select
+  using (
+    id_portafolio in (
+      select id_portafolio from public.proyectos_portafolio
+      where id_estudiante in (select id_estudiante from public.estudiantes where id_usuario = auth.uid())
+         or (is_active = true and (origen <> 'plataforma_contratada' or estado_consentimiento = 'aprobado'))
+    )
+  );
+
+create policy "portafolio_tec_write_own"
+  on public.portafolio_tecnologias for all
+  using (
+    id_portafolio in (
+      select id_portafolio from public.proyectos_portafolio
+      where id_estudiante in (select id_estudiante from public.estudiantes where id_usuario = auth.uid())
+    )
+  )
+  with check (
+    id_portafolio in (
+      select id_portafolio from public.proyectos_portafolio
+      where id_estudiante in (select id_estudiante from public.estudiantes where id_usuario = auth.uid())
+    )
+  );
+
+-- proyecto_categorias: pública (sigue al proyecto); escribe el empresario dueño.
+create policy "proy_cat_select_public"
+  on public.proyecto_categorias for select
+  using (true);
+
+create policy "proy_cat_write_own"
+  on public.proyecto_categorias for all
+  using (
+    id_proyecto in (
+      select p.id_proyecto from public.proyectos p
+      join public.empresarios e on e.id_empresario = p.id_empresario
+      where e.id_usuario = auth.uid()
+    )
+  )
+  with check (
+    id_proyecto in (
+      select p.id_proyecto from public.proyectos p
+      join public.empresarios e on e.id_empresario = p.id_empresario
+      where e.id_usuario = auth.uid()
+    )
+  );
+
+
+-- ============================================================
+-- TABLAS SIN POLICIES DE CLIENTE (acceso solo via service_role):
 --
---   auditoria          → solo admin via service_role
---   configuracion_sistema → solo admin via service_role
---   mensajes           → reservado para 2.0 (chat en tiempo real)
+--   auditoria  → log de auditoría; se escribe del lado servidor.
+--   mensajes   → PENDIENTE: se va a implementar en el MVP; faltan
+--                policies. La regla depende del modelo de mensajería
+--                (post-contratación vs durante la ventana). Definir
+--                antes de habilitar el chat.
+--
+-- configuracion_sistema: AHORA tiene lectura para 'authenticated'
+-- (la escritura sigue solo via service_role).
 --
 -- RLS está habilitado en estas tablas desde migración 0001.
 -- Sin policies → acceso desde anon/user key bloqueado por defecto.

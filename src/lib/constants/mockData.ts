@@ -7,6 +7,9 @@ export const mockCompanies: Company[] = [
   {
     id: 'comp-1',
     name: 'TechFlow Solutions',
+    companyType: 'formal',
+    sector: 'Desarrollo de Software',
+    cedula: '3-101-234567',
     description:
       'Agencia boutique especializada en desarrollo de software a medida y transformación digital para startups.',
     logo: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=128&h=128&fit=crop&auto=format',
@@ -19,6 +22,9 @@ export const mockCompanies: Company[] = [
   {
     id: 'comp-2',
     name: 'Innovatech Labs',
+    companyType: 'formal',
+    sector: 'Inteligencia Artificial',
+    cedula: '3-101-345678',
     description:
       'Estudio de innovación tecnológica enfocado en Inteligencia Artificial y soluciones Web3.',
     logo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=128&h=128&fit=crop&auto=format',
@@ -31,6 +37,9 @@ export const mockCompanies: Company[] = [
   {
     id: 'comp-3',
     name: 'Global Devs Group',
+    companyType: 'formal',
+    sector: 'Consultoría TI',
+    cedula: '3-101-456789',
     description:
       'Consultora de TI internacional que conecta talento emergente con grandes corporativos.',
     logo: 'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=128&h=128&fit=crop&auto=format',
@@ -43,6 +52,9 @@ export const mockCompanies: Company[] = [
   {
     id: 'comp-4',
     name: 'EduTech Academy',
+    companyType: 'emprendedor',
+    sector: 'Educación',
+    cedula: '1-1450-0678',
     description:
       'Plataforma educativa en línea que busca modernizar sus herramientas de aprendizaje interactivo.',
     logo: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=128&h=128&fit=crop&auto=format',

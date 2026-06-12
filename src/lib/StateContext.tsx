@@ -15,6 +15,7 @@ import {
   mockApplications,
   mockCompanies,
 } from '@/lib/constants/mockData'
+import type { CompanyProfileInput } from '@/lib/company/schemas'
 
 interface StateContextType {
   projects: Project[]
@@ -34,6 +35,7 @@ interface StateContextType {
   ) => void
   updateApplicationStatus: (id: string, status: ApplicationStatus) => void
   updateCompanyStatus: (id: string, status: CompanyStatus) => void
+  updateCompany: (id: string, profile: CompanyProfileInput) => void
   resetAll: () => void
 }
 
@@ -156,6 +158,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
+  const updateCompany = (id: string, profile: CompanyProfileInput) => {
+    setCompanies((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, ...profile, isProfileFilled: true } : c,
+      ),
+    )
+  }
+
   const resetAll = () => {
     localStorage.removeItem('fwd_projects')
     localStorage.removeItem('fwd_applications')
@@ -184,6 +194,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         addApplication,
         updateApplicationStatus,
         updateCompanyStatus,
+        updateCompany,
         resetAll,
       }}
     >
