@@ -76,7 +76,14 @@
     "success": "Link sent! Check your inbox.",
     "error": "An error occurred. Please try again.",
     "redirecting": "Redirecting to your dashboard in a few seconds...",
+    "suspended": "Your account is suspended. Contact the FWD Talent team for more information.",
     "orContinueWith": "or continue with",
+    "passwordTab": "Password",
+    "magicLinkTab": "Magic link",
+    "signInButton": "Sign in",
+    "signingIn": "Signing in...",
+    "invalidCredentials": "Incorrect email or password.",
+    "accountLocked": "Too many failed attempts. Try again in a few minutes.",
     "simulatingOAuth": "Simulating login with {provider}...",
     "noAccount": "No account?",
     "signUpViaGoogle": "Sign up with Google above."
@@ -140,7 +147,9 @@
     "resetInvalidDesc": "The recovery link is invalid or has expired. Request a new one.",
     "awardText": "AMCHAM Award 2025 — Sustainable Business",
     "passwordBreached": "This password has appeared in known data breaches. Please choose a different one.",
-    "pwnedCheckFailed": "We couldn't verify your password's security. Please try again."
+    "pwnedCheckFailed": "We couldn't verify your password's security. Please try again.",
+    "emailAlreadyExists": "This email is already registered.",
+    "emailDuplicateOAuth": "This account is already registered. Please sign in."
   },
 
   "Common": {
@@ -234,6 +243,7 @@
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",
+    "passwordRequired": "Please enter your password.",
     "passwordMin": "Password must be at least 8 characters.",
     "passwordMismatch": "Passwords do not match.",
     "coverLetterMin": "Cover letter must be at least 30 characters.",

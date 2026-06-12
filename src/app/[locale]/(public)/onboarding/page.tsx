@@ -1,82 +1,23 @@
-'use client'
-
-import { useState } from 'react'
-import { useRouter } from '@/i18n/routing'
-import { useTranslations } from 'next-intl'
-import { ArrowRight } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { AuthCard } from '@/components/features/auth/AuthCard'
-import { AuthHeader } from '@/components/features/auth/AuthHeader'
-import { RoleCard } from '@/components/features/auth/RoleCard'
-import { assignRole } from '@/lib/auth/actions'
-import { ROLE_HOME } from '@/lib/auth/roles'
-import type { UserRole } from '@/types'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { OnboardingRoleForm } from '@/components/features/auth/OnboardingRoleForm'
 
 type OnboardingRole = 'junior' | 'empresa'
 
-export default function OnboardingPage() {
-  const tAuth = useTranslations('Auth')
-  const tOnboarding = useTranslations('Onboarding')
-  const router = useRouter()
+/**
+ * El registro guarda el rol elegido en el user metadata ('junior' | 'empresa').
+ * Lo leemos en el servidor y lo pasamos como preselección al formulario; el
+ * usuario confirma en vez de re-elegir desde cero (RF-01). La asignación real
+ * sigue ocurriendo en assignRole → assign_my_role.
+ */
+export default async function OnboardingPage() {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const [selected, setSelected] = useState<OnboardingRole>('junior')
-  const [loading, setLoading] = useState(false)
+  const metadataRole: unknown = user?.user_metadata?.role
+  const initialRole: OnboardingRole =
+    metadataRole === 'empresa' ? 'empresa' : 'junior'
 
-  const handleContinue = async () => {
-    setLoading(true)
-
-    // La BD usa 'empresario'; la UI usa 'empresa'
-    const dbRole = selected === 'empresa' ? 'empresario' : 'junior'
-    const result = await assignRole({ role: dbRole })
-
-    setLoading(false)
-
-    if (result.ok || result.error === 'role_already_assigned') {
-      // Idempotente: si ya tenía rol, ir a su home igualmente
-      router.push(ROLE_HOME[selected as UserRole])
-      return
-    }
-
-    toast.error(tOnboarding('errorGeneric'))
-  }
-
-  return (
-    <AuthCard>
-      <div className="space-y-6">
-        <AuthHeader
-          welcomeText={tAuth('welcome')}
-          title="Adelante"
-          subtitle={tOnboarding('subtitle')}
-        />
-
-        <div className="space-y-3.5 my-6">
-          <RoleCard
-            title={tAuth('roleJuniorTitle')}
-            description={tAuth('roleJuniorDesc')}
-            iconName="GraduationCap"
-            selected={selected === 'junior'}
-            onClick={() => setSelected('junior')}
-          />
-
-          <RoleCard
-            title={tAuth('roleCompanyTitle')}
-            description={tAuth('roleCompanyDesc')}
-            iconName="Building2"
-            selected={selected === 'empresa'}
-            onClick={() => setSelected('empresa')}
-          />
-        </div>
-
-        <Button
-          onClick={handleContinue}
-          disabled={loading}
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
-        >
-          {loading ? tOnboarding('loading') : tAuth('continue')}
-          {!loading && <ArrowRight className="w-4 h-4" />}
-        </Button>
-      </div>
-    </AuthCard>
-  )
+  return <OnboardingRoleForm initialRole={initialRole} />
 }

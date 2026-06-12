@@ -347,7 +347,7 @@ export type Database = {
           id_empresario: string
           id_usuario: string
           logo: string | null
-          nombre_empresa: string
+          nombre_empresa: string | null
           pais_sede: string | null
           sector: string | null
           sitio_web: string | null
@@ -365,7 +365,7 @@ export type Database = {
           id_empresario?: string
           id_usuario: string
           logo?: string | null
-          nombre_empresa: string
+          nombre_empresa?: string | null
           pais_sede?: string | null
           sector?: string | null
           sitio_web?: string | null
@@ -383,7 +383,7 @@ export type Database = {
           id_empresario?: string
           id_usuario?: string
           logo?: string | null
-          nombre_empresa?: string
+          nombre_empresa?: string | null
           pais_sede?: string | null
           sector?: string | null
           sitio_web?: string | null

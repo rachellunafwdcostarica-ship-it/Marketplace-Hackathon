@@ -15,7 +15,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Link, useRouter } from '@/i18n/routing'
 import { toast } from 'sonner'
-import { MOCK_COMPANY_ID } from '@/lib/constants/mockData'
 import {
   Dialog,
   DialogContent,
@@ -44,13 +43,12 @@ export default function CompanyDashboard() {
   const {
     projects,
     applications,
-    companies,
     updateApplicationStatus,
     updateProjectStatus,
+    currentCompany: company,
   } = useAppState()
 
   const router = useRouter()
-  const company = companies.find((c) => c.id === MOCK_COMPANY_ID)
 
   useEffect(() => {
     if (company && !company.isProfileFilled) {
@@ -58,7 +56,9 @@ export default function CompanyDashboard() {
     }
   }, [company, router])
 
-  const myProjects = projects.filter((p) => p.companyId === MOCK_COMPANY_ID)
+  const myProjects = projects.filter(
+    (p) => p.companyId === (company?.id || 'comp-1'),
+  )
   const activeProjects = myProjects.filter((p) => p.status === 'active')
   const myProjectIds = myProjects.map((p) => p.id)
   const receivedApps = applications.filter((app) =>
