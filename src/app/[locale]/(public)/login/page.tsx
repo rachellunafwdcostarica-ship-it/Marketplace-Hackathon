@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, Suspense } from 'react'
+import React, { useState, useMemo, useEffect, Suspense } from 'react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
 import { Link, useRouter } from '@/i18n/routing'
@@ -80,6 +80,20 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
+  // Errores de OAuth devueltos por el callback (?error=...). El callback no
+  // puede mostrar toasts; aquí los traducimos y mostramos.
+  useEffect(() => {
+    const oauthError = searchParams.get('error')
+    if (!oauthError) return
+    if (oauthError === 'email_already_exists') {
+      toast.error(tLogin('oauthErrorEmailExists'))
+    } else {
+      toast.error(tLogin('oauthError'))
+    }
+    // Limpiar el query param para no repetir el toast al refrescar
+    window.history.replaceState(null, '', window.location.pathname)
+  }, [searchParams, tLogin])
+
   const magicSchema = useMemo(
     () => createMagicSchema(tValidation),
     [tValidation],
@@ -151,7 +165,7 @@ function LoginContent() {
       },
     })
     if (error) {
-      toast.error(error.message)
+      toast.error(tLogin('oauthError'))
       setLoading(false)
     }
   }
