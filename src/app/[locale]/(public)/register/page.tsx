@@ -106,7 +106,8 @@ export default function RegisterPage() {
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true)
-    setUserRole(selectedRole)
+    // El rol NO se decide aquí en el flujo OAuth: tras autenticar, el callback
+    // envía al usuario nuevo a /onboarding, que es donde elige junior/empresa.
     const supabase = createSupabaseBrowserClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider,

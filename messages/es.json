@@ -84,6 +84,8 @@
     "signingIn": "Ingresando...",
     "invalidCredentials": "Correo o contraseña incorrectos.",
     "accountLocked": "Demasiados intentos fallidos. Intentá de nuevo en unos minutos.",
+    "oauthError": "No se pudo iniciar sesión con el proveedor. Intentá de nuevo.",
+    "oauthErrorEmailExists": "Ya existe una cuenta con ese correo. Iniciá sesión con tu método original.",
     "simulatingOAuth": "Simulando login con {provider}...",
     "noAccount": "¿Sin cuenta?",
     "signUpViaGoogle": "Regístrate con Google arriba."
