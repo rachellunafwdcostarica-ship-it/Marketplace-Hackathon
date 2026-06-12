@@ -22,7 +22,6 @@ import {
   MessageSquare,
   Settings,
   HelpCircle,
-  ShieldCheck,
 } from 'lucide-react'
 
 export function SidebarEmpresaNuevo() {
@@ -59,21 +58,6 @@ export function SidebarEmpresaNuevo() {
 
   return (
     <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6">
-      {/* Tarjeta de Perfil Freelancer Pro (mockup) */}
-      <div className="bg-card border border-border/60 p-5 rounded-2xl flex items-center gap-3 shadow-sm">
-        <div className="w-10 h-10 bg-[#E8F1FC] rounded-full flex items-center justify-center shrink-0 border border-[#D0E2FA]">
-          <ShieldCheck className="w-5 h-5 text-[#0A6CB9]" />
-        </div>
-        <div className="text-left">
-          <h3 className="font-bold text-foreground text-sm leading-tight">
-            Freelancer Pro
-          </h3>
-          <span className="inline-block text-[10px] text-muted-foreground font-semibold">
-            Junior • Nivel 2
-          </span>
-        </div>
-      </div>
-
       {/* Menú de navegación principal */}
       <nav className="flex flex-col gap-1 px-1">
         {menuItems.map((item) => {
