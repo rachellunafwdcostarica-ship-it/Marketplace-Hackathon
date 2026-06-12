@@ -394,6 +394,11 @@
     "userApproved": "{name}'s account approved successfully.",
     "userApproveError": "Error approving account. Please try again.",
     "noRoleYet": "no role assigned",
+    "verifyGraduate": "Verify graduate",
+    "verifying": "Verifying...",
+    "graduateVerified": "{name} verified as graduate successfully.",
+    "graduateVerifyError": "Error verifying graduate. Please try again.",
+    "graduateVerifyNotStudent": "This user is not a student; cannot verify as graduate.",
     "supportTickets": "Business Needs & Problems",
     "supportTicketsDesc": "Reports and tickets describing business needs or technical issues submitted by company owners.",
     "noSupportTickets": "No support tickets or business needs registered at this time."
