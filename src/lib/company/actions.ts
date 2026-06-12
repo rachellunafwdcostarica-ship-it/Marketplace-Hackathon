@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { CompanyProfileDbSchema, type CompanyProfileInput } from './schemas'
+import type { Database } from '@/types/database'
 
 /**
  * Obtiene el perfil del empresario para el usuario autenticado actual.
@@ -93,10 +94,9 @@ export async function saveCompanyProfile(
     const dbProfile = {
       id_usuario: user.id,
       nombre_empresa: data.name,
-      tipo_empresario:
-        data.companyType === 'formal'
-          ? ('empresa_formal' as const)
-          : ('emprendedor' as const),
+      tipo_empresario: (data.companyType === 'formal'
+        ? 'empresa_formal'
+        : 'emprendedor') as Database['public']['Enums']['tipo_empresario_enum'],
       sector: data.sector,
       cedula_juridica: data.cedula,
       descripcion: data.description,
