@@ -393,7 +393,10 @@
     "approving": "Approving...",
     "userApproved": "{name}'s account approved successfully.",
     "userApproveError": "Error approving account. Please try again.",
-    "noRoleYet": "no role assigned"
+    "noRoleYet": "no role assigned",
+    "supportTickets": "Business Needs & Problems",
+    "supportTicketsDesc": "Reports and tickets describing business needs or technical issues submitted by company owners.",
+    "noSupportTickets": "No support tickets or business needs registered at this time."
   },
   "Errors": {
     "forbidden": "Access denied",
@@ -434,6 +437,13 @@
     "tabAnalytics": "Analytics",
     "support": "Support",
     "logout": "Log Out",
+    "supportModalTitle": "Technical Support & Needs",
+    "supportModalDesc": "Describe your technical issue or business need. The admin team will review your ticket for follow-up.",
+    "supportFieldDesc": "Detailed description",
+    "supportPlaceholder": "Describe in detail what the problem or technical need of your business is...",
+    "supportSubmit": "Submit ticket",
+    "supportSuccess": "Support ticket submitted successfully.",
+    "supportMinLength": "The description must be at least 15 characters.",
     "companyName": "FWD Technological Solutions",
     "tagline": "Architecting the future of distributed tech talent globally since 2018.",
     "statProjects": "Projects",
