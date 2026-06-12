@@ -394,6 +394,11 @@
     "userApproved": "Cuenta de {name} aprobada exitosamente.",
     "userApproveError": "Error al aprobar la cuenta. Intentá de nuevo.",
     "noRoleYet": "sin rol asignado",
+    "verifyGraduate": "Verificar egresado",
+    "verifying": "Verificando...",
+    "graduateVerified": "Egresado {name} verificado exitosamente.",
+    "graduateVerifyError": "Error al verificar al egresado. Intentá de nuevo.",
+    "graduateVerifyNotStudent": "Este usuario no es un estudiante; no se puede verificar como egresado.",
     "supportTickets": "Problemas y Necesidades de Negocio",
     "supportTicketsDesc": "Reportes y solicitudes de soporte técnico o ideas de negocio planteadas por empresarios.",
     "noSupportTickets": "No hay reportes de soporte o necesidades registradas en este momento."
