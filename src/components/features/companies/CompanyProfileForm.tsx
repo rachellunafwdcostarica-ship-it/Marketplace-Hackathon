@@ -24,6 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { saveCompanyProfile } from '@/lib/company/actions'
+import { Upload, ImageIcon, Loader2 } from 'lucide-react'
 
 export function CompanyProfileForm() {
   const tEmpresa = useTranslations('Empresa')
@@ -43,6 +46,7 @@ export function CompanyProfileForm() {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm<CompanyProfileInput>({
     resolver: zodResolver(profileSchema),
@@ -58,16 +62,108 @@ export function CompanyProfileForm() {
     },
   })
 
-  const onSubmit = (data: CompanyProfileInput) => {
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    company?.logo || null,
+  )
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('El archivo supera el límite de 5MB')
+        return
+      }
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        toast.error('Formato no permitido. Use JPEG, PNG o WEBP')
+        return
+      }
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+      setValue('logo', 'https://placeholder.url/temp-logo.png')
+    }
+  }
+
+  const onSubmit = async (data: CompanyProfileInput) => {
     if (!company) return
     setLoading(true)
 
-    setTimeout(() => {
-      updateCompany(company.id, data)
-      setLoading(false)
+    try {
+      let finalLogoUrl = data.logo
+
+      // 1. Si hay un archivo de logo nuevo seleccionado, procedemos con el flujo de subida
+      if (logoFile) {
+        setUploadingLogo(true)
+
+        // Primero guardamos/creamos el perfil del empresario para satisfacer la RLS del Storage
+        const initialRes = await saveCompanyProfile({
+          ...data,
+          logo: company.logo || '', // Usamos logo previo o vacío
+        })
+
+        if (!initialRes.ok) {
+          throw new Error(initialRes.error)
+        }
+
+        // Obtener el ID del usuario actual para la ruta de storage
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
+        if (userError || !user) {
+          throw new Error('No se encontró sesión de usuario válida')
+        }
+
+        const fileExt = logoFile.name.split('.').pop()
+        const filePath = `${user.id}/logo_${Date.now()}.${fileExt}`
+
+        // Subir archivo al bucket 'logos'
+        const { error: uploadError } = await supabase.storage
+          .from('logos')
+          .upload(filePath, logoFile, {
+            upsert: true,
+          })
+
+        if (uploadError) {
+          throw new Error(uploadError.message)
+        }
+
+        // Obtener la URL pública del logo
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('logos').getPublicUrl(filePath)
+
+        finalLogoUrl = publicUrl
+        data.logo = publicUrl
+      }
+
+      // 2. Guardar el perfil completo (ahora sí con la URL final del logo)
+      const saveRes = await saveCompanyProfile({
+        ...data,
+        logo: finalLogoUrl,
+      })
+
+      if (!saveRes.ok) {
+        throw new Error(saveRes.error)
+      }
+
+      // Sincronizar estado global
+      updateCompany(company.id, {
+        ...data,
+        logo: finalLogoUrl,
+      })
+
       toast.success(tEmpresa('profileSaved'))
       router.push('/empresa/perfil')
-    }, 900)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : tCommon('error')
+      toast.error(errorMsg)
+    } finally {
+      setLoading(false)
+      setUploadingLogo(false)
+    }
   }
 
   if (!company) {
@@ -238,16 +334,52 @@ export function CompanyProfileForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="logo" className="text-sm font-bold">
+            <Label htmlFor="logo" className="text-sm font-bold block text-left">
               {tEmpresa('fieldLogo')}
             </Label>
-            <Input
-              id="logo"
-              type="url"
-              placeholder={tEmpresa('fieldLogoPlaceholder')}
-              className={`bg-card/50 border-border ${errors.logo ? 'border-destructive' : 'focus-visible:ring-primary'}`}
-              {...register('logo')}
-            />
+            <input type="hidden" {...register('logo')} />
+
+            <div className="flex flex-col sm:flex-row gap-4 items-center p-4 bg-card/40 border border-dashed border-border rounded-xl hover:border-primary/50 transition-colors duration-200">
+              <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center shrink-0 border border-border overflow-hidden relative group">
+                {logoPreview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logoPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                )}
+                {uploadingLogo && (
+                  <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 text-center sm:text-left space-y-1">
+                <p className="text-xs font-semibold text-foreground">
+                  Subir nuevo logo corporativo
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  Formatos soportados: JPG, PNG, WEBP. Máximo 5MB.
+                </p>
+                <label className="inline-block">
+                  <span className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 text-primary hover:bg-primary/25 text-[11px] font-bold rounded-lg transition-all">
+                    <Upload className="w-3.5 h-3.5" />
+                    Seleccionar archivo
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              </div>
+            </div>
+
             {errors.logo && (
               <p className="text-xs font-semibold text-destructive">
                 {errors.logo.message}

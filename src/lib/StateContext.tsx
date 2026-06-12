@@ -25,6 +25,8 @@ import {
 import type { CompanyProfileInput } from '@/lib/company/schemas'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { normalizeRole } from '@/lib/auth/roles'
+import { getCompanyProfile, saveCompanyProfile } from '@/lib/company/actions'
+import { logger } from '@/lib/logger'
 
 import type { User } from '@supabase/supabase-js'
 
@@ -117,14 +119,59 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
 
     // Suscribirse al estado de autenticación de Supabase
     const supabase = createSupabaseBrowserClient()
+
+    const fetchCompanyAndRole = async (user: User) => {
+      setCurrentUser(user)
+      const { data: roleRaw } = await supabase.rpc('get_my_role')
+      const role = normalizeRole(roleRaw)
+      if (role) {
+        setUserRoleState(role)
+        if (role === 'empresa') {
+          const res = await getCompanyProfile()
+          if (res.ok && res.data) {
+            const dbProf = res.data
+            setCompanies((prev) => {
+              const exists = prev.some((c) => c.userId === user.id)
+              if (exists) {
+                return prev.map((c) =>
+                  c.userId === user.id
+                    ? {
+                        ...c,
+                        ...dbProf,
+                        isProfileFilled: true,
+                      }
+                    : c,
+                )
+              } else {
+                return [
+                  {
+                    id: `comp-${Date.now()}`,
+                    name: dbProf.name,
+                    companyType: dbProf.companyType as CompanyType,
+                    sector: dbProf.sector,
+                    cedula: dbProf.cedula,
+                    description: dbProf.description,
+                    logo: dbProf.logo,
+                    status: 'approved' as const,
+                    projectsCount: 0,
+                    contactEmail: dbProf.contactEmail,
+                    website: dbProf.website,
+                    createdAt: new Date().toISOString(),
+                    isProfileFilled: true,
+                    userId: user.id,
+                  },
+                  ...prev,
+                ]
+              }
+            })
+          }
+        }
+      }
+    }
+
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
-        setCurrentUser(user)
-        const { data: roleRaw } = await supabase.rpc('get_my_role')
-        const role = normalizeRole(roleRaw)
-        if (role) {
-          setUserRoleState(role)
-        }
+        await fetchCompanyAndRole(user)
       }
     })
 
@@ -134,11 +181,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       const user = session?.user ?? null
       setCurrentUser(user)
       if (user) {
-        const { data: roleRaw } = await supabase.rpc('get_my_role')
-        const role = normalizeRole(roleRaw)
-        if (role) {
-          setUserRoleState(role)
-        }
+        await fetchCompanyAndRole(user)
       }
     })
 
@@ -248,6 +291,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateCompany = (id: string, profile: CompanyProfileInput) => {
+    saveCompanyProfile(profile).then((res) => {
+      if (!res.ok) {
+        logger.error('Failed to save company profile to Supabase', {
+          error: res.error,
+        })
+      }
+    })
+
     setCompanies((prev) => {
       const exists = prev.some(
         (c) => c.id === id || (currentUser && c.userId === currentUser.id),
