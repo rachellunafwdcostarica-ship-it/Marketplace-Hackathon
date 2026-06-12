@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { EmptyState } from '@/components/features/shared/EmptyState'
 import { ApproveUserButton } from '@/components/features/auth/ApproveUserButton'
+import { VerifyGraduateButton } from '@/components/features/auth/VerifyGraduateButton'
 import { getPendingUsers } from '@/lib/admin/queries'
 
 export default async function ValidationsPage() {
@@ -61,10 +62,16 @@ export default async function ValidationsPage() {
                       </div>
                     </div>
 
-                    <ApproveUserButton
-                      userId={user.id_usuario}
-                      userName={`${user.nombre} ${user.apellido_1}`}
-                    />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <ApproveUserButton
+                        userId={user.id_usuario}
+                        userName={`${user.nombre} ${user.apellido_1}`}
+                      />
+                      <VerifyGraduateButton
+                        userId={user.id_usuario}
+                        userName={`${user.nombre} ${user.apellido_1}`}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               ))}
