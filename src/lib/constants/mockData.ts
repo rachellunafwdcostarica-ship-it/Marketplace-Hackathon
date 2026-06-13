@@ -1,4 +1,10 @@
-import { Company, Project, Application } from '@/types'
+import {
+  Company,
+  Project,
+  Application,
+  StudentSkill,
+  StudentPortfolio,
+} from '@/types'
 
 export const MOCK_JUNIOR_NAME = 'Juan Pérez'
 export const MOCK_COMPANY_ID = 'comp-1'
@@ -70,6 +76,8 @@ export const mockProjects: Project[] = [
   {
     id: 'proj-1',
     title: 'Desarrollo de Dashboard para Analíticas de Ventas',
+    category: 'Dashboard',
+    area: 'Frontend',
     companyId: 'comp-1',
     companyName: 'TechFlow Solutions',
     description:
@@ -85,6 +93,8 @@ export const mockProjects: Project[] = [
   {
     id: 'proj-2',
     title: 'Integración de Pasarela de Pagos Stripe',
+    category: 'Integración',
+    area: 'Full Stack',
     companyId: 'comp-1',
     companyName: 'TechFlow Solutions',
     description:
@@ -100,6 +110,8 @@ export const mockProjects: Project[] = [
   {
     id: 'proj-3',
     title: 'Componentes de UI para Sistema de Diseño interno',
+    category: 'UI Components',
+    area: 'Frontend',
     companyId: 'comp-2',
     companyName: 'Innovatech Labs',
     description:
@@ -115,6 +127,8 @@ export const mockProjects: Project[] = [
   {
     id: 'proj-4',
     title: 'Landing Page con Animaciones para SaaS B2B',
+    category: 'Landing Page',
+    area: 'Frontend',
     companyId: 'comp-2',
     companyName: 'Innovatech Labs',
     description:
@@ -130,6 +144,8 @@ export const mockProjects: Project[] = [
   {
     id: 'proj-5',
     title: 'Migración de Aplicación React a Next.js',
+    category: 'Migración',
+    area: 'Full Stack',
     companyId: 'comp-1',
     companyName: 'TechFlow Solutions',
     description:
@@ -145,6 +161,8 @@ export const mockProjects: Project[] = [
   {
     id: 'proj-6',
     title: 'Bot de Telegram para Notificaciones de E-commerce',
+    category: 'Bot',
+    area: 'Backend',
     companyId: 'comp-2',
     companyName: 'Innovatech Labs',
     description:
@@ -227,3 +245,28 @@ export const mockApplications: Application[] = [
     createdAt: '2026-06-02T16:00:00Z',
   },
 ]
+
+export const mockStudentSkills: StudentSkill[] = [
+  { id: 'skill-1', name: 'React', level: 'avanzado' },
+  { id: 'skill-2', name: 'TypeScript', level: 'intermedio' },
+  { id: 'skill-3', name: 'Node.js', level: 'basico' },
+]
+
+export const mockStudentPortfolio: StudentPortfolio = {
+  studentId: MOCK_JUNIOR_NAME,
+  bio: 'Desarrollador Junior apasionado por el frontend y la creación de interfaces de usuario interactivas.',
+  visibility: 'publico',
+  skills: mockStudentSkills,
+  projects: [
+    {
+      id: 'port-proj-1',
+      title: 'E-commerce App',
+      description:
+        'Aplicación de comercio electrónico con carrito de compras y pasarela de pago.',
+      technologies: ['React', 'Next.js', 'Tailwind CSS'],
+      completionDate: '2026-05-10',
+      repositoryUrl: 'https://github.com/ejemplo/ecommerce',
+      demoUrl: 'https://ecommerce-demo.vercel.app',
+    },
+  ],
+}
