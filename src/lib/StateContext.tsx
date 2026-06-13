@@ -117,7 +117,15 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       setInitialized(true)
     }, 0)
 
-    // Suscribirse al estado de autenticación de Supabase
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [])
+
+  // Suscribirse al estado de autenticación y sincronizar datos de Supabase tras inicialización local
+  useEffect(() => {
+    if (!initialized) return
+
     const supabase = createSupabaseBrowserClient()
 
     const fetchCompanyAndRole = async (user: User) => {
@@ -186,10 +194,9 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      clearTimeout(timer)
       subscription.unsubscribe()
     }
-  }, [])
+  }, [initialized])
 
   useEffect(() => {
     if (!initialized) return

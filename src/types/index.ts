@@ -26,6 +26,8 @@ export interface Project {
   startDate: string // ISO date string
   status: ProjectStatus
   createdAt: string
+  category?: string
+  area?: string
 }
 
 export interface Application {
@@ -61,3 +63,29 @@ export interface Company {
 }
 
 export type UserRole = 'junior' | 'empresa' | 'admin'
+
+export type SkillLevel = 'basico' | 'intermedio' | 'avanzado'
+
+export interface StudentSkill {
+  id: string
+  name: string
+  level: SkillLevel
+}
+
+export interface PortfolioProject {
+  id: string
+  title: string
+  description: string
+  technologies: string[]
+  completionDate: string
+  repositoryUrl?: string
+  demoUrl?: string
+}
+
+export interface StudentPortfolio {
+  studentId: string
+  bio: string
+  visibility: 'publico' | 'empresas'
+  skills: StudentSkill[]
+  projects: PortfolioProject[]
+}

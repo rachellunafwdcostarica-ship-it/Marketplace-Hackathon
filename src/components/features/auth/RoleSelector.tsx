@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { GraduationCap, Building2, ShieldCheck } from 'lucide-react'
+import { GraduationCap, Building2 } from 'lucide-react'
 import type { UserRole } from '@/types'
 
 interface RoleSelectorProps {
@@ -28,12 +28,6 @@ const ROLES: {
     description: 'Publico proyectos',
     icon: Building2,
   },
-  {
-    value: 'admin',
-    label: 'Admin',
-    description: 'Gestiono la plataforma',
-    icon: ShieldCheck,
-  },
 ]
 
 export function RoleSelector({ selected, onChange, label }: RoleSelectorProps) {
@@ -44,7 +38,7 @@ export function RoleSelector({ selected, onChange, label }: RoleSelectorProps) {
           {label}
         </p>
       )}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {ROLES.map((role) => {
           const Icon = role.icon
           const isSelected = selected === role.value

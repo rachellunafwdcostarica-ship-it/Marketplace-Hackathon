@@ -84,6 +84,8 @@
     "signingIn": "Ingresando...",
     "invalidCredentials": "Correo o contraseña incorrectos.",
     "accountLocked": "Demasiados intentos fallidos. Intentá de nuevo en unos minutos.",
+    "oauthError": "No se pudo iniciar sesión con el proveedor. Intentá de nuevo.",
+    "oauthErrorEmailExists": "Ya existe una cuenta con ese correo. Iniciá sesión con tu método original.",
     "simulatingOAuth": "Simulando login con {provider}...",
     "noAccount": "¿Sin cuenta?",
     "signUpViaGoogle": "Regístrate con Google arriba."
@@ -403,6 +405,11 @@
     "userApproved": "Cuenta de {name} aprobada exitosamente.",
     "userApproveError": "Error al aprobar la cuenta. Intentá de nuevo.",
     "noRoleYet": "sin rol asignado",
+    "verifyGraduate": "Verificar egresado",
+    "verifying": "Verificando...",
+    "graduateVerified": "Egresado {name} verificado exitosamente.",
+    "graduateVerifyError": "Error al verificar al egresado. Intentá de nuevo.",
+    "graduateVerifyNotStudent": "Este usuario no es un estudiante; no se puede verificar como egresado.",
     "supportTickets": "Problemas y Necesidades de Negocio",
     "supportTicketsDesc": "Reportes y solicitudes de soporte técnico o ideas de negocio planteadas por empresarios.",
     "noSupportTickets": "No hay reportes de soporte o necesidades registradas en este momento."
@@ -504,6 +511,15 @@
     "appsReceived": "{count} recibidas",
     "viewApps": "Ver Postulaciones",
     "priority": "Prioridad",
-    "interviews": "Entrevistas"
+    "interviews": "Entrevistas",
+    "menuExplorar": "Explorar",
+    "menuPostulaciones": "Mis Postulaciones",
+    "menuMensajes": "Mensajes",
+    "menuConfiguracion": "Configuración",
+    "menuAyuda": "Ayuda",
+    "menuActualizarPlan": "Actualizar Plan",
+    "actualizarPlanToast": "Actualización de plan en simulación",
+    "cancelar": "Cancelar",
+    "supportMinCharsInfo": "caracteres mínimo"
   }
 }

@@ -84,6 +84,8 @@
     "signingIn": "Signing in...",
     "invalidCredentials": "Incorrect email or password.",
     "accountLocked": "Too many failed attempts. Try again in a few minutes.",
+    "oauthError": "Could not sign in with the provider. Please try again.",
+    "oauthErrorEmailExists": "An account with that email already exists. Sign in with your original method.",
     "simulatingOAuth": "Simulating login with {provider}...",
     "noAccount": "No account?",
     "signUpViaGoogle": "Sign up with Google above."
@@ -403,6 +405,11 @@
     "userApproved": "{name}'s account approved successfully.",
     "userApproveError": "Error approving account. Please try again.",
     "noRoleYet": "no role assigned",
+    "verifyGraduate": "Verify graduate",
+    "verifying": "Verifying...",
+    "graduateVerified": "{name} verified as graduate successfully.",
+    "graduateVerifyError": "Error verifying graduate. Please try again.",
+    "graduateVerifyNotStudent": "This user is not a student; cannot verify as graduate.",
     "supportTickets": "Business Needs & Problems",
     "supportTicketsDesc": "Reports and tickets describing business needs or technical issues submitted by company owners.",
     "noSupportTickets": "No support tickets or business needs registered at this time."
@@ -504,6 +511,15 @@
     "appsReceived": "{count} received",
     "viewApps": "View Applications",
     "priority": "Priority",
-    "interviews": "Interviews"
+    "interviews": "Interviews",
+    "menuExplorar": "Explore",
+    "menuPostulaciones": "My Applications",
+    "menuMensajes": "Messages",
+    "menuConfiguracion": "Configuration",
+    "menuAyuda": "Help",
+    "menuActualizarPlan": "Upgrade Plan",
+    "actualizarPlanToast": "Plan upgrade in simulation",
+    "cancelar": "Cancel",
+    "supportMinCharsInfo": "characters minimum"
   }
 }
