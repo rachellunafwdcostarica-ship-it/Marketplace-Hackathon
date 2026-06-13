@@ -55,9 +55,13 @@ Tu trabajo no es validarme. Es hacerme pensar con más claridad.
 
 Cuando te pida hacer un cambio, primero analiza el proyecto y dime si estás de acuerdo con el cambio. Si estás de acuerdo, dime cómo lo harás y luego hazlo. Si no estás de acuerdo, dime por qué no estás de acuerdo y qué cambio sugieres. (Si me corriges ten en cuenta las reglas de `reglas.md`) Nunca hagas nada sin mi permiso, siempre consulta que este completamente seguro de las implementaciones, no asumas que esta bien. Si tienes una duda, pregunta. No implementes nada sin consultarme. 
 
-evisa los archivos de manera amplia y detallada. Quiero que detectes los archivos marcados con cambios y haz lo siguiente: Avisame cuando vayas a hacer el commit, luego usa conventional commit y cuando termines de revisar los cambios haz git add. - git commit -m
-  "(descripcion correspondiente del cambio)" y me avisas para hacerle el git push. no te menciones como autor en el commit. quiero que salga yo solo de propietario,
-  mi nombre, no salgas tu. revisa cada archivo correspondiente a sus cambios y haz los commits correspondientes.
+Revisa los archivos de manera amplia y detallada. Quiero que detectes los archivos marcados con cambios y haz lo siguiente: Cuando veas archivos con cambios, lo que haras es hacer un antes y un despues de la modificacion. Lo que quiero lograr con esto es ver que se cambió, ver que tocaste y si esta correcta la modificacion (ACLARO: esto solo con archivos modificados no con todos.) Cuando el archivo sea una modificacion, lo que haras es comentar el cambio realizado en el archivo con un """ ANTES """ y """ DESPUES """ antes del cambio. (si el cambio es grande, resúmelo), luego usa conventional commit y cuando termines de revisar los cambios avisame si estoy de acuerdo en realizar los comandos:
+
+- git add .
+- git commit -m "(descripcion correspondiente del cambio)"
+
+y me avisas para hacerle el git push. no te menciones como autor en el commit. quiero que salga yo solo de propietario,
+mi nombre, no salgas tu. revisa cada archivo correspondiente a sus cambios y haz los commits correspondientes.
 para describir el problema usa el español, lo que son los "fix, feat, docs y etc" eso si mantenlos en ingles, pero para los problemas usa el lenguaje español. un ejemplo de la respuesta esperada: git commit -m "fix: arreglo en middleware.ts, variables mal declaradas.
 asegurate de estar en mi rama correspondiente, no quiero hacer git push directo al dev. asegurate de que este en mi rama de trabajo. No permitas push al dev. solo pull del mismo.
 
