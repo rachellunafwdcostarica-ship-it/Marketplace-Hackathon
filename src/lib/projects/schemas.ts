@@ -54,6 +54,29 @@ export interface LogisticaDraft {
   ciudadProyecto: string | null
 }
 
+/** Referencia a un ítem de catálogo ya resuelto (id + nombre legible). */
+export interface CatalogRef {
+  id: string
+  nombre: string
+}
+
+/**
+ * Propuesta del fondo ya RESUELTA contra los catálogos, tal como se persiste en
+ * `conversaciones_ia.propuesta_generada` y se publica luego (errolpendiente §2).
+ * Las categorías/tecnologías guardan id + nombre: el nombre para mostrar, el id
+ * para los INSERT en las tablas puente al publicar.
+ */
+export interface PropuestaProyecto {
+  titulo: string
+  descripcion: string
+  idArea: string | null
+  areaNombre: string | null
+  categorias: CatalogRef[]
+  tecnologias: CatalogRef[]
+  stackSugerido: string[]
+  involucraIa: boolean
+}
+
 /** Convierte un monto de texto a número; vacío o no numérico devuelve null. */
 export function parseMoney(raw: string): number | null {
   const limpio = raw.trim()

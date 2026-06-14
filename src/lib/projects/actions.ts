@@ -10,8 +10,9 @@ import {
   toLogisticaDraft,
   type LogisticaDraft,
   type LogisticsFormValues,
+  type PropuestaProyecto,
 } from './schemas'
-import { parseHistorial, parseLogistica } from './persistence'
+import { parseHistorial, parseLogistica, parseProposal } from './persistence'
 
 export interface CatalogItem {
   id: string
@@ -30,6 +31,7 @@ export interface ProjectFlowInit {
   logistica: LogisticaDraft | null
   contextoInicial: string
   historial: HistorialEntry[]
+  propuesta: PropuestaProyecto | null
 }
 
 /**
@@ -126,7 +128,9 @@ export async function initProjectPublishing(): Promise<
 
     const { data: existing, error: convReadError } = await supabase
       .from('conversaciones_ia')
-      .select('id_conversacion, contexto_inicial, logistica, historial')
+      .select(
+        'id_conversacion, contexto_inicial, logistica, historial, propuesta_generada',
+      )
       .eq('id_empresario', empresario.id_empresario)
       .eq('estado', 'en_curso')
       .order('fecha_inicio', { ascending: false })
@@ -145,6 +149,7 @@ export async function initProjectPublishing(): Promise<
         logistica: parseLogistica(existing.logistica),
         contextoInicial: existing.contexto_inicial ?? '',
         historial: parseHistorial(existing.historial),
+        propuesta: parseProposal(existing.propuesta_generada),
       })
     }
 
@@ -166,6 +171,7 @@ export async function initProjectPublishing(): Promise<
       logistica: null,
       contextoInicial: '',
       historial: [],
+      propuesta: null,
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unexpected_error'

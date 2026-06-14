@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { Send, Sparkles, User } from 'lucide-react'
+import { Send, Sparkles, User, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils/cn'
@@ -15,6 +15,8 @@ interface ProjectChatProps {
   contextoInicial: string
   historial: HistorialEntry[]
   onHistorialChange: (historial: HistorialEntry[]) => void
+  onArmarPropuesta: () => void
+  armando: boolean
 }
 
 const KNOWN_ERROR_CODES = new Set([
@@ -64,28 +66,33 @@ function ChatBubble({
 }
 
 /**
- * Chat con la IA (RF-54/55, llamada #1). Controlado por el wizard: el historial
- * vive arriba para sobrevivir a los cambios de paso. Cada envío persiste
- * append-only en el servidor y la IA responde sin streaming.
+ * Chat con la IA (RF-54/55). Controlado por el wizard; cada envío persiste
+ * append-only y la IA responde sin streaming. Cuando la IA marca "completo",
+ * se muestra una pista; el botón "Armar propuesta" está siempre disponible y la
+ * validación (#3) es el verdadero filtro (errolpendiente §1 paso 5-6).
  */
 export function ProjectChat({
   conversationId,
   contextoInicial,
   historial,
   onHistorialChange,
+  onArmarPropuesta,
+  armando,
 }: ProjectChatProps) {
   const t = useTranslations('ProjectPublish')
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
+  const [completo, setCompleto] = useState(false)
 
   const onSend = async () => {
     const limpio = text.trim()
-    if (limpio.length === 0 || loading) return
+    if (limpio.length === 0 || loading || armando) return
     setLoading(true)
     const result = await sendChatMessage(conversationId, limpio)
     setLoading(false)
     if (result.ok) {
       onHistorialChange(result.data.historial)
+      setCompleto(result.data.completo)
       setText('')
       return
     }
@@ -120,7 +127,7 @@ export function ProjectChat({
           value={text}
           onChange={(event) => setText(event.target.value)}
           rows={2}
-          disabled={loading}
+          disabled={loading || armando}
           placeholder={t('chatPlaceholder')}
           className="bg-card/50 border-border focus-visible:ring-primary resize-none"
           onKeyDown={(event) => {
@@ -133,11 +140,30 @@ export function ProjectChat({
         <Button
           type="button"
           onClick={() => void onSend()}
-          disabled={loading || text.trim().length === 0}
+          disabled={loading || armando || text.trim().length === 0}
           className="bg-primary hover:bg-primary/95 text-primary-foreground shrink-0"
           aria-label={t('chatSend')}
         >
           <Send className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-2 pt-1">
+        {completo && (
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">
+            <Sparkles className="h-3.5 w-3.5" />
+            {t('readyCue')}
+          </p>
+        )}
+        <Button
+          type="button"
+          variant={completo ? 'secondary' : 'outline'}
+          onClick={onArmarPropuesta}
+          disabled={loading || armando}
+          className="inline-flex items-center gap-1.5 self-start"
+        >
+          <Wand2 className="h-4 w-4" />
+          {armando ? t('generating') : t('buildProposal')}
         </Button>
       </div>
     </div>

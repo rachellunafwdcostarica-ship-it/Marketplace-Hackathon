@@ -19,7 +19,7 @@ const MENSAJE_MAX = 2000
 export async function sendChatMessage(
   conversationId: string,
   text: string,
-): Promise<Result<{ historial: HistorialEntry[] }>> {
+): Promise<Result<{ historial: HistorialEntry[]; completo: boolean }>> {
   try {
     const texto = text.trim()
     if (texto.length === 0 || texto.length > MENSAJE_MAX) {
@@ -91,7 +91,7 @@ export async function sendChatMessage(
       {
         rol: 'ia',
         tipo: 'mensaje',
-        contenido: respuesta,
+        contenido: respuesta.mensaje,
         fecha: new Date().toISOString(),
       },
     ]
@@ -116,7 +116,7 @@ export async function sendChatMessage(
       return err('save_failed')
     }
 
-    return ok({ historial: historialFinal })
+    return ok({ historial: historialFinal, completo: respuesta.completo })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unexpected_error'
     if (msg === 'AI_NOT_CONFIGURED') {
