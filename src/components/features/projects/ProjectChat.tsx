@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Send, Sparkles, User, Wand2 } from 'lucide-react'
@@ -83,6 +83,7 @@ export function ProjectChat({
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
   const [completo, setCompleto] = useState(false)
+  const kickedOff = useRef(false)
 
   const onSend = async () => {
     const limpio = text.trim()
@@ -101,6 +102,32 @@ export function ProjectChat({
       : 'unexpected'
     toast.error(t(`errors.${code}`))
   }
+
+  // Saludo automático: al entrar al chat sin historial, la IA reacciona al
+  // contexto inicial (errolpendiente §1 paso 3). Es un side-effect de montaje
+  // (sincroniza con la IA), NO un manager de estado — uso permitido de useEffect
+  // (reglas §8 prohíbe usarlo para DERIVAR estado, no para efectos externos).
+  const kickoff = async () => {
+    setLoading(true)
+    const result = await sendChatMessage(conversationId)
+    setLoading(false)
+    if (result.ok) {
+      onHistorialChange(result.data.historial)
+      setCompleto(result.data.completo)
+      return
+    }
+    const code = KNOWN_ERROR_CODES.has(result.error)
+      ? result.error
+      : 'unexpected'
+    toast.error(t(`errors.${code}`))
+  }
+
+  useEffect(() => {
+    if (historial.length > 0 || kickedOff.current) return
+    kickedOff.current = true
+    void kickoff()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const mensajes = historial.filter((entrada) => entrada.tipo === 'mensaje')
 
@@ -149,17 +176,19 @@ export function ProjectChat({
       </div>
 
       <div className="flex flex-col gap-2 pt-1">
-        {completo && (
+        {completo ? (
           <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">
             <Sparkles className="h-3.5 w-3.5" />
             {t('readyCue')}
           </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">{t('notReadyHint')}</p>
         )}
         <Button
           type="button"
           variant={completo ? 'secondary' : 'outline'}
           onClick={onArmarPropuesta}
-          disabled={loading || armando}
+          disabled={loading || armando || !completo}
           className="inline-flex items-center gap-1.5 self-start"
         >
           <Wand2 className="h-4 w-4" />

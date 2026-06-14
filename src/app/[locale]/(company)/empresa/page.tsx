@@ -67,6 +67,9 @@ export default function CompanyDashboard() {
     setLoadingProjects(false)
   }, [tBoard])
 
+  // Fetch de datos reales en el montaje: side-effect (sincroniza con la BD), NO
+  // un manager de estado. El page es client (depende de contextos mock) y el
+  // proyecto no tiene react-query, así que useEffect es la vía idiomática acá.
   useEffect(() => {
     void loadProjects()
   }, [loadProjects])

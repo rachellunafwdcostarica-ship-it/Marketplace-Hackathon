@@ -18,11 +18,11 @@ const MENSAJE_MAX = 2000
  */
 export async function sendChatMessage(
   conversationId: string,
-  text: string,
+  text?: string,
 ): Promise<Result<{ historial: HistorialEntry[]; completo: boolean }>> {
   try {
-    const texto = text.trim()
-    if (texto.length === 0 || texto.length > MENSAJE_MAX) {
+    const texto = (text ?? '').trim()
+    if (texto.length > MENSAJE_MAX) {
       return err('invalid_input')
     }
 
@@ -73,11 +73,26 @@ export async function sendChatMessage(
       return err('no_context')
     }
 
+    const historialPrevio = parseHistorial(conv.historial)
+    // Kickoff (sin texto): la IA reacciona al contexto inicial. Solo válido como
+    // primer turno; con historial ya existente, el mensaje del empresario es obligatorio.
+    const esKickoff = texto.length === 0
+    if (esKickoff && historialPrevio.length > 0) {
+      return err('invalid_input')
+    }
+
     const ahora = new Date().toISOString()
-    const historialConUsuario: HistorialEntry[] = [
-      ...parseHistorial(conv.historial),
-      { rol: 'empresario', tipo: 'mensaje', contenido: texto, fecha: ahora },
-    ]
+    const historialConUsuario: HistorialEntry[] = esKickoff
+      ? historialPrevio
+      : [
+          ...historialPrevio,
+          {
+            rol: 'empresario',
+            tipo: 'mensaje',
+            contenido: texto,
+            fecha: ahora,
+          },
+        ]
 
     const provider = getAiProvider()
     const respuesta = await provider.conversar({
