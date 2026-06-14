@@ -29,6 +29,7 @@ import {
   type PropuestaProyecto,
 } from '@/lib/projects/schemas'
 import { saveLogisticsDraft } from '@/lib/projects/actions'
+import { sendChatMessage } from '@/lib/projects/chat'
 import { generateProposal } from '@/lib/projects/proposal'
 import { publishProject } from '@/lib/projects/publish'
 import type { HistorialEntry } from '@/lib/ai/types'
@@ -88,6 +89,8 @@ export function ProjectWizard({
   const [logisticaActual, setLogisticaActual] = useState<LogisticaDraft | null>(
     logistica,
   )
+  const [completo, setCompleto] = useState(false)
+  const [kickoffLoading, setKickoffLoading] = useState(false)
   const [step, setStep] = useState<1 | 2 | 3>(
     propuestaInicial ? 3 : historialInicial.length > 0 ? 2 : 1,
   )
@@ -115,6 +118,23 @@ export function ProjectWizard({
       setLogisticaActual(toLogisticaDraft(values))
       toast.success(t('draftSaved'))
       setStep(2)
+      // Saludo de la IA disparado por la acción del usuario (sin useEffect): solo
+      // en el primer ingreso al chat (historial vacío). Reacciona al contexto.
+      if (historial.length === 0) {
+        setKickoffLoading(true)
+        const kr = await sendChatMessage(conversationId)
+        setKickoffLoading(false)
+        if (kr.ok) {
+          setHistorial(kr.data.historial)
+          setCompleto(kr.data.completo)
+        } else {
+          toast.error(
+            t(
+              `errors.${KNOWN_ERROR_CODES.has(kr.error) ? kr.error : 'unexpected'}`,
+            ),
+          )
+        }
+      }
       return
     }
 
@@ -213,7 +233,10 @@ export function ProjectWizard({
             conversationId={conversationId}
             contextoInicial={contexto}
             historial={historial}
+            completo={completo}
+            kickoffLoading={kickoffLoading}
             onHistorialChange={setHistorial}
+            onCompletoChange={setCompleto}
             onArmarPropuesta={onArmarPropuesta}
             armando={armando}
           />

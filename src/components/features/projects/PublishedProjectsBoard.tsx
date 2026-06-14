@@ -3,7 +3,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { Eye, XCircle, Loader2 } from 'lucide-react'
+import { Eye, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -22,7 +22,6 @@ import type { EstadoEfectivo, PublishedProject } from '@/lib/projects/dashboard'
 
 interface PublishedProjectsBoardProps {
   projects: PublishedProject[]
-  loading: boolean
   onRefetch: () => void
 }
 
@@ -62,7 +61,6 @@ function formatBudget(
 
 export function PublishedProjectsBoard({
   projects,
-  loading,
   onRefetch,
 }: PublishedProjectsBoardProps) {
   const t = useTranslations('ProjectsBoard')
@@ -111,15 +109,6 @@ export function PublishedProjectsBoard({
       ? result.error
       : 'unexpected'
     toast.error(t(`errors.${code}`))
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
-        <Loader2 className="w-4 h-4 animate-spin" />
-        {t('loading')}
-      </div>
-    )
   }
 
   if (projects.length === 0) {
