@@ -156,7 +156,7 @@ export function CompanyProfileForm() {
       })
 
       toast.success(tEmpresa('profileSaved'))
-      router.push('/empresa/perfil')
+      router.push('/empresario/perfil')
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : tCommon('error')
       toast.error(errorMsg)

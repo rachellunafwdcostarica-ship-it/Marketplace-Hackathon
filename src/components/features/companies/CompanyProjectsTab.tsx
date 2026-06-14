@@ -181,7 +181,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>
@@ -277,7 +277,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>
@@ -376,7 +376,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>
@@ -472,7 +472,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>
