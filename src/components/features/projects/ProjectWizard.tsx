@@ -18,16 +18,23 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { LogisticsForm } from './LogisticsForm'
+import { ProjectChat } from './ProjectChat'
 import {
   buildLogisticsSchema,
+  draftToFormValues,
+  type LogisticaDraft,
   type LogisticsFormValues,
 } from '@/lib/projects/schemas'
 import { saveLogisticsDraft } from '@/lib/projects/actions'
+import type { HistorialEntry } from '@/lib/ai/types'
 
 interface ProjectWizardProps {
   conversationId: string
   isVerified: boolean
   todayIso: string
+  logistica: LogisticaDraft | null
+  contextoInicial: string
+  historial: HistorialEntry[]
 }
 
 const KNOWN_ERROR_CODES = new Set([
@@ -41,34 +48,29 @@ const KNOWN_ERROR_CODES = new Set([
 /**
  * Orquesta el flujo de publicación en UNA ruta con dos pasos (errolpendiente §1):
  * Paso 1 = logística + contexto → "Continuar con la IA" persiste el borrador.
- * Paso 2 = la conversación con la IA y la propuesta (se construye en cortes
- * siguientes); por ahora es un placeholder.
+ * Paso 2 = chat con la IA (RF-54/55). El historial y el contexto viven acá para
+ * sobrevivir a los cambios de paso; al retomar, el form arranca hidratado.
  */
 export function ProjectWizard({
   conversationId,
   isVerified,
   todayIso,
+  logistica,
+  contextoInicial,
+  historial: historialInicial,
 }: ProjectWizardProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
   const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2>(historialInicial.length > 0 ? 2 : 1)
+  const [historial, setHistorial] = useState<HistorialEntry[]>(historialInicial)
+  const [contexto, setContexto] = useState(contextoInicial)
 
   const schema = useMemo(() => buildLogisticsSchema(todayIso), [todayIso])
 
   const form = useForm<LogisticsFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      titulo: '',
-      modalidad: '',
-      moneda: 'USD',
-      presupuestoMin: '',
-      presupuestoMax: '',
-      fechaCierre: '',
-      paisProyecto: '',
-      ciudadProyecto: '',
-      contextoInicial: '',
-    },
+    defaultValues: draftToFormValues(logistica, contextoInicial),
   })
 
   const {
@@ -83,6 +85,7 @@ export function ProjectWizard({
     setLoading(false)
 
     if (result.ok) {
+      setContexto(values.contextoInicial.trim())
       toast.success(t('draftSaved'))
       setStep(2)
       return
@@ -98,23 +101,33 @@ export function ProjectWizard({
     return (
       <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative mt-6">
         <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-secondary to-accent" />
-        <CardContent className="p-6 pt-8 space-y-4 text-center">
-          <Sparkles className="w-8 h-8 text-secondary mx-auto" />
-          <h2 className="text-lg font-bold text-foreground">
-            {t('step2Title')}
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            {t('step2Soon')}
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setStep(1)}
-            className="inline-flex items-center gap-1.5"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('back')}
-          </Button>
+        <CardContent className="p-6 pt-8 space-y-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-secondary" />
+            <h2 className="text-lg font-bold text-foreground">
+              {t('step2Title')}
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">{t('chatIntro')}</p>
+
+          <ProjectChat
+            conversationId={conversationId}
+            contextoInicial={contexto}
+            historial={historial}
+            onHistorialChange={setHistorial}
+          />
+
+          <div className="pt-3 border-t border-border/40">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStep(1)}
+              className="inline-flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('back')}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     )

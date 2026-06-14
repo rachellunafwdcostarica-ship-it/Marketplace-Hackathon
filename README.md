@@ -30,6 +30,14 @@ Sale completo del brief (§4 y §8.2):
 
 No se agregan dependencias fuera de esa lista sin justificarlo y documentarlo.
 
+### Dependencias fuera del brief (justificadas)
+
+- **`openai`** — cliente del agente de IA (sección 2.10 del SRS, RF-54..60). Se usa
+  contra **OpenRouter** (API compatible con OpenAI) con el modelo `openai/gpt-oss-120b`;
+  un solo proveedor intercambiable, envuelto en `src/lib/ai/`. El brief fija el stack
+  pero no nombra un SDK de LLM, y el SRS exige el agente conversacional. Configuración por
+  entorno: `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL` (ver "Variables de entorno").
+
 ## Estructura de carpetas
 
 Refleja la estructura **real** del repo. Base: §6.1 del brief, más las carpetas que exigen §3.2, §7 y §4.6, y los ajustes que el equipo hizo al construir (que difieren del plan original; ver "Decisiones técnicas no obvias").
@@ -113,6 +121,12 @@ Requeridas (Supabase, MVP):
 - `NEXT_PUBLIC_SUPABASE_URL` — URL del proyecto Supabase del equipo.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — clave pública del proyecto Supabase (cliente, sometida a RLS).
 - `SUPABASE_SERVICE_ROLE_KEY` — clave de servicio (solo server, nunca cliente).
+
+IA (agente conversacional, SRS 2.10) — vía OpenRouter:
+
+- `OPENAI_API_KEY` — clave de OpenRouter (openrouter.ai), solo server.
+- `OPENAI_MODEL` — modelo a usar, p. ej. `openai/gpt-oss-120b`.
+- `OPENAI_BASE_URL` — endpoint compatible con OpenAI, p. ej. `https://openrouter.ai/api/v1`.
 
 Opcionales (features 2.0):
 

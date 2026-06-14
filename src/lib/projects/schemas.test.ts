@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import {
   buildLogisticsSchema,
   daysBetween,
+  draftToFormValues,
   parseMoney,
   toLogisticaDraft,
+  type LogisticaDraft,
   type LogisticsFormValues,
 } from './schemas'
 
@@ -120,5 +122,35 @@ describe('toLogisticaDraft', () => {
     expect(draft.paisProyecto).toBe('Costa Rica')
     expect(draft.ciudadProyecto).toBe('San José')
     expect(draft.titulo).toBe('Landing institucional')
+  })
+})
+
+describe('draftToFormValues', () => {
+  it('reconstruye los valores del form desde el draft + contexto', () => {
+    const draft: LogisticaDraft = {
+      titulo: 'App de pedidos',
+      modalidad: 'hibrido',
+      moneda: 'CRC',
+      presupuestoMin: 1000,
+      presupuestoMax: 5000,
+      fechaCierre: '2026-06-25',
+      paisProyecto: 'Costa Rica',
+      ciudadProyecto: 'Cartago',
+    }
+    const values = draftToFormValues(draft, 'Contexto del proyecto guardado.')
+    expect(values.titulo).toBe('App de pedidos')
+    expect(values.modalidad).toBe('hibrido')
+    expect(values.presupuestoMin).toBe('1000')
+    expect(values.presupuestoMax).toBe('5000')
+    expect(values.ciudadProyecto).toBe('Cartago')
+    expect(values.contextoInicial).toBe('Contexto del proyecto guardado.')
+  })
+
+  it('usa valores por defecto cuando el draft es null', () => {
+    const values = draftToFormValues(null, '')
+    expect(values.modalidad).toBe('')
+    expect(values.moneda).toBe('USD')
+    expect(values.presupuestoMin).toBe('')
+    expect(values.titulo).toBe('')
   })
 })
