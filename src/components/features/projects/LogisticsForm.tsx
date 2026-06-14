@@ -3,7 +3,6 @@
 import { useFormContext, Controller, useWatch } from 'react-hook-form'
 import { useTranslations } from 'next-intl'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -12,19 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { MultiPicker } from './MultiPicker'
 import {
   MODALIDADES,
   MONEDAS,
   PLAZO_MAX_DIAS,
   PLAZO_MIN_DIAS,
-  type ProjectFormValues,
+  type LogisticsFormValues,
 } from '@/lib/projects/schemas'
-import type { ProjectCatalogs } from '@/lib/projects/actions'
 
 interface LogisticsFormProps {
-  catalogs: ProjectCatalogs
   disabled: boolean
+  todayIso: string
 }
 
 function FieldError({ code }: { code?: string | undefined }) {
@@ -37,15 +34,20 @@ function FieldError({ code }: { code?: string | undefined }) {
   )
 }
 
-/** Campos de logística del proyecto (RF-19..22, modalidad/fechas/presupuesto). */
-export function LogisticsForm({ catalogs, disabled }: LogisticsFormProps) {
+/**
+ * Pantalla 1 — logística (errolpendiente §1): modalidad, moneda, presupuesto,
+ * fecha de cierre, país/ciudad (solo si la modalidad ≠ remoto) y `titulo`
+ * OPCIONAL. El fondo (descripción, área, categorías, tecnologías) NO va acá: lo
+ * produce la IA y se revisa en la propuesta (Pantalla 2).
+ */
+export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
   const {
     register,
     control,
     formState: { errors },
-  } = useFormContext<ProjectFormValues>()
+  } = useFormContext<LogisticsFormValues>()
 
   const modalidad = useWatch({ control, name: 'modalidad' })
   const requiereUbicacion = modalidad !== '' && modalidad !== 'remoto'
@@ -57,8 +59,14 @@ export function LogisticsForm({ catalogs, disabled }: LogisticsFormProps) {
       </h2>
 
       <div className="space-y-2">
-        <Label htmlFor="titulo" className="text-sm font-bold">
-          {t('fieldTitle')}
+        <Label
+          htmlFor="titulo"
+          className="text-sm font-bold flex justify-between gap-2"
+        >
+          <span>{t('fieldTitle')}</span>
+          <span className="text-xs font-normal text-muted-foreground">
+            {t('fieldTitleOptional')}
+          </span>
         </Label>
         <Input
           id="titulo"
@@ -69,98 +77,6 @@ export function LogisticsForm({ catalogs, disabled }: LogisticsFormProps) {
           {...register('titulo')}
         />
         <FieldError code={errors.titulo?.message} />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="descripcion" className="text-sm font-bold">
-          {t('fieldDescription')}
-        </Label>
-        <Textarea
-          id="descripcion"
-          rows={5}
-          disabled={disabled}
-          placeholder={t('fieldDescriptionPlaceholder')}
-          className="bg-card/50 border-border focus-visible:ring-primary"
-          {...register('descripcion')}
-        />
-        <FieldError code={errors.descripcion?.message} />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="idAreaNegocio" className="text-sm font-bold">
-          {t('fieldArea')}
-        </Label>
-        <Controller
-          name="idAreaNegocio"
-          control={control}
-          render={({ field }) => (
-            <Select
-              value={field.value}
-              onValueChange={field.onChange}
-              disabled={disabled}
-            >
-              <SelectTrigger
-                id="idAreaNegocio"
-                className="w-full bg-card/50 border-border focus:ring-primary"
-              >
-                <SelectValue placeholder={t('fieldAreaPlaceholder')} />
-              </SelectTrigger>
-              <SelectContent>
-                {catalogs.areas.map((area) => (
-                  <SelectItem key={area.id} value={area.id}>
-                    {area.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-sm font-bold flex justify-between">
-          <span>{t('fieldCategories')}</span>
-          <span className="text-xs font-normal text-muted-foreground">
-            {t('fieldCategoriesHint')}
-          </span>
-        </Label>
-        <Controller
-          name="categorias"
-          control={control}
-          render={({ field }) => (
-            <MultiPicker
-              options={catalogs.categorias}
-              value={field.value}
-              onChange={field.onChange}
-              ariaLabel={t('fieldCategories')}
-              disabled={disabled}
-            />
-          )}
-        />
-        <FieldError code={errors.categorias?.message} />
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-sm font-bold flex justify-between">
-          <span>{t('fieldTechnologies')}</span>
-          <span className="text-xs font-normal text-muted-foreground">
-            {t('fieldTechnologiesHint')}
-          </span>
-        </Label>
-        <Controller
-          name="tecnologias"
-          control={control}
-          render={({ field }) => (
-            <MultiPicker
-              options={catalogs.tecnologias}
-              value={field.value}
-              onChange={field.onChange}
-              ariaLabel={t('fieldTechnologies')}
-              disabled={disabled}
-            />
-          )}
-        />
-        <FieldError code={errors.tecnologias?.message} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -292,37 +208,23 @@ export function LogisticsForm({ catalogs, disabled }: LogisticsFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="fechaPublicacion" className="text-sm font-bold">
-            {t('fieldPublishDate')}
-          </Label>
-          <Input
-            id="fechaPublicacion"
-            type="date"
-            disabled={disabled}
-            className="bg-card/50 border-border focus-visible:ring-primary"
-            {...register('fechaPublicacion')}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="fechaCierre" className="text-sm font-bold">
-            {t('fieldCloseDate')}
-          </Label>
-          <Input
-            id="fechaCierre"
-            type="date"
-            disabled={disabled}
-            className="bg-card/50 border-border focus-visible:ring-primary"
-            {...register('fechaCierre')}
-          />
-          <FieldError code={errors.fechaCierre?.message} />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="fechaCierre" className="text-sm font-bold">
+          {t('fieldCloseDate')}
+        </Label>
+        <Input
+          id="fechaCierre"
+          type="date"
+          min={todayIso}
+          disabled={disabled}
+          className="bg-card/50 border-border focus-visible:ring-primary"
+          {...register('fechaCierre')}
+        />
+        <FieldError code={errors.fechaCierre?.message} />
+        <p className="text-xs text-muted-foreground">
+          {t('plazoHint', { min: PLAZO_MIN_DIAS, max: PLAZO_MAX_DIAS })}
+        </p>
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        {t('plazoHint', { min: PLAZO_MIN_DIAS, max: PLAZO_MAX_DIAS })}
-      </p>
     </section>
   )
 }

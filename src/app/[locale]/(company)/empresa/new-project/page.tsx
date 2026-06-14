@@ -5,27 +5,21 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ProjectWizard } from '@/components/features/projects/ProjectWizard'
-import {
-  getProjectCatalogs,
-  initProjectPublishing,
-} from '@/lib/projects/actions'
+import { initProjectPublishing } from '@/lib/projects/actions'
 
 /**
- * Página de publicación de proyecto (RF-19..22 + flujo IA, Fase 1).
+ * Página de publicación de proyecto (flujo IA — Corte 1: Pantalla 1).
  *
- * Server Component: el rol 'empresa' y la autenticación ya los garantiza el
- * layout (company). Acá se cargan catálogos, se resuelve la verificación del
- * empresario y se crea/reanuda la conversación de IA antes de montar el wizard.
+ * Server Component: el rol 'empresa' y la autenticación los garantiza el layout
+ * (company). Acá se resuelve la verificación del empresario y se crea/reanuda la
+ * conversación de IA antes de montar el wizard. Los catálogos del fondo NO se
+ * cargan en la Pantalla 1: se usan en la propuesta (Pantalla 2, corte siguiente).
  */
 export default async function PublishProjectPage() {
   const t = await getTranslations('Empresa')
   const tPublish = await getTranslations('ProjectPublish')
 
-  const [catalogsRes, initRes] = await Promise.all([
-    getProjectCatalogs(),
-    initProjectPublishing(),
-  ])
-
+  const initRes = await initProjectPublishing()
   const todayIso = new Date().toISOString().slice(0, 10)
 
   return (
@@ -49,11 +43,10 @@ export default async function PublishProjectPage() {
           dotColor="text-secondary"
         />
 
-        {catalogsRes.ok && initRes.ok ? (
+        {initRes.ok ? (
           <ProjectWizard
             conversationId={initRes.data.conversationId}
             isVerified={initRes.data.isVerified}
-            catalogs={catalogsRes.data}
             todayIso={todayIso}
           />
         ) : (

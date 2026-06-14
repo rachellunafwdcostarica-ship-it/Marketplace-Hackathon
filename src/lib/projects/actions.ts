@@ -3,11 +3,11 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
-import { getAiProvider } from '@/lib/ai/provider'
+import type { Json } from '@/types/database'
 import {
-  projectFormSchema,
-  toPublishPayload,
-  type ProjectFormValues,
+  buildLogisticsSchema,
+  toLogisticaDraft,
+  type LogisticsFormValues,
 } from './schemas'
 
 export interface CatalogItem {
@@ -26,7 +26,11 @@ export interface ProjectFlowInit {
   isVerified: boolean
 }
 
-/** Catálogos para los selects del formulario (RF-19, RF-20, RF-22). */
+/**
+ * Catálogos del fondo (áreas, categorías, tecnologías). En el flujo nuevo NO
+ * alimentan la Pantalla 1: se usan en la propuesta de la IA (Pantalla 2, Corte 4)
+ * para que el empresario revise/ajuste lo que la IA propuso (RF-20, RF-22).
+ */
 export async function getProjectCatalogs(): Promise<Result<ProjectCatalogs>> {
   try {
     const supabase = await createSupabaseServerClient()
@@ -152,31 +156,23 @@ export async function initProjectPublishing(): Promise<
   }
 }
 
-/** Traduce un error del RPC/constraint a un código amigable de la UI. */
-function mapRpcError(message: string | undefined): string {
-  if (!message) return 'unexpected'
-  if (message.includes('chk_proyectos_plazo')) return 'plazo'
-  if (message.includes('chk_proyectos_ubicacion')) return 'ubicacion'
-  if (message.includes('chk_proyectos_presupuesto')) return 'presupuesto'
-  if (message.includes('EMPRESARIO_NO_ENCONTRADO')) {
-    return 'empresario_no_encontrado'
-  }
-  if (message.toLowerCase().includes('row-level security'))
-    return 'not_verified'
-  return 'unexpected'
-}
-
 /**
- * Publica el proyecto: valida (Zod), corre el guardrail de IA (#3) y delega la
- * escritura atómica al RPC `publicar_proyecto`. Nada se publica sin pasar la
- * validación de la IA ni sin empresario verificado (RLS + chequeo explícito).
+ * Guarda el borrador de la Pantalla 1 en `conversaciones_ia` (errolpendiente §1
+ * paso 2, §2): la logística va a `logistica` (jsonb) y el cuadro de contexto a
+ * `contexto_inicial`, para que la conversación se retome completa tras una
+ * recarga. Todavía NO publica nada.
+ *
+ * Nota: la inmutabilidad de `contexto_inicial` (§2) se hará valer desde el Corte
+ * 2, cuando el chat empiece a consumirlo; en la Pantalla 1 el empresario aún lo
+ * está componiendo, así que se sobrescribe al re-confirmar.
  */
-export async function publishProject(
+export async function saveLogisticsDraft(
   conversationId: string,
-  values: ProjectFormValues,
-): Promise<Result<{ projectId: string }>> {
+  values: LogisticsFormValues,
+): Promise<Result<{ saved: boolean }>> {
   try {
-    const parsed = projectFormSchema.safeParse(values)
+    const todayIso = new Date().toISOString().slice(0, 10)
+    const parsed = buildLogisticsSchema(todayIso).safeParse(values)
     if (!parsed.success) {
       return err('invalid_input')
     }
@@ -192,84 +188,52 @@ export async function publishProject(
 
     const { data: empresario, error: empError } = await supabase
       .from('empresarios')
-      .select('id_empresario, estado_verificacion')
+      .select('id_empresario')
       .eq('id_usuario', user.id)
       .maybeSingle()
     if (empError) {
-      logger.error('publishProject: fallo al leer empresario', {
+      logger.error('saveLogisticsDraft: fallo al leer empresario', {
         error: empError.message,
       })
-      return err(empError.message)
+      return err('unexpected')
     }
     if (!empresario) {
       return err('empresario_no_encontrado')
     }
-    if (empresario.estado_verificacion !== 'verificado') {
-      return err('not_verified')
-    }
 
-    const payload = toPublishPayload(parsed.data)
+    const draft = toLogisticaDraft(parsed.data)
 
-    const ai = getAiProvider()
-    const validation = await ai.validateProposal({
-      titulo: payload.titulo,
-      descripcion: payload.descripcion,
-      categorias: payload.categorias,
-      tecnologias: payload.tecnologias,
-      modalidad: payload.modalidad,
-      contextoInicial: payload.contextoInicial,
-    })
-    if (!validation.valido) {
-      logger.warn('publishProject: propuesta rechazada por la IA', {
-        razones: validation.razones,
+    const { data: updated, error: updateError } = await supabase
+      .from('conversaciones_ia')
+      .update({
+        // El draft ya está validado por Zod; Supabase tipa el jsonb como `Json`
+        // (sin index signature compatible con interfaces nombradas), de ahí el cast.
+        logistica: draft as unknown as Json,
+        contexto_inicial: parsed.data.contextoInicial,
       })
-      return err('ai_rejected')
-    }
-
-    const propuesta = { ...payload, validadaPor: ai.modelId }
-
-    const client = supabase as unknown as {
-      rpc: (
-        fn: 'publicar_proyecto',
-        args: Record<string, unknown>,
-      ) => Promise<{ data: string | null; error: { message: string } | null }>
-    }
-    const { data: projectId, error: rpcError } = await client.rpc(
-      'publicar_proyecto',
-      {
-        p_conversacion: conversationId,
-        p_titulo: payload.titulo,
-        p_descripcion: payload.descripcion,
-        p_id_area: payload.idAreaNegocio,
-        p_modalidad: payload.modalidad,
-        p_pais: payload.paisProyecto,
-        p_ciudad: payload.ciudadProyecto,
-        p_moneda: payload.moneda,
-        p_presupuesto_min: payload.presupuestoMin,
-        p_presupuesto_max: payload.presupuestoMax,
-        p_fecha_publicacion: payload.fechaPublicacionIso,
-        p_fecha_cierre: payload.fechaCierreIso,
-        p_categorias: payload.categorias,
-        p_tecnologias: payload.tecnologias,
-        p_contexto_inicial: payload.contextoInicial,
-        p_propuesta: propuesta,
-        p_modelo_ia: ai.modelId,
-      },
-    )
-
-    if (rpcError || !projectId) {
-      const mapped = mapRpcError(rpcError?.message)
-      logger.error('publishProject: fallo al publicar proyecto', {
-        error: rpcError?.message ?? 'sin_dato',
-        mapped,
+      .eq('id_conversacion', conversationId)
+      .eq('id_empresario', empresario.id_empresario)
+      .eq('estado', 'en_curso')
+      .select('id_conversacion')
+      .maybeSingle()
+    if (updateError) {
+      logger.error('saveLogisticsDraft: fallo al guardar logística', {
+        error: updateError.message,
       })
-      return err(mapped)
+      return err('save_failed')
+    }
+    if (!updated) {
+      // RLS o filtros no afectaron filas: conversación ajena, inexistente o cerrada.
+      logger.warn('saveLogisticsDraft: sin fila afectada al guardar', {
+        conversationId,
+      })
+      return err('save_failed')
     }
 
-    return ok({ projectId })
+    return ok({ saved: true })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unexpected_error'
-    logger.error('publishProject: error inesperado', { error: msg })
+    logger.error('saveLogisticsDraft: error inesperado', { error: msg })
     return err('unexpected')
   }
 }
