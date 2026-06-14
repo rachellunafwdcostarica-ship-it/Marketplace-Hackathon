@@ -140,10 +140,13 @@ export function ProjectWizard({
     }
 
     if (result.data.estado === 'rechazada') {
-      toast.error(t('proposalRejected'))
+      // La IA explica en el chat qué falta; nos quedamos en el chat.
+      setHistorial(result.data.historial)
+      toast(t('proposalRejected'))
       return
     }
 
+    setHistorial(result.data.historial)
     setPropuesta(result.data.propuesta)
     setStep(3)
   }

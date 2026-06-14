@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * ⚠️ HUÉRFANO / CÓDIGO MUERTO — preservado a pedido del equipo.
+ * HUÉRFANO / CÓDIGO MUERTO — preservado a pedido del equipo.
  *
  * Era la sección "Mis proyectos publicados" del dashboard del empresario cuando
  * usaba datos MOCK de `StateContext`. Se reemplazó por `PublishedProjectsBoard`

@@ -79,69 +79,36 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
         <FieldError code={errors.titulo?.message} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="modalidad" className="text-sm font-bold">
-            {t('fieldModality')}
-          </Label>
-          <Controller
-            name="modalidad"
-            control={control}
-            render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                disabled={disabled}
+      <div className="space-y-2">
+        <Label htmlFor="modalidad" className="text-sm font-bold">
+          {t('fieldModality')}
+        </Label>
+        <Controller
+          name="modalidad"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={disabled}
+            >
+              <SelectTrigger
+                id="modalidad"
+                className="w-full bg-card/50 border-border focus:ring-primary"
               >
-                <SelectTrigger
-                  id="modalidad"
-                  className="w-full bg-card/50 border-border focus:ring-primary"
-                >
-                  <SelectValue placeholder={t('fieldModalityPlaceholder')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {MODALIDADES.map((modo) => (
-                    <SelectItem key={modo} value={modo}>
-                      {tCommon(modo)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-          <FieldError code={errors.modalidad?.message} />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="moneda" className="text-sm font-bold">
-            {t('fieldCurrency')}
-          </Label>
-          <Controller
-            name="moneda"
-            control={control}
-            render={({ field }) => (
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                disabled={disabled}
-              >
-                <SelectTrigger
-                  id="moneda"
-                  className="w-full bg-card/50 border-border focus:ring-primary"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONEDAS.map((codigo) => (
-                    <SelectItem key={codigo} value={codigo}>
-                      {codigo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
-        </div>
+                <SelectValue placeholder={t('fieldModalityPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {MODALIDADES.map((modo) => (
+                  <SelectItem key={modo} value={modo}>
+                    {tCommon(modo)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <FieldError code={errors.modalidad?.message} />
       </div>
 
       {requiereUbicacion && (
@@ -176,7 +143,37 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="moneda" className="text-sm font-bold">
+            {t('fieldCurrency')}
+          </Label>
+          <Controller
+            name="moneda"
+            control={control}
+            render={({ field }) => (
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={disabled}
+              >
+                <SelectTrigger
+                  id="moneda"
+                  className="w-full bg-card/50 border-border focus:ring-primary"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MONEDAS.map((codigo) => (
+                    <SelectItem key={codigo} value={codigo}>
+                      {codigo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
         <div className="space-y-2">
           <Label htmlFor="presupuestoMin" className="text-sm font-bold">
             {t('fieldBudgetMin')}
