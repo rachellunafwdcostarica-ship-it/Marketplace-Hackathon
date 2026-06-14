@@ -4,10 +4,13 @@ import type { ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { CheckCircle2, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { PropuestaProyecto } from '@/lib/projects/schemas'
+import type { Moneda, PropuestaProyecto } from '@/lib/projects/schemas'
 
 interface ProjectProposalProps {
   propuesta: PropuestaProyecto
+  moneda: Moneda
+  presupuestoMin: number | null
+  presupuestoMax: number | null
   isVerified: boolean
   publicando: boolean
   onAceptar: () => void
@@ -40,6 +43,9 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
  */
 export function ProjectProposal({
   propuesta,
+  moneda,
+  presupuestoMin,
+  presupuestoMax,
   isVerified,
   publicando,
   onAceptar,
@@ -68,6 +74,15 @@ export function ProjectProposal({
         {propuesta.involucraIa && (
           <Field label={t('proposalFlagsLabel')}>
             <Chip>{t('involvesAi')}</Chip>
+          </Field>
+        )}
+        {presupuestoMin !== null && presupuestoMax !== null && (
+          <Field label={t('proposalBudgetLabel')}>
+            <p className="text-sm font-semibold text-foreground">
+              {presupuestoMin === presupuestoMax
+                ? `${moneda} ${presupuestoMin} · ${t('budgetNonNegotiable')}`
+                : `${moneda} ${presupuestoMin} – ${presupuestoMax}`}
+            </p>
           </Field>
         )}
       </div>

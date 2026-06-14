@@ -23,6 +23,7 @@ import { ProjectProposal } from './ProjectProposal'
 import {
   buildLogisticsSchema,
   draftToFormValues,
+  toLogisticaDraft,
   type LogisticaDraft,
   type LogisticsFormValues,
   type PropuestaProyecto,
@@ -84,6 +85,9 @@ export function ProjectWizard({
   const [propuesta, setPropuesta] = useState<PropuestaProyecto | null>(
     propuestaInicial,
   )
+  const [logisticaActual, setLogisticaActual] = useState<LogisticaDraft | null>(
+    logistica,
+  )
   const [step, setStep] = useState<1 | 2 | 3>(
     propuestaInicial ? 3 : historialInicial.length > 0 ? 2 : 1,
   )
@@ -108,6 +112,7 @@ export function ProjectWizard({
 
     if (result.ok) {
       setContexto(values.contextoInicial.trim())
+      setLogisticaActual(toLogisticaDraft(values))
       toast.success(t('draftSaved'))
       setStep(2)
       return
@@ -175,6 +180,9 @@ export function ProjectWizard({
           <p className="text-sm text-muted-foreground">{t('proposalIntro')}</p>
           <ProjectProposal
             propuesta={propuesta}
+            moneda={logisticaActual?.moneda ?? 'USD'}
+            presupuestoMin={logisticaActual?.presupuestoMin ?? null}
+            presupuestoMax={logisticaActual?.presupuestoMax ?? null}
             isVerified={isVerified}
             publicando={publicando}
             onAceptar={onAceptar}

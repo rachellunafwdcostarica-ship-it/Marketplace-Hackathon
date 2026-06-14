@@ -184,12 +184,13 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
           <Input
             id="presupuestoMin"
             type="number"
-            min={0}
+            min={1}
             disabled={disabled}
             placeholder={t('fieldBudgetPlaceholder')}
             className="bg-card/50 border-border focus-visible:ring-primary"
             {...register('presupuestoMin')}
           />
+          <FieldError code={errors.presupuestoMin?.message} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="presupuestoMax" className="text-sm font-bold">
@@ -198,7 +199,7 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
           <Input
             id="presupuestoMax"
             type="number"
-            min={0}
+            min={1}
             disabled={disabled}
             placeholder={t('fieldBudgetPlaceholder')}
             className="bg-card/50 border-border focus-visible:ring-primary"

@@ -18,8 +18,8 @@ function baseValues(
     titulo: '',
     modalidad: 'remoto',
     moneda: 'USD',
-    presupuestoMin: '',
-    presupuestoMax: '',
+    presupuestoMin: '1000',
+    presupuestoMax: '5000',
     fechaCierre: '2026-06-20', // 7 días desde HOY → dentro de 5..15
     paisProyecto: '',
     ciudadProyecto: '',
@@ -87,6 +87,34 @@ describe('buildLogisticsSchema', () => {
       baseValues({ presupuestoMin: '900', presupuestoMax: '500' }),
     )
     expect(result.success).toBe(false)
+  })
+
+  it('exige presupuesto mínimo y máximo (rechaza vacío)', () => {
+    const result = schema.safeParse(
+      baseValues({ presupuestoMin: '', presupuestoMax: '' }),
+    )
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(
+        result.error.issues.some((i) => i.message === 'presupuestoMin'),
+      ).toBe(true)
+    }
+  })
+
+  it('rechaza presupuesto 0 o negativo', () => {
+    expect(schema.safeParse(baseValues({ presupuestoMin: '0' })).success).toBe(
+      false,
+    )
+    expect(
+      schema.safeParse(baseValues({ presupuestoMin: '-100' })).success,
+    ).toBe(false)
+  })
+
+  it('acepta presupuesto fijo (min == max)', () => {
+    const result = schema.safeParse(
+      baseValues({ presupuestoMin: '1000', presupuestoMax: '1000' }),
+    )
+    expect(result.success).toBe(true)
   })
 
   it('rechaza un contexto demasiado corto', () => {

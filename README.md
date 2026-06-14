@@ -37,6 +37,10 @@ No se agregan dependencias fuera de esa lista sin justificarlo y documentarlo.
   un solo proveedor intercambiable, envuelto en `src/lib/ai/`. El brief fija el stack
   pero no nombra un SDK de LLM, y el SRS exige el agente conversacional. Configuración por
   entorno: `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL` (ver "Variables de entorno").
+- **`supabase` (devDependency)** — CLI oficial de Supabase para aplicar las migraciones
+  versionadas de `supabase/migrations/` (`npx supabase db push`). Solo de desarrollo, no
+  entra al bundle. El brief fija Supabase pero no lista el CLI, y las migraciones versionadas
+  que exige §7 se aplican con esta herramienta.
 
 ## Estructura de carpetas
 
