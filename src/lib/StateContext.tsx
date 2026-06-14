@@ -16,11 +16,15 @@ import {
   ApplicationStatus,
   CompanyStatus,
   CompanyType,
+  StudentSkill,
+  StudentPortfolio,
 } from '@/types'
 import {
   mockProjects,
   mockApplications,
   mockCompanies,
+  mockStudentSkills,
+  mockStudentPortfolio,
 } from '@/lib/constants/mockData'
 import type { CompanyProfileInput } from '@/lib/company/schemas'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -52,6 +56,10 @@ interface StateContextType {
   resetAll: () => void
   currentCompany: Company | undefined
   currentUser: User | null
+  studentSkills: StudentSkill[]
+  setStudentSkills: (skills: StudentSkill[]) => void
+  studentPortfolio: StudentPortfolio | null
+  setStudentPortfolio: (portfolio: StudentPortfolio | null) => void
 }
 
 const StateContext = createContext<StateContextType | undefined>(undefined)
@@ -60,6 +68,9 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([])
   const [applications, setApplications] = useState<Application[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
+  const [studentSkills, setStudentSkills] = useState<StudentSkill[]>([])
+  const [studentPortfolio, setStudentPortfolio] =
+    useState<StudentPortfolio | null>(null)
   const [userRole, setUserRoleState] = useState<UserRole>('junior')
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [initialized, setInitialized] = useState(false)
@@ -68,6 +79,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     const localProjects = localStorage.getItem('fwd_projects')
     const localApps = localStorage.getItem('fwd_applications')
     const localCompanies = localStorage.getItem('fwd_companies')
+    const localStudentSkills = localStorage.getItem('fwd_student_skills')
+    const localStudentPortfolio = localStorage.getItem('fwd_student_portfolio')
     const localRole = localStorage.getItem('fwd_role')
 
     const timer = setTimeout(() => {
@@ -109,6 +122,44 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       } catch {
         setCompanies(mockCompanies)
         localStorage.setItem('fwd_companies', JSON.stringify(mockCompanies))
+      }
+
+      try {
+        if (localStudentSkills)
+          setStudentSkills(JSON.parse(localStudentSkills) as StudentSkill[])
+        else {
+          setStudentSkills(mockStudentSkills)
+          localStorage.setItem(
+            'fwd_student_skills',
+            JSON.stringify(mockStudentSkills),
+          )
+        }
+      } catch {
+        setStudentSkills(mockStudentSkills)
+        localStorage.setItem(
+          'fwd_student_skills',
+          JSON.stringify(mockStudentSkills),
+        )
+      }
+
+      try {
+        if (localStudentPortfolio)
+          setStudentPortfolio(
+            JSON.parse(localStudentPortfolio) as StudentPortfolio,
+          )
+        else {
+          setStudentPortfolio(mockStudentPortfolio)
+          localStorage.setItem(
+            'fwd_student_portfolio',
+            JSON.stringify(mockStudentPortfolio),
+          )
+        }
+      } catch {
+        setStudentPortfolio(mockStudentPortfolio)
+        localStorage.setItem(
+          'fwd_student_portfolio',
+          JSON.stringify(mockStudentPortfolio),
+        )
       }
 
       if (localRole) setUserRoleState(localRole as UserRole)
@@ -212,6 +263,19 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     if (!initialized) return
     localStorage.setItem('fwd_companies', JSON.stringify(companies))
   }, [companies, initialized])
+
+  useEffect(() => {
+    if (!initialized) return
+    localStorage.setItem('fwd_student_skills', JSON.stringify(studentSkills))
+  }, [studentSkills, initialized])
+
+  useEffect(() => {
+    if (!initialized) return
+    localStorage.setItem(
+      'fwd_student_portfolio',
+      JSON.stringify(studentPortfolio),
+    )
+  }, [studentPortfolio, initialized])
 
   useEffect(() => {
     if (!initialized) return
@@ -351,6 +415,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('fwd_projects')
       localStorage.removeItem('fwd_applications')
       localStorage.removeItem('fwd_companies')
+      localStorage.removeItem('fwd_student_skills')
+      localStorage.removeItem('fwd_student_portfolio')
       localStorage.removeItem('fwd_role')
       if (typeof window !== 'undefined') {
         document.cookie =
@@ -359,6 +425,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       setProjects(mockProjects)
       setApplications(mockApplications)
       setCompanies(mockCompanies)
+      setStudentSkills(mockStudentSkills)
+      setStudentPortfolio(mockStudentPortfolio)
       setUserRoleState('junior')
       setCurrentUser(null)
     })
@@ -370,6 +438,10 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         projects,
         applications,
         companies,
+        studentSkills,
+        setStudentSkills,
+        studentPortfolio,
+        setStudentPortfolio,
         userRole,
         setUserRole,
         addProject,
