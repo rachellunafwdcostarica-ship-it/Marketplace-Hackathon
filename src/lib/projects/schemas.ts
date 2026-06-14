@@ -136,6 +136,21 @@ export function buildLogisticsSchema(todayIso: string) {
 
       const min = parseMoney(valores.presupuestoMin)
       const max = parseMoney(valores.presupuestoMax)
+      // Obligatorios y > 0 (decisión de proyecto; el doc viejo los daba opcionales).
+      if (min === null || min <= 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'presupuestoMin',
+          path: ['presupuestoMin'],
+        })
+      }
+      if (max === null || max <= 0) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'presupuestoMax',
+          path: ['presupuestoMax'],
+        })
+      }
       if (min !== null && max !== null && min > max) {
         ctx.addIssue({
           code: 'custom',

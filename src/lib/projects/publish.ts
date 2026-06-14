@@ -98,6 +98,16 @@ export async function publishProject(
     ) {
       return err('invalid_input')
     }
+    // Presupuesto obligatorio y > 0 (defensa por borradores viejos sin presupuesto).
+    if (
+      logistica.presupuestoMin == null ||
+      logistica.presupuestoMax == null ||
+      logistica.presupuestoMin <= 0 ||
+      logistica.presupuestoMax <= 0 ||
+      logistica.presupuestoMin > logistica.presupuestoMax
+    ) {
+      return err('invalid_input')
+    }
 
     const client = supabase as unknown as {
       rpc: (
