@@ -2,12 +2,15 @@
 
 import type { ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
-import { MessageSquare } from 'lucide-react'
+import { CheckCircle2, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { PropuestaProyecto } from '@/lib/projects/schemas'
 
 interface ProjectProposalProps {
   propuesta: PropuestaProyecto
+  isVerified: boolean
+  publicando: boolean
+  onAceptar: () => void
   onPedirCambios: () => void
 }
 
@@ -33,10 +36,13 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 /**
  * Propuesta de la IA en SOLO LECTURA (opción B, errolpendiente §1 paso 6): el
  * empresario no edita los campos a mano; para cambiar algo pide cambios y vuelve
- * al chat. "Aceptar y publicar" llega en el corte de publicación.
+ * al chat. "Aceptar y publicar" cierra el flujo (requiere empresa verificada).
  */
 export function ProjectProposal({
   propuesta,
+  isVerified,
+  publicando,
+  onAceptar,
   onPedirCambios,
 }: ProjectProposalProps) {
   const t = useTranslations('ProjectPublish')
@@ -92,22 +98,33 @@ export function ProjectProposal({
         </Field>
       )}
 
-      <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
-        <p className="text-xs text-muted-foreground">
-          {t('publishComingSoon')}
-        </p>
-      </div>
-
-      <div className="flex gap-2 pt-3 border-t border-border/40">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onPedirCambios}
-          className="inline-flex items-center gap-1.5"
-        >
-          <MessageSquare className="h-4 w-4" />
-          {t('requestChanges')}
-        </Button>
+      <div className="space-y-3 pt-3 border-t border-border/40">
+        {!isVerified && (
+          <p className="text-xs font-semibold text-warning">
+            {t('notVerifiedPublish')}
+          </p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            onClick={onAceptar}
+            disabled={!isVerified || publicando}
+            className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {publicando ? t('submitting') : t('acceptAndPublish')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onPedirCambios}
+            disabled={publicando}
+            className="inline-flex items-center gap-1.5"
+          >
+            <MessageSquare className="h-4 w-4" />
+            {t('requestChanges')}
+          </Button>
+        </div>
       </div>
     </div>
   )

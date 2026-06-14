@@ -12,7 +12,7 @@ import {
   ShieldAlert,
   Sparkles,
 } from 'lucide-react'
-import { Link } from '@/i18n/routing'
+import { Link, useRouter } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -29,6 +29,7 @@ import {
 } from '@/lib/projects/schemas'
 import { saveLogisticsDraft } from '@/lib/projects/actions'
 import { generateProposal } from '@/lib/projects/proposal'
+import { publishProject } from '@/lib/projects/publish'
 import type { HistorialEntry } from '@/lib/ai/types'
 
 interface ProjectWizardProps {
@@ -47,6 +48,11 @@ const KNOWN_ERROR_CODES = new Set([
   'empresario_no_encontrado',
   'save_failed',
   'no_context',
+  'no_proposal',
+  'not_verified',
+  'plazo',
+  'ubicacion',
+  'presupuesto',
   'ai_not_configured',
   'ai_failed',
   'unexpected',
@@ -69,8 +75,10 @@ export function ProjectWizard({
 }: ProjectWizardProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [armando, setArmando] = useState(false)
+  const [publicando, setPublicando] = useState(false)
   const [historial, setHistorial] = useState<HistorialEntry[]>(historialInicial)
   const [contexto, setContexto] = useState(contextoInicial)
   const [propuesta, setPropuesta] = useState<PropuestaProyecto | null>(
@@ -135,6 +143,24 @@ export function ProjectWizard({
     setStep(3)
   }
 
+  const onAceptar = async () => {
+    setPublicando(true)
+    const result = await publishProject(conversationId)
+    setPublicando(false)
+
+    if (result.ok) {
+      toast.success(t('publishedSuccess'))
+      router.push('/empresa')
+      return
+    }
+
+    toast.error(
+      t(
+        `errors.${KNOWN_ERROR_CODES.has(result.error) ? result.error : 'unexpected'}`,
+      ),
+    )
+  }
+
   if (step === 3 && propuesta) {
     return (
       <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative mt-6">
@@ -149,6 +175,9 @@ export function ProjectWizard({
           <p className="text-sm text-muted-foreground">{t('proposalIntro')}</p>
           <ProjectProposal
             propuesta={propuesta}
+            isVerified={isVerified}
+            publicando={publicando}
+            onAceptar={onAceptar}
             onPedirCambios={() => setStep(2)}
           />
         </CardContent>

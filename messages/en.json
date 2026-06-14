@@ -392,7 +392,8 @@
     "proposalCategoriesLabel": "Categories",
     "proposalTechnologiesLabel": "Technologies",
     "proposalStackLabel": "Suggested stack",
-    "publishComingSoon": "The publish button arrives in the next step.",
+    "acceptAndPublish": "Accept and publish",
+    "notVerifiedPublish": "Your company must be verified to publish.",
     "requestChanges": "Request changes",
     "proposalRejected": "The AI couldn't validate the proposal. Add more context or contact an administrator.",
     "notVerifiedTitle": "Your company is not verified yet",
@@ -420,6 +421,7 @@
       "empresario_no_encontrado": "We couldn't find your company profile.",
       "save_failed": "We couldn't save your progress. Please try again.",
       "no_context": "First tell us the project context in the previous step.",
+      "no_proposal": "Build the proposal with the AI first.",
       "ai_not_configured": "The AI is not configured. Please notify the team.",
       "ai_failed": "The AI did not respond. Please try again in a moment.",
       "unexpected": "An unexpected error occurred. Please try again."
