@@ -888,7 +888,8 @@ export type Database = {
           presupuesto_min: number | null
           titulo: string
           updated_at: string
-          usa_ia: boolean
+          generado_por_ia: boolean
+          involucra_ia: boolean
         }
         Insert: {
           ciudad_proyecto?: string | null
@@ -910,7 +911,8 @@ export type Database = {
           presupuesto_min?: number | null
           titulo: string
           updated_at?: string
-          usa_ia?: boolean
+          generado_por_ia?: boolean
+          involucra_ia?: boolean
         }
         Update: {
           ciudad_proyecto?: string | null
@@ -932,7 +934,8 @@ export type Database = {
           presupuesto_min?: number | null
           titulo?: string
           updated_at?: string
-          usa_ia?: boolean
+          generado_por_ia?: boolean
+          involucra_ia?: boolean
         }
         Relationships: [
           {

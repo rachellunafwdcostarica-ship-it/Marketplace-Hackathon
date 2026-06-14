@@ -392,7 +392,8 @@
     "proposalCategoriesLabel": "Categorías",
     "proposalTechnologiesLabel": "Tecnologías",
     "proposalStackLabel": "Stack sugerido",
-    "publishComingSoon": "El botón para publicar llega en el siguiente paso.",
+    "acceptAndPublish": "Aceptar y publicar",
+    "notVerifiedPublish": "Tu empresa debe estar verificada para publicar.",
     "requestChanges": "Pedir cambios",
     "proposalRejected": "La IA no pudo validar la propuesta. Agregá más contexto o contactá a un administrador.",
     "notVerifiedTitle": "Tu empresa todavía no está verificada",
@@ -420,6 +421,7 @@
       "empresario_no_encontrado": "No encontramos tu perfil de empresa.",
       "save_failed": "No pudimos guardar tu avance. Intentá de nuevo.",
       "no_context": "Primero contanos el contexto del proyecto en el paso anterior.",
+      "no_proposal": "Primero armá la propuesta con la IA.",
       "ai_not_configured": "La IA no está configurada. Avisá al equipo.",
       "ai_failed": "La IA no respondió. Probá de nuevo en un momento.",
       "unexpected": "Ocurrió un error inesperado. Intentá de nuevo."
