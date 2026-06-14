@@ -51,6 +51,7 @@ export default async function PublishProjectPage() {
             logistica={initRes.data.logistica}
             contextoInicial={initRes.data.contextoInicial}
             historial={initRes.data.historial}
+            propuesta={initRes.data.propuesta}
           />
         ) : (
           <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">

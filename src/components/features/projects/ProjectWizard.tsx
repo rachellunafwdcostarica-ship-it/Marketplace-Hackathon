@@ -19,13 +19,16 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { LogisticsForm } from './LogisticsForm'
 import { ProjectChat } from './ProjectChat'
+import { ProjectProposal } from './ProjectProposal'
 import {
   buildLogisticsSchema,
   draftToFormValues,
   type LogisticaDraft,
   type LogisticsFormValues,
+  type PropuestaProyecto,
 } from '@/lib/projects/schemas'
 import { saveLogisticsDraft } from '@/lib/projects/actions'
+import { generateProposal } from '@/lib/projects/proposal'
 import type { HistorialEntry } from '@/lib/ai/types'
 
 interface ProjectWizardProps {
@@ -35,6 +38,7 @@ interface ProjectWizardProps {
   logistica: LogisticaDraft | null
   contextoInicial: string
   historial: HistorialEntry[]
+  propuesta: PropuestaProyecto | null
 }
 
 const KNOWN_ERROR_CODES = new Set([
@@ -42,14 +46,17 @@ const KNOWN_ERROR_CODES = new Set([
   'unauthorized',
   'empresario_no_encontrado',
   'save_failed',
+  'no_context',
+  'ai_not_configured',
+  'ai_failed',
   'unexpected',
 ])
 
 /**
- * Orquesta el flujo de publicación en UNA ruta con dos pasos (errolpendiente §1):
- * Paso 1 = logística + contexto → "Continuar con la IA" persiste el borrador.
- * Paso 2 = chat con la IA (RF-54/55). El historial y el contexto viven acá para
- * sobrevivir a los cambios de paso; al retomar, el form arranca hidratado.
+ * Orquesta el flujo de publicación en UNA ruta con tres pasos (errolpendiente §1):
+ * 1 = logística + contexto, 2 = chat con la IA, 3 = propuesta (solo lectura).
+ * El historial, el contexto y la propuesta viven acá para sobrevivir a los
+ * cambios de paso; al retomar, se arranca en el paso que corresponda.
  */
 export function ProjectWizard({
   conversationId,
@@ -58,13 +65,20 @@ export function ProjectWizard({
   logistica,
   contextoInicial,
   historial: historialInicial,
+  propuesta: propuestaInicial,
 }: ProjectWizardProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
   const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState<1 | 2>(historialInicial.length > 0 ? 2 : 1)
+  const [armando, setArmando] = useState(false)
   const [historial, setHistorial] = useState<HistorialEntry[]>(historialInicial)
   const [contexto, setContexto] = useState(contextoInicial)
+  const [propuesta, setPropuesta] = useState<PropuestaProyecto | null>(
+    propuestaInicial,
+  )
+  const [step, setStep] = useState<1 | 2 | 3>(
+    propuestaInicial ? 3 : historialInicial.length > 0 ? 2 : 1,
+  )
 
   const schema = useMemo(() => buildLogisticsSchema(todayIso), [todayIso])
 
@@ -91,10 +105,55 @@ export function ProjectWizard({
       return
     }
 
-    const code = KNOWN_ERROR_CODES.has(result.error)
-      ? result.error
-      : 'unexpected'
-    toast.error(t(`errors.${code}`))
+    toast.error(
+      t(
+        `errors.${KNOWN_ERROR_CODES.has(result.error) ? result.error : 'unexpected'}`,
+      ),
+    )
+  }
+
+  const onArmarPropuesta = async () => {
+    setArmando(true)
+    const result = await generateProposal(conversationId)
+    setArmando(false)
+
+    if (!result.ok) {
+      toast.error(
+        t(
+          `errors.${KNOWN_ERROR_CODES.has(result.error) ? result.error : 'unexpected'}`,
+        ),
+      )
+      return
+    }
+
+    if (result.data.estado === 'rechazada') {
+      toast.error(t('proposalRejected'))
+      return
+    }
+
+    setPropuesta(result.data.propuesta)
+    setStep(3)
+  }
+
+  if (step === 3 && propuesta) {
+    return (
+      <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative mt-6">
+        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-secondary to-accent" />
+        <CardContent className="p-6 pt-8 space-y-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-secondary" />
+            <h2 className="text-lg font-bold text-foreground">
+              {t('proposalTitle')}
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">{t('proposalIntro')}</p>
+          <ProjectProposal
+            propuesta={propuesta}
+            onPedirCambios={() => setStep(2)}
+          />
+        </CardContent>
+      </Card>
+    )
   }
 
   if (step === 2) {
@@ -115,6 +174,8 @@ export function ProjectWizard({
             contextoInicial={contexto}
             historial={historial}
             onHistorialChange={setHistorial}
+            onArmarPropuesta={onArmarPropuesta}
+            armando={armando}
           />
 
           <div className="pt-3 border-t border-border/40">
