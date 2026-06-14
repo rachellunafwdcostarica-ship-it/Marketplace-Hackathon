@@ -416,12 +416,12 @@ function DetailField({
 function ChipRow({ items }: { items: string[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      {items.map((item) => (
+      {items.map((etiqueta) => (
         <span
-          key={item}
+          key={etiqueta}
           className="inline-flex items-center rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground"
         >
-          {item}
+          {etiqueta}
         </span>
       ))}
     </div>
