@@ -178,7 +178,7 @@ export function ProjectWizard({
 
     if (result.ok) {
       toast.success(t('publishedSuccess'))
-      router.push('/empresa')
+      router.push('/empresario')
       return
     }
 
@@ -308,7 +308,7 @@ export function ProjectWizard({
 
             <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
               <Link
-                href="/empresa"
+                href="/empresario"
                 className="border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center rounded-lg text-sm font-semibold h-8 px-3"
               >
                 {tCommon('cancel')}

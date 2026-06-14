@@ -29,7 +29,7 @@ export default async function PublishProjectPage() {
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
-            href="/empresa"
+            href="/empresario"
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />

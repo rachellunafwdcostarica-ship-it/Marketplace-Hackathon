@@ -19,7 +19,7 @@ export default function EmpresaPerfilPage() {
 
   useEffect(() => {
     if (company && !company.isProfileFilled) {
-      router.replace('/empresa/formulario-empresa')
+      router.replace('/empresario/formulario-empresa')
     }
   }, [company, router])
 

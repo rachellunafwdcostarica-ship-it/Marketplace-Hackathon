@@ -62,7 +62,7 @@ export function CompanyDashboardClient({
 
   useEffect(() => {
     if (company && !company.isProfileFilled) {
-      router.replace('/empresa/formulario-empresa')
+      router.replace('/empresario/formulario-empresa')
     }
   }, [company, router])
 
@@ -151,7 +151,7 @@ export function CompanyDashboardClient({
             action={
               <div className="flex items-center gap-2">
                 <Link
-                  href="/empresa/perfil"
+                  href="/empresario/perfil"
                   className="border border-border bg-background text-foreground hover:bg-muted font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-pointer"
                 >
                   <Building2 className="w-4 h-4" />
@@ -168,7 +168,7 @@ export function CompanyDashboardClient({
                   </span>
                 ) : (
                   <Link
-                    href="/empresa/new-project"
+                    href="/empresario/new-project"
                     className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
