@@ -1,30 +1,26 @@
 import { describe, it, expect } from 'vitest'
 import {
+  buildLogisticsSchema,
   daysBetween,
   parseMoney,
-  projectFormSchema,
-  toPublishPayload,
-  type ProjectFormValues,
+  toLogisticaDraft,
+  type LogisticsFormValues,
 } from './schemas'
 
+const HOY = '2026-06-13'
+
 function baseValues(
-  overrides: Partial<ProjectFormValues> = {},
-): ProjectFormValues {
+  overrides: Partial<LogisticsFormValues> = {},
+): LogisticsFormValues {
   return {
-    titulo: 'Landing page institucional en React',
-    descripcion:
-      'Necesitamos una landing page responsive con formulario de contacto.',
-    idAreaNegocio: '',
-    categorias: ['11111111-1111-4111-8111-111111111111'],
-    tecnologias: ['22222222-2222-4222-8222-222222222222'],
+    titulo: '',
     modalidad: 'remoto',
-    paisProyecto: '',
-    ciudadProyecto: '',
     moneda: 'USD',
     presupuestoMin: '',
     presupuestoMax: '',
-    fechaPublicacion: '2026-06-13',
-    fechaCierre: '2026-06-20',
+    fechaCierre: '2026-06-20', // 7 días desde HOY → dentro de 5..15
+    paisProyecto: '',
+    ciudadProyecto: '',
     contextoInicial: 'Queremos una landing para captar leads de la marca.',
     ...overrides,
   }
@@ -48,15 +44,15 @@ describe('parseMoney', () => {
   })
 })
 
-describe('projectFormSchema', () => {
-  it('acepta un proyecto remoto válido', () => {
-    expect(projectFormSchema.safeParse(baseValues()).success).toBe(true)
+describe('buildLogisticsSchema', () => {
+  const schema = buildLogisticsSchema(HOY)
+
+  it('acepta una logística remota válida (título vacío, contexto suficiente)', () => {
+    expect(schema.safeParse(baseValues()).success).toBe(true)
   })
 
   it('rechaza un plazo menor a 5 días', () => {
-    const result = projectFormSchema.safeParse(
-      baseValues({ fechaPublicacion: '2026-06-13', fechaCierre: '2026-06-16' }),
-    )
+    const result = schema.safeParse(baseValues({ fechaCierre: '2026-06-16' }))
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues.some((i) => i.message === 'plazo')).toBe(true)
@@ -64,14 +60,12 @@ describe('projectFormSchema', () => {
   })
 
   it('rechaza un plazo mayor a 15 días', () => {
-    const result = projectFormSchema.safeParse(
-      baseValues({ fechaPublicacion: '2026-06-13', fechaCierre: '2026-07-13' }),
-    )
+    const result = schema.safeParse(baseValues({ fechaCierre: '2026-07-13' }))
     expect(result.success).toBe(false)
   })
 
   it('exige país y ciudad cuando no es remoto', () => {
-    const result = projectFormSchema.safeParse(
+    const result = schema.safeParse(
       baseValues({
         modalidad: 'hibrido',
         paisProyecto: '',
@@ -87,32 +81,44 @@ describe('projectFormSchema', () => {
   })
 
   it('rechaza presupuesto mínimo mayor al máximo', () => {
-    const result = projectFormSchema.safeParse(
+    const result = schema.safeParse(
       baseValues({ presupuestoMin: '900', presupuestoMax: '500' }),
     )
     expect(result.success).toBe(false)
   })
+
+  it('rechaza un contexto demasiado corto', () => {
+    const result = schema.safeParse(baseValues({ contextoInicial: 'corto' }))
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.message === 'fondoMin')).toBe(
+        true,
+      )
+    }
+  })
 })
 
-describe('toPublishPayload', () => {
-  it('anula país/ciudad cuando es remoto y arma ISO de fechas', () => {
-    const payload = toPublishPayload(
+describe('toLogisticaDraft', () => {
+  it('anula país/ciudad y deja título null cuando es remoto y vacío', () => {
+    const draft = toLogisticaDraft(
       baseValues({ paisProyecto: 'Costa Rica', ciudadProyecto: 'San José' }),
     )
-    expect(payload.paisProyecto).toBeNull()
-    expect(payload.ciudadProyecto).toBeNull()
-    expect(payload.fechaPublicacionIso).toBe('2026-06-13T00:00:00.000Z')
+    expect(draft.paisProyecto).toBeNull()
+    expect(draft.ciudadProyecto).toBeNull()
+    expect(draft.titulo).toBeNull()
   })
 
-  it('conserva país/ciudad cuando es presencial', () => {
-    const payload = toPublishPayload(
+  it('conserva país/ciudad y título cuando es presencial', () => {
+    const draft = toLogisticaDraft(
       baseValues({
+        titulo: 'Landing institucional',
         modalidad: 'presencial',
         paisProyecto: 'Costa Rica',
         ciudadProyecto: 'San José',
       }),
     )
-    expect(payload.paisProyecto).toBe('Costa Rica')
-    expect(payload.ciudadProyecto).toBe('San José')
+    expect(draft.paisProyecto).toBe('Costa Rica')
+    expect(draft.ciudadProyecto).toBe('San José')
+    expect(draft.titulo).toBe('Landing institucional')
   })
 })

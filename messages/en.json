@@ -368,7 +368,14 @@
     "plazoHint": "The application window must last between {min} and {max} days.",
     "fieldBackground": "Project context (brief)",
     "fieldBackgroundPlaceholder": "Tell the AI what your project is about, what you need, and for whom...",
-    "aiSimulatedBanner": "Simulated AI mode: validation is provisional until the real provider is connected.",
+    "flowIntro": "First tell us the project logistics and context. Then the AI helps you build the proposal (title, description, categories, and technologies).",
+    "fieldTitleOptional": "Optional — if left empty, the AI generates it",
+    "continueWithAi": "Continue with the AI",
+    "continuing": "Saving...",
+    "draftSaved": "We saved your progress.",
+    "step2Title": "Now chat with the AI",
+    "step2Soon": "The assistant that builds your proposal arrives in the next step. Your logistics and context are already saved.",
+    "back": "Back to logistics",
     "notVerifiedTitle": "Your company is not verified yet",
     "notVerifiedDesc": "You can fill out the form, but publishing stays blocked until an administrator verifies your company.",
     "submit": "Publish project",
@@ -377,7 +384,7 @@
     "loadErrorTitle": "We couldn't load the form",
     "loadErrorDesc": "Something went wrong while preparing the publication. Please try again in a moment.",
     "errors": {
-      "tituloMin": "The title must be at least 10 characters.",
+      "tituloMax": "The title is too long (max 120 characters).",
       "descripcionMin": "The description must be at least 30 characters.",
       "categoriasMin": "Pick at least one category.",
       "tecnologiasMin": "Pick at least one technology.",
@@ -385,14 +392,15 @@
       "ubicacion": "Provide country and city for hybrid or on-site modes.",
       "presupuesto": "The minimum budget cannot exceed the maximum.",
       "plazo": "The application window must be 5 to 15 days.",
-      "fechasRequeridas": "Provide publication and close dates.",
+      "fechaCierreRequerida": "Provide the application close date.",
       "fondoMin": "Tell us a bit more about the project (at least 20 characters).",
       "invalid_input": "Please review the form fields.",
       "not_verified": "Your company is not verified. You cannot publish yet.",
       "ai_rejected": "The AI did not validate the proposal: add more project context.",
       "unauthorized": "Your session expired. Please sign in again.",
       "empresario_no_encontrado": "We couldn't find your company profile.",
-      "unexpected": "An unexpected error occurred while publishing. Please try again."
+      "save_failed": "We couldn't save your progress. Please try again.",
+      "unexpected": "An unexpected error occurred. Please try again."
     }
   },
   "Admin": {

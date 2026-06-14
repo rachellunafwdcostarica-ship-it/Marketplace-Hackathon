@@ -1,69 +1,72 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { Save, Info, ShieldAlert } from 'lucide-react'
-import { useRouter, Link } from '@/i18n/routing'
+import {
+  ArrowRight,
+  ArrowLeft,
+  Info,
+  ShieldAlert,
+  Sparkles,
+} from 'lucide-react'
+import { Link } from '@/i18n/routing'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { LogisticsForm } from './LogisticsForm'
 import {
-  projectFormSchema,
-  type ProjectFormValues,
+  buildLogisticsSchema,
+  type LogisticsFormValues,
 } from '@/lib/projects/schemas'
-import { publishProject, type ProjectCatalogs } from '@/lib/projects/actions'
+import { saveLogisticsDraft } from '@/lib/projects/actions'
 
 interface ProjectWizardProps {
   conversationId: string
   isVerified: boolean
-  catalogs: ProjectCatalogs
   todayIso: string
 }
 
 const KNOWN_ERROR_CODES = new Set([
   'invalid_input',
-  'not_verified',
-  'ai_rejected',
   'unauthorized',
   'empresario_no_encontrado',
-  'plazo',
-  'ubicacion',
-  'presupuesto',
+  'save_failed',
   'unexpected',
 ])
 
+/**
+ * Orquesta el flujo de publicación en UNA ruta con dos pasos (errolpendiente §1):
+ * Paso 1 = logística + contexto → "Continuar con la IA" persiste el borrador.
+ * Paso 2 = la conversación con la IA y la propuesta (se construye en cortes
+ * siguientes); por ahora es un placeholder.
+ */
 export function ProjectWizard({
   conversationId,
   isVerified,
-  catalogs,
   todayIso,
 }: ProjectWizardProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<1 | 2>(1)
 
-  const form = useForm<ProjectFormValues>({
-    resolver: zodResolver(projectFormSchema),
+  const schema = useMemo(() => buildLogisticsSchema(todayIso), [todayIso])
+
+  const form = useForm<LogisticsFormValues>({
+    resolver: zodResolver(schema),
     defaultValues: {
       titulo: '',
-      descripcion: '',
-      idAreaNegocio: '',
-      categorias: [],
-      tecnologias: [],
       modalidad: '',
-      paisProyecto: '',
-      ciudadProyecto: '',
       moneda: 'USD',
       presupuestoMin: '',
       presupuestoMax: '',
-      fechaPublicacion: todayIso,
       fechaCierre: '',
+      paisProyecto: '',
+      ciudadProyecto: '',
       contextoInicial: '',
     },
   })
@@ -74,14 +77,14 @@ export function ProjectWizard({
     formState: { errors },
   } = form
 
-  const onSubmit = async (values: ProjectFormValues) => {
+  const onSubmit = async (values: LogisticsFormValues) => {
     setLoading(true)
-    const result = await publishProject(conversationId, values)
+    const result = await saveLogisticsDraft(conversationId, values)
     setLoading(false)
 
     if (result.ok) {
-      toast.success(t('publishedSuccess'))
-      router.push('/empresa')
+      toast.success(t('draftSaved'))
+      setStep(2)
       return
     }
 
@@ -91,7 +94,31 @@ export function ProjectWizard({
     toast.error(t(`errors.${code}`))
   }
 
-  const formDisabled = loading || !isVerified
+  if (step === 2) {
+    return (
+      <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative mt-6">
+        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-secondary to-accent" />
+        <CardContent className="p-6 pt-8 space-y-4 text-center">
+          <Sparkles className="w-8 h-8 text-secondary mx-auto" />
+          <h2 className="text-lg font-bold text-foreground">
+            {t('step2Title')}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            {t('step2Soon')}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setStep(1)}
+            className="inline-flex items-center gap-1.5"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t('back')}
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative mt-6">
@@ -113,14 +140,12 @@ export function ProjectWizard({
 
         <div className="flex gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
           <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-          <p className="text-xs text-muted-foreground">
-            {t('aiSimulatedBanner')}
-          </p>
+          <p className="text-xs text-muted-foreground">{t('flowIntro')}</p>
         </div>
 
         <FormProvider {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <LogisticsForm catalogs={catalogs} disabled={formDisabled} />
+            <LogisticsForm disabled={loading} todayIso={todayIso} />
 
             <section className="space-y-2">
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
@@ -132,7 +157,7 @@ export function ProjectWizard({
               <Textarea
                 id="contextoInicial"
                 rows={5}
-                disabled={formDisabled}
+                disabled={loading}
                 placeholder={t('fieldBackgroundPlaceholder')}
                 className="bg-card/50 border-border focus-visible:ring-primary"
                 {...register('contextoInicial')}
@@ -153,11 +178,11 @@ export function ProjectWizard({
               </Link>
               <Button
                 type="submit"
-                disabled={formDisabled}
+                disabled={loading}
                 className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4" />
-                {loading ? t('submitting') : t('submit')}
+                {loading ? t('continuing') : t('continueWithAi')}
+                <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </form>

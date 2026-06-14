@@ -276,6 +276,7 @@ export type Database = {
           id_conversacion: string
           id_empresario: string
           id_proyecto: string | null
+          logistica: Json | null
           modelo_ia: string | null
           nivel_tecnico_empresario:
             | Database['public']['Enums']['nivel_tecnico_enum']
@@ -294,6 +295,7 @@ export type Database = {
           id_conversacion?: string
           id_empresario: string
           id_proyecto?: string | null
+          logistica?: Json | null
           modelo_ia?: string | null
           nivel_tecnico_empresario?:
             | Database['public']['Enums']['nivel_tecnico_enum']
@@ -312,6 +314,7 @@ export type Database = {
           id_conversacion?: string
           id_empresario?: string
           id_proyecto?: string | null
+          logistica?: Json | null
           modelo_ia?: string | null
           nivel_tecnico_empresario?:
             | Database['public']['Enums']['nivel_tecnico_enum']
