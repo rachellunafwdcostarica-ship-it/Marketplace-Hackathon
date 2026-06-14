@@ -373,8 +373,11 @@
     "continueWithAi": "Continue with the AI",
     "continuing": "Saving...",
     "draftSaved": "We saved your progress.",
-    "step2Title": "Now chat with the AI",
-    "step2Soon": "The assistant that builds your proposal arrives in the next step. Your logistics and context are already saved.",
+    "step2Title": "Chat with the AI",
+    "chatIntro": "Tell the AI what you need. It will ask questions to understand the project and, later, build the proposal.",
+    "aiThinking": "The AI is thinking...",
+    "chatPlaceholder": "Type your message...",
+    "chatSend": "Send",
     "back": "Back to logistics",
     "notVerifiedTitle": "Your company is not verified yet",
     "notVerifiedDesc": "You can fill out the form, but publishing stays blocked until an administrator verifies your company.",
@@ -400,6 +403,9 @@
       "unauthorized": "Your session expired. Please sign in again.",
       "empresario_no_encontrado": "We couldn't find your company profile.",
       "save_failed": "We couldn't save your progress. Please try again.",
+      "no_context": "First tell us the project context in the previous step.",
+      "ai_not_configured": "The AI is not configured. Please notify the team.",
+      "ai_failed": "The AI did not respond. Please try again in a moment.",
       "unexpected": "An unexpected error occurred. Please try again."
     }
   },

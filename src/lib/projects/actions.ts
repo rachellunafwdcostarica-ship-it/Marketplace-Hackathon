@@ -4,11 +4,14 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import type { Json } from '@/types/database'
+import type { HistorialEntry } from '@/lib/ai/types'
 import {
   buildLogisticsSchema,
   toLogisticaDraft,
+  type LogisticaDraft,
   type LogisticsFormValues,
 } from './schemas'
+import { parseHistorial, parseLogistica } from './persistence'
 
 export interface CatalogItem {
   id: string
@@ -24,6 +27,9 @@ export interface ProjectCatalogs {
 export interface ProjectFlowInit {
   conversationId: string
   isVerified: boolean
+  logistica: LogisticaDraft | null
+  contextoInicial: string
+  historial: HistorialEntry[]
 }
 
 /**
@@ -120,7 +126,7 @@ export async function initProjectPublishing(): Promise<
 
     const { data: existing, error: convReadError } = await supabase
       .from('conversaciones_ia')
-      .select('id_conversacion')
+      .select('id_conversacion, contexto_inicial, logistica, historial')
       .eq('id_empresario', empresario.id_empresario)
       .eq('estado', 'en_curso')
       .order('fecha_inicio', { ascending: false })
@@ -133,7 +139,13 @@ export async function initProjectPublishing(): Promise<
       return err(convReadError.message)
     }
     if (existing) {
-      return ok({ conversationId: existing.id_conversacion, isVerified })
+      return ok({
+        conversationId: existing.id_conversacion,
+        isVerified,
+        logistica: parseLogistica(existing.logistica),
+        contextoInicial: existing.contexto_inicial ?? '',
+        historial: parseHistorial(existing.historial),
+      })
     }
 
     const { data: created, error: convInsertError } = await supabase
@@ -148,7 +160,13 @@ export async function initProjectPublishing(): Promise<
       return err(convInsertError?.message ?? 'conversation_insert_failed')
     }
 
-    return ok({ conversationId: created.id_conversacion, isVerified })
+    return ok({
+      conversationId: created.id_conversacion,
+      isVerified,
+      logistica: null,
+      contextoInicial: '',
+      historial: [],
+    })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unexpected_error'
     logger.error('initProjectPublishing: error inesperado', { error: msg })

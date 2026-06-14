@@ -373,8 +373,11 @@
     "continueWithAi": "Continuar con la IA",
     "continuing": "Guardando...",
     "draftSaved": "Guardamos tu avance.",
-    "step2Title": "Ahora conversá con la IA",
-    "step2Soon": "El asistente que arma tu propuesta llega en el siguiente paso. Tu logística y contexto ya quedaron guardados.",
+    "step2Title": "Conversá con la IA",
+    "chatIntro": "Contale a la IA lo que necesites. Te va a hacer preguntas para entender el proyecto y, más adelante, armar la propuesta.",
+    "aiThinking": "La IA está pensando...",
+    "chatPlaceholder": "Escribí tu mensaje...",
+    "chatSend": "Enviar",
     "back": "Volver a la logística",
     "notVerifiedTitle": "Tu empresa todavía no está verificada",
     "notVerifiedDesc": "Podés completar el formulario, pero la publicación queda bloqueada hasta que un administrador verifique tu empresa.",
@@ -400,6 +403,9 @@
       "unauthorized": "Tu sesión expiró. Iniciá sesión de nuevo.",
       "empresario_no_encontrado": "No encontramos tu perfil de empresa.",
       "save_failed": "No pudimos guardar tu avance. Intentá de nuevo.",
+      "no_context": "Primero contanos el contexto del proyecto en el paso anterior.",
+      "ai_not_configured": "La IA no está configurada. Avisá al equipo.",
+      "ai_failed": "La IA no respondió. Probá de nuevo en un momento.",
       "unexpected": "Ocurrió un error inesperado. Intentá de nuevo."
     }
   },

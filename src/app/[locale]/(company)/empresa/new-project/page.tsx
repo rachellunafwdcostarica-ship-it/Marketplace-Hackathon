@@ -48,6 +48,9 @@ export default async function PublishProjectPage() {
             conversationId={initRes.data.conversationId}
             isVerified={initRes.data.isVerified}
             todayIso={todayIso}
+            logistica={initRes.data.logistica}
+            contextoInicial={initRes.data.contextoInicial}
+            historial={initRes.data.historial}
           />
         ) : (
           <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">

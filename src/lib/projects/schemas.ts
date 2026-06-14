@@ -153,3 +153,27 @@ export function toLogisticaDraft(values: LogisticsFormValues): LogisticaDraft {
     ciudadProyecto: esRemoto || ciudad === '' ? null : ciudad,
   }
 }
+
+/**
+ * Inverso de `toLogisticaDraft`: reconstruye los valores del formulario a partir
+ * del draft persistido + el contexto, para hidratar la Pantalla 1 al retomar la
+ * conversación (errolpendiente §3, RF-59).
+ */
+export function draftToFormValues(
+  draft: LogisticaDraft | null,
+  contextoInicial: string,
+): LogisticsFormValues {
+  return {
+    titulo: draft?.titulo ?? '',
+    modalidad: draft?.modalidad ?? '',
+    moneda: draft?.moneda ?? 'USD',
+    presupuestoMin:
+      draft?.presupuestoMin != null ? String(draft.presupuestoMin) : '',
+    presupuestoMax:
+      draft?.presupuestoMax != null ? String(draft.presupuestoMax) : '',
+    fechaCierre: draft?.fechaCierre ?? '',
+    paisProyecto: draft?.paisProyecto ?? '',
+    ciudadProyecto: draft?.ciudadProyecto ?? '',
+    contextoInicial,
+  }
+}
