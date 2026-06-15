@@ -31,9 +31,10 @@
     datos reales: el badge de verificación refleja `estado_verificacion`, se
     quitaron las stats y los tabs falsos, y la pestaña Proyectos reusa
     `PublishedProjectsBoard` (proyectos reales de `getMyPublishedProjects`).
-  - **Pendiente (fase siguiente):** `CompanyProfileDetails` todavía tiene el
-    showcase hardcodeado (proyectos/historial/cultura de mentira); y
-    `CompanyProfileForm` aún sincroniza el mock `StateContext` (`updateCompany`).
+  - `CompanyProfileDetails` ya muestra SOLO datos reales (descripción, datos de
+    la empresa y representante); el showcase hardcodeado quedó en `_orphans`.
+  - **Pendiente (fase final):** `CompanyProfileForm` aún sincroniza el mock
+    `StateContext` (`updateCompany`).
 
 ## Huérfanos (código muerto preservado)
 
@@ -56,6 +57,11 @@
     inventados, sin datos de BD).
   - Reemplazada por `PublishedProjectsBoard` (proyectos reales). Solo la
     referencia `MockCompanyPerfilPage`.
+
+- `src/components/_orphans/MockCompanyProfileDetails.tsx`
+  - Detalle MOCK del perfil: proyectos (DeFi/RAG/Fintech), historial de
+    contratación falso (Aether Dynamics…), cultura y redes hardcodeadas; casi
+    nada salía de la BD. Reemplazado por `CompanyProfileDetails` (datos reales).
 
 ## Mocks que SIGUEN en uso (no se tocaron — fuera de esta tarea)
 

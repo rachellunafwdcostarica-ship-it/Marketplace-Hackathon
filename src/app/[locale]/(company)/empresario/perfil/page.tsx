@@ -57,5 +57,7 @@ export default async function CompanyProfilePage() {
     isProfileFilled: true,
   }
 
-  return <CompanyPerfilClient company={company} projects={proyectos} />
+  return (
+    <CompanyPerfilClient company={company} profile={p} projects={proyectos} />
+  )
 }
