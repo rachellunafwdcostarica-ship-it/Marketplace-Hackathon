@@ -89,6 +89,7 @@ export function CompanyProfileForm({
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm<CompanyProfileInput>({
     resolver: zodResolver(profileSchema),
@@ -101,7 +102,7 @@ export function CompanyProfileForm({
       name: initialProfile.name,
       companyType: initialProfile.companyType,
       sector: initialProfile.sector,
-      cedula: initialProfile.cedula,
+      cedula: initialProfile.cedula ?? '',
       description: initialProfile.description,
       contactEmail: initialProfile.contactEmail,
       website: initialProfile.website,
@@ -113,6 +114,8 @@ export function CompanyProfileForm({
         : {}),
     },
   })
+
+  const watchedType = watch('companyType')
 
   const validateImage = (file: File): boolean => {
     if (file.size > MAX_IMAGE_BYTES) {
@@ -385,6 +388,9 @@ export function CompanyProfileForm({
                     </Select>
                   )}
                 />
+                <p className="text-[11px] text-muted-foreground">
+                  {tEmpresa('typeHint')}
+                </p>
               </Field>
               <Field
                 id="sector"
@@ -401,25 +407,26 @@ export function CompanyProfileForm({
               </Field>
             </div>
 
-            <Field
-              id="cedula"
-              label={tEmpresa('fieldCedula')}
-              error={errors.cedula?.message}
-            >
-              <Input
+            {watchedType === 'formal' && (
+              <Field
                 id="cedula"
-                type="text"
-                placeholder={tEmpresa('fieldCedulaPlaceholder')}
-                className="bg-card/50 border-border focus-visible:ring-primary"
-                {...register('cedula')}
-              />
-            </Field>
+                label={tEmpresa('fieldCedula')}
+                error={errors.cedula?.message}
+              >
+                <Input
+                  id="cedula"
+                  type="text"
+                  placeholder={tEmpresa('fieldCedulaPlaceholder')}
+                  className="bg-card/50 border-border focus-visible:ring-primary"
+                  {...register('cedula')}
+                />
+              </Field>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Field
                 id="country"
                 label={tEmpresa('fieldCountry')}
-                optional={tEmpresa('optionalTag')}
                 error={errors.country?.message}
               >
                 <Input
@@ -447,7 +454,6 @@ export function CompanyProfileForm({
               <Field
                 id="operatingScope"
                 label={tEmpresa('fieldScope')}
-                optional={tEmpresa('optionalTag')}
                 error={errors.operatingScope?.message}
               >
                 <Controller
