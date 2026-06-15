@@ -243,7 +243,7 @@ body {
 }
 
 .fwd-carousel__dot--active {
-  background: #ffffff;
+  background: oklch(1 0.003 245);
   width: 24px;
   border-radius: 4px;
   transform: none;

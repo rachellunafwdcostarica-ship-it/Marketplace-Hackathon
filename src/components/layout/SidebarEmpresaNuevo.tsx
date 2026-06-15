@@ -1,7 +1,10 @@
 'use client'
 
+// """ ANTES """: Se usaba activeMenu (useState) y botones tradicionales para cambiar la pestaña explorar/postulaciones/mensajes/configuracion.
+// """ DESPUES """: Se usa next-intl Link con hrefs directas y pathname para detectar la ruta activa.
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Link, usePathname } from '@/i18n/routing'
 import {
   Dialog,
   DialogContent,
@@ -26,7 +29,7 @@ import {
 
 export function SidebarEmpresaNuevo() {
   const t = useTranslations('EmpresaPerfil')
-  const [activeMenu, setActiveMenu] = useState<string>('explorar')
+  const pathname = usePathname()
   const [isSupportOpen, setIsSupportOpen] = useState(false)
   const [supportDescription, setSupportDescription] = useState('')
   const [submittingSupport, setSubmittingSupport] = useState(false)
@@ -50,10 +53,30 @@ export function SidebarEmpresaNuevo() {
   }
 
   const menuItems = [
-    { id: 'explorar', label: t('menuExplorar'), icon: Compass },
-    { id: 'postulaciones', label: t('menuPostulaciones'), icon: Send },
-    { id: 'mensajes', label: t('menuMensajes'), icon: MessageSquare },
-    { id: 'configuracion', label: t('menuConfiguracion'), icon: Settings },
+    {
+      id: 'explorar',
+      href: '/empresario',
+      label: t('menuExplorar'),
+      icon: Compass,
+    },
+    {
+      id: 'postulaciones',
+      href: '/empresario/postulaciones',
+      label: t('menuPostulaciones'),
+      icon: Send,
+    },
+    {
+      id: 'mensajes',
+      href: '/empresario',
+      label: t('menuMensajes'),
+      icon: MessageSquare,
+    },
+    {
+      id: 'configuracion',
+      href: '/empresario/perfil',
+      label: t('menuConfiguracion'),
+      icon: Settings,
+    },
   ]
 
   return (
@@ -62,13 +85,14 @@ export function SidebarEmpresaNuevo() {
       <nav className="flex flex-col gap-1 px-1">
         {menuItems.map((item) => {
           const Icon = item.icon
-          const isActive = activeMenu === item.id
+          const isActive =
+            pathname === item.href ||
+            (item.id === 'explorar' && pathname === '/empresario')
           return (
-            <button
+            <Link
               key={item.id}
-              type="button"
-              onClick={() => setActiveMenu(item.id)}
-              className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all ${
+              href={item.href}
+              className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -76,7 +100,7 @@ export function SidebarEmpresaNuevo() {
             >
               <Icon className="w-4 h-4 shrink-0" />
               <span>{item.label}</span>
-            </button>
+            </Link>
           )
         })}
 
