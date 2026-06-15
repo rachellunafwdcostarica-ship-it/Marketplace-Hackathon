@@ -4,7 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
-import { useAppState } from '@/lib/StateContext'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import {
@@ -39,7 +39,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
-  const { userRole: role, resetAll } = useAppState()
+  const { userRole: role, resetAuth } = useAuth()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -287,7 +287,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
                   onClick={async () => {
                     const { signOut } = await import('@/lib/auth/actions')
                     await signOut()
-                    resetAll()
+                    resetAuth()
                     router.push('/login')
                   }}
                   className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"

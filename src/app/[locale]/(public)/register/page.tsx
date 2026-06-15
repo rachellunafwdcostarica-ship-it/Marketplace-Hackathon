@@ -19,7 +19,7 @@ import { OAuthButtons } from '@/components/features/auth/OAuthButtons'
 import { AuthFooter } from '@/components/features/auth/AuthFooter'
 import { PasswordStrengthIndicator } from '@/components/features/auth/PasswordStrengthIndicator'
 import { RoleSelector } from '@/components/features/auth/RoleSelector'
-import { useAppState } from '@/lib/StateContext'
+import { useAuth } from '@/lib/auth/AuthContext'
 import type { UserRole } from '@/types'
 
 interface RegisterFormValues {
@@ -50,7 +50,7 @@ export default function RegisterPage() {
   const tLogin = useTranslations('Login')
   const tValidation = useTranslations('Validation')
   const router = useRouter()
-  const { setUserRole } = useAppState()
+  const { setUserRole } = useAuth()
 
   const [loading, setLoading] = useState(false)
   const [selectedRole, setSelectedRole] = useState<UserRole>('egresado')
