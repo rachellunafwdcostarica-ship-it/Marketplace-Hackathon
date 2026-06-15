@@ -40,3 +40,40 @@ dashboard sea 100% real. No se tocaron porque exceden la tarea de proyectos:
 **Qué hacer en el futuro:** reemplazar las postulaciones por el flujo real de
 `participaciones`/`contrataciones` (RF-30s/40s, otra sección). Cuando eso exista,
 `StateContext` para empresa queda obsoleto y se borra junto al huérfano de arriba.
+
+---
+
+# Panel admin
+
+## Qué se reemplazó por datos REALES
+
+- **Gestión de usuarios** (RF-63): nueva página `/admin/users` que lee la base de
+  datos real (no `useAppState`).
+  - Query: `src/lib/admin/queries.ts` (`listUsers`) — service_role +
+    `requireRole('admin')`, con búsqueda por nombre/correo y filtros por rol y
+    estado de cuenta.
+  - UI: `src/app/[locale]/(admin)/admin/users/page.tsx` (RSC, tabla) +
+    `src/components/features/admin/AdminUserFilters.tsx` (filtros, isla client).
+- **Entrada del panel** `/admin`: antes renderizaba el dashboard mock; ahora
+  redirige a `/admin/users`.
+
+## Huérfanos (código muerto preservado)
+
+- `src/components/_orphans/MockAdminDashboard.tsx`
+  - Era el dashboard del admin (`/admin`) cuando usaba `useAppState()` (mock de
+    `StateContext`): stats, empresas pendientes y proyectos activos en memoria.
+  - **No se importa en ningún lado.** Solo referencia.
+  - **Qué hacer en el futuro:** borrarlo cuando el dashboard real madure. git
+    conserva el historial igual.
+
+## Mocks que SIGUEN en uso (no se tocaron — fuera de esta tarea)
+
+Estas páginas del admin siguen leyendo de `useAppState()` / `StateContext` y son
+de otras tareas (verificación de empresas y moderación de proyectos). **No** se
+orfanaron para no dejar sus rutas en 404 sin reemplazo real:
+
+- `src/app/[locale]/(admin)/admin/companies/page.tsx` — verificación de empresas.
+- `src/app/[locale]/(admin)/admin/projects/page.tsx` — moderación de proyectos.
+
+**Qué hacer en el futuro:** reconstruir cada una con datos reales en su propia
+tarea y, recién entonces, orfanar/borrar su versión mock.

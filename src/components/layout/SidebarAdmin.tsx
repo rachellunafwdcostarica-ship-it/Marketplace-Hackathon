@@ -3,7 +3,7 @@
 import { Link, usePathname } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 import {
-  LayoutDashboard,
+  Users,
   Building2,
   Briefcase,
   ShieldCheck,
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
-type AdminNavLabel = 'dashboard' | 'companies' | 'projects' | 'validations'
+type AdminNavLabel = 'users' | 'companies' | 'projects' | 'validations'
 
 interface AdminNavItem {
   href: string
@@ -20,7 +20,7 @@ interface AdminNavItem {
 }
 
 const ADMIN_NAV: AdminNavItem[] = [
-  { href: '/admin', labelKey: 'dashboard', icon: LayoutDashboard },
+  { href: '/admin/users', labelKey: 'users', icon: Users },
   { href: '/admin/companies', labelKey: 'companies', icon: Building2 },
   { href: '/admin/projects', labelKey: 'projects', icon: Briefcase },
   { href: '/admin/validations', labelKey: 'validations', icon: ShieldCheck },

@@ -70,3 +70,57 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
   revalidatePath('/admin/validations', 'page')
   return ok(undefined)
 }
+
+/**
+ * Desactiva la cuenta de un usuario (is_active → false). Es el reverso de
+ * `approveUser` (que reactiva con is_active → true). Solo un admin puede
+ * invocarla.
+ *
+ * El bloqueo es real: el gate del middleware expulsa a las cuentas con
+ * is_active = false (no pueden iniciar sesión ni navegar), igual que con las
+ * suspendidas.
+ *
+ * Self-guard: un admin NO puede desactivarse a sí mismo; si pudiera, el gate lo
+ * sacaría de la plataforma en la siguiente navegación.
+ *
+ * Usa el cliente de servicio para bypassear RLS (las políticas solo dejan al
+ * usuario ver/editar su propio registro).
+ */
+export async function deactivateUser(userId: string): Promise<Result<void>> {
+  const parsed = z.string().uuid().safeParse(userId)
+  if (!parsed.success) {
+    return err('invalid_user_id')
+  }
+
+  const authResult = await requireRole('admin')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return err('unauthenticated')
+  }
+
+  if (user.id === parsed.data) {
+    return err('cannot_modify_self')
+  }
+
+  const adminClient = createSupabaseAdminClient()
+  const { error } = await adminClient
+    .from('usuarios')
+    .update({ is_active: false })
+    .eq('id_usuario', parsed.data)
+
+  if (error) {
+    logger.error('deactivateUser failed', { error: error.message, userId })
+    return err(error.message)
+  }
+
+  revalidatePath('/admin/users', 'page')
+  return ok(undefined)
+}
