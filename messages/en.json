@@ -159,7 +159,10 @@
     "emailDuplicateOAuth": "This account is already registered. Please sign in.",
     "registerSuccess": "Registration successful! Check your email to verify your account.",
     "orWithEmail": "or sign up with your email",
-    "registering": "Creating account..."
+    "registering": "Creating account...",
+    "sending": "Sending...",
+    "backToLogin": "Back to sign in",
+    "errorUnexpected": "An unexpected error occurred. Please try again."
   },
 
   "Common": {

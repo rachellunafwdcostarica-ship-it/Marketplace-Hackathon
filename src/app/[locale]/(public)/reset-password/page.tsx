@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
           ? tAuth('passwordBreached')
           : result.error === 'pwned_check_failed'
             ? tAuth('pwnedCheckFailed')
-            : result.error
+            : tAuth('errorUnexpected')
       toast.error(message)
       return
     }

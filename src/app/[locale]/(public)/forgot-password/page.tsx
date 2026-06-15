@@ -11,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
 import { Mail, ArrowRight, ArrowLeft } from 'lucide-react'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { requestPasswordReset } from '@/lib/auth/actions'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { VerificationMessage } from '@/components/features/auth/VerificationMessage'
@@ -51,13 +51,10 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setLoading(true)
-    const supabase = createSupabaseBrowserClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    })
+    const result = await requestPasswordReset(data.email)
     setLoading(false)
-    if (error) {
-      toast.error(error.message)
+    if (!result.ok) {
+      toast.error(tAuth('errorUnexpected'))
       return
     }
     setSuccess(true)
@@ -80,7 +77,7 @@ export default function ForgotPasswordPage() {
                 className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Volver al inicio de sesión
+                {tAuth('backToLogin')}
               </Link>
             </div>
           </div>
@@ -122,7 +119,7 @@ export default function ForgotPasswordPage() {
                 disabled={loading}
                 className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
               >
-                {loading ? 'Enviando...' : tAuth('sendLink')}
+                {loading ? tAuth('sending') : tAuth('sendLink')}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </Button>
             </form>
@@ -133,7 +130,7 @@ export default function ForgotPasswordPage() {
                 className="inline-flex items-center gap-2 text-xs font-bold text-primary hover:underline"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                Volver al inicio de sesión
+                {tAuth('backToLogin')}
               </Link>
             </div>
           </>

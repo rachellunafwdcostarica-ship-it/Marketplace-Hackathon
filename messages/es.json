@@ -159,7 +159,10 @@
     "emailDuplicateOAuth": "Esta cuenta ya está registrada. Por favor inicia sesión.",
     "registerSuccess": "¡Registro exitoso! Revisá tu correo para verificar tu cuenta.",
     "orWithEmail": "o registrate con tu correo",
-    "registering": "Registrando..."
+    "registering": "Registrando...",
+    "sending": "Enviando...",
+    "backToLogin": "Volver al inicio de sesión",
+    "errorUnexpected": "Ocurrió un error inesperado. Intentá de nuevo."
   },
 
   "Common": {

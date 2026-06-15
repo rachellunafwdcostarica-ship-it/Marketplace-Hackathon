@@ -88,14 +88,19 @@ export default function RegisterPage() {
     })
     setLoading(false)
     if (!result.ok) {
+      if (result.error === 'email_already_exists') {
+        // Anti-enumeración: no revelar que el correo ya está registrado.
+        // Mostrar el mismo flujo que un registro exitoso.
+        toast.success(tAuth('registerSuccess'))
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
+        return
+      }
       const message =
         result.error === 'password_breached'
           ? tAuth('passwordBreached')
           : result.error === 'pwned_check_failed'
             ? tAuth('pwnedCheckFailed')
-            : result.error === 'email_already_exists'
-              ? tAuth('emailAlreadyExists')
-              : result.error
+            : tAuth('errorUnexpected')
       toast.error(message)
       return
     }

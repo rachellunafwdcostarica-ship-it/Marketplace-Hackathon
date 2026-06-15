@@ -61,6 +61,41 @@ export async function signOut(): Promise<Result<void>> {
 }
 
 /**
+ * Solicita un enlace de recuperación de contraseña (RF-04).
+ *
+ * Supabase Auth devuelve éxito incluso si el correo no existe en el sistema,
+ * de modo que la respuesta nunca revela si una cuenta está registrada
+ * (anti-enumeración por diseño del proveedor). Si llega un error es operacional
+ * (rate limit, config inválida) — se registra pero no se expone al usuario.
+ */
+export async function requestPasswordReset(
+  email: string,
+): Promise<Result<void>> {
+  const parsed = z.string().email().safeParse(email)
+  if (!parsed.success) return err('invalid_email')
+
+  const reqHeaders = await headers()
+  const host =
+    reqHeaders.get('x-forwarded-host') ??
+    reqHeaders.get('host') ??
+    'localhost:3000'
+  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+  const redirectTo = `${proto}://${host}/auth/callback?next=/reset-password`
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+    redirectTo,
+  })
+
+  if (error) {
+    logger.error('requestPasswordReset failed', { error: error.message })
+    return err('reset_failed')
+  }
+
+  return ok(undefined)
+}
+
+/**
  * Asigna el rol al usuario actual durante el onboarding.
  *
  * - Solo acepta 'junior' o 'empresario' (Q6: nunca admin).
@@ -217,6 +252,8 @@ export async function signUpWithPassword(input: {
     .maybeSingle()
 
   if (existingUser) {
+    // Anti-enumeración: la UI debe mostrar el mismo mensaje de éxito que un
+    // registro nuevo. No revelar que el correo ya está registrado.
     return err('email_already_exists')
   }
 
