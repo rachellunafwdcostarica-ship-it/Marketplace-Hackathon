@@ -133,7 +133,7 @@ export default function RegisterPage() {
         <RoleSelector
           selected={selectedRole}
           onChange={setSelectedRole}
-          label="¿Cómo vas a usar FWD Talent?"
+          label={tAuth('roleTitle')}
         />
 
         <OAuthButtons
