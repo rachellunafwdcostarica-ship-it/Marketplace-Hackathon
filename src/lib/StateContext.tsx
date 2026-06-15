@@ -226,12 +226,6 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        await fetchCompanyAndRole(user)
-      }
-    })
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
