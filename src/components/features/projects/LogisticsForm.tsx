@@ -85,6 +85,11 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
   const modalidad = useWatch({ control, name: 'modalidad' })
   const requiereUbicacion = modalidad !== '' && modalidad !== 'remoto'
 
+  // Decimales por defecto (USD); en colones solo enteros (céntimos en desuso).
+  // El `step` lo refleja en el input; la validación dura vive en el schema/backend.
+  const moneda = useWatch({ control, name: 'moneda' })
+  const montoStep = moneda === 'CRC' ? '1' : '0.01'
+
   const plazoDias = useWatch({ control, name: 'plazoDias' })
   const cierreEstimado = calcularCierreEstimado(todayIso, plazoDias, locale)
 
@@ -218,6 +223,7 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
             id="presupuestoMin"
             type="number"
             min={1}
+            step={montoStep}
             disabled={disabled}
             placeholder={t('fieldBudgetPlaceholder')}
             className="bg-card/50 border-border focus-visible:ring-primary"
@@ -233,6 +239,7 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
             id="presupuestoMax"
             type="number"
             min={1}
+            step={montoStep}
             disabled={disabled}
             placeholder={t('fieldBudgetPlaceholder')}
             className="bg-card/50 border-border focus-visible:ring-primary"
