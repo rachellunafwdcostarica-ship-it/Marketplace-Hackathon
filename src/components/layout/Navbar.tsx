@@ -105,16 +105,16 @@ export function Navbar({ heroMode = false }: NavbarProps) {
       ...mockLinks,
     ],
     empresa: [
-      { href: '/empresa', label: t('dashboard'), icon: 'dashboard' },
+      { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },
       {
-        href: '/empresa/new-project',
+        href: '/empresario/new-project',
         label: t('publishProject'),
         icon: 'plus',
       },
       ...mockLinks,
     ],
     admin: [
-      { href: '/admin', label: t('dashboard'), icon: 'dashboard' },
+      { href: '/admin/users', label: t('users'), icon: 'users' },
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },
       { href: '/admin/validations', label: t('validations'), icon: 'shield' },
@@ -141,6 +141,8 @@ export function Navbar({ heroMode = false }: NavbarProps) {
         return <PlusCircle className={className} />
       case 'building':
         return <Building2 className={className} />
+      case 'users':
+        return <Users className={className} />
       case 'shield':
         return <ShieldCheck className={className} />
       default:
@@ -273,7 +275,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
             {/* User Profile Avatar / Logout Dropdown */}
             <div className="relative group shrink-0">
               <Link
-                href="/empresa/perfil"
+                href="/empresario/perfil"
                 className={`flex items-center justify-center w-9 h-9 rounded-full shadow-sm transition-all duration-500 hover:scale-105 active:scale-95 cursor-pointer ${isHero ? 'bg-white/15 hover:bg-white/25 border border-white/25 text-white' : 'bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground'}`}
                 aria-label={t('profile')}
               >

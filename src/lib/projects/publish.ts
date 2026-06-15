@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
+import { PLAZO_MIN_DIAS, PLAZO_MAX_DIAS } from './schemas'
 import { parseLogistica, parseProposal } from './persistence'
 
 /** Traduce un error del RPC/constraint a un código amigable de la UI. */
@@ -108,6 +109,15 @@ export async function publishProject(
     ) {
       return err('invalid_input')
     }
+    // Plazo en días y en rango (defensa por borradores viejos que guardaban
+    // `fechaCierre` en vez de `plazoDias`). El RPC lo re-valida y calcula la fecha.
+    if (
+      !Number.isInteger(logistica.plazoDias) ||
+      logistica.plazoDias < PLAZO_MIN_DIAS ||
+      logistica.plazoDias > PLAZO_MAX_DIAS
+    ) {
+      return err('plazo')
+    }
 
     const client = supabase as unknown as {
       rpc: (
@@ -128,7 +138,7 @@ export async function publishProject(
         p_moneda: logistica.moneda,
         p_presupuesto_min: logistica.presupuestoMin,
         p_presupuesto_max: logistica.presupuestoMax,
-        p_fecha_cierre: `${logistica.fechaCierre}T00:00:00.000Z`,
+        p_plazo_dias: logistica.plazoDias,
         p_categorias: propuesta.categorias.map((categoria) => categoria.id),
         p_tecnologias: propuesta.tecnologias.map((tecnologia) => tecnologia.id),
         p_propuesta: propuesta,

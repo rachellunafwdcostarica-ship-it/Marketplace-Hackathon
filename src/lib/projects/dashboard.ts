@@ -100,7 +100,7 @@ export async function getMyPublishedProjects(): Promise<
       return err('empresario_no_encontrado')
     }
 
-    const { data, error } = await supabase
+    const { data: filasRaw, error } = await supabase
       .from('proyectos')
       .select(PROYECTO_SELECT)
       .eq('id_empresario', empresario.id_empresario)
@@ -113,7 +113,7 @@ export async function getMyPublishedProjects(): Promise<
     }
 
     // Cast: el typado de selects anidados de Supabase es poco confiable; mapeamos a mano.
-    const filas = (data ?? []) as unknown as RawProyecto[]
+    const filas = (filasRaw ?? []) as unknown as RawProyecto[]
     const proyectos: PublishedProject[] = filas.map((p) => ({
       id: p.id_proyecto,
       titulo: p.titulo,
@@ -180,7 +180,7 @@ export async function cancelProject(
     }
 
     const motivoLimpio = motivo.trim()
-    const { data, error } = await supabase
+    const { data: proyecto, error } = await supabase
       .from('proyectos')
       .update({
         estado: 'cancelado',
@@ -198,7 +198,7 @@ export async function cancelProject(
       })
       return err('cancel_failed')
     }
-    if (!data) {
+    if (!proyecto) {
       // No encontrado, ajeno o ya terminal.
       return err('cancel_failed')
     }

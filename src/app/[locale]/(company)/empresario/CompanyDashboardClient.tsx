@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/StateContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
@@ -31,19 +31,26 @@ import {
   AlertTriangle,
   Building2,
 } from 'lucide-react'
-import {
-  getMyPublishedProjects,
-  type PublishedProject,
-} from '@/lib/projects/dashboard'
+import type { PublishedProject } from '@/lib/projects/dashboard'
 
-export default function CompanyDashboard() {
+interface CompanyDashboardClientProps {
+  initialProjects: PublishedProject[]
+}
+
+/**
+ * Cuerpo (client) del dashboard del empresario. Los proyectos llegan YA cargados
+ * por prop desde el server component (sin useEffect de fetch); el refetch tras
+ * cancelar usa `router.refresh()`. Postulaciones y stats de postulaciones siguen
+ * en mock (StateContext) — ver docs/deuda-tecnica-mocks.md.
+ */
+export function CompanyDashboardClient({
+  initialProjects,
+}: CompanyDashboardClientProps) {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
   const tAccount = useTranslations('Account')
-  const tBoard = useTranslations('ProjectsBoard')
   const { isPending } = useAccountStatus()
 
-  // Postulaciones siguen en mock (StateContext); los proyectos pasan a datos reales.
   const {
     projects,
     applications,
@@ -53,30 +60,6 @@ export default function CompanyDashboard() {
 
   const router = useRouter()
 
-  const [realProjects, setRealProjects] = useState<PublishedProject[]>([])
-  const [loadingProjects, setLoadingProjects] = useState(true)
-
-  const loadProjects = useCallback(async () => {
-    setLoadingProjects(true)
-    const result = await getMyPublishedProjects()
-    if (result.ok) {
-      setRealProjects(result.data)
-    } else {
-      toast.error(tBoard('errors.load'))
-    }
-    setLoadingProjects(false)
-  }, [tBoard])
-
-  useEffect(() => {
-    void loadProjects()
-  }, [loadProjects])
-
-  useEffect(() => {
-    if (company && !company.isProfileFilled) {
-      router.replace('/empresa/formulario-empresa')
-    }
-  }, [company, router])
-
   // Postulaciones recibidas: mock, filtradas por los proyectos mock del contexto.
   const myProjectIds = projects
     .filter((p) => p.companyId === (company?.id || 'comp-1'))
@@ -85,7 +68,7 @@ export default function CompanyDashboard() {
     myProjectIds.includes(app.projectId),
   )
 
-  const activeRealCount = realProjects.filter(
+  const activeRealCount = initialProjects.filter(
     (p) => p.estadoEfectivo === 'abierto',
   ).length
 
@@ -142,9 +125,8 @@ export default function CompanyDashboard() {
 
   const handleContactCandidate = (email: string) => {
     toast.info(tEmpresa('contactEmailInfo', { email }))
-    window.location.assign(
-      `mailto:${email}?subject=Contacto%20FWD%20Talent%20Marketplace`,
-    )
+    const subject = encodeURIComponent(tEmpresa('contactEmailSubject'))
+    window.location.assign(`mailto:${email}?subject=${subject}`)
   }
 
   return (
@@ -162,7 +144,7 @@ export default function CompanyDashboard() {
             action={
               <div className="flex items-center gap-2">
                 <Link
-                  href="/empresa/perfil"
+                  href="/empresario/perfil"
                   className="border border-border bg-background text-foreground hover:bg-muted font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-pointer"
                 >
                   <Building2 className="w-4 h-4" />
@@ -179,7 +161,7 @@ export default function CompanyDashboard() {
                   </span>
                 ) : (
                   <Link
-                    href="/empresa/new-project"
+                    href="/empresario/new-project"
                     className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center justify-center gap-1.5 shadow-md rounded-lg text-sm h-8 px-3 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
@@ -200,9 +182,8 @@ export default function CompanyDashboard() {
               </h2>
 
               <PublishedProjectsBoard
-                projects={realProjects}
-                loading={loadingProjects}
-                onRefetch={() => void loadProjects()}
+                projects={initialProjects}
+                onRefetch={() => router.refresh()}
               />
             </div>
 

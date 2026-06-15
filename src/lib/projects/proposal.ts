@@ -14,8 +14,8 @@ import type { PropuestaProyecto } from './schemas'
 const MAX_INTENTOS = 3
 
 export type ProposalOutcome =
-  | { estado: 'ok'; propuesta: PropuestaProyecto }
-  | { estado: 'rechazada'; razones: string[] }
+  | { estado: 'ok'; propuesta: PropuestaProyecto; historial: HistorialEntry[] }
+  | { estado: 'rechazada'; historial: HistorialEntry[] }
 
 /**
  * Genera la propuesta (errolpendiente §1 paso 6, llamadas #2 y #3): arma la
@@ -38,7 +38,7 @@ export async function generateProposal(
 
     const { data: empresario, error: empError } = await supabase
       .from('empresarios')
-      .select('id_empresario')
+      .select('id_empresario, estado_verificacion')
       .eq('id_usuario', user.id)
       .maybeSingle()
     if (empError) {
@@ -49,6 +49,11 @@ export async function generateProposal(
     }
     if (!empresario) {
       return err('empresario_no_encontrado')
+    }
+    // Gate de costo: la propuesta dispara hasta MAX_INTENTOS llamadas a la IA
+    // (las más caras del flujo). Solo para empresas verificadas.
+    if (empresario.estado_verificacion !== 'verificado') {
+      return err('not_verified')
     }
 
     const { data: conv, error: convError } = await supabase
@@ -163,13 +168,54 @@ export async function generateProposal(
         return err('save_failed')
       }
 
-      return ok<ProposalOutcome>({ estado: 'ok', propuesta })
+      return ok<ProposalOutcome>({
+        estado: 'ok',
+        propuesta,
+        historial: historialFinal,
+      })
+    }
+
+    // Rechazada tras los reintentos: la IA le explica al empresario qué falta,
+    // en el chat (errolpendiente §5.1: tope de reintentos → explicar).
+    const detalles = ajustes.length > 0 ? ajustes : ultimasRazones
+    const mensajeRechazo =
+      detalles.length > 0
+        ? `Todavía no puedo armar la propuesta. Para avanzar:\n- ${detalles.join('\n- ')}`
+        : 'Todavía no puedo armar la propuesta con lo que tengo. Contame un poco más del proyecto.'
+    const historialRechazo: HistorialEntry[] = [
+      ...historial,
+      {
+        rol: 'ia',
+        tipo: 'mensaje',
+        contenido: mensajeRechazo,
+        fecha: new Date().toISOString(),
+      },
+    ]
+    const { data: updatedRechazo, error: updateRechazoError } = await supabase
+      .from('conversaciones_ia')
+      .update({
+        historial: historialRechazo as unknown as Json,
+        modelo_ia: provider.modelId,
+      })
+      .eq('id_conversacion', conversationId)
+      .eq('id_empresario', empresario.id_empresario)
+      .eq('estado', 'en_curso')
+      .select('id_conversacion')
+      .maybeSingle()
+    if (updateRechazoError || !updatedRechazo) {
+      logger.error('generateProposal: fallo al guardar feedback de rechazo', {
+        error: updateRechazoError?.message ?? 'sin_fila',
+      })
+      return err('save_failed')
     }
 
     logger.warn('generateProposal: propuesta rechazada tras reintentos', {
       razones: ultimasRazones,
     })
-    return ok<ProposalOutcome>({ estado: 'rechazada', razones: ultimasRazones })
+    return ok<ProposalOutcome>({
+      estado: 'rechazada',
+      historial: historialRechazo,
+    })
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'unexpected_error'
     if (msg === 'AI_NOT_CONFIGURED') {

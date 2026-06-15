@@ -3,8 +3,6 @@
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/StateContext'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
 import { EmptyState } from '@/components/features/shared/EmptyState'
@@ -88,34 +86,26 @@ export default function AdminProjectsPage() {
   )
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        <PageTitle
-          title={tAdmin('moderateProject')}
-          description={tAdmin('moderateProjectDesc')}
-          dotColor="text-magenta"
-        />
+    <div className="mx-auto w-full max-w-7xl space-y-12 px-4 py-8 sm:px-6 lg:px-8">
+      <PageTitle
+        title={tAdmin('moderateProject')}
+        description={tAdmin('moderateProjectDesc')}
+        dotColor="text-magenta"
+      />
 
-        {projects.length === 0 ? (
-          <EmptyState
-            title={tAdmin('noProjects')}
-            description={tAdmin('noProjectsDesc')}
-            icon={Briefcase}
-          />
-        ) : (
-          <>
-            {renderSection(tAdmin('projectsActive'), activeProjects, 'hide')}
-            {renderSection(
-              tAdmin('projectsPending'),
-              pendingProjects,
-              'approve',
-            )}
-            {renderSection(tAdmin('projectsClosed'), closedProjects, 'none')}
-          </>
-        )}
-      </main>
-      <Footer />
+      {projects.length === 0 ? (
+        <EmptyState
+          title={tAdmin('noProjects')}
+          description={tAdmin('noProjectsDesc')}
+          icon={Briefcase}
+        />
+      ) : (
+        <>
+          {renderSection(tAdmin('projectsActive'), activeProjects, 'hide')}
+          {renderSection(tAdmin('projectsPending'), pendingProjects, 'approve')}
+          {renderSection(tAdmin('projectsClosed'), closedProjects, 'none')}
+        </>
+      )}
     </div>
   )
 }

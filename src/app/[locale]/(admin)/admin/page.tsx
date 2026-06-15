@@ -1,190 +1,130 @@
-'use client'
-
-import React from 'react'
-import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { PageTitle } from '@/components/features/brand/PageTitle'
-import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
-import { CompanyCard } from '@/components/features/companies/CompanyCard'
-import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
-import { Button } from '@/components/ui/button'
+import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/routing'
-import { toast } from 'sonner'
 import {
-  Building,
-  Briefcase,
-  Layers,
+  Users,
+  UserCheck,
   ShieldCheck,
-  CheckSquare,
-  AlertOctagon,
+  Power,
+  GraduationCap,
+  Building2,
+  ShieldAlert,
   ArrowRight,
 } from 'lucide-react'
+import { PageTitle } from '@/components/features/brand/PageTitle'
+import {
+  DashboardStats,
+  type StatItem,
+} from '@/components/features/DashboardStats'
+import { getUserStats, type AdminUserStats } from '@/lib/admin/queries'
 
-export default function AdminDashboard() {
-  const tAdmin = useTranslations('Admin')
-  const tCommon = useTranslations('Common')
+const EMPTY_STATS: AdminUserStats = {
+  total: 0,
+  pendientes: 0,
+  activas: 0,
+  desactivadas: 0,
+  egresados: 0,
+  empresarios: 0,
+  administradores: 0,
+}
 
-  const {
-    projects,
-    applications,
-    companies,
-    updateCompanyStatus,
-    updateProjectStatus,
-  } = useAppState()
+export default async function AdminDashboardPage() {
+  const t = await getTranslations('Admin')
+  const result = await getUserStats()
+  const stats = result.ok ? result.data : EMPTY_STATS
 
-  const totalCompanies = companies.length
-  const pendingCompanies = companies.filter((c) => c.status === 'pending')
-  const activeProjects = projects.filter((p) => p.status === 'active')
-  const totalApplications = applications.length
-
-  const stats: StatItem[] = [
+  const cards: StatItem[] = [
     {
-      title: tAdmin('statsTotalCompanies'),
-      value: totalCompanies,
-      icon: Building,
-      description: tAdmin('statsTotalCompaniesDesc'),
+      title: t('statTotalUsers'),
+      value: stats.total,
+      icon: Users,
+      description: t('statTotalUsersDesc'),
       colorClass: 'text-primary bg-primary/10',
     },
     {
-      title: tAdmin('statsPendingApprovals'),
-      value: pendingCompanies.length,
-      icon: ShieldCheck,
-      description: tAdmin('statsPendingDesc'),
+      title: t('statPendingUsers'),
+      value: stats.pendientes,
+      icon: UserCheck,
+      description: t('statPendingUsersDesc'),
       colorClass: 'text-warning bg-warning/10',
     },
     {
-      title: tAdmin('statsActiveJobs'),
-      value: activeProjects.length,
-      icon: Briefcase,
-      description: tAdmin('statsActiveJobsDesc'),
+      title: t('statActiveUsers'),
+      value: stats.activas,
+      icon: ShieldCheck,
+      description: t('statActiveUsersDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
     {
-      title: tAdmin('statsApplicationsCount'),
-      value: totalApplications,
-      icon: Layers,
-      description: tAdmin('statsApplicationsDesc'),
+      title: t('statInactiveUsers'),
+      value: stats.desactivadas,
+      icon: Power,
+      description: t('statInactiveUsersDesc'),
+      colorClass: 'text-destructive bg-destructive/10',
+    },
+    {
+      title: t('statGraduates'),
+      value: stats.egresados,
+      icon: GraduationCap,
+      description: t('statGraduatesDesc'),
+      colorClass: 'text-secondary bg-secondary/10',
+    },
+    {
+      title: t('statCompanyUsers'),
+      value: stats.empresarios,
+      icon: Building2,
+      description: t('statCompanyUsersDesc'),
       colorClass: 'text-magenta bg-magenta/10',
+    },
+    {
+      title: t('statAdmins'),
+      value: stats.administradores,
+      icon: ShieldAlert,
+      description: t('statAdminsDesc'),
+      colorClass: 'text-highlight bg-highlight/10',
     },
   ]
 
-  const handleApproveCompany = (id: string, name: string) => {
-    updateCompanyStatus(id, 'approved')
-    toast.success(tAdmin('companyApproved', { name }))
-  }
-
-  const handleRejectCompany = (id: string, name: string) => {
-    updateCompanyStatus(id, 'rejected')
-    toast.error(tAdmin('companyRejected', { name }))
-  }
-
-  const handleHideProject = (id: string, title: string) => {
-    updateProjectStatus(id, 'closed')
-    toast.warning(tAdmin('projectHidden', { title }))
-  }
-
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <PageTitle
+        title={t('dashboard')}
+        description={t('dashboardOverviewDesc')}
+        dotColor="text-magenta"
+      />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PageTitle
-          title={tAdmin('dashboard')}
-          description={tAdmin('dashboardDesc')}
-          dotColor="text-magenta"
-        />
+      <DashboardStats stats={cards} className="xl:grid-cols-4" />
 
-        <DashboardStats stats={stats} />
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Link
+          href="/admin/validations"
+          className="group flex items-center justify-between rounded-xl border border-border/80 bg-card/40 p-5 backdrop-blur-sm transition-colors hover:border-warning/40"
+        >
+          <span className="flex items-center gap-3">
+            <span className="rounded-lg bg-warning/10 p-2.5 text-warning">
+              <UserCheck className="h-5 w-5" />
+            </span>
+            <span className="font-semibold text-foreground">
+              {t('goToValidations')} ({stats.pendientes})
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-10">
-          <div className="lg:col-span-6 space-y-6">
-            <div className="flex justify-between items-center pb-2 border-b border-border/60">
-              <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
-                {tAdmin('verifyCompany')} ({pendingCompanies.length})
-                <span className="text-warning">.</span>
-              </h2>
-              <Link
-                href="/admin/companies"
-                className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
-              >
-                {tCommon('viewAll')}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {pendingCompanies.length === 0 ? (
-              <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
-                <CheckSquare className="w-8 h-8 mx-auto mb-2 text-accent" />
-                {tAdmin('noPendingCompanies')}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {pendingCompanies.slice(0, 2).map((company) => (
-                  <CompanyCard
-                    key={company.id}
-                    company={company}
-                    onApprove={() =>
-                      handleApproveCompany(company.id, company.name)
-                    }
-                    onReject={() =>
-                      handleRejectCompany(company.id, company.name)
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="lg:col-span-6 space-y-6">
-            <div className="flex justify-between items-center pb-2 border-b border-border/60">
-              <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
-                {tAdmin('moderateProject')} ({activeProjects.length})
-                <span className="text-accent">.</span>
-              </h2>
-              <Link
-                href="/admin/projects"
-                className="text-sm font-semibold text-primary hover:underline flex items-center gap-1"
-              >
-                {tCommon('viewAll')}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {activeProjects.length === 0 ? (
-              <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
-                <AlertOctagon className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-                {tAdmin('noPendingCompanies')}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {activeProjects.slice(0, 2).map((project) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    actionButton={
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          handleHideProject(project.id, project.title)
-                        }
-                        className="w-full border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5"
-                      >
-                        <AlertOctagon className="w-4 h-4" />
-                        {tAdmin('hideFromMarketplace')}
-                      </Button>
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-
-      <Footer />
+        <Link
+          href="/admin/users"
+          className="group flex items-center justify-between rounded-xl border border-border/80 bg-card/40 p-5 backdrop-blur-sm transition-colors hover:border-primary/40"
+        >
+          <span className="flex items-center gap-3">
+            <span className="rounded-lg bg-primary/10 p-2.5 text-primary">
+              <Users className="h-5 w-5" />
+            </span>
+            <span className="font-semibold text-foreground">
+              {t('goToUsers')}
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      </div>
     </div>
   )
 }

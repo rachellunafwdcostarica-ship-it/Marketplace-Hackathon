@@ -1,5 +1,13 @@
 'use client'
 
+/**
+ * HUÉRFANO (código muerto preservado) — pestaña "Proyectos" MOCK del perfil del
+ * empresario (proyectos, filtros y avatares inventados, sin datos de BD).
+ * Reemplazada en `/empresario/perfil` por `PublishedProjectsBoard` (proyectos
+ * reales). Solo la referencia el otro huérfano `MockCompanyPerfilPage`.
+ * Conservada por decisión del equipo (ver `docs/deuda-tecnica-mocks.md`).
+ */
+
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
@@ -181,7 +189,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>
@@ -277,7 +285,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>
@@ -376,7 +384,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>
@@ -472,7 +480,7 @@ export function CompanyProjectsTab({ tecnologias }: CompanyProjectsTabProps) {
             </div>
 
             <Link
-              href="/empresa"
+              href="/empresario"
               className="text-xs font-bold text-primary hover:text-primary-foreground/90 flex items-center gap-1 transition-all"
             >
               <span>{t('viewApps')}</span>

@@ -34,19 +34,20 @@ function createRegisterSchema(
 ) {
   return zod
     .object({
-      fullName: zod.string().min(2, { message: t('titleMin') }),
+      fullName: zod.string().min(2, { message: t('nameMin') }),
       email: zod.string().email({ message: t('emailInvalid') }),
-      password: zod.string().min(6, { message: t('titleMin') }),
+      password: zod.string().min(8, { message: t('passwordMin') }),
       confirmPassword: zod.string(),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      message: 'Las contraseñas no coinciden',
+      message: t('passwordMismatch'),
       path: ['confirmPassword'],
     })
 }
 
 export default function RegisterPage() {
   const tAuth = useTranslations('Auth')
+  const tLogin = useTranslations('Login')
   const tValidation = useTranslations('Validation')
   const router = useRouter()
   const { setUserRole } = useAppState()
@@ -98,9 +99,7 @@ export default function RegisterPage() {
       toast.error(message)
       return
     }
-    toast.success(
-      '¡Registro exitoso! Revisa tu correo para verificar tu cuenta.',
-    )
+    toast.success(tAuth('registerSuccess'))
     router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
   }
 
@@ -141,8 +140,8 @@ export default function RegisterPage() {
           onGoogleClick={() => handleOAuthLogin('google')}
           onGitHubClick={() => handleOAuthLogin('github')}
           disabled={loading}
-          googleText="Continuar con Google"
-          githubText="Continuar con GitHub"
+          googleText={tLogin('google')}
+          githubText={tLogin('github')}
         />
 
         <div className="relative my-4">
@@ -151,7 +150,7 @@ export default function RegisterPage() {
           </div>
           <div className="relative flex justify-center text-xs">
             <span className="bg-surface px-3 text-ink-subtle font-semibold uppercase tracking-wider text-[10px]">
-              o registrate con tu correo
+              {tAuth('orWithEmail')}
             </span>
           </div>
         </div>
@@ -263,7 +262,7 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
           >
-            {loading ? 'Registrando...' : tAuth('createAccount')}
+            {loading ? tAuth('registering') : tAuth('createAccount')}
             {!loading && <ArrowRight className="w-4 h-4" />}
           </Button>
         </form>

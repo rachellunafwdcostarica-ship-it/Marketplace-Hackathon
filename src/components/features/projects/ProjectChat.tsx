@@ -14,7 +14,10 @@ interface ProjectChatProps {
   conversationId: string
   contextoInicial: string
   historial: HistorialEntry[]
+  completo: boolean
+  kickoffLoading: boolean
   onHistorialChange: (historial: HistorialEntry[]) => void
+  onCompletoChange: (completo: boolean) => void
   onArmarPropuesta: () => void
   armando: boolean
 }
@@ -66,33 +69,37 @@ function ChatBubble({
 }
 
 /**
- * Chat con la IA (RF-54/55). Controlado por el wizard; cada envío persiste
- * append-only y la IA responde sin streaming. Cuando la IA marca "completo",
- * se muestra una pista; el botón "Armar propuesta" está siempre disponible y la
- * validación (#3) es el verdadero filtro (errolpendiente §1 paso 5-6).
+ * Chat con la IA (RF-54/55). Controlado por el wizard: el historial, `completo`
+ * y el loading del saludo viven arriba. El saludo de la IA lo dispara el wizard
+ * al "Continuar con la IA" (sin useEffect). "Armar propuesta" se habilita solo
+ * cuando la IA marca el proyecto como completo (errolpendiente §1 paso 5-6).
  */
 export function ProjectChat({
   conversationId,
   contextoInicial,
   historial,
+  completo,
+  kickoffLoading,
   onHistorialChange,
+  onCompletoChange,
   onArmarPropuesta,
   armando,
 }: ProjectChatProps) {
   const t = useTranslations('ProjectPublish')
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
-  const [completo, setCompleto] = useState(false)
+
+  const ocupado = loading || armando || kickoffLoading
 
   const onSend = async () => {
     const limpio = text.trim()
-    if (limpio.length === 0 || loading || armando) return
+    if (limpio.length === 0 || ocupado) return
     setLoading(true)
     const result = await sendChatMessage(conversationId, limpio)
     setLoading(false)
     if (result.ok) {
       onHistorialChange(result.data.historial)
-      setCompleto(result.data.completo)
+      onCompletoChange(result.data.completo)
       setText('')
       return
     }
@@ -115,7 +122,7 @@ export function ProjectChat({
             contenido={mensaje.contenido}
           />
         ))}
-        {loading && (
+        {(loading || kickoffLoading) && (
           <p className="text-xs text-muted-foreground pl-9">
             {t('aiThinking')}
           </p>
@@ -127,7 +134,7 @@ export function ProjectChat({
           value={text}
           onChange={(event) => setText(event.target.value)}
           rows={2}
-          disabled={loading || armando}
+          disabled={ocupado}
           placeholder={t('chatPlaceholder')}
           className="bg-card/50 border-border focus-visible:ring-primary resize-none"
           onKeyDown={(event) => {
@@ -140,7 +147,7 @@ export function ProjectChat({
         <Button
           type="button"
           onClick={() => void onSend()}
-          disabled={loading || armando || text.trim().length === 0}
+          disabled={ocupado || text.trim().length === 0}
           className="bg-primary hover:bg-primary/95 text-primary-foreground shrink-0"
           aria-label={t('chatSend')}
         >
@@ -149,17 +156,19 @@ export function ProjectChat({
       </div>
 
       <div className="flex flex-col gap-2 pt-1">
-        {completo && (
+        {completo ? (
           <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent">
             <Sparkles className="h-3.5 w-3.5" />
             {t('readyCue')}
           </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">{t('notReadyHint')}</p>
         )}
         <Button
           type="button"
           variant={completo ? 'secondary' : 'outline'}
           onClick={onArmarPropuesta}
-          disabled={loading || armando}
+          disabled={ocupado || !completo}
           className="inline-flex items-center gap-1.5 self-start"
         >
           <Wand2 className="h-4 w-4" />

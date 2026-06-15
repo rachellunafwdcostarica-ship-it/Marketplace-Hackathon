@@ -29,6 +29,7 @@ import {
   type PropuestaProyecto,
 } from '@/lib/projects/schemas'
 import { saveLogisticsDraft } from '@/lib/projects/actions'
+import { sendChatMessage } from '@/lib/projects/chat'
 import { generateProposal } from '@/lib/projects/proposal'
 import { publishProject } from '@/lib/projects/publish'
 import type { HistorialEntry } from '@/lib/ai/types'
@@ -88,11 +89,13 @@ export function ProjectWizard({
   const [logisticaActual, setLogisticaActual] = useState<LogisticaDraft | null>(
     logistica,
   )
+  const [completo, setCompleto] = useState(false)
+  const [kickoffLoading, setKickoffLoading] = useState(false)
   const [step, setStep] = useState<1 | 2 | 3>(
     propuestaInicial ? 3 : historialInicial.length > 0 ? 2 : 1,
   )
 
-  const schema = useMemo(() => buildLogisticsSchema(todayIso), [todayIso])
+  const schema = useMemo(() => buildLogisticsSchema(), [])
 
   const form = useForm<LogisticsFormValues>({
     resolver: zodResolver(schema),
@@ -115,6 +118,23 @@ export function ProjectWizard({
       setLogisticaActual(toLogisticaDraft(values))
       toast.success(t('draftSaved'))
       setStep(2)
+      // Saludo de la IA disparado por la acción del usuario (sin useEffect): solo
+      // en el primer ingreso al chat (historial vacío). Reacciona al contexto.
+      if (historial.length === 0) {
+        setKickoffLoading(true)
+        const kr = await sendChatMessage(conversationId)
+        setKickoffLoading(false)
+        if (kr.ok) {
+          setHistorial(kr.data.historial)
+          setCompleto(kr.data.completo)
+        } else {
+          toast.error(
+            t(
+              `errors.${KNOWN_ERROR_CODES.has(kr.error) ? kr.error : 'unexpected'}`,
+            ),
+          )
+        }
+      }
       return
     }
 
@@ -140,10 +160,13 @@ export function ProjectWizard({
     }
 
     if (result.data.estado === 'rechazada') {
-      toast.error(t('proposalRejected'))
+      // La IA explica en el chat qué falta; nos quedamos en el chat.
+      setHistorial(result.data.historial)
+      toast(t('proposalRejected'))
       return
     }
 
+    setHistorial(result.data.historial)
     setPropuesta(result.data.propuesta)
     setStep(3)
   }
@@ -155,7 +178,7 @@ export function ProjectWizard({
 
     if (result.ok) {
       toast.success(t('publishedSuccess'))
-      router.push('/empresa')
+      router.push('/empresario')
       return
     }
 
@@ -210,7 +233,10 @@ export function ProjectWizard({
             conversationId={conversationId}
             contextoInicial={contexto}
             historial={historial}
+            completo={completo}
+            kickoffLoading={kickoffLoading}
             onHistorialChange={setHistorial}
+            onCompletoChange={setCompleto}
             onArmarPropuesta={onArmarPropuesta}
             armando={armando}
           />
@@ -282,14 +308,14 @@ export function ProjectWizard({
 
             <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
               <Link
-                href="/empresa"
+                href="/empresario"
                 className="border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center rounded-lg text-sm font-semibold h-8 px-3"
               >
                 {tCommon('cancel')}
               </Link>
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !isVerified}
                 className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? t('continuing') : t('continueWithAi')}
