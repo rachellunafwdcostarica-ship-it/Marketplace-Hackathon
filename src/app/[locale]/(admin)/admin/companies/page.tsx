@@ -3,8 +3,6 @@
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/StateContext'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { CompanyCard } from '@/components/features/companies/CompanyCard'
 import { toast } from 'sonner'
@@ -66,29 +64,25 @@ export default function AdminCompaniesPage() {
   )
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
-        <PageTitle
-          title={tAdmin('verifyCompany')}
-          description={tAdmin('verifyCompanyDesc')}
-          dotColor="text-magenta"
-        />
+    <div className="mx-auto w-full max-w-7xl space-y-12 px-4 py-8 sm:px-6 lg:px-8">
+      <PageTitle
+        title={tAdmin('verifyCompany')}
+        description={tAdmin('verifyCompanyDesc')}
+        dotColor="text-magenta"
+      />
 
-        {companies.length === 0 ? (
-          <div className="p-12 border border-dashed border-border rounded-xl text-center text-muted-foreground">
-            <Building className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
-            <p className="font-semibold">{tAdmin('noCompaniesRegistered')}</p>
-          </div>
-        ) : (
-          <>
-            {renderSection(tAdmin('companiesPending'), pending, true)}
-            {renderSection(tAdmin('companiesApproved'), approved, false)}
-            {renderSection(tAdmin('companiesRejected'), rejected, false)}
-          </>
-        )}
-      </main>
-      <Footer />
+      {companies.length === 0 ? (
+        <div className="p-12 border border-dashed border-border rounded-xl text-center text-muted-foreground">
+          <Building className="w-10 h-10 mx-auto mb-3 text-muted-foreground/50" />
+          <p className="font-semibold">{tAdmin('noCompaniesRegistered')}</p>
+        </div>
+      ) : (
+        <>
+          {renderSection(tAdmin('companiesPending'), pending, true)}
+          {renderSection(tAdmin('companiesApproved'), approved, false)}
+          {renderSection(tAdmin('companiesRejected'), rejected, false)}
+        </>
+      )}
     </div>
   )
 }

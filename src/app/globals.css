@@ -27,6 +27,11 @@
   --border: oklch(0.92 0.005 245);
   --border-strong: oklch(0.85 0.005 245);
 
+  /* Chrome del admin (design.md §3 "Admin dark"): morado FWD derivado del
+     secondary #662D91, más claro que el negro-azulado original pero todavía
+     oscuro, manteniendo contraste con el topbar y texto blanco legible. */
+  --surface-admin: oklch(0.34 0.105 305);
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --duration-fast: 160ms;
@@ -65,6 +70,7 @@
   --color-ink-subtle: var(--ink-subtle);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-surface-admin: var(--surface-admin);
 
   /* Alias compatibles con shadcn/ui mapeados sobre tokens FWD (sin colores nuevos) */
   --color-card: var(--surface);
