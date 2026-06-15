@@ -343,7 +343,7 @@ export type Database = {
       empresarios: {
         Row: {
           alcance_operativo: Database['public']['Enums']['alcance_enum'] | null
-          cedula_juridica: string | null
+          cedula: string | null
           ciudad_sede: string | null
           descripcion: string | null
           estado_verificacion: Database['public']['Enums']['estado_verif_enum']
@@ -361,7 +361,7 @@ export type Database = {
         }
         Insert: {
           alcance_operativo?: Database['public']['Enums']['alcance_enum'] | null
-          cedula_juridica?: string | null
+          cedula?: string | null
           ciudad_sede?: string | null
           descripcion?: string | null
           estado_verificacion?: Database['public']['Enums']['estado_verif_enum']
@@ -379,7 +379,7 @@ export type Database = {
         }
         Update: {
           alcance_operativo?: Database['public']['Enums']['alcance_enum'] | null
-          cedula_juridica?: string | null
+          cedula?: string | null
           ciudad_sede?: string | null
           descripcion?: string | null
           estado_verificacion?: Database['public']['Enums']['estado_verif_enum']

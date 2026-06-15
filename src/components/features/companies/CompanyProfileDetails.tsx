@@ -105,8 +105,15 @@ export function CompanyProfileDetails({
                 : tE('typeEmprendedor')
             }
           />
-          {profile.companyType === 'formal' && profile.cedula ? (
-            <DataItem label={tE('fieldCedula')} value={profile.cedula} />
+          {profile.cedula ? (
+            <DataItem
+              label={
+                profile.companyType === 'emprendedor'
+                  ? tE('fieldCedulaIdentidad')
+                  : tE('fieldCedulaJuridica')
+              }
+              value={profile.cedula}
+            />
           ) : null}
           {ubicacion ? (
             <DataItem label={tE('fieldCountry')} value={ubicacion} />
