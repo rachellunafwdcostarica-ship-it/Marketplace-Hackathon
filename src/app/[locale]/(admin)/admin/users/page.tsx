@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/table'
 import { AdminUserFilters } from '@/components/features/admin/AdminUserFilters'
 import { AccountStatusActions } from '@/components/features/admin/AccountStatusActions'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/dal'
 import {
   listUsers,
   ADMIN_USER_ROLES,
@@ -52,10 +52,7 @@ export default async function AdminUsersPage({
   const result = await listUsers(filters)
   const users = result.ok ? result.data : []
 
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user: currentUser },
-  } = await supabase.auth.getUser()
+  const currentUser = await getCurrentUser()
   const currentUserId = currentUser?.id ?? null
 
   const statusLabel = (value: AdminAccountStatus): string => {

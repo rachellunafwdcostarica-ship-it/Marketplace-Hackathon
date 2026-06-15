@@ -1,6 +1,7 @@
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/dal'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import type { Database } from '@/types/database'
@@ -76,14 +77,10 @@ export async function getMyPublishedProjects(): Promise<
   Result<PublishedProject[]>
 > {
   try {
+    const user = await getCurrentUser()
+    if (!user) return err('unauthorized')
+
     const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return err('unauthorized')
-    }
 
     const { data: empresario, error: empError } = await supabase
       .from('empresarios')
