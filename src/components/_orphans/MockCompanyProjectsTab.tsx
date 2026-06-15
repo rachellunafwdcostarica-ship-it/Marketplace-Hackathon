@@ -1,5 +1,13 @@
 'use client'
 
+/**
+ * HUÉRFANO (código muerto preservado) — pestaña "Proyectos" MOCK del perfil del
+ * empresario (proyectos, filtros y avatares inventados, sin datos de BD).
+ * Reemplazada en `/empresario/perfil` por `PublishedProjectsBoard` (proyectos
+ * reales). Solo la referencia el otro huérfano `MockCompanyPerfilPage`.
+ * Conservada por decisión del equipo (ver `docs/deuda-tecnica-mocks.md`).
+ */
+
 import React from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
