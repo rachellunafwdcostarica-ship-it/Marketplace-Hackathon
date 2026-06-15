@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import { DemoDataProvider } from '@/lib/DemoDataContext'
 import { AccountStatusProvider } from '@/components/features/auth/AccountStatusContext'
 import { PendingAccountBanner } from '@/components/features/auth/PendingAccountBanner'
 
@@ -44,9 +45,11 @@ export default async function AppLayout({
   const estado = estadoCuenta as string | null
 
   return (
-    <AccountStatusProvider estadoCuenta={estado}>
-      {estado !== 'activa' && <PendingAccountBanner />}
-      {children}
-    </AccountStatusProvider>
+    <DemoDataProvider>
+      <AccountStatusProvider estadoCuenta={estado}>
+        {estado !== 'activa' && <PendingAccountBanner />}
+        {children}
+      </AccountStatusProvider>
+    </DemoDataProvider>
   )
 }

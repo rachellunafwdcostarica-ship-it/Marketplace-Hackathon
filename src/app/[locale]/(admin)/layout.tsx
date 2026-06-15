@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import { DemoDataProvider } from '@/lib/DemoDataContext'
 import { AdminShell } from '@/components/layout/AdminShell'
 
 /**
@@ -36,5 +37,9 @@ export default async function AdminLayout({
     redirect(`/${locale}${ROLE_HOME[role]}`)
   }
 
-  return <AdminShell>{children}</AdminShell>
+  return (
+    <DemoDataProvider>
+      <AdminShell>{children}</AdminShell>
+    </DemoDataProvider>
+  )
 }
