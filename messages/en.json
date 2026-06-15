@@ -623,6 +623,7 @@
     "representative": "Representative",
     "fullName": "Full name",
     "noDescription": "You haven't added a company description yet.",
+    "noProjectsYet": "You haven't published any projects yet.",
     "tabProfile": "Company Profile",
     "tabProjects": "Active Projects",
     "tabHistory": "Hiring History",
