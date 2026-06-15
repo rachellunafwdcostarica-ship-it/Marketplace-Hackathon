@@ -13,8 +13,8 @@ import { EmptyState } from '@/components/features/shared/EmptyState'
 import { LoadingSkeleton } from '@/components/features/shared/LoadingSkeleton'
 import { Briefcase } from 'lucide-react'
 
-export default function JuniorProjectsMarketplace() {
-  const tJunior = useTranslations('Junior')
+export default function EgresadoProjectsMarketplace() {
+  const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
   const { projects } = useAppState()
 
@@ -108,8 +108,8 @@ export default function JuniorProjectsMarketplace() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
-          title={tJunior('marketplace')}
-          description={tJunior('marketplaceDesc')}
+          title={tEgresado('marketplace')}
+          description={tEgresado('marketplaceDesc')}
           dotColor="text-accent"
         />
 
@@ -117,7 +117,7 @@ export default function JuniorProjectsMarketplace() {
           <SearchBar
             value={search}
             onChange={setSearch}
-            placeholder={tJunior('searchPlaceholder')}
+            placeholder={tEgresado('searchPlaceholder')}
           />
 
           <ProjectFilters
@@ -138,8 +138,8 @@ export default function JuniorProjectsMarketplace() {
               <LoadingSkeleton type="card" count={4} />
             ) : filteredProjects.length === 0 ? (
               <EmptyState
-                title={tJunior('emptyState')}
-                description={tJunior('emptyStateDesc')}
+                title={tEgresado('emptyState')}
+                description={tEgresado('emptyStateDesc')}
                 icon={Briefcase}
                 actionText={tCommon('clearFilters')}
                 onAction={handleClearFilters}

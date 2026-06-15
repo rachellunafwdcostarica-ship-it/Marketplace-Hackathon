@@ -68,7 +68,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   const [studentSkills, setStudentSkills] = useState<StudentSkill[]>([])
   const [studentPortfolio, setStudentPortfolio] =
     useState<StudentPortfolio | null>(null)
-  const [userRole, setUserRoleState] = useState<UserRole>('junior')
+  const [userRole, setUserRoleState] = useState<UserRole>('egresado')
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [initialized, setInitialized] = useState(false)
 
@@ -160,7 +160,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (localRole) setUserRoleState(localRole as UserRole)
-      else setUserRoleState('junior')
+      else setUserRoleState('egresado')
 
       setInitialized(true)
     }, 0)
@@ -182,7 +182,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       const role = normalizeRole(roleRaw)
       if (role) {
         setUserRoleState(role)
-        if (role === 'empresa') {
+        if (role === 'empresario') {
           const res = await getCompanyProfile()
           if (res.ok && res.data) {
             const dbProf = res.data
@@ -288,7 +288,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     const found = companies.find((c) => c.userId === currentUser.id)
     if (found) return found
 
-    if (userRole === 'empresa') {
+    if (userRole === 'empresario') {
       return {
         id: `comp-temp-${currentUser.id}`,
         name: currentUser.user_metadata?.full_name || '',
@@ -377,7 +377,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
       setCompanies(mockCompanies)
       setStudentSkills(mockStudentSkills)
       setStudentPortfolio(mockStudentPortfolio)
-      setUserRoleState('junior')
+      setUserRoleState('egresado')
       setCurrentUser(null)
     })
   }

@@ -6,8 +6,8 @@ import { AccountStatusProvider } from '@/components/features/auth/AccountStatusC
 import { PendingAccountBanner } from '@/components/features/auth/PendingAccountBanner'
 
 /**
- * Layout del grupo (app) — rutas de junior.
- * Verifica que el usuario esté autenticado, tenga rol 'junior',
+ * Layout del grupo (app) — rutas de egresado.
+ * Verifica que el usuario esté autenticado, tenga rol 'egresado',
  * e inyecta el estado de la cuenta en AccountStatusProvider.
  */
 export default async function AppLayout({
@@ -37,7 +37,7 @@ export default async function AppLayout({
     redirect(`/${locale}/onboarding`)
   }
 
-  if (role !== 'junior') {
+  if (role !== 'egresado') {
     redirect(`/${locale}${ROLE_HOME[role]}`)
   }
 

@@ -204,7 +204,7 @@ export function CompanyDashboardClient({
                     <ApplicationCard
                       key={app.id}
                       application={app}
-                      viewMode="empresa"
+                      viewMode="empresario"
                       onAccept={() =>
                         handleActionClick('accept', app.id, app.candidateName)
                       }

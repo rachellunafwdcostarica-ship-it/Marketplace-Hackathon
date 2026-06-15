@@ -1,18 +1,18 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeRole, toDbRole } from './roles'
+import { normalizeRole } from './roles'
 import type { UserRole } from '@/types'
 
 describe('normalizeRole', () => {
-  it("convierte 'egresado' a 'junior'", () => {
-    expect(normalizeRole('egresado')).toBe('junior')
+  it("devuelve 'egresado' para el valor de BD 'egresado'", () => {
+    expect(normalizeRole('egresado')).toBe<UserRole>('egresado')
   })
 
-  it("convierte 'empresario' a 'empresa'", () => {
-    expect(normalizeRole('empresario')).toBe('empresa')
+  it("devuelve 'empresario' para el valor de BD 'empresario'", () => {
+    expect(normalizeRole('empresario')).toBe<UserRole>('empresario')
   })
 
-  it("convierte 'administrador' a 'admin'", () => {
-    expect(normalizeRole('administrador')).toBe('admin')
+  it("devuelve 'administrador' para el valor de BD 'administrador'", () => {
+    expect(normalizeRole('administrador')).toBe<UserRole>('administrador')
   })
 
   it('devuelve null para valor desconocido', () => {
@@ -26,28 +26,12 @@ describe('normalizeRole', () => {
   it('devuelve null para undefined', () => {
     expect(normalizeRole(undefined)).toBeNull()
   })
-})
 
-describe('toDbRole', () => {
-  it("convierte 'junior' a 'egresado'", () => {
-    expect(toDbRole('junior')).toBe('egresado')
+  it("devuelve null para el valor legado 'junior' (ya no existe en la BD)", () => {
+    expect(normalizeRole('junior')).toBeNull()
   })
 
-  it("convierte 'empresa' a 'empresario'", () => {
-    expect(toDbRole('empresa')).toBe('empresario')
+  it("devuelve null para el valor legado 'empresa' (ya no existe en la BD)", () => {
+    expect(normalizeRole('empresa')).toBeNull()
   })
-
-  it("convierte 'admin' a 'administrador'", () => {
-    expect(toDbRole('admin')).toBe('administrador')
-  })
-})
-
-describe('round-trip normalizeRole ↔ toDbRole', () => {
-  const roles: UserRole[] = ['junior', 'empresa', 'admin']
-
-  for (const role of roles) {
-    it(`normalizeRole(toDbRole('${role}')) === '${role}'`, () => {
-      expect(normalizeRole(toDbRole(role))).toBe(role)
-    })
-  }
 })

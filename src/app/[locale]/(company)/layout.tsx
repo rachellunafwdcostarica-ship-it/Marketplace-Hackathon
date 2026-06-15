@@ -7,7 +7,7 @@ import { PendingAccountBanner } from '@/components/features/auth/PendingAccountB
 
 /**
  * Layout del grupo (company) — rutas de empresario.
- * Verifica que el usuario esté autenticado, tenga rol 'empresa',
+ * Verifica que el usuario esté autenticado, tenga rol 'empresario',
  * e inyecta el estado de la cuenta en AccountStatusProvider.
  */
 export default async function CompanyLayout({
@@ -37,7 +37,7 @@ export default async function CompanyLayout({
     redirect(`/${locale}/onboarding`)
   }
 
-  if (role !== 'empresa') {
+  if (role !== 'empresario') {
     redirect(`/${locale}${ROLE_HOME[role]}`)
   }
 

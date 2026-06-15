@@ -55,26 +55,26 @@ export function Navbar({ heroMode = false }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Configuracion de rol con tokens FWD (§5.1): junior=primary, empresa=secondary, admin=magenta.
+  // Configuracion de rol con tokens FWD (§5.1): egresado=primary, empresario=secondary, administrador=magenta.
   const roleConfig: Record<
     UserRole,
     { label: string; text: string; dot: string; chip: string; icon: ReactNode }
   > = {
-    junior: {
-      label: t('roleJunior'),
+    egresado: {
+      label: t('roleEgresado'),
       text: 'text-primary',
       dot: 'bg-primary',
       chip: 'bg-primary text-primary-foreground',
       icon: <User className="w-3.5 h-3.5" />,
     },
-    empresa: {
+    empresario: {
       label: t('roleEmpresa'),
       text: 'text-secondary',
       dot: 'bg-secondary',
       chip: 'bg-secondary text-secondary-foreground',
       icon: <Users className="w-3.5 h-3.5" />,
     },
-    admin: {
+    administrador: {
       label: t('roleAdmin'),
       text: 'text-magenta',
       dot: 'bg-magenta',
@@ -98,13 +98,13 @@ export function Navbar({ heroMode = false }: NavbarProps) {
   ]
 
   const navLinksByRole: Record<UserRole, NavLink[]> = {
-    junior: [
+    egresado: [
       { href: '/junior', label: t('dashboard'), icon: 'dashboard' },
       { href: '/junior/projects', label: t('jobs'), icon: 'briefcase' },
       { href: '/junior/applications', label: t('applications'), icon: 'send' },
       ...mockLinks,
     ],
-    empresa: [
+    empresario: [
       { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },
       {
         href: '/empresario/new-project',
@@ -113,7 +113,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
       },
       ...mockLinks,
     ],
-    admin: [
+    administrador: [
       { href: '/admin/users', label: t('users'), icon: 'users' },
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },

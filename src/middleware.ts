@@ -30,10 +30,12 @@ function isOnboardingPath(pathname: string): boolean {
   return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
 }
 
-function getRouteRole(pathname: string): 'junior' | 'empresa' | 'admin' | null {
-  if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
-  if (/^\/(es|en)\/empresario/.test(pathname)) return 'empresa'
-  if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
+function getRouteRole(
+  pathname: string,
+): 'egresado' | 'empresario' | 'administrador' | null {
+  if (/^\/(es|en)\/junior/.test(pathname)) return 'egresado'
+  if (/^\/(es|en)\/empresario/.test(pathname)) return 'empresario'
+  if (/^\/(es|en)\/admin/.test(pathname)) return 'administrador'
   return null
 }
 

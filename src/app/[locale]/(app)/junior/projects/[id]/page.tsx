@@ -27,7 +27,7 @@ import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 export default function ProjectDetailsPage() {
   const params = useParams()
   const tCommon = useTranslations('Common')
-  const tJunior = useTranslations('Junior')
+  const tEgresado = useTranslations('Egresado')
   const tAccount = useTranslations('Account')
 
   const { projects, applications } = useAppState()
@@ -41,12 +41,12 @@ export default function ProjectDetailsPage() {
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center p-8">
           <Briefcase className="w-12 h-12 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
+          <h2 className="text-xl font-bold">{tEgresado('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
             className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 h-9 px-4"
           >
-            {tJunior('backToMarketplace')}
+            {tEgresado('backToMarketplace')}
           </Link>
         </main>
         <Footer />
@@ -76,13 +76,13 @@ export default function ProjectDetailsPage() {
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {tJunior('backToMarketplace')}
+            {tEgresado('backToMarketplace')}
           </Link>
         </div>
 
         <PageTitle
           title={project.title}
-          description={`${tJunior('company')}: ${project.companyName}`}
+          description={`${tEgresado('company')}: ${project.companyName}`}
           dotColor="text-accent"
         />
 
@@ -92,7 +92,7 @@ export default function ProjectDetailsPage() {
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-3">
                   <h3 className="text-lg font-bold tracking-tight text-foreground font-heading">
-                    {tJunior('projectDescription')}
+                    {tEgresado('projectDescription')}
                     <span className="text-accent">.</span>
                   </h3>
                   <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
@@ -101,7 +101,7 @@ export default function ProjectDetailsPage() {
                 </div>
                 <div className="space-y-3 pt-4 border-t border-border/60">
                   <h3 className="text-lg font-bold tracking-tight text-foreground font-heading">
-                    {tJunior('requirementsStack')}
+                    {tEgresado('requirementsStack')}
                     <span className="text-accent">.</span>
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -131,7 +131,7 @@ export default function ProjectDetailsPage() {
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide leading-none">
-                        {tJunior('selectMode')}
+                        {tEgresado('selectMode')}
                       </p>
                       <Badge
                         variant="outline"
@@ -176,7 +176,7 @@ export default function ProjectDetailsPage() {
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide leading-none">
-                        {tJunior('startDate')}
+                        {tEgresado('startDate')}
                       </p>
                       <p className="text-sm font-semibold text-foreground mt-0.5">
                         {project.startDate}
@@ -192,7 +192,7 @@ export default function ProjectDetailsPage() {
                       className="w-full bg-muted text-muted-foreground font-semibold h-11 flex items-center justify-center gap-2"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      {tJunior('alreadyApplied')}
+                      {tEgresado('alreadyApplied')}
                     </Button>
                   ) : isPending ? (
                     <Button
@@ -201,7 +201,7 @@ export default function ProjectDetailsPage() {
                       className="w-full bg-muted text-muted-foreground/50 font-semibold h-11 flex items-center justify-center gap-2 cursor-not-allowed"
                     >
                       <FileText className="w-4 h-4" />
-                      {tJunior('applyBtn')}
+                      {tEgresado('applyBtn')}
                     </Button>
                   ) : (
                     <Link
@@ -209,7 +209,7 @@ export default function ProjectDetailsPage() {
                       className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold h-11 shadow-md hover:scale-[1.02] transition-transform inline-flex items-center justify-center rounded-lg text-sm cursor-pointer"
                     >
                       <FileText className="w-4 h-4 mr-2" />
-                      {tJunior('applyBtn')}
+                      {tEgresado('applyBtn')}
                     </Link>
                   )}
                 </div>

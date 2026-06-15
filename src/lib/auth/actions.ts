@@ -18,7 +18,6 @@ import {
 } from './schemas'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
-import { toDbRole } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
@@ -98,9 +97,8 @@ export async function requestPasswordReset(
 /**
  * Asigna el rol al usuario actual durante el onboarding.
  *
- * - Solo acepta 'junior' o 'empresario' (Q6: nunca admin).
- * - En la BD (modelo XXI) el rol del junior se llama 'egresado';
- *   la traducción ocurre aquí, en la frontera.
+ * - Solo acepta 'egresado' o 'empresario' (nunca 'administrador'; Q6).
+ * - El valor ya coincide con nombre_rol de la BD: no se necesita traducción.
  * - El rol es PERMANENTE: si ya tiene uno, retorna err('role_already_assigned').
  * - La permanencia se refuerza también a nivel BD en assign_my_role().
  */
@@ -112,11 +110,9 @@ export async function assignRole(
     return err('invalid_role')
   }
 
-  const dbRole = toDbRole(parsed.data.role)
-
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc('assign_my_role', {
-    p_role: dbRole,
+    p_role: parsed.data.role,
   })
 
   if (error) {
@@ -188,7 +184,7 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   }
 
   // Verificar que el caller es admin
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }
@@ -214,14 +210,14 @@ export async function signUpWithPassword(input: {
   email: string
   password: string
   fullName: string
-  role: 'junior' | 'empresa'
+  role: 'egresado' | 'empresario'
 }): Promise<Result<void>> {
   const parsed = z
     .object({
       email: z.string().email(),
       password: z.string().min(8),
       fullName: z.string().min(2),
-      role: z.enum(['junior', 'empresa']),
+      role: z.enum(['egresado', 'empresario']),
     })
     .safeParse(input)
 

@@ -12,8 +12,8 @@ import { Link } from '@/i18n/routing'
 import { Briefcase } from 'lucide-react'
 import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 
-export default function JuniorApplicationsPage() {
-  const tJunior = useTranslations('Junior')
+export default function EgresadoApplicationsPage() {
+  const tEgresado = useTranslations('Egresado')
   const { applications } = useAppState()
 
   const myApps = applications.filter(
@@ -26,18 +26,18 @@ export default function JuniorApplicationsPage() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
-          title={tJunior('applications')}
-          description={tJunior('applicationsDesc')}
+          title={tEgresado('applications')}
+          description={tEgresado('applicationsDesc')}
           dotColor="text-primary"
         />
 
         <div className="mt-8">
           {myApps.length === 0 ? (
             <EmptyState
-              title={tJunior('emptyApplications')}
-              description={tJunior('emptyApplicationsDesc')}
+              title={tEgresado('emptyApplications')}
+              description={tEgresado('emptyApplicationsDesc')}
               icon={Briefcase}
-              actionText={tJunior('exploreMarketplace')}
+              actionText={tEgresado('exploreMarketplace')}
               onAction={() => {}}
             />
           ) : (
@@ -46,7 +46,7 @@ export default function JuniorApplicationsPage() {
                 <ApplicationCard
                   key={application.id}
                   application={application}
-                  viewMode="junior"
+                  viewMode="egresado"
                 />
               ))}
             </div>
@@ -59,7 +59,7 @@ export default function JuniorApplicationsPage() {
               href="/junior/projects"
               className="text-sm font-semibold text-primary hover:underline"
             >
-              {tJunior('exploreMoreProjects')}
+              {tEgresado('exploreMoreProjects')}
             </Link>
           </div>
         )}

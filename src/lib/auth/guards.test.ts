@@ -17,7 +17,7 @@ describe('requireRole', () => {
   it('devuelve unauthenticated cuando no hay rol/sesión', async () => {
     mockedGetUserRole.mockResolvedValue(err('no_role'))
 
-    const result = await requireRole('admin')
+    const result = await requireRole('administrador')
 
     expect(result).toEqual({ ok: false, error: 'unauthenticated' })
   })
@@ -25,23 +25,23 @@ describe('requireRole', () => {
   it('devuelve ok con el rol cuando coincide', async () => {
     mockedGetUserRole.mockResolvedValue(ok('administrador'))
 
-    const result = await requireRole('admin')
+    const result = await requireRole('administrador')
 
-    expect(result).toEqual({ ok: true, data: 'admin' })
+    expect(result).toEqual({ ok: true, data: 'administrador' })
   })
 
-  it("normaliza 'empresario' (BD) a 'empresa' (frontend) al comparar", async () => {
+  it("devuelve ok para el rol 'empresario'", async () => {
     mockedGetUserRole.mockResolvedValue(ok('empresario'))
 
-    const result = await requireRole('empresa')
+    const result = await requireRole('empresario')
 
-    expect(result).toEqual({ ok: true, data: 'empresa' })
+    expect(result).toEqual({ ok: true, data: 'empresario' })
   })
 
   it('devuelve forbidden cuando el rol no coincide', async () => {
     mockedGetUserRole.mockResolvedValue(ok('egresado'))
 
-    const result = await requireRole('admin')
+    const result = await requireRole('administrador')
 
     expect(result).toEqual({ ok: false, error: 'forbidden' })
   })
@@ -49,7 +49,7 @@ describe('requireRole', () => {
   it('devuelve forbidden para un rol desconocido que normaliza a null', async () => {
     mockedGetUserRole.mockResolvedValue(ok('moderador'))
 
-    const result = await requireRole('admin')
+    const result = await requireRole('administrador')
 
     expect(result).toEqual({ ok: false, error: 'forbidden' })
   })

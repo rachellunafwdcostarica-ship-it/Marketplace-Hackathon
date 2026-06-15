@@ -22,8 +22,8 @@ import {
   Target,
 } from 'lucide-react'
 
-export default function JuniorDashboard() {
-  const tJunior = useTranslations('Junior')
+export default function EgresadoDashboard() {
+  const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
   const { projects, applications } = useAppState()
 
@@ -38,24 +38,24 @@ export default function JuniorDashboard() {
 
   const stats: StatItem[] = [
     {
-      title: tJunior('appliedProjects'),
+      title: tEgresado('appliedProjects'),
       value: totalCount,
       icon: FileText,
-      description: tJunior('statAppliedDesc'),
+      description: tEgresado('statAppliedDesc'),
       colorClass: 'text-primary bg-primary/10',
     },
     {
-      title: tJunior('activeApplications'),
+      title: tEgresado('activeApplications'),
       value: sentCount,
       icon: Send,
-      description: tJunior('statActiveDesc'),
+      description: tEgresado('statActiveDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
     {
-      title: tJunior('acceptedProjects'),
+      title: tEgresado('acceptedProjects'),
       value: acceptedCount,
       icon: CheckCircle2,
-      description: tJunior('statAcceptedDesc'),
+      description: tEgresado('statAcceptedDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
   ]
@@ -67,18 +67,18 @@ export default function JuniorDashboard() {
 
   const insights = [
     {
-      title: tJunior('insightTitle1'),
-      description: tJunior('insightDesc1'),
+      title: tEgresado('insightTitle1'),
+      description: tEgresado('insightDesc1'),
       icon: Lightbulb,
     },
     {
-      title: tJunior('insightTitle2'),
-      description: tJunior('insightDesc2'),
+      title: tEgresado('insightTitle2'),
+      description: tEgresado('insightDesc2'),
       icon: Target,
     },
     {
-      title: tJunior('insightTitle3'),
-      description: tJunior('insightDesc3'),
+      title: tEgresado('insightTitle3'),
+      description: tEgresado('insightDesc3'),
       icon: Rocket,
     },
   ]
@@ -89,8 +89,8 @@ export default function JuniorDashboard() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
-          title={tJunior('dashboard')}
-          description={tJunior('dashboardDesc')}
+          title={tEgresado('dashboard')}
+          description={tEgresado('dashboardDesc')}
           dotColor="text-primary"
         />
 
@@ -100,7 +100,7 @@ export default function JuniorDashboard() {
           <div className="lg:col-span-8 space-y-6">
             <div className="flex justify-between items-center pb-2 border-b border-border/60">
               <h2 className="text-xl font-bold tracking-tight text-foreground font-heading">
-                {tJunior('statsRecommended')}
+                {tEgresado('statsRecommended')}
                 <span className="text-accent">.</span>
               </h2>
               <Link
@@ -115,7 +115,7 @@ export default function JuniorDashboard() {
             {recommendedProjects.length === 0 ? (
               <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
                 <AlertCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-                {tJunior('emptyRecommendations')}
+                {tEgresado('emptyRecommendations')}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -128,7 +128,7 @@ export default function JuniorDashboard() {
 
           <div className="lg:col-span-4">
             <InsightSection
-              title={tJunior('insightsSectionTitle')}
+              title={tEgresado('insightsSectionTitle')}
               insights={insights}
             />
           </div>

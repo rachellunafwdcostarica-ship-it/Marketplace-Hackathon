@@ -53,7 +53,7 @@ export default function RegisterPage() {
   const { setUserRole } = useAppState()
 
   const [loading, setLoading] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<UserRole>('junior')
+  const [selectedRole, setSelectedRole] = useState<UserRole>('egresado')
 
   const registerSchema = useMemo(
     () => createRegisterSchema(tValidation),
@@ -84,7 +84,7 @@ export default function RegisterPage() {
       email: data.email,
       password: data.password,
       fullName: data.fullName,
-      role: selectedRole as 'junior' | 'empresa',
+      role: selectedRole as 'egresado' | 'empresario',
     })
     setLoading(false)
     if (!result.ok) {
