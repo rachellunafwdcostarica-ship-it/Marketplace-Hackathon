@@ -9,12 +9,14 @@ import { CompanyProfileBanner } from '@/components/features/companies/CompanyPro
 import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
 import { PublishedProjectsBoard } from '@/components/features/projects/PublishedProjectsBoard'
 import type { Company } from '@/types'
+import type { CompanyProfileView } from '@/lib/company/schemas'
 import type { PublishedProject } from '@/lib/projects/dashboard'
 
 type TabType = 'profile' | 'projects'
 
 interface CompanyPerfilClientProps {
   company: Company
+  profile: CompanyProfileView
   projects: PublishedProject[]
 }
 
@@ -25,6 +27,7 @@ interface CompanyPerfilClientProps {
  */
 export function CompanyPerfilClient({
   company,
+  profile,
   projects,
 }: CompanyPerfilClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
@@ -45,10 +48,7 @@ export function CompanyPerfilClient({
           <CompanyProfileBanner company={company} />
 
           {activeTab === 'profile' && (
-            <CompanyProfileDetails
-              company={company}
-              setActiveTab={setActiveTab}
-            />
+            <CompanyProfileDetails profile={profile} />
           )}
 
           {activeTab === 'projects' && (
