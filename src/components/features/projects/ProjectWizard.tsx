@@ -25,6 +25,7 @@ import {
   buildLogisticsSchema,
   draftToFormValues,
   toLogisticaDraft,
+  CONTEXTO_MAX,
   type LogisticaDraft,
   type LogisticsFormValues,
   type PropuestaProyecto,
@@ -110,6 +111,9 @@ export function ProjectWizard({
     handleSubmit,
     formState: { errors },
   } = form
+
+  // Largo actual del contexto para el contador (tope CONTEXTO_MAX caracteres).
+  const contextoLen = (form.watch('contextoInicial') ?? '').length
 
   const onSubmit = async (values: LogisticsFormValues) => {
     setLoading(true)
@@ -335,16 +339,27 @@ export function ProjectWizard({
               <Textarea
                 id="contextoInicial"
                 rows={5}
+                maxLength={CONTEXTO_MAX}
                 disabled={loading}
                 placeholder={t('fieldBackgroundPlaceholder')}
                 className="bg-card/50 border-border focus-visible:ring-primary"
                 {...register('contextoInicial')}
               />
-              {errors.contextoInicial?.message && (
-                <p className="text-xs font-semibold text-destructive">
-                  {t(`errors.${errors.contextoInicial.message}`)}
+              <div className="flex justify-between gap-2">
+                {errors.contextoInicial?.message ? (
+                  <p className="text-xs font-semibold text-destructive">
+                    {t(`errors.${errors.contextoInicial.message}`)}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {t('fieldBackgroundCounter', {
+                    count: String(contextoLen),
+                    max: String(CONTEXTO_MAX),
+                  })}
                 </p>
-              )}
+              </div>
             </section>
 
             <div className="flex gap-3 items-center justify-between pt-4 border-t border-border/40">

@@ -21,6 +21,7 @@ export type Moneda = (typeof MONEDAS)[number]
 export const TITULO_MAX = 120
 export const UBICACION_MAX = 80
 export const CONTEXTO_MIN = 20
+export const CONTEXTO_MAX = 3000
 export const PLAZO_MIN_DIAS = 5
 export const PLAZO_MAX_DIAS = 15
 
@@ -111,7 +112,8 @@ export function buildLogisticsSchema() {
       contextoInicial: z
         .string()
         .trim()
-        .min(CONTEXTO_MIN, { error: 'fondoMin' }),
+        .min(CONTEXTO_MIN, { error: 'fondoMin' })
+        .max(CONTEXTO_MAX, { error: 'fondoMax' }),
     })
     .superRefine((valores, ctx) => {
       if (!MODALIDADES.includes(valores.modalidad as Modalidad)) {
