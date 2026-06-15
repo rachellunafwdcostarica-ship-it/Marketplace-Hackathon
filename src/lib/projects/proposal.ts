@@ -38,7 +38,7 @@ export async function generateProposal(
 
     const { data: empresario, error: empError } = await supabase
       .from('empresarios')
-      .select('id_empresario')
+      .select('id_empresario, estado_verificacion')
       .eq('id_usuario', user.id)
       .maybeSingle()
     if (empError) {
@@ -49,6 +49,11 @@ export async function generateProposal(
     }
     if (!empresario) {
       return err('empresario_no_encontrado')
+    }
+    // Gate de costo: la propuesta dispara hasta MAX_INTENTOS llamadas a la IA
+    // (las más caras del flujo). Solo para empresas verificadas.
+    if (empresario.estado_verificacion !== 'verificado') {
+      return err('not_verified')
     }
 
     const { data: conv, error: convError } = await supabase

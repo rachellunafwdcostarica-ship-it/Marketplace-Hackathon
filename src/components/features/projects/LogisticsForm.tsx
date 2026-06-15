@@ -1,7 +1,7 @@
 'use client'
 
 import { useFormContext, Controller, useWatch } from 'react-hook-form'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -14,6 +14,7 @@ import {
 import {
   MODALIDADES,
   MONEDAS,
+  parsePlazo,
   PLAZO_MAX_DIAS,
   PLAZO_MIN_DIAS,
   type LogisticsFormValues,
@@ -22,6 +23,37 @@ import {
 interface LogisticsFormProps {
   disabled: boolean
   todayIso: string
+}
+
+/** Opciones del plazo de recepción (RF-21): 5..15 días. */
+const PLAZO_OPCIONES = Array.from(
+  { length: PLAZO_MAX_DIAS - PLAZO_MIN_DIAS + 1 },
+  (_, i) => PLAZO_MIN_DIAS + i,
+)
+
+/**
+ * Fecha de cierre estimada para mostrarle al empresario: `todayIso` + plazo, en
+ * UTC (consistente server/cliente, sin desajuste de hidratación). Es solo una
+ * referencia visual; la fecha real la fija el RPC con `now()` al publicar.
+ */
+function calcularCierreEstimado(
+  todayIso: string,
+  plazoDias: string,
+  locale: string,
+): string | null {
+  const dias = parsePlazo(plazoDias)
+  if (dias === null || dias < PLAZO_MIN_DIAS || dias > PLAZO_MAX_DIAS) {
+    return null
+  }
+  const base = Date.parse(`${todayIso}T00:00:00.000Z`)
+  if (Number.isNaN(base)) return null
+  const cierre = new Date(base + dias * 86_400_000)
+  return cierre.toLocaleDateString(locale === 'en' ? 'en-US' : 'es-CR', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 function FieldError({ code }: { code?: string | undefined }) {
@@ -49,8 +81,12 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
     formState: { errors },
   } = useFormContext<LogisticsFormValues>()
 
+  const locale = useLocale()
   const modalidad = useWatch({ control, name: 'modalidad' })
   const requiereUbicacion = modalidad !== '' && modalidad !== 'remoto'
+
+  const plazoDias = useWatch({ control, name: 'plazoDias' })
+  const cierreEstimado = calcularCierreEstimado(todayIso, plazoDias, locale)
 
   return (
     <section className="space-y-6">
@@ -207,21 +243,45 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="fechaCierre" className="text-sm font-bold">
-          {t('fieldCloseDate')}
+        <Label htmlFor="plazoDias" className="text-sm font-bold">
+          {t('fieldDeadline')}
         </Label>
-        <Input
-          id="fechaCierre"
-          type="date"
-          min={todayIso}
-          disabled={disabled}
-          className="bg-card/50 border-border focus-visible:ring-primary"
-          {...register('fechaCierre')}
+        <Controller
+          name="plazoDias"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={disabled}
+            >
+              <SelectTrigger
+                id="plazoDias"
+                className="w-full bg-card/50 border-border focus:ring-primary"
+              >
+                <SelectValue placeholder={t('deadlinePlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {PLAZO_OPCIONES.map((dias) => (
+                  <SelectItem key={dias} value={String(dias)}>
+                    {t('deadlineDays', { dias })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         />
-        <FieldError code={errors.fechaCierre?.message} />
-        <p className="text-xs text-muted-foreground">
-          {t('plazoHint', { min: PLAZO_MIN_DIAS, max: PLAZO_MAX_DIAS })}
-        </p>
+        <FieldError code={errors.plazoDias?.message} />
+        {cierreEstimado ? (
+          <p className="text-xs text-muted-foreground">
+            {t('deadlineEstimate', { fecha: cierreEstimado })}{' '}
+            {t('deadlineEstimateHint')}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {t('plazoHint', { min: PLAZO_MIN_DIAS, max: PLAZO_MAX_DIAS })}
+          </p>
+        )}
       </div>
     </section>
   )
