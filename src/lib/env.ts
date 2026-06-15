@@ -22,5 +22,7 @@ export function parseClientEnv(
   }
   return parsed.data
 }
-
-export const env = parseClientEnv(process.env)
+export const env = parseClientEnv({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+})
