@@ -95,7 +95,7 @@ function resumenLogistica(logistica: LogisticaDraft | null): string {
       `presupuesto ${logistica.presupuestoMin ?? '?'}–${logistica.presupuestoMax ?? '?'}`,
     )
   }
-  partes.push(`cierre de recepción ${logistica.fechaCierre}`)
+  partes.push(`plazo de recepción ${logistica.plazoDias} días`)
   if (logistica.paisProyecto) {
     partes.push(
       `ubicación ${[logistica.ciudadProyecto, logistica.paisProyecto].filter(Boolean).join(', ')}`,
