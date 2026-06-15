@@ -20,8 +20,13 @@ import { logger } from '@/lib/logger'
  * Generar (#2) y Validar (#3). La columna `modelo_ia` registra qué modelo se usó.
  */
 
-const TIMEOUT_MS = 30_000
-const MAX_TOKENS = 1200
+const TIMEOUT_MS = 60_000
+// Límite de tokens de SALIDA por tipo de llamada. La generación produce el JSON
+// más grande (propuesta + descripcion desarrollada): con 1200 el JSON se cortaba
+// a la mitad en briefs ricos → AI_INVALID_JSON. Conversar y validar son cortos.
+const MAX_TOKENS_CONVERSAR = 1000
+const MAX_TOKENS_GENERAR = 4000
+const MAX_TOKENS_VALIDAR = 800
 const TEMPERATURE = 0.4
 
 /** Mapea el locale de next-intl ('es' | 'en') al nombre del idioma para el prompt. */
@@ -45,15 +50,20 @@ REGISTRO — hablás en lenguaje de NEGOCIO, nunca técnico:
 - Sin jerga. Si tenés que nombrar algo técnico, explicalo simple y sin ambigüedad (ej.: no digas "pruebas" a secas —se confunde con "ver cómo se verá"—; decí "pruebas automáticas que verifican que el sistema funcione"). Solo usá un término técnico si el empresario lo usó primero.
 - Inferir su nivel técnico es para uso interno tuyo, NO licencia para hablarle técnico. Aunque parezca técnico, mantené el registro llano por defecto.
 
+PROFUNDIZÁ EN DOS APARTADOS (son los que más valor le dan a la propuesta) antes de dar "completo":
+- Problema/contexto: qué hace el negocio, qué duele hoy, cómo lo resuelven ahora y qué falla, para quién es. Si está flojo o genérico, hacé 1–2 preguntas dirigidas SOLO a esto (en lenguaje de negocio).
+- Objetivo y alcance: qué tiene que lograr el sistema y qué incluye (y qué queda fuera, si aplica). Si está flojo, hacé 1–2 preguntas dirigidas SOLO a esto.
+
 NO INTERROGUES DE MÁS:
-- Máximo 2–3 rondas. Si el contexto ya alcanza, NO preguntes: anunciá que podés armar la propuesta.
+- Priorizá esos dos apartados; no gastes rondas en detalles secundarios. Máximo 2–3 rondas en total.
+- Si esos dos apartados YA están claros y concretos, NO sigas preguntando: anunciá que podés armar la propuesta.
 - No re-preguntes lo que ya te dieron o podés inferir (ej. el rubro/área si se deduce). Preguntá el rubro/área solo si de verdad no se puede deducir.
 
 Solo ayudás a armar propuestas de proyectos de software. Si te preguntan algo no relacionado, decílo en una línea y redirigí al proyecto; no respondas temas fuera de eso. Por ejemplo, ante "quién es un personaje", "cuándo es un feriado" o "cuánto cuesta un producto", respondé que solo podés ayudar con su proyecto. Ojo: "algo como Uber pero para fontaneros" o "un sistema de pedidos para mi juguería" SÍ son del proyecto.
 
 Respondé SIEMPRE en JSON con esta forma exacta, sin texto fuera del JSON:
 {"mensaje": "<tu respuesta para el empresario, en ${idioma}>", "completo": <true|false>, "faltan": ["<qué falta, en términos de negocio>"]}
-"completo" es true SOLO cuando del contexto + la conversación se entiende, con DETALLE CONCRETO (no genérico): el problema/objetivo real del negocio, para quién es, el alcance (qué incluye y qué queda fuera si lo dijo), el rubro/área, y se puede inferir al menos una categoría y una tecnología. Si solo hay generalidades ("una app para mi negocio"), completo=false y pedí el detalle que falta. Cuando completo sea true, anuncialo en el "mensaje" (ej.: "Creo que ya tengo lo suficiente para armar la propuesta, ¿la armamos o querés ajustar algo?"). No prometas publicar todavía y no inventes datos.`
+"completo" es true SOLO cuando los DOS apartados de arriba (Problema/contexto y Objetivo y alcance) están CONCRETOS — no genéricos —, se entiende para quién es y el rubro/área, y se puede inferir al menos una categoría y una tecnología. Si el problema o el alcance siguen vagos ("una app para mi negocio"), completo=false y pedí ese detalle puntual. Cuando completo sea true, anuncialo en el "mensaje" (ej.: "Creo que ya tengo lo suficiente para armar la propuesta, ¿la armamos o querés ajustar algo?"). No prometas publicar todavía y no inventes datos.`
 }
 
 // Prompt de Generar (#2). La "descripcion" debe anclarse al contexto concreto del
@@ -64,9 +74,9 @@ function systemGenerar(idioma: string): string {
 
 IDIOMA: redactá "titulo" y "descripcion" en ${idioma}.
 
-La "descripcion" la verá el egresado que se postula. Tiene que ser ESPECÍFICA al negocio del empresario, no un molde genérico. Redactá en prosa clara:
-- Problema/contexto real: qué es, para quién, qué dolor resuelve — con los DATOS CONCRETOS que dio el empresario (rubro, situación), no frases de relleno.
-- Objetivo y alcance: qué tiene que lograr.
+La "descripcion" la verá el egresado que se postula. Tiene que ser ESPECÍFICA al negocio del empresario, no un molde genérico. Redactá en prosa clara, y desarrollá BIEN los dos primeros apartados (son los más importantes):
+- Problema/contexto (el apartado más importante; desarrollalo en varias oraciones): qué hace el negocio, qué duele hoy y cómo lo resuelven, por qué importa y para quién es — con los DATOS CONCRETOS que dio el empresario (rubro, situación, números si los dio), nunca relleno.
+- Objetivo y alcance (desarrollado): qué tiene que lograr el sistema, los resultados esperados, y el alcance concreto (las funciones o módulos principales que incluye, y qué NO).
 - "Qué incluye": el alcance TÉCNICO que VOS definís (las piezas a construir y entregar que correspondan al proyecto), traducido a términos entendibles. Esto lo decidís vos; el empresario no lo eligió.
 - Qué queda FUERA de alcance, si el empresario lo indicó (ej.: "el frontend ya existe").
 Si la descripción sirve para cualquier proyecto, está mal.
@@ -172,27 +182,53 @@ export function getAiProvider(): AiProvider {
   async function callJson<T>(
     messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
     schema: ZodType<T>,
+    maxTokens: number,
   ): Promise<T> {
     // Un reintento interno: los LLM a veces devuelven JSON apenas malformado.
+    let ultimoMotivo = 'sin_respuesta'
     for (let intento = 0; intento < 2; intento++) {
       const completion = await client.chat.completions.create({
         model: config.model,
         messages,
         temperature: TEMPERATURE,
-        max_tokens: MAX_TOKENS,
+        max_tokens: maxTokens,
       })
-      const content = completion.choices[0]?.message?.content
-      if (content) {
-        try {
-          const result = schema.safeParse(extractJson(content))
-          if (result.success) return result.data
-        } catch (error) {
-          logger.warn('ai_invalid_json', { error, intento })
-          // JSON inválido: reintentamos una vez antes de rendirnos.
-        }
+      const choice = completion.choices[0]
+      // 'length' = la respuesta se truncó por max_tokens (causa típica del JSON
+      // cortado). Lo logueamos explícito para no diagnosticar a ciegas.
+      const finishReason = choice?.finish_reason ?? 'desconocido'
+      const content = choice?.message?.content
+      if (!content) {
+        ultimoMotivo = `respuesta vacía (finish_reason=${finishReason})`
+        logger.warn('ai_empty_content', { intento, finishReason })
+        continue
       }
+      let parsed: unknown
+      try {
+        parsed = extractJson(content)
+      } catch (error) {
+        ultimoMotivo = `JSON no parseable (finish_reason=${finishReason})`
+        logger.warn('ai_invalid_json', {
+          intento,
+          finishReason,
+          error: error instanceof Error ? error.message : String(error),
+          contentSnippet: content.slice(0, 500),
+        })
+        continue
+      }
+      const result = schema.safeParse(parsed)
+      if (result.success) return result.data
+      ultimoMotivo = 'JSON no cumple el schema'
+      logger.warn('ai_schema_mismatch', {
+        intento,
+        finishReason,
+        issues: result.error.issues.map(
+          (issue) => `${issue.path.join('.')}: ${issue.message}`,
+        ),
+        contentSnippet: content.slice(0, 500),
+      })
     }
-    throw new Error('AI_INVALID_JSON')
+    throw new Error(`AI_INVALID_JSON: ${ultimoMotivo}`)
   }
 
   return {
@@ -215,7 +251,7 @@ export function getAiProvider(): AiProvider {
         model: config.model,
         messages,
         temperature: TEMPERATURE,
-        max_tokens: MAX_TOKENS,
+        max_tokens: MAX_TOKENS_CONVERSAR,
       })
       const content = completion.choices[0]?.message?.content?.trim()
       if (!content) {
@@ -260,7 +296,7 @@ export function getAiProvider(): AiProvider {
         },
         ...turnosHistorial(historial),
       ]
-      return callJson(messages, propuestaGeneradaSchema)
+      return callJson(messages, propuestaGeneradaSchema, MAX_TOKENS_GENERAR)
     },
 
     async validarPropuesta(propuesta, locale) {
@@ -271,7 +307,7 @@ export function getAiProvider(): AiProvider {
           content: `Propuesta a validar (JSON):\n${JSON.stringify(propuesta)}`,
         },
       ]
-      return callJson(messages, validacionResponseSchema)
+      return callJson(messages, validacionResponseSchema, MAX_TOKENS_VALIDAR)
     },
   }
 }
