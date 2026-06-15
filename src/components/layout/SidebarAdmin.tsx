@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
+import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 import { cn } from '@/lib/utils/cn'
 
 type AdminNavLabel = 'dashboard' | 'users' | 'projects' | 'validations'
@@ -83,14 +84,18 @@ export function SidebarAdmin({
       })}
 
       {onLogout && (
-        <button
-          type="button"
-          onClick={onLogout}
-          className="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        <ConfirmButton
+          onConfirm={onLogout}
+          title={t('confirmLogoutTitle')}
+          description={t('confirmLogoutDesc')}
+          confirmLabel={t('logout')}
+          variant="ghost"
+          size="default"
+          className="mt-auto flex items-center justify-start gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white"
         >
           <LogOut className="h-4 w-4" aria-hidden="true" />
-          <span>{t('logout')}</span>
-        </button>
+          {t('logout')}
+        </ConfirmButton>
       )}
     </nav>
   )

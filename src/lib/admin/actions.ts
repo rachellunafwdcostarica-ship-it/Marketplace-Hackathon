@@ -9,33 +9,31 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
 
 /**
- * Marca a un estudiante (egresado) como verificado.
+ * Mueve `estudiantes.estado_verificacion` (RF-64). Productor del campo que la
+ * policy `participaciones_insert_egresado` exige para postular.
  *
- * Es el productor de `estudiantes.estado_verificacion = 'verificado'`, el campo
- * que la policy `participaciones_insert_egresado` exige para poder postular.
- * Se mantiene SEPARADA de `approveUser` a propósito: aprobar la cuenta
+ * Separado de `approveUser` a propósito: aprobar la cuenta
  * (`usuarios.estado_cuenta = 'activa'`) y verificar el egreso son dos conceptos
  * distintos del SRS (cuenta activa ≠ egresado FWD validado).
  *
- * Usa el cliente de servicio porque el guard-trigger
- * `trg_guard_estudiantes_protected` congela estas columnas ante el rol
- * `authenticated` y solo deja pasar a `service_role`.
- *
- * Solo un admin puede invocarla.
+ * Usa service_role porque el guard-trigger `trg_guard_estudiantes_protected`
+ * congela estas columnas ante `authenticated`. Solo un admin puede invocarla.
  */
-export async function verificarEgresado(userId: string): Promise<Result<void>> {
+async function setGraduateVerification(
+  userId: string,
+  estado: 'verificado' | 'rechazado',
+): Promise<Result<void>> {
   const parsed = z.string().uuid().safeParse(userId)
   if (!parsed.success) {
     return err('invalid_user_id')
   }
 
-  // Verificar que el caller es admin
   const authResult = await requireRole('admin')
   if (!authResult.ok) {
     return authResult
   }
 
-  // Obtener el id del admin que verifica (para verificado_por)
+  // Id del admin que decide (para verificado_por, traza también al rechazar)
   const supabase = await createSupabaseServerClient()
   const {
     data: { user },
@@ -45,12 +43,11 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
     return err('unauthenticated')
   }
 
-  // service_role para bypassear RLS y el guard-trigger de columnas protegidas
   const adminClient = createSupabaseAdminClient()
   const { data, error } = await adminClient
     .from('estudiantes')
     .update({
-      estado_verificacion: 'verificado',
+      estado_verificacion: estado,
       verificado_at: new Date().toISOString(),
       verificado_por: user.id,
     })
@@ -58,7 +55,11 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
     .select('id_estudiante')
 
   if (error) {
-    logger.error('verificarEgresado failed', { error: error.message, userId })
+    logger.error('setGraduateVerification failed', {
+      error: error.message,
+      userId,
+      estado,
+    })
     return err(error.message)
   }
 
@@ -69,6 +70,16 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
 
   revalidatePath('/admin/validations', 'page')
   return ok(undefined)
+}
+
+/** Verifica a un egresado (estado_verificacion → 'verificado'). Solo admin. */
+export async function verificarEgresado(userId: string): Promise<Result<void>> {
+  return setGraduateVerification(userId, 'verificado')
+}
+
+/** Rechaza a un egresado (estado_verificacion → 'rechazado'). Solo admin. */
+export async function rechazarEgresado(userId: string): Promise<Result<void>> {
+  return setGraduateVerification(userId, 'rechazado')
 }
 
 /**
