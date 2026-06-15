@@ -142,7 +142,7 @@ export async function signUpWithPassword(input: {
   const parsed = z
     .object({
       email: z.string().email(),
-      password: z.string().min(6),
+      password: z.string().min(8),
       fullName: z.string().min(2),
       role: z.enum(['junior', 'empresa']),
     })
