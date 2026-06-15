@@ -55,6 +55,7 @@ const KNOWN_ERROR_CODES = new Set([
   'plazo',
   'ubicacion',
   'presupuesto',
+  'presupuestoEntero',
   'ai_not_configured',
   'ai_failed',
   'unexpected',

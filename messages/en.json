@@ -482,6 +482,7 @@
       "presupuesto": "The minimum budget cannot exceed the maximum.",
       "presupuestoMin": "Enter a minimum budget greater than 0.",
       "presupuestoMax": "Enter a maximum budget greater than 0.",
+      "presupuestoEntero": "In colones the budget must be a whole number (no decimals).",
       "plazo": "The application window must be 5 to 15 days.",
       "fechaCierreRequerida": "Provide the application close date.",
       "fondoMin": "Tell us a bit more about the project (at least 20 characters).",
