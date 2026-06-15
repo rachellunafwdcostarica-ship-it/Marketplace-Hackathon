@@ -1320,6 +1320,7 @@ export type Database = {
       assign_my_role: { Args: { p_role: string }; Returns: boolean }
       get_my_account_status: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
+      register_failed_login: { Args: { p_email: string }; Returns: undefined }
     }
     Enums: {
       alcance_enum: 'nacional' | 'internacional' | 'ambos'

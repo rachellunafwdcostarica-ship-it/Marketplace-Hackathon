@@ -286,8 +286,10 @@ export async function signUpWithPassword(input: {
  * pasar por RLS. OTP y OAuth quedan fuera del contador.
  *
  * - Pre-chequea `bloqueado_hasta`; si sigue vigente devuelve err('account_locked').
- * - En credenciales inválidas incrementa `intentos_fallidos`; al alcanzar
- *   `intentos_login_max` fija `bloqueado_hasta = now() + tiempo_bloqueo_minutos`.
+ * - Solo en credenciales inválidas (código `invalid_credentials`) invoca el RPC
+ *   `register_failed_login`, que realiza el incremento de forma atómica en una
+ *   sola sentencia UPDATE (sin race condition de lectura previa). Otros errores
+ *   de Supabase (email sin confirmar, rate-limit, etc.) NO incrementan el contador.
  * - En login exitoso resetea el contador.
  * - El error de credenciales es neutro: no revela si el correo existe.
  */
@@ -300,20 +302,6 @@ export async function signInWithPassword(
   const { email, password } = parsed.data
 
   const admin = createSupabaseAdminClient()
-
-  // Configuración del bloqueo (con defaults si faltara alguna fila).
-  const { data: configRows } = await admin
-    .from('configuracion_sistema')
-    .select('clave, valor')
-    .in('clave', ['intentos_login_max', 'tiempo_bloqueo_minutos'])
-
-  const readIntConfig = (clave: string, fallback: number): number => {
-    const row = configRows?.find((r) => r.clave === clave)
-    const value = row ? Number.parseInt(row.valor, 10) : Number.NaN
-    return Number.isFinite(value) ? value : fallback
-  }
-  const maxAttempts = readIntConfig('intentos_login_max', 5)
-  const lockMinutes = readIntConfig('tiempo_bloqueo_minutos', 30)
 
   // Estado de bloqueo actual del usuario (si la cuenta existe).
   const { data: usuario } = await admin
@@ -333,23 +321,16 @@ export async function signInWithPassword(
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    if (usuario) {
-      const newCount = usuario.intentos_fallidos + 1
-      const updates: { intentos_fallidos: number; bloqueado_hasta?: string } = {
-        intentos_fallidos: newCount,
-      }
-      if (newCount >= maxAttempts) {
-        updates.bloqueado_hasta = new Date(
-          Date.now() + lockMinutes * 60_000,
-        ).toISOString()
-      }
-      const { error: updateError } = await admin
-        .from('usuarios')
-        .update(updates)
-        .eq('id_usuario', usuario.id_usuario)
-      if (updateError) {
-        logger.error('signInWithPassword: fallo al incrementar intentos', {
-          error: updateError.message,
+    // Solo incrementar el contador si el error es de credenciales inválidas.
+    // Otros códigos (email_not_confirmed, over_request_rate_limit, etc.) no
+    // representan un intento de fuerza bruta y no deben penalizar al usuario.
+    if (usuario && error.code === 'invalid_credentials') {
+      const { error: rpcError } = await admin.rpc('register_failed_login', {
+        p_email: email,
+      })
+      if (rpcError) {
+        logger.error('signInWithPassword: fallo al registrar intento fallido', {
+          error: rpcError.message,
         })
       }
     }
