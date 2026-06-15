@@ -6,7 +6,7 @@ import type { UserRole } from '@/types'
  */
 export const ROLE_HOME: Record<UserRole, string> = {
   junior: '/junior',
-  empresa: '/empresa',
+  empresa: '/empresario',
   admin: '/admin',
 }
 

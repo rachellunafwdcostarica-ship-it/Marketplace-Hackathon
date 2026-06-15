@@ -106,8 +106,8 @@ export function ProjectProposal({
       {propuesta.stackSugerido.length > 0 && (
         <Field label={t('proposalStackLabel')}>
           <ul className="list-disc list-inside text-sm text-muted-foreground space-y-0.5">
-            {propuesta.stackSugerido.map((item, indice) => (
-              <li key={`${indice}-${item}`}>{item}</li>
+            {propuesta.stackSugerido.map((sugerencia, indice) => (
+              <li key={`${indice}-${sugerencia}`}>{sugerencia}</li>
             ))}
           </ul>
         </Field>

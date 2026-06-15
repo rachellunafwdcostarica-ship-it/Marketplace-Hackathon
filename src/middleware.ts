@@ -7,7 +7,7 @@ import type { Database } from '@/types/database'
 
 const intlMiddleware = createMiddleware(routing)
 
-const PROTECTED_PREFIXES = ['/junior', '/empresa', '/admin']
+const PROTECTED_PREFIXES = ['/junior', '/empresario', '/admin']
 
 function getLocale(pathname: string): string {
   return pathname.startsWith('/en') ? 'en' : 'es'
@@ -31,7 +31,7 @@ function isOnboardingPath(pathname: string): boolean {
 
 function getRouteRole(pathname: string): 'junior' | 'empresa' | 'admin' | null {
   if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
-  if (/^\/(es|en)\/empresa/.test(pathname)) return 'empresa'
+  if (/^\/(es|en)\/empresario/.test(pathname)) return 'empresa'
   if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
   return null
 }
