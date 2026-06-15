@@ -17,6 +17,24 @@
   - El stat **"Proyectos activos"** del dashboard también cuenta proyectos reales
     (`estado_efectivo === 'abierto'`).
 
+- **Perfil del empresario** (`/empresario/formulario-empresa` y
+  `/empresario/perfil`) ahora usa datos REALES de las tablas `empresarios` y
+  `usuarios`:
+  - Server actions: `src/lib/company/actions.ts` (`getCompanyProfile`,
+    `getCompanyProfileForEdit`, `saveCompanyProfile`, `isCompanyProfileComplete`).
+  - El **guard "perfil completo"** pasó a server-side (en `empresario/page.tsx` y
+    `empresario/perfil/page.tsx`, con `isCompanyProfileComplete`), reemplazando
+    los `useEffect` que leían `currentCompany.isProfileFilled` del mock.
+  - `empresario/perfil/page.tsx` es server component + `CompanyPerfilClient`
+    (cuerpo) con los datos reales mapeados a `Company`.
+  - El **banner**, el **sidebar** y la pestaña **Proyectos** del perfil ya usan
+    datos reales: el badge de verificación refleja `estado_verificacion`, se
+    quitaron las stats y los tabs falsos, y la pestaña Proyectos reusa
+    `PublishedProjectsBoard` (proyectos reales de `getMyPublishedProjects`).
+  - **Pendiente (fase siguiente):** `CompanyProfileDetails` todavía tiene el
+    showcase hardcodeado (proyectos/historial/cultura de mentira); y
+    `CompanyProfileForm` aún sincroniza el mock `StateContext` (`updateCompany`).
+
 ## Huérfanos (código muerto preservado)
 
 - `src/components/_orphans/MockPublishedProjectsSection.tsx`
@@ -25,6 +43,19 @@
   - **No se importa en ningún lado.** Solo referencia.
   - **Qué hacer en el futuro:** borrarlo. La funcionalidad real ya vive en
     `PublishedProjectsBoard`. git conserva el historial igual.
+
+- `src/components/_orphans/MockCompanyPerfilPage.tsx`
+  - Versión MOCK de la página de perfil del empresario: leía `currentCompany`
+    del `StateContext` y usaba un `useEffect` para el guard "perfil incompleto".
+  - Reemplazada por `empresario/perfil/page.tsx` (server, real) +
+    `CompanyPerfilClient`.
+  - **No se importa en ningún lado.** Solo referencia.
+
+- `src/components/_orphans/MockCompanyProjectsTab.tsx`
+  - Pestaña "Proyectos" MOCK del perfil (proyectos, filtros y avatares
+    inventados, sin datos de BD).
+  - Reemplazada por `PublishedProjectsBoard` (proyectos reales). Solo la
+    referencia `MockCompanyPerfilPage`.
 
 ## Mocks que SIGUEN en uso (no se tocaron — fuera de esta tarea)
 

@@ -1,62 +1,61 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { getLocale } from 'next-intl/server'
+import {
+  getCompanyProfileForEdit,
+  isCompanyProfileComplete,
+} from '@/lib/company/actions'
+import { getMyPublishedProjects } from '@/lib/projects/dashboard'
+import type { VerificationStatus } from '@/lib/company/schemas'
+import type { Company, CompanyStatus } from '@/types'
+import { CompanyPerfilClient } from './CompanyPerfilClient'
 
-import React, { useState, useEffect } from 'react'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { useRouter } from '@/i18n/routing'
-import { useAppState } from '@/lib/StateContext'
-import { CompanyProfileSidebar } from '@/components/features/companies/CompanyProfileSidebar'
-import { CompanyProfileBanner } from '@/components/features/companies/CompanyProfileBanner'
-import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
-import { CompanyProjectsTab } from '@/components/features/companies/CompanyProjectsTab'
+const VERIF_TO_STATUS: Record<VerificationStatus, CompanyStatus> = {
+  pendiente: 'pending',
+  verificado: 'approved',
+  rechazado: 'rejected',
+}
 
-type TabType = 'profile' | 'projects'
+/**
+ * Perfil del empresario. Server Component: el guard de "perfil completo" y la
+ * lectura de datos viven en el server (sin `useEffect`). Si el perfil está
+ * incompleto, redirige al formulario. Los datos REALES (empresarios + usuarios)
+ * y los proyectos reales se pasan al cuerpo cliente.
+ */
+export default async function CompanyProfilePage() {
+  const locale = await getLocale()
 
-export default function EmpresaPerfilPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('profile')
-  const router = useRouter()
-  const { currentCompany: company } = useAppState()
+  const complete = await isCompanyProfileComplete()
+  if (!complete.ok || !complete.data) {
+    redirect(`/${locale}/empresario/formulario-empresa`)
+  }
 
-  useEffect(() => {
-    if (company && !company.isProfileFilled) {
-      router.replace('/empresario/formulario-empresa')
-    }
-  }, [company, router])
+  const profileRes = await getCompanyProfileForEdit()
+  if (!profileRes.ok) {
+    redirect(`/${locale}/empresario/formulario-empresa`)
+  }
 
-  // Tecnologías preparadas para ser integradas posteriormente con el backend (F2)
-  const tecnologias: { id: string; nombre: string }[] = []
+  const projectsRes = await getMyPublishedProjects()
+  const proyectos = projectsRes.ok ? projectsRes.data : []
 
-  return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Navbar />
+  const p = profileRes.data
+  const company: Company = {
+    // El perfil no expone el id de empresario y ningún sub-componente lo usa.
+    id: '',
+    name: p.name,
+    companyType: p.companyType,
+    sector: p.sector,
+    cedula: p.cedula ?? '',
+    description: p.description,
+    logo: p.logo,
+    status: p.verificationStatus
+      ? VERIF_TO_STATUS[p.verificationStatus]
+      : 'pending',
+    projectsCount: proyectos.length,
+    contactEmail: p.contactEmail,
+    website: p.website,
+    createdAt: '',
+    isProfileFilled: true,
+  }
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        {/* Sidebar modularizado (F1) */}
-        <CompanyProfileSidebar
-          company={company}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
-
-        {/* Contenido Principal modularizado (F1) */}
-        <main className="flex-1 space-y-8">
-          {/* Banner modularizado (F1) */}
-          <CompanyProfileBanner company={company} />
-
-          {activeTab === 'profile' && (
-            <CompanyProfileDetails
-              company={company}
-              setActiveTab={setActiveTab}
-            />
-          )}
-
-          {activeTab === 'projects' && (
-            <CompanyProjectsTab tecnologias={tecnologias} />
-          )}
-        </main>
-      </div>
-
-      <Footer />
-    </div>
-  )
+  return <CompanyPerfilClient company={company} projects={proyectos} />
 }

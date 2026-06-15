@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useAppState } from '@/lib/StateContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
@@ -59,12 +59,6 @@ export function CompanyDashboardClient({
   } = useAppState()
 
   const router = useRouter()
-
-  useEffect(() => {
-    if (company && !company.isProfileFilled) {
-      router.replace('/empresario/formulario-empresa')
-    }
-  }, [company, router])
 
   // Postulaciones recibidas: mock, filtradas por los proyectos mock del contexto.
   const myProjectIds = projects
