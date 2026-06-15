@@ -157,6 +157,26 @@ export function buildLogisticsSchema() {
         })
       }
 
+      // Decimales por defecto (USD), pero el colón no admite decimales (céntimos
+      // en desuso): en CRC el presupuesto debe ser entero. Mitad backend de la
+      // regla; el form refleja lo mismo con el `step` del input.
+      if (valores.moneda === 'CRC') {
+        if (min !== null && !Number.isInteger(min)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'presupuestoEntero',
+            path: ['presupuestoMin'],
+          })
+        }
+        if (max !== null && !Number.isInteger(max)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'presupuestoEntero',
+            path: ['presupuestoMax'],
+          })
+        }
+      }
+
       const plazo = parsePlazo(valores.plazoDias)
       if (plazo === null || plazo < PLAZO_MIN_DIAS || plazo > PLAZO_MAX_DIAS) {
         ctx.addIssue({

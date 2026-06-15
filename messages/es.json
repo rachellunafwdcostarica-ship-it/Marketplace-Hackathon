@@ -479,6 +479,7 @@
       "presupuesto": "El presupuesto mínimo no puede superar al máximo.",
       "presupuestoMin": "Indicá un presupuesto mínimo mayor a 0.",
       "presupuestoMax": "Indicá un presupuesto máximo mayor a 0.",
+      "presupuestoEntero": "En colones el presupuesto debe ser un número entero (sin decimales).",
       "plazo": "El plazo de recepción debe ser de 5 a 15 días.",
       "fechaCierreRequerida": "Indicá la fecha de cierre de recepción.",
       "fondoMin": "Contanos un poco más del proyecto (al menos 20 caracteres).",
