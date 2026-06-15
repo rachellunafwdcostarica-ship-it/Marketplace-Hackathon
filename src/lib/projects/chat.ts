@@ -37,7 +37,7 @@ export async function sendChatMessage(
 
     const { data: empresario, error: empError } = await supabase
       .from('empresarios')
-      .select('id_empresario')
+      .select('id_empresario, estado_verificacion')
       .eq('id_usuario', user.id)
       .maybeSingle()
     if (empError) {
@@ -48,6 +48,12 @@ export async function sendChatMessage(
     }
     if (!empresario) {
       return err('empresario_no_encontrado')
+    }
+    // Gate de costo: la IA solo corre para empresas verificadas. Sin este
+    // chequeo, un empresario no verificado podría quemar tokens antes de
+    // siquiera poder publicar (la verificación la hace un admin).
+    if (empresario.estado_verificacion !== 'verificado') {
+      return err('not_verified')
     }
 
     const { data: conv, error: convError } = await supabase
