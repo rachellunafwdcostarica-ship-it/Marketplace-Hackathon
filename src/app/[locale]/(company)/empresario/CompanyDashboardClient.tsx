@@ -125,9 +125,8 @@ export function CompanyDashboardClient({
 
   const handleContactCandidate = (email: string) => {
     toast.info(tEmpresa('contactEmailInfo', { email }))
-    window.location.assign(
-      `mailto:${email}?subject=Contacto%20FWD%20Talent%20Marketplace`,
-    )
+    const subject = encodeURIComponent(tEmpresa('contactEmailSubject'))
+    window.location.assign(`mailto:${email}?subject=${subject}`)
   }
 
   return (

@@ -18,7 +18,7 @@ import { useRouter } from '@/i18n/routing'
 import { useAppState } from '@/lib/StateContext'
 import { CompanyProfileSidebar } from '@/components/features/companies/CompanyProfileSidebar'
 import { CompanyProfileBanner } from '@/components/features/companies/CompanyProfileBanner'
-import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
+import { CompanyProfileDetails } from '@/components/_orphans/MockCompanyProfileDetails'
 import { CompanyProjectsTab } from '@/components/_orphans/MockCompanyProjectsTab'
 
 type TabType = 'profile' | 'projects'

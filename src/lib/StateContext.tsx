@@ -26,11 +26,9 @@ import {
   mockStudentSkills,
   mockStudentPortfolio,
 } from '@/lib/constants/mockData'
-import type { CompanyProfileInput } from '@/lib/company/schemas'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { normalizeRole } from '@/lib/auth/roles'
-import { getCompanyProfile, saveCompanyProfile } from '@/lib/company/actions'
-import { logger } from '@/lib/logger'
+import { getCompanyProfile } from '@/lib/company/actions'
 
 import type { User } from '@supabase/supabase-js'
 
@@ -52,7 +50,6 @@ interface StateContextType {
   ) => void
   updateApplicationStatus: (id: string, status: ApplicationStatus) => void
   updateCompanyStatus: (id: string, status: CompanyStatus) => void
-  updateCompany: (id: string, profile: CompanyProfileInput) => void
   resetAll: () => void
   currentCompany: Company | undefined
   currentUser: User | null
@@ -362,55 +359,6 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const updateCompany = (id: string, profile: CompanyProfileInput) => {
-    saveCompanyProfile(profile).then((res) => {
-      if (!res.ok) {
-        logger.error('Failed to save company profile to Supabase', {
-          error: res.error,
-        })
-      }
-    })
-
-    setCompanies((prev) => {
-      const exists = prev.some(
-        (c) => c.id === id || (currentUser && c.userId === currentUser.id),
-      )
-      if (exists) {
-        return prev.map((c) => {
-          if (c.id === id || (currentUser && c.userId === currentUser.id)) {
-            return {
-              ...c,
-              ...profile,
-              cedula: profile.cedula ?? '',
-              id: id.startsWith('comp-temp-') ? `comp-${Date.now()}` : c.id,
-              isProfileFilled: true,
-              userId: currentUser?.id,
-            }
-          }
-          return c
-        })
-      } else {
-        const newCompany: Company = {
-          id: `comp-${Date.now()}`,
-          name: profile.name,
-          companyType: profile.companyType as CompanyType,
-          sector: profile.sector,
-          cedula: profile.cedula ?? '',
-          description: profile.description || '',
-          logo: profile.logo || '',
-          status: 'approved',
-          projectsCount: 0,
-          contactEmail: profile.contactEmail,
-          website: profile.website || '',
-          createdAt: new Date().toISOString(),
-          isProfileFilled: true,
-          userId: currentUser?.id,
-        }
-        return [newCompany, ...prev]
-      }
-    })
-  }
-
   const resetAll = () => {
     const supabase = createSupabaseBrowserClient()
     supabase.auth.signOut().then(() => {
@@ -451,7 +399,6 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         addApplication,
         updateApplicationStatus,
         updateCompanyStatus,
-        updateCompany,
         resetAll,
         currentCompany,
         currentUser,

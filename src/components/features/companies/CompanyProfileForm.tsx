@@ -15,7 +15,6 @@ import {
   Building2,
   BadgeCheck,
 } from 'lucide-react'
-import { useAppState } from '@/lib/StateContext'
 import {
   createCompanyProfileSchema,
   type CompanyProfileInput,
@@ -62,9 +61,6 @@ export function CompanyProfileForm({
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
   const tValidation = useTranslations('Validation')
-  // Sincronización con el mock (StateContext): la Fase C la elimina junto al
-  // guard server-side de "perfil completo".
-  const { currentCompany: company, updateCompany } = useAppState()
   const router = useRouter()
 
   const [loading, setLoading] = useState(false)
@@ -203,10 +199,6 @@ export function CompanyProfileForm({
         if (!logoSave.ok) {
           throw new Error(logoSave.error)
         }
-      }
-
-      if (company) {
-        updateCompany(company.id, { ...baseProfile, logo: logoUrl })
       }
 
       toast.success(tEmpresa('profileSaved'))
@@ -407,21 +399,23 @@ export function CompanyProfileForm({
               </Field>
             </div>
 
-            {watchedType === 'formal' && (
-              <Field
+            <Field
+              id="cedula"
+              label={
+                watchedType === 'emprendedor'
+                  ? tEmpresa('fieldCedulaIdentidad')
+                  : tEmpresa('fieldCedulaJuridica')
+              }
+              error={errors.cedula?.message}
+            >
+              <Input
                 id="cedula"
-                label={tEmpresa('fieldCedula')}
-                error={errors.cedula?.message}
-              >
-                <Input
-                  id="cedula"
-                  type="text"
-                  placeholder={tEmpresa('fieldCedulaPlaceholder')}
-                  className="bg-card/50 border-border focus-visible:ring-primary"
-                  {...register('cedula')}
-                />
-              </Field>
-            )}
+                type="text"
+                placeholder={tEmpresa('fieldCedulaPlaceholder')}
+                className="bg-card/50 border-border focus-visible:ring-primary"
+                {...register('cedula')}
+              />
+            </Field>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Field

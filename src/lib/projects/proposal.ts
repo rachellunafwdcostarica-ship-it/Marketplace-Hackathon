@@ -1,5 +1,6 @@
 'use server'
 
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
@@ -38,7 +39,7 @@ export async function generateProposal(
 
     const { data: empresario, error: empError } = await supabase
       .from('empresarios')
-      .select('id_empresario')
+      .select('id_empresario, estado_verificacion')
       .eq('id_usuario', user.id)
       .maybeSingle()
     if (empError) {
@@ -49,6 +50,11 @@ export async function generateProposal(
     }
     if (!empresario) {
       return err('empresario_no_encontrado')
+    }
+    // Gate de costo: la propuesta dispara hasta MAX_INTENTOS llamadas a la IA
+    // (las más caras del flujo). Solo para empresas verificadas.
+    if (empresario.estado_verificacion !== 'verificado') {
+      return err('not_verified')
     }
 
     const { data: conv, error: convError } = await supabase
@@ -81,6 +87,7 @@ export async function generateProposal(
     const logistica = parseLogistica(conv.logistica)
     const historial = parseHistorial(conv.historial)
     const provider = getAiProvider()
+    const locale = await getLocale()
 
     let ajustes: string[] = []
     let ultimasRazones: string[] = []
@@ -98,6 +105,7 @@ export async function generateProposal(
           ),
         },
         ajustes,
+        locale,
       })
 
       const categorias = resolveCatalog(raw.categorias, catalogs.categorias)
@@ -113,7 +121,7 @@ export async function generateProposal(
         continue
       }
 
-      const validacion = await provider.validarPropuesta(raw)
+      const validacion = await provider.validarPropuesta(raw, locale)
       if (!validacion.valido) {
         ajustes = validacion.ajustes
         ultimasRazones = validacion.razones
@@ -173,10 +181,12 @@ export async function generateProposal(
     // Rechazada tras los reintentos: la IA le explica al empresario qué falta,
     // en el chat (errolpendiente §5.1: tope de reintentos → explicar).
     const detalles = ajustes.length > 0 ? ajustes : ultimasRazones
+    // Mensaje de chat visible al empresario → i18n (en su idioma, no hardcoded).
+    const t = await getTranslations('ProjectPublish')
     const mensajeRechazo =
       detalles.length > 0
-        ? `Todavía no puedo armar la propuesta. Para avanzar:\n- ${detalles.join('\n- ')}`
-        : 'Todavía no puedo armar la propuesta con lo que tengo. Contame un poco más del proyecto.'
+        ? t('agentRejection.withDetails', { detalles: detalles.join('\n- ') })
+        : t('agentRejection.noDetails')
     const historialRechazo: HistorialEntry[] = [
       ...historial,
       {

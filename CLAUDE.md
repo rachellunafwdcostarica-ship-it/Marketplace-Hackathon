@@ -55,6 +55,7 @@ Tu trabajo no es validarme. Es hacerme pensar con más claridad.
 
 Cuando te pida hacer un cambio, primero analiza el proyecto y dime si estás de acuerdo con el cambio. Si estás de acuerdo, dime cómo lo harás y luego hazlo. Si no estás de acuerdo, dime por qué no estás de acuerdo y qué cambio sugieres. (Si me corriges ten en cuenta las reglas de `reglas.md`) Nunca hagas nada sin mi permiso, siempre consulta que este completamente seguro de las implementaciones, no asumas que esta bien. Si tienes una duda, pregunta. No implementes nada sin consultarme. 
 
+## Github 
 Revisa los archivos de manera amplia y detallada. Quiero que detectes los archivos marcados con cambios y haz lo siguiente: Cuando veas archivos con cambios, lo que haras es hacer un antes y un despues de la modificacion. Lo que quiero lograr con esto es ver que se cambió, ver que tocaste y si esta correcta la modificacion (ACLARO: esto solo con archivos modificados no con todos.) Cuando el archivo sea una modificacion, lo que haras es comentar el cambio realizado en el archivo con un """ ANTES """ y """ DESPUES """ antes del cambio. (si el cambio es grande, resúmelo), luego usa conventional commit y cuando termines de revisar los cambios avisame si estoy de acuerdo en realizar los comandos:
 
 - git add .

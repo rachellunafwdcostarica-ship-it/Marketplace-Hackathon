@@ -22,7 +22,8 @@ import type { EstadoEfectivo, PublishedProject } from '@/lib/projects/dashboard'
 
 interface PublishedProjectsBoardProps {
   projects: PublishedProject[]
-  onRefetch: () => void
+  onRefetch?: () => void
+  readOnly?: boolean
 }
 
 const KNOWN_ERROR_CODES = new Set([
@@ -47,7 +48,7 @@ function isCancelable(project: PublishedProject): boolean {
   return project.estado !== 'finalizado' && project.estado !== 'cancelado'
 }
 
-function formatBudget(
+export function formatBudget(
   moneda: string,
   min: number | null,
   max: number | null,
@@ -62,6 +63,7 @@ function formatBudget(
 export function PublishedProjectsBoard({
   projects,
   onRefetch,
+  readOnly = false,
 }: PublishedProjectsBoardProps) {
   const t = useTranslations('ProjectsBoard')
   const tCommon = useTranslations('Common')
@@ -102,7 +104,7 @@ export function PublishedProjectsBoard({
     if (result.ok) {
       toast.success(t('cancelSuccess'))
       cerrarCancel()
-      onRefetch()
+      onRefetch?.()
       return
     }
     const code = KNOWN_ERROR_CODES.has(result.error)
@@ -185,18 +187,6 @@ export function PublishedProjectsBoard({
                     <Eye className="w-4 h-4" />
                     {t('viewDetails')}
                   </Button>
-                  {isCancelable(project) && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setCancelTarget(project)}
-                      title={t('cancelAction')}
-                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -283,6 +273,22 @@ export function PublishedProjectsBoard({
                 )}
                 {detail.involucraIa && <ChipRow items={[t('involvesAi')]} />}
               </div>
+              {!readOnly && isCancelable(detail) && (
+                <DialogFooter className="pt-4 border-t border-border/40 mt-2 sm:justify-start">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      setCancelTarget(detail)
+                      setDetail(null)
+                    }}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 font-semibold inline-flex items-center gap-1.5"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    {t('cancelAction')}
+                  </Button>
+                </DialogFooter>
+              )}
             </>
           )}
         </DialogContent>
@@ -294,16 +300,23 @@ export function PublishedProjectsBoard({
       >
         <DialogContent className="sm:max-w-md border border-border">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold font-heading text-destructive">
+            <DialogTitle className="text-xl font-bold font-heading text-destructive">
               {t('cancelDialogTitle')}
             </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
+            <DialogDescription className="text-base text-foreground">
               {t('cancelDialogWarning')}
             </DialogDescription>
           </DialogHeader>
+          {cancelTarget && (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2">
+              <p className="text-base font-semibold text-foreground truncate">
+                {cancelTarget.titulo}
+              </p>
+            </div>
+          )}
           <div className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="cancelMotivo" className="text-sm font-semibold">
+              <Label htmlFor="cancelMotivo" className="text-base font-semibold">
                 {t('cancelMotivoLabel')}
               </Label>
               <Textarea
@@ -316,7 +329,7 @@ export function PublishedProjectsBoard({
                 className="bg-card/50 border-border focus-visible:ring-destructive resize-none"
               />
             </div>
-            <label className="flex items-start gap-2 text-sm text-foreground cursor-pointer">
+            <label className="flex items-start gap-2 text-base text-foreground cursor-pointer">
               <input
                 type="checkbox"
                 checked={cancelChecked}
@@ -377,7 +390,7 @@ function FilterButton({
   )
 }
 
-function StatusPill({
+export function StatusPill({
   estado,
   label,
 }: {

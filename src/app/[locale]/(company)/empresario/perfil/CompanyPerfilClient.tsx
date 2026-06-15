@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { CompanyProfileSidebar } from '@/components/features/companies/CompanyProfileSidebar'
@@ -9,12 +8,14 @@ import { CompanyProfileBanner } from '@/components/features/companies/CompanyPro
 import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
 import { PublishedProjectsBoard } from '@/components/features/projects/PublishedProjectsBoard'
 import type { Company } from '@/types'
+import type { CompanyProfileView } from '@/lib/company/schemas'
 import type { PublishedProject } from '@/lib/projects/dashboard'
 
 type TabType = 'profile' | 'projects'
 
 interface CompanyPerfilClientProps {
   company: Company
+  profile: CompanyProfileView
   projects: PublishedProject[]
 }
 
@@ -25,10 +26,10 @@ interface CompanyPerfilClientProps {
  */
 export function CompanyPerfilClient({
   company,
+  profile,
   projects,
 }: CompanyPerfilClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
-  const router = useRouter()
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -46,16 +47,14 @@ export function CompanyPerfilClient({
 
           {activeTab === 'profile' && (
             <CompanyProfileDetails
-              company={company}
+              profile={profile}
+              projects={projects}
               setActiveTab={setActiveTab}
             />
           )}
 
           {activeTab === 'projects' && (
-            <PublishedProjectsBoard
-              projects={projects}
-              onRefetch={() => router.refresh()}
-            />
+            <PublishedProjectsBoard projects={projects} readOnly />
           )}
         </main>
       </div>

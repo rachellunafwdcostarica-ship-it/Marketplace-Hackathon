@@ -75,6 +75,7 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isSuspended = searchParams.get('reason') === 'suspended'
+  const isDeactivated = searchParams.get('reason') === 'deactivated'
 
   const [method, setMethod] = useState<LoginMethod>('password')
   const [loading, setLoading] = useState(false)
@@ -195,6 +196,18 @@ function LoginContent() {
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <p className="text-xs font-semibold leading-relaxed">
                 {tLogin('suspended')}
+              </p>
+            </div>
+          )}
+
+          {isDeactivated && (
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 text-destructive"
+            >
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <p className="text-xs font-semibold leading-relaxed">
+                {tLogin('deactivated')}
               </p>
             </div>
           )}

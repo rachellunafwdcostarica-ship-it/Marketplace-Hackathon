@@ -100,12 +100,5 @@ skills-lock.json
 docs/TAREAS-SAMIR.md
 docs/DEPENDENCIAS-SAMIR.md
 
-
-{
-  "mcpServers": {
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=mgowuyflhiavquztxpqh"
-    }
-  }
-}
+# Plan personal de implementación de Fressia (no versionar)
+docs/PLAN-FRESSIA.md

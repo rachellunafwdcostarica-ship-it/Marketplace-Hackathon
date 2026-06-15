@@ -1,15 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
   buildLogisticsSchema,
-  daysBetween,
   draftToFormValues,
   parseMoney,
+  parsePlazo,
   toLogisticaDraft,
   type LogisticaDraft,
   type LogisticsFormValues,
 } from './schemas'
-
-const HOY = '2026-06-13'
 
 function baseValues(
   overrides: Partial<LogisticsFormValues> = {},
@@ -20,7 +18,7 @@ function baseValues(
     moneda: 'USD',
     presupuestoMin: '1000',
     presupuestoMax: '5000',
-    fechaCierre: '2026-06-20', // 7 días desde HOY → dentro de 5..15
+    plazoDias: '7', // dentro de 5..15
     paisProyecto: '',
     ciudadProyecto: '',
     contextoInicial: 'Queremos una landing para captar leads de la marca.',
@@ -28,12 +26,16 @@ function baseValues(
   }
 }
 
-describe('daysBetween', () => {
-  it('cuenta los días entre dos fechas UTC', () => {
-    expect(daysBetween('2026-06-13', '2026-06-20')).toBe(7)
+describe('parsePlazo', () => {
+  it('convierte texto entero', () => {
+    expect(parsePlazo(' 7 ')).toBe(7)
   })
-  it('devuelve null si falta una fecha', () => {
-    expect(daysBetween('', '2026-06-20')).toBeNull()
+  it('trata el vacío como null', () => {
+    expect(parsePlazo('')).toBeNull()
+  })
+  it('rechaza valores no enteros', () => {
+    expect(parsePlazo('7.5')).toBeNull()
+    expect(parsePlazo('abc')).toBeNull()
   })
 })
 
@@ -47,14 +49,14 @@ describe('parseMoney', () => {
 })
 
 describe('buildLogisticsSchema', () => {
-  const schema = buildLogisticsSchema(HOY)
+  const schema = buildLogisticsSchema()
 
   it('acepta una logística remota válida (título vacío, contexto suficiente)', () => {
     expect(schema.safeParse(baseValues()).success).toBe(true)
   })
 
   it('rechaza un plazo menor a 5 días', () => {
-    const result = schema.safeParse(baseValues({ fechaCierre: '2026-06-16' }))
+    const result = schema.safeParse(baseValues({ plazoDias: '4' }))
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues.some((i) => i.message === 'plazo')).toBe(true)
@@ -62,8 +64,21 @@ describe('buildLogisticsSchema', () => {
   })
 
   it('rechaza un plazo mayor a 15 días', () => {
-    const result = schema.safeParse(baseValues({ fechaCierre: '2026-07-13' }))
+    const result = schema.safeParse(baseValues({ plazoDias: '16' }))
     expect(result.success).toBe(false)
+  })
+
+  it('rechaza un plazo vacío', () => {
+    const result = schema.safeParse(baseValues({ plazoDias: '' }))
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.message === 'plazo')).toBe(true)
+    }
+  })
+
+  it('acepta los bordes del rango (5 y 15 días)', () => {
+    expect(schema.safeParse(baseValues({ plazoDias: '5' })).success).toBe(true)
+    expect(schema.safeParse(baseValues({ plazoDias: '15' })).success).toBe(true)
   })
 
   it('exige país y ciudad cuando no es remoto', () => {
@@ -151,6 +166,11 @@ describe('toLogisticaDraft', () => {
     expect(draft.ciudadProyecto).toBe('San José')
     expect(draft.titulo).toBe('Landing institucional')
   })
+
+  it('convierte el plazo a número', () => {
+    const draft = toLogisticaDraft(baseValues({ plazoDias: '10' }))
+    expect(draft.plazoDias).toBe(10)
+  })
 })
 
 describe('draftToFormValues', () => {
@@ -161,7 +181,7 @@ describe('draftToFormValues', () => {
       moneda: 'CRC',
       presupuestoMin: 1000,
       presupuestoMax: 5000,
-      fechaCierre: '2026-06-25',
+      plazoDias: 10,
       paisProyecto: 'Costa Rica',
       ciudadProyecto: 'Cartago',
     }
@@ -170,6 +190,7 @@ describe('draftToFormValues', () => {
     expect(values.modalidad).toBe('hibrido')
     expect(values.presupuestoMin).toBe('1000')
     expect(values.presupuestoMax).toBe('5000')
+    expect(values.plazoDias).toBe('10')
     expect(values.ciudadProyecto).toBe('Cartago')
     expect(values.contextoInicial).toBe('Contexto del proyecto guardado.')
   })
@@ -179,6 +200,7 @@ describe('draftToFormValues', () => {
     expect(values.modalidad).toBe('')
     expect(values.moneda).toBe('USD')
     expect(values.presupuestoMin).toBe('')
+    expect(values.plazoDias).toBe('')
     expect(values.titulo).toBe('')
   })
 })

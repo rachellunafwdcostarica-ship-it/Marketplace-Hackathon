@@ -93,12 +93,28 @@ export async function middleware(request: NextRequest) {
     isPublicAuthPage(pathname) ||
     isOnboardingPath(pathname)
   ) {
-    const { data: accountStatus } = await supabase.rpc('get_my_account_status')
+    const [{ data: accountStatus }, { data: usuarioRow }] = await Promise.all([
+      supabase.rpc('get_my_account_status'),
+      supabase
+        .from('usuarios')
+        .select('is_active')
+        .eq('id_usuario', user.id)
+        .maybeSingle(),
+    ])
 
+    // Bloqueo duro: cuenta suspendida (RF-65) o desactivada por un admin
+    // (is_active = false). Ambos cierran sesión y rebotan a /login.
+    let blockReason: 'suspended' | 'deactivated' | null = null
     if (
       accountStatus === 'suspendida' ||
       accountStatus === 'suspendida_severa'
     ) {
+      blockReason = 'suspended'
+    } else if (usuarioRow?.is_active === false) {
+      blockReason = 'deactivated'
+    }
+
+    if (blockReason) {
       await supabase.auth.signOut()
 
       // Si ya está en una página de auth, dejarla renderizar (evita un bucle
@@ -108,7 +124,7 @@ export async function middleware(request: NextRequest) {
       }
 
       const loginUrl = new URL(`/${locale}/login`, request.url)
-      loginUrl.searchParams.set('reason', 'suspended')
+      loginUrl.searchParams.set('reason', blockReason)
       const redirect = NextResponse.redirect(loginUrl)
       // Propagar las cookies de cierre de sesión escritas por signOut().
       intlResponse.cookies.getAll().forEach((cookie) => {
