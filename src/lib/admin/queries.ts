@@ -5,23 +5,34 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
 import type { Database } from '@/types/database'
 
-export interface PendingGraduate {
+export const ADMIN_VERIFICATION_STATES = [
+  'pendiente',
+  'verificado',
+  'rechazado',
+] as const
+export type AdminVerificationState = (typeof ADMIN_VERIFICATION_STATES)[number]
+
+export interface GraduateVerificationItem {
   id_usuario: string
   nombre: string
   apellido_1: string
+  apellido_2: string | null
   correo: string
+  fecha_nacimiento: string | null
+  titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
+  estado_verificacion: AdminVerificationState
 }
 
 /**
- * Egresados pendientes de verificación (RF-64): estudiantes con
- * estado_verificacion = 'pendiente'. Es la bandeja del cotejo de egreso, NO la
- * aprobación de cuenta (eso es estado_cuenta, en gestión de usuarios).
+ * Lista egresados por estado de verificación (RF-64): pendientes para la cola
+ * del cotejo, o verificado/rechazado para el historial. Trae los datos del
+ * estudiante (titulo_fwd) y del representante (nombre, correo, fecha_nacimiento).
  *
  * Solo un admin puede invocarla. Usa el cliente de servicio para bypassear RLS.
  */
-export async function getPendingGraduateVerifications(): Promise<
-  Result<PendingGraduate[]>
-> {
+export async function listGraduateVerifications(
+  estado: AdminVerificationState,
+): Promise<Result<GraduateVerificationItem[]>> {
   const authResult = await requireRole('admin')
   if (!authResult.ok) {
     return authResult
@@ -31,33 +42,144 @@ export async function getPendingGraduateVerifications(): Promise<
 
   const { data: estudiantes, error: estudiantesError } = await adminClient
     .from('estudiantes')
-    .select('id_usuario')
-    .eq('estado_verificacion', 'pendiente')
+    .select('id_usuario, titulo_fwd, estado_verificacion')
+    .eq('estado_verificacion', estado)
   if (estudiantesError) {
-    logger.error('getPendingGraduateVerifications: fallo al leer estudiantes', {
+    logger.error('listGraduateVerifications: fallo al leer estudiantes', {
       error: estudiantesError.message,
     })
     return err(estudiantesError.message)
   }
-
-  const ids = (estudiantes ?? []).map((e) => e.id_usuario)
-  if (ids.length === 0) {
+  if (!estudiantes || estudiantes.length === 0) {
     return ok([])
   }
 
-  const { data, error } = await adminClient
+  const ids = estudiantes.map((e) => e.id_usuario)
+  const { data: usuarios, error: usuariosError } = await adminClient
     .from('usuarios')
-    .select('id_usuario, nombre, apellido_1, correo')
+    .select(
+      'id_usuario, nombre, apellido_1, apellido_2, correo, fecha_nacimiento',
+    )
     .in('id_usuario', ids)
-    .order('fecha_registro', { ascending: true })
-  if (error) {
-    logger.error('getPendingGraduateVerifications failed', {
-      error: error.message,
+  if (usuariosError) {
+    logger.error('listGraduateVerifications: fallo al leer usuarios', {
+      error: usuariosError.message,
     })
-    return err(error.message)
+    return err(usuariosError.message)
+  }
+  const userById = new Map((usuarios ?? []).map((u) => [u.id_usuario, u]))
+
+  const items: GraduateVerificationItem[] = estudiantes.map((e) => {
+    const u = userById.get(e.id_usuario)
+    return {
+      id_usuario: e.id_usuario,
+      nombre: u?.nombre ?? '',
+      apellido_1: u?.apellido_1 ?? '',
+      apellido_2: u?.apellido_2 ?? null,
+      correo: u?.correo ?? '',
+      fecha_nacimiento: u?.fecha_nacimiento ?? null,
+      titulo_fwd: e.titulo_fwd,
+      estado_verificacion: e.estado_verificacion,
+    }
+  })
+
+  return ok(items)
+}
+
+export interface CompanyVerificationItem {
+  id_empresario: string
+  nombre_empresa: string | null
+  tipo_empresario: Database['public']['Enums']['tipo_empresario_enum']
+  sector: string | null
+  descripcion: string | null
+  cedula: string | null
+  alcance_operativo: Database['public']['Enums']['alcance_enum'] | null
+  pais_sede: string | null
+  ciudad_sede: string | null
+  logo: string | null
+  sitio_web: string | null
+  estado_verificacion: AdminVerificationState
+  // Representante (de usuarios)
+  nombre: string
+  apellido_1: string
+  apellido_2: string | null
+  correo: string
+  fecha_nacimiento: string | null
+}
+
+/**
+ * Lista empresas por estado de verificación (RF-17): pendientes para la cola, o
+ * verificado/rechazado para el historial, con los datos del representante.
+ *
+ * Solo un admin puede invocarla. Usa el cliente de servicio: la policy
+ * empresarios_select_own solo deja ver el registro propio.
+ */
+export async function listCompanyVerifications(
+  estado: AdminVerificationState,
+): Promise<Result<CompanyVerificationItem[]>> {
+  const authResult = await requireRole('admin')
+  if (!authResult.ok) {
+    return authResult
   }
 
-  return ok((data ?? []) as PendingGraduate[])
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: empresas, error: empresasError } = await adminClient
+    .from('empresarios')
+    .select(
+      'id_empresario, id_usuario, nombre_empresa, tipo_empresario, sector, descripcion, cedula, alcance_operativo, pais_sede, ciudad_sede, logo, sitio_web, estado_verificacion',
+    )
+    .eq('estado_verificacion', estado)
+    .order('updated_at', { ascending: true })
+  if (empresasError) {
+    logger.error('listCompanyVerifications: fallo al leer empresarios', {
+      error: empresasError.message,
+    })
+    return err(empresasError.message)
+  }
+  if (!empresas || empresas.length === 0) {
+    return ok([])
+  }
+
+  const userIds = empresas.map((e) => e.id_usuario)
+  const { data: usuarios, error: usuariosError } = await adminClient
+    .from('usuarios')
+    .select(
+      'id_usuario, nombre, apellido_1, apellido_2, correo, fecha_nacimiento',
+    )
+    .in('id_usuario', userIds)
+  if (usuariosError) {
+    logger.error('listCompanyVerifications: fallo al leer usuarios', {
+      error: usuariosError.message,
+    })
+    return err(usuariosError.message)
+  }
+  const userById = new Map((usuarios ?? []).map((u) => [u.id_usuario, u]))
+
+  const companies: CompanyVerificationItem[] = empresas.map((e) => {
+    const u = userById.get(e.id_usuario)
+    return {
+      id_empresario: e.id_empresario,
+      nombre_empresa: e.nombre_empresa,
+      tipo_empresario: e.tipo_empresario,
+      sector: e.sector,
+      descripcion: e.descripcion,
+      cedula: e.cedula,
+      alcance_operativo: e.alcance_operativo,
+      pais_sede: e.pais_sede,
+      ciudad_sede: e.ciudad_sede,
+      logo: e.logo,
+      sitio_web: e.sitio_web,
+      estado_verificacion: e.estado_verificacion,
+      nombre: u?.nombre ?? '',
+      apellido_1: u?.apellido_1 ?? '',
+      apellido_2: u?.apellido_2 ?? null,
+      correo: u?.correo ?? '',
+      fecha_nacimiento: u?.fecha_nacimiento ?? null,
+    }
+  })
+
+  return ok(companies)
 }
 
 export type AdminAccountStatus =

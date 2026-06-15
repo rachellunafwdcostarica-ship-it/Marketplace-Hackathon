@@ -146,7 +146,7 @@ export default async function AdminUsersPage({
                       ) : (
                         <Badge
                           variant="outline"
-                          className="rounded-full border border-destructive/20 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive"
+                          className="rounded-full border border-magenta/20 bg-magenta/10 px-2 text-[10px] font-semibold text-magenta"
                         >
                           {t('accountInactive')}
                         </Badge>

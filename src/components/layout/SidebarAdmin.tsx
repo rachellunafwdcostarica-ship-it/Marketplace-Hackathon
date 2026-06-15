@@ -5,20 +5,16 @@ import { useTranslations } from 'next-intl'
 import {
   LayoutDashboard,
   Users,
-  Building2,
   Briefcase,
   ShieldCheck,
+  LogOut,
   type LucideIcon,
 } from 'lucide-react'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
+import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 import { cn } from '@/lib/utils/cn'
 
-type AdminNavLabel =
-  | 'dashboard'
-  | 'users'
-  | 'companies'
-  | 'projects'
-  | 'validations'
+type AdminNavLabel = 'dashboard' | 'users' | 'projects' | 'validations'
 
 interface AdminNavItem {
   href: string
@@ -29,7 +25,6 @@ interface AdminNavItem {
 const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/admin/users', labelKey: 'users', icon: Users },
-  { href: '/admin/companies', labelKey: 'companies', icon: Building2 },
   { href: '/admin/projects', labelKey: 'projects', icon: Briefcase },
   { href: '/admin/validations', labelKey: 'validations', icon: ShieldCheck },
 ]
@@ -37,9 +32,14 @@ const ADMIN_NAV: AdminNavItem[] = [
 interface SidebarAdminProps {
   className?: string | undefined
   onNavigate?: (() => void) | undefined
+  onLogout?: (() => void) | undefined
 }
 
-export function SidebarAdmin({ className, onNavigate }: SidebarAdminProps) {
+export function SidebarAdmin({
+  className,
+  onNavigate,
+  onLogout,
+}: SidebarAdminProps) {
   const t = useTranslations('Nav')
   const pathname = usePathname()
 
@@ -82,6 +82,21 @@ export function SidebarAdmin({ className, onNavigate }: SidebarAdminProps) {
           </Link>
         )
       })}
+
+      {onLogout && (
+        <ConfirmButton
+          onConfirm={onLogout}
+          title={t('confirmLogoutTitle')}
+          description={t('confirmLogoutDesc')}
+          confirmLabel={t('logout')}
+          variant="ghost"
+          size="default"
+          className="mt-auto flex items-center justify-start gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white"
+        >
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+          {t('logout')}
+        </ConfirmButton>
+      )}
     </nav>
   )
 }

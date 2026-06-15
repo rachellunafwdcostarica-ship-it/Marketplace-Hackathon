@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 import { CheckCircle, Ban } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 import { approveUser } from '@/lib/auth/actions'
 import { deactivateUser } from '@/lib/admin/actions'
 import type { AdminAccountStatus } from '@/lib/admin/queries'
@@ -19,13 +18,9 @@ interface AccountStatusActionsProps {
 }
 
 /**
- * Acciones de cuenta por fila en la gestión de usuarios (RF-63):
- * - Aprobar: activa la cuenta (estado_cuenta = 'activa', is_active = true).
- * - Desactivar: bloquea la cuenta (is_active = false); el gate del middleware la
- *   expulsa de la plataforma.
- *
- * En la propia fila del admin no se muestran acciones (self-guard, reforzado en
- * las server actions).
+ * Acciones de cuenta por fila (RF-63): aprobar (estado_cuenta = 'activa',
+ * is_active = true) y desactivar (is_active = false), cada una con confirmación.
+ * En la propia fila del admin no se muestran (self-guard).
  */
 export function AccountStatusActions({
   userId,
@@ -36,7 +31,6 @@ export function AccountStatusActions({
 }: AccountStatusActionsProps) {
   const t = useTranslations('Admin')
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
 
   if (isSelf) {
     return <span className="text-xs text-muted-foreground">{t('selfRow')}</span>
@@ -46,10 +40,7 @@ export function AccountStatusActions({
   const canDeactivate = isActive
 
   const handleApprove = async () => {
-    setLoading(true)
     const result = await approveUser(userId)
-    setLoading(false)
-
     if (result.ok) {
       toast.success(t('userApproved', { name: userName }))
       router.refresh()
@@ -59,10 +50,7 @@ export function AccountStatusActions({
   }
 
   const handleDeactivate = async () => {
-    setLoading(true)
     const result = await deactivateUser(userId)
-    setLoading(false)
-
     if (result.ok) {
       toast.success(t('userDeactivated', { name: userName }))
       router.refresh()
@@ -76,27 +64,31 @@ export function AccountStatusActions({
   return (
     <div className="flex items-center gap-2">
       {canApprove && (
-        <Button
-          onClick={handleApprove}
-          disabled={loading}
-          size="sm"
-          className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold flex items-center gap-1.5"
+        <ConfirmButton
+          onConfirm={handleApprove}
+          title={t('confirmApproveTitle')}
+          description={t('confirmApproveDesc', { name: userName })}
+          confirmLabel={t('approveUser')}
+          className="flex items-center gap-1.5 bg-accent font-semibold text-accent-foreground hover:bg-accent/90"
+          confirmClassName="bg-accent text-accent-foreground hover:bg-accent/90"
         >
-          <CheckCircle className="w-4 h-4" />
-          {loading ? t('approving') : t('approveUser')}
-        </Button>
+          <CheckCircle className="h-4 w-4" />
+          {t('approveUser')}
+        </ConfirmButton>
       )}
       {canDeactivate && (
-        <Button
-          onClick={handleDeactivate}
-          disabled={loading}
-          size="sm"
+        <ConfirmButton
+          onConfirm={handleDeactivate}
+          title={t('confirmDeactivateTitle')}
+          description={t('confirmDeactivateDesc', { name: userName })}
+          confirmLabel={t('deactivate')}
           variant="outline"
-          className="border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive font-semibold flex items-center gap-1.5"
+          className="flex items-center gap-1.5 border-magenta/20 font-semibold text-magenta hover:bg-magenta/10 hover:text-magenta"
+          confirmClassName="bg-magenta text-magenta-foreground hover:bg-magenta/90"
         >
-          <Ban className="w-4 h-4" />
-          {loading ? t('deactivating') : t('deactivate')}
-        </Button>
+          <Ban className="h-4 w-4" />
+          {t('deactivate')}
+        </ConfirmButton>
       )}
     </div>
   )

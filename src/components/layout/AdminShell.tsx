@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '@/i18n/routing'
-import { Menu, X, LogOut, ShieldCheck, User } from 'lucide-react'
+import { Menu, X, ShieldCheck, User } from 'lucide-react'
 import { useAppState } from '@/lib/StateContext'
 import { SidebarAdmin } from './SidebarAdmin'
 import { cn } from '@/lib/utils/cn'
@@ -50,7 +50,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
   return (
     <div className="flex min-h-screen bg-canvas">
-      <SidebarAdmin className="hidden md:flex" />
+      <SidebarAdmin className="hidden md:flex" onLogout={handleLogout} />
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
@@ -61,7 +61,11 @@ export function AdminShell({ children }: AdminShellProps) {
             className="absolute inset-0 bg-ink-strong/60"
           />
           <div className="absolute inset-y-0 left-0">
-            <SidebarAdmin className="h-full" onNavigate={closeMobile} />
+            <SidebarAdmin
+              className="h-full"
+              onNavigate={closeMobile}
+              onLogout={handleLogout}
+            />
           </div>
         </div>
       )}
@@ -89,28 +93,6 @@ export function AdminShell({ children }: AdminShellProps) {
           </span>
 
           <div className="flex-1" />
-
-          <span
-            className="flex items-center gap-2"
-            title={adminEmail || undefined}
-          >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
-              <User className="h-4 w-4" />
-            </span>
-            <span className="hidden max-w-[12rem] flex-col leading-tight sm:flex">
-              <span className="truncate text-xs font-bold text-white">
-                {adminName}
-              </span>
-              <span className="truncate text-[10px] text-white/70">
-                {adminEmail}
-              </span>
-            </span>
-          </span>
-
-          <span className="flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold text-white">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-magenta" />
-            <span>{t('roleAdmin')}</span>
-          </span>
 
           <div
             className="flex items-center rounded-full border border-white/25 bg-white/10 p-0.5"
@@ -142,14 +124,27 @@ export function AdminShell({ children }: AdminShellProps) {
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+          <span className="flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-bold text-white">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-magenta" />
+            <span>{t('roleAdmin')}</span>
+          </span>
+
+          <span
+            className="flex items-center gap-2"
+            title={adminEmail || undefined}
           >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('logout')}</span>
-          </button>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
+              <User className="h-4 w-4" />
+            </span>
+            <span className="hidden max-w-[12rem] flex-col leading-tight sm:flex">
+              <span className="truncate text-xs font-bold text-white">
+                {adminName}
+              </span>
+              <span className="truncate text-[10px] text-white/70">
+                {adminEmail}
+              </span>
+            </span>
+          </span>
         </header>
 
         {/* Firma multicolor FWD (brand guide §6): azul · morado · turquesa ·

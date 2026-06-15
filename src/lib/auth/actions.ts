@@ -97,6 +97,46 @@ export async function assignRole(
 }
 
 /**
+ * Registra el consentimiento explícito del egresado para el cotejo de su correo
+ * contra la base de egresados de FWD (RNF-38). Lo otorga el propio usuario en su
+ * sesión; la policy `consentimientos_insert_own` permite el insert. Es requisito
+ * para que un admin pueda verificarlo (gate en `verificarEgresado`).
+ */
+export async function registrarConsentimientoCotejo(): Promise<Result<void>> {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return err('unauthenticated')
+  }
+
+  const reqHeaders = await headers()
+  const ipOrigen =
+    reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 60) ??
+    null
+  const userAgent = reqHeaders.get('user-agent')?.slice(0, 255) ?? null
+
+  const { error } = await supabase.from('consentimientos').insert({
+    id_usuario: user.id,
+    tipo_consentimiento: 'cotejo_fwd',
+    otorgado: true,
+    ip_origen: ipOrigen,
+    user_agent: userAgent,
+  })
+
+  if (error) {
+    logger.error('registrarConsentimientoCotejo failed', {
+      error: error.message,
+    })
+    return err(error.message)
+  }
+
+  return ok(undefined)
+}
+
+/**
  * Aprueba la cuenta de un usuario (estado_cuenta → 'activa', is_active → true).
  * Solo puede ser llamada por un usuario con rol 'admin'.
  * Usa el cliente de servicio para bypassear RLS.
