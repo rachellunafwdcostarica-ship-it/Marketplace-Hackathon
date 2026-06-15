@@ -6,9 +6,9 @@ import { useTranslations } from 'next-intl'
  * (tabla `empresarios`) + datos personales del representante (tabla `usuarios`).
  *
  * Obligatorios: nombre y primer apellido (NOT NULL en usuarios), nombre de
- * empresa, tipo, sector, país y alcance. La cédula/ID fiscal es obligatoria
- * SOLO para "empresa formal" (el emprendedor individual no la tiene) → es
- * condicional. SIN formato por país: la plataforma acepta empresas
+ * empresa, tipo, sector, país, alcance y cédula. La cédula es obligatoria para
+ * ambos tipos: jurídica/ID fiscal para "empresa formal", de identidad para el
+ * "emprendedor individual". SIN formato por país: la plataforma acepta empresas
  * internacionales (EIN, CIF, RFC...), que no usan el formato CR; la legitimidad
  * la valida el admin (`estado_verificacion`). `contactEmail` (correo de la
  * cuenta) y el estado de verificación son de solo lectura: la BD los congela.
@@ -65,11 +65,8 @@ export function createCompanyProfileSchema(
       operatingScope: z.enum(OPERATING_SCOPES).optional(),
     })
     .superRefine((data, ctx) => {
-      // Cédula/ID fiscal obligatoria solo para empresa formal.
-      if (
-        data.companyType === 'formal' &&
-        (data.cedula ?? '').trim().length < MIN_TAX_ID_LENGTH
-      ) {
+      // Cédula obligatoria para ambos tipos (jurídica o de identidad).
+      if ((data.cedula ?? '').trim().length < MIN_TAX_ID_LENGTH) {
         ctx.addIssue({
           code: 'custom',
           path: ['cedula'],
@@ -106,10 +103,7 @@ export const CompanyProfileDbSchema = z
     operatingScope: z.enum(OPERATING_SCOPES).optional(),
   })
   .superRefine((data, ctx) => {
-    if (
-      data.companyType === 'formal' &&
-      (data.cedula ?? '').trim().length < MIN_TAX_ID_LENGTH
-    ) {
+    if ((data.cedula ?? '').trim().length < MIN_TAX_ID_LENGTH) {
       ctx.addIssue({
         code: 'custom',
         path: ['cedula'],
