@@ -461,6 +461,10 @@
     "notVerifiedPublish": "Your company must be verified to publish.",
     "requestChanges": "Request changes",
     "proposalRejected": "Check the chat: the AI explains what's missing to build the proposal.",
+    "agentRejection": {
+      "withDetails": "I can't build the proposal yet. To move forward:\n- {detalles}",
+      "noDetails": "I can't build the proposal yet with what I have. Tell me a bit more about your project."
+    },
     "notVerifiedTitle": "Your company is not verified yet",
     "notVerifiedDesc": "You can fill out the form, but you won't be able to continue with the AI until an administrator verifies your company.",
     "submit": "Publish project",
