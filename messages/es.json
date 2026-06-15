@@ -24,6 +24,7 @@
     "language": "Idioma",
     "validations": "Validaciones",
     "users": "Usuarios",
+    "adminEyebrow": "Fundación Forward",
     "activeRole": "Rol Activo",
     "logout": "Cerrar sesión"
   },
@@ -618,7 +619,24 @@
     "deactivating": "Desactivando...",
     "userDeactivated": "Cuenta de {name} desactivada.",
     "userDeactivateError": "Error al desactivar la cuenta. Intentá de nuevo.",
-    "cannotModifySelf": "No podés cambiar el estado de tu propia cuenta."
+    "cannotModifySelf": "No podés cambiar el estado de tu propia cuenta.",
+    "dashboardOverviewDesc": "Resumen de las cuentas de la plataforma y accesos rápidos a la gestión.",
+    "statTotalUsers": "Cuentas totales",
+    "statTotalUsersDesc": "Usuarios registrados",
+    "statPendingUsers": "Pendientes de aprobación",
+    "statPendingUsersDesc": "Esperando validación",
+    "statActiveUsers": "Cuentas activas",
+    "statActiveUsersDesc": "Con acceso al sistema",
+    "statInactiveUsers": "Desactivadas",
+    "statInactiveUsersDesc": "Bloqueadas por un admin",
+    "statGraduates": "Egresados",
+    "statGraduatesDesc": "Rol egresado",
+    "statCompanyUsers": "Empresarios",
+    "statCompanyUsersDesc": "Rol empresario",
+    "statAdmins": "Administradores",
+    "statAdminsDesc": "Rol administrador",
+    "goToValidations": "Validar usuarios pendientes",
+    "goToUsers": "Gestionar usuarios"
   },
   "Errors": {
     "forbidden": "Acceso no autorizado",

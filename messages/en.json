@@ -24,6 +24,7 @@
     "language": "Language",
     "validations": "Validations",
     "users": "Users",
+    "adminEyebrow": "Forward Foundation",
     "activeRole": "Active role",
     "logout": "Log out"
   },
@@ -618,7 +619,24 @@
     "deactivating": "Deactivating...",
     "userDeactivated": "{name}'s account deactivated.",
     "userDeactivateError": "Error deactivating account. Please try again.",
-    "cannotModifySelf": "You can't change your own account status."
+    "cannotModifySelf": "You can't change your own account status.",
+    "dashboardOverviewDesc": "Overview of platform accounts and quick links to management.",
+    "statTotalUsers": "Total accounts",
+    "statTotalUsersDesc": "Registered users",
+    "statPendingUsers": "Pending approval",
+    "statPendingUsersDesc": "Awaiting validation",
+    "statActiveUsers": "Active accounts",
+    "statActiveUsersDesc": "With system access",
+    "statInactiveUsers": "Deactivated",
+    "statInactiveUsersDesc": "Blocked by an admin",
+    "statGraduates": "Graduates",
+    "statGraduatesDesc": "Graduate role",
+    "statCompanyUsers": "Company owners",
+    "statCompanyUsersDesc": "Company-owner role",
+    "statAdmins": "Administrators",
+    "statAdminsDesc": "Administrator role",
+    "goToValidations": "Validate pending users",
+    "goToUsers": "Manage users"
   },
   "Errors": {
     "forbidden": "Access denied",

@@ -49,7 +49,7 @@ Documento de referencia del lenguaje visual de la plataforma. Vivo: cualquier de
 
 **Cómo se ve:**
 
-- Sidebar fondo `oklch(0.18 0.020 270)` (negro azulado, NO negro puro)
+- Sidebar fondo token `--surface-admin` = `oklch(0.25 0.09 305)` (morado FWD profundo derivado del `secondary #662D91`, oscuro pero claramente morado, NO negro). Chrome admin monocromo morado (topbar `bg-secondary` + sidebar más oscuro).
 - Texto blanco con jerarquía via opacidad (`text-white` / `text-white/60` / `text-white/40`)
 - Topbar morado `bg-secondary` con shield amarillo + eyebrow "FUNDACIÓN FORWARD"
 - Active state en sidebar: `bg-white/15` con texto blanco
@@ -155,7 +155,7 @@ Patrón canónico de cada pantalla:
 
 ## TODOs / deuda registrada
 
-- Tokenizar el sidebar admin como `--surface-admin` + `--ink-on-admin-*` (hoy son oklch arbitrarios)
+- ~~Tokenizar el sidebar admin como `--surface-admin`~~ (hecho: `--surface-admin` en globals.css). Falta `--ink-on-admin-*` (hoy se usa `text-white` con opacidad).
 - Decidir destino de tokens `--color-*-tint` (líneas 205+ de globals.css): adopción amplia o eliminar
 - Auditar `htmlFor`/`id` pairing en los ~5 forms con `<Input>`
 - Variant FWD en `input.tsx` (similar a las de `badge.tsx` y `card.tsx`)

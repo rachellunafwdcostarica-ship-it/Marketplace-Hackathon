@@ -174,3 +174,90 @@ export async function listUsers(
 
   return ok(users)
 }
+
+export interface AdminUserStats {
+  total: number
+  pendientes: number
+  activas: number
+  desactivadas: number
+  egresados: number
+  empresarios: number
+  administradores: number
+}
+
+/**
+ * Métricas de cuentas para el dashboard admin (datos reales). Solo un admin
+ * puede invocarla. Usa `count: 'exact', head: true` para contar sin traer filas
+ * y el cliente de servicio para bypassear RLS.
+ */
+export async function getUserStats(): Promise<Result<AdminUserStats>> {
+  const authResult = await requireRole('admin')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: rolesRows, error: rolesError } = await adminClient
+    .from('roles')
+    .select('id_rol, nombre_rol')
+  if (rolesError) {
+    logger.error('getUserStats: fallo al leer roles', {
+      error: rolesError.message,
+    })
+    return err(rolesError.message)
+  }
+  const roleIdByName = new Map<string, number>(
+    (rolesRows ?? []).map((r) => [r.nombre_rol, r.id_rol]),
+  )
+
+  const usuariosCount = () =>
+    adminClient.from('usuarios').select('*', { count: 'exact', head: true })
+
+  const egresadoId = roleIdByName.get('egresado') ?? -1
+  const empresarioId = roleIdByName.get('empresario') ?? -1
+  const administradorId = roleIdByName.get('administrador') ?? -1
+
+  const [
+    totalRes,
+    pendientesRes,
+    activasRes,
+    desactivadasRes,
+    egresadosRes,
+    empresariosRes,
+    administradoresRes,
+  ] = await Promise.all([
+    usuariosCount(),
+    usuariosCount().eq('estado_cuenta', 'pendiente'),
+    usuariosCount().eq('estado_cuenta', 'activa'),
+    usuariosCount().eq('is_active', false),
+    usuariosCount().eq('id_rol', egresadoId),
+    usuariosCount().eq('id_rol', empresarioId),
+    usuariosCount().eq('id_rol', administradorId),
+  ])
+
+  const allResults = [
+    totalRes,
+    pendientesRes,
+    activasRes,
+    desactivadasRes,
+    egresadosRes,
+    empresariosRes,
+    administradoresRes,
+  ]
+  const failed = allResults.find((r) => r.error)
+  if (failed?.error) {
+    logger.error('getUserStats failed', { error: failed.error.message })
+    return err(failed.error.message)
+  }
+
+  return ok({
+    total: totalRes.count ?? 0,
+    pendientes: pendientesRes.count ?? 0,
+    activas: activasRes.count ?? 0,
+    desactivadas: desactivadasRes.count ?? 0,
+    egresados: egresadosRes.count ?? 0,
+    empresarios: empresariosRes.count ?? 0,
+    administradores: administradoresRes.count ?? 0,
+  })
+}

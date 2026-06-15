@@ -1,7 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server'
 import { Users } from 'lucide-react'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
@@ -87,104 +85,98 @@ export default async function AdminUsersPage({
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <PageTitle
+        title={t('usersManagement')}
+        description={t('usersManagementDesc')}
+        dotColor="text-magenta"
+      />
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-        <PageTitle
-          title={t('usersManagement')}
-          description={t('usersManagementDesc')}
-          dotColor="text-magenta"
+      <div className="mt-8 space-y-6">
+        <AdminUserFilters
+          initialSearch={search ?? ''}
+          initialRole={role ?? ''}
+          initialStatus={status ?? ''}
         />
 
-        <div className="mt-8 space-y-6">
-          <AdminUserFilters
-            initialSearch={search ?? ''}
-            initialRole={role ?? ''}
-            initialStatus={status ?? ''}
+        {users.length === 0 ? (
+          <EmptyState
+            title={t('noUsersFound')}
+            description={t('noUsersFoundDesc')}
+            icon={Users}
           />
-
-          {users.length === 0 ? (
-            <EmptyState
-              title={t('noUsersFound')}
-              description={t('noUsersFoundDesc')}
-              icon={Users}
-            />
-          ) : (
-            <div className="rounded-xl border border-border/80 bg-card/40 backdrop-blur-sm">
-              <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground">
-                {t('usersCount', { count: users.length })}
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('colName')}</TableHead>
-                    <TableHead>{t('colEmail')}</TableHead>
-                    <TableHead>{t('colRole')}</TableHead>
-                    <TableHead>{t('colStatus')}</TableHead>
-                    <TableHead className="text-center">
-                      {t('colStrikes')}
-                    </TableHead>
-                    <TableHead>{t('colRegistered')}</TableHead>
-                    <TableHead>{t('colActions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id_usuario}>
-                      <TableCell className="font-semibold text-foreground">
-                        {user.nombre} {user.apellido_1}
-                        {user.apellido_2 ? ` ${user.apellido_2}` : ''}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {user.correo}
-                      </TableCell>
-                      <TableCell>{roleLabel(user.nombre_rol)}</TableCell>
-                      <TableCell>
-                        {user.is_active ? (
-                          <Badge
-                            variant="outline"
-                            className={`rounded-full border px-2 text-[10px] font-semibold ${STATUS_BADGE_CLASS[user.estado_cuenta]}`}
-                          >
-                            {statusLabel(user.estado_cuenta)}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="rounded-full border border-destructive/20 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive"
-                          >
-                            {t('accountInactive')}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {user.cantidad_strikes}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(user.fecha_registro).toLocaleDateString(
-                          locale,
-                          { year: 'numeric', month: 'short', day: 'numeric' },
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <AccountStatusActions
-                          userId={user.id_usuario}
-                          estadoCuenta={user.estado_cuenta}
-                          isActive={user.is_active}
-                          isSelf={user.id_usuario === currentUserId}
-                          userName={`${user.nombre} ${user.apellido_1}`}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+        ) : (
+          <div className="rounded-xl border border-border/80 bg-card/40 backdrop-blur-sm">
+            <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground">
+              {t('usersCount', { count: users.length })}
             </div>
-          )}
-        </div>
-      </main>
-
-      <Footer />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('colName')}</TableHead>
+                  <TableHead>{t('colEmail')}</TableHead>
+                  <TableHead>{t('colRole')}</TableHead>
+                  <TableHead>{t('colStatus')}</TableHead>
+                  <TableHead className="text-center">
+                    {t('colStrikes')}
+                  </TableHead>
+                  <TableHead>{t('colRegistered')}</TableHead>
+                  <TableHead>{t('colActions')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id_usuario}>
+                    <TableCell className="font-semibold text-foreground">
+                      {user.nombre} {user.apellido_1}
+                      {user.apellido_2 ? ` ${user.apellido_2}` : ''}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {user.correo}
+                    </TableCell>
+                    <TableCell>{roleLabel(user.nombre_rol)}</TableCell>
+                    <TableCell>
+                      {user.is_active ? (
+                        <Badge
+                          variant="outline"
+                          className={`rounded-full border px-2 text-[10px] font-semibold ${STATUS_BADGE_CLASS[user.estado_cuenta]}`}
+                        >
+                          {statusLabel(user.estado_cuenta)}
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="rounded-full border border-destructive/20 bg-destructive/10 px-2 text-[10px] font-semibold text-destructive"
+                        >
+                          {t('accountInactive')}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center tabular-nums">
+                      {user.cantidad_strikes}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(user.fecha_registro).toLocaleDateString(
+                        locale,
+                        { year: 'numeric', month: 'short', day: 'numeric' },
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <AccountStatusActions
+                        userId={user.id_usuario}
+                        estadoCuenta={user.estado_cuenta}
+                        isActive={user.is_active}
+                        isSelf={user.id_usuario === currentUserId}
+                        userName={`${user.nombre} ${user.apellido_1}`}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
