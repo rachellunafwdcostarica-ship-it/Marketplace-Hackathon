@@ -24,15 +24,13 @@ export const CONTEXTO_MIN = 20
 export const PLAZO_MIN_DIAS = 5
 export const PLAZO_MAX_DIAS = 15
 
-const MS_POR_DIA = 86_400_000
-
 export interface LogisticsFormValues {
   titulo: string
   modalidad: string
   moneda: Moneda
   presupuestoMin: string
   presupuestoMax: string
-  fechaCierre: string
+  plazoDias: string
   paisProyecto: string
   ciudadProyecto: string
   contextoInicial: string
@@ -49,7 +47,7 @@ export interface LogisticaDraft {
   moneda: Moneda
   presupuestoMin: number | null
   presupuestoMax: number | null
-  fechaCierre: string
+  plazoDias: number
   paisProyecto: string | null
   ciudadProyecto: string | null
 }
@@ -85,21 +83,21 @@ export function parseMoney(raw: string): number | null {
   return Number.isFinite(monto) ? monto : null
 }
 
-/** Días entre dos fechas 'YYYY-MM-DD' en UTC; null si alguna es inválida. */
-export function daysBetween(desde: string, hasta: string): number | null {
-  if (!desde || !hasta) return null
-  const inicio = Date.parse(`${desde}T00:00:00.000Z`)
-  const fin = Date.parse(`${hasta}T00:00:00.000Z`)
-  if (Number.isNaN(inicio) || Number.isNaN(fin)) return null
-  return Math.round((fin - inicio) / MS_POR_DIA)
+/** Convierte el plazo (días) de texto a entero; null si vacío o no es entero. */
+export function parsePlazo(raw: string): number | null {
+  const limpio = raw.trim()
+  if (limpio === '') return null
+  const dias = Number(limpio)
+  return Number.isInteger(dias) ? dias : null
 }
 
 /**
- * Construye el esquema de la Pantalla 1. Recibe `todayIso` ('YYYY-MM-DD') porque
- * el plazo (RF-21) se mide desde HOY: `fecha_publicacion` será ~`now()` al
- * publicar. En el publicar (Corte 4) se re-valida contra `now()` real.
+ * Construye el esquema de la Pantalla 1. El plazo (RF-21) es una DURACIÓN en
+ * días (5..15), no una fecha: así no envejece al retomar el borrador ni depende
+ * de la zona horaria. La `fecha_cierre` real la calcula el RPC al publicar
+ * (`fecha_publicacion` + `plazo_dias`).
  */
-export function buildLogisticsSchema(todayIso: string) {
+export function buildLogisticsSchema() {
   return z
     .object({
       titulo: z.string().trim().max(TITULO_MAX, { error: 'tituloMax' }),
@@ -107,7 +105,7 @@ export function buildLogisticsSchema(todayIso: string) {
       moneda: z.enum(MONEDAS),
       presupuestoMin: z.string(),
       presupuestoMax: z.string(),
-      fechaCierre: z.string().min(1, { error: 'fechaCierreRequerida' }),
+      plazoDias: z.string(),
       paisProyecto: z.string().trim().max(UBICACION_MAX),
       ciudadProyecto: z.string().trim().max(UBICACION_MAX),
       contextoInicial: z
@@ -159,12 +157,12 @@ export function buildLogisticsSchema(todayIso: string) {
         })
       }
 
-      const dias = daysBetween(todayIso, valores.fechaCierre)
-      if (dias !== null && (dias < PLAZO_MIN_DIAS || dias > PLAZO_MAX_DIAS)) {
+      const plazo = parsePlazo(valores.plazoDias)
+      if (plazo === null || plazo < PLAZO_MIN_DIAS || plazo > PLAZO_MAX_DIAS) {
         ctx.addIssue({
           code: 'custom',
           message: 'plazo',
-          path: ['fechaCierre'],
+          path: ['plazoDias'],
         })
       }
     })
@@ -186,7 +184,7 @@ export function toLogisticaDraft(values: LogisticsFormValues): LogisticaDraft {
     moneda: values.moneda,
     presupuestoMin: parseMoney(values.presupuestoMin),
     presupuestoMax: parseMoney(values.presupuestoMax),
-    fechaCierre: values.fechaCierre,
+    plazoDias: parsePlazo(values.plazoDias) ?? PLAZO_MIN_DIAS,
     paisProyecto: esRemoto || pais === '' ? null : pais,
     ciudadProyecto: esRemoto || ciudad === '' ? null : ciudad,
   }
@@ -209,7 +207,7 @@ export function draftToFormValues(
       draft?.presupuestoMin != null ? String(draft.presupuestoMin) : '',
     presupuestoMax:
       draft?.presupuestoMax != null ? String(draft.presupuestoMax) : '',
-    fechaCierre: draft?.fechaCierre ?? '',
+    plazoDias: draft?.plazoDias != null ? String(draft.plazoDias) : '',
     paisProyecto: draft?.paisProyecto ?? '',
     ciudadProyecto: draft?.ciudadProyecto ?? '',
     contextoInicial,

@@ -95,7 +95,7 @@ export function ProjectWizard({
     propuestaInicial ? 3 : historialInicial.length > 0 ? 2 : 1,
   )
 
-  const schema = useMemo(() => buildLogisticsSchema(todayIso), [todayIso])
+  const schema = useMemo(() => buildLogisticsSchema(), [])
 
   const form = useForm<LogisticsFormValues>({
     resolver: zodResolver(schema),

@@ -195,8 +195,7 @@ export async function saveLogisticsDraft(
   values: LogisticsFormValues,
 ): Promise<Result<{ saved: boolean }>> {
   try {
-    const todayIso = new Date().toISOString().slice(0, 10)
-    const parsed = buildLogisticsSchema(todayIso).safeParse(values)
+    const parsed = buildLogisticsSchema().safeParse(values)
     if (!parsed.success) {
       return err('invalid_input')
     }
