@@ -1,5 +1,6 @@
 'use server'
 
+import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
@@ -105,6 +106,7 @@ export async function sendChatMessage(
       contextoInicial,
       logistica: parseLogistica(conv.logistica),
       historial: historialConUsuario,
+      locale: await getLocale(),
     })
 
     const historialFinal: HistorialEntry[] = [
