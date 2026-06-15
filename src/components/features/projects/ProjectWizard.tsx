@@ -315,7 +315,7 @@ export function ProjectWizard({
               </Link>
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !isVerified}
                 className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? t('continuing') : t('continueWithAi')}
