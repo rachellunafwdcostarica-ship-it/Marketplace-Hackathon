@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { env } from '@/lib/env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import {
   AssignRoleSchema,
@@ -27,8 +28,8 @@ export async function signOut(): Promise<Result<void>> {
   const cookieStore = await cookies()
 
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {

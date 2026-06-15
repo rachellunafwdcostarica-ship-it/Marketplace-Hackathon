@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
 import type { Database } from '@/types/database'
+import { env } from '@/lib/env'
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -49,8 +50,8 @@ export async function middleware(request: NextRequest) {
 
   // Refrescar sesión de Supabase y propagar cookies
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
