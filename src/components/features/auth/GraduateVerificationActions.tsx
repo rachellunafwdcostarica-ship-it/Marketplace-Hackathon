@@ -31,6 +31,8 @@ export function GraduateVerificationActions({
       router.refresh()
     } else if (result.error === 'not_a_student') {
       toast.error(t('graduateVerifyNotStudent'))
+    } else if (result.error === 'sin_consentimiento_cotejo') {
+      toast.error(t('graduateNoConsent'))
     } else {
       toast.error(t('graduateVerifyError'))
     }

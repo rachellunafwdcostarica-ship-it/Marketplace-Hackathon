@@ -635,6 +635,7 @@
     "graduateVerified": "Egresado {name} verificado exitosamente.",
     "graduateVerifyError": "Error al verificar al egresado. Intentá de nuevo.",
     "graduateVerifyNotStudent": "Este usuario no es un estudiante; no se puede verificar como egresado.",
+    "graduateNoConsent": "Este egresado no autorizó el cotejo; no se puede verificar.",
     "supportTickets": "Problemas y Necesidades de Negocio",
     "supportTicketsDesc": "Reportes y solicitudes de soporte técnico o ideas de negocio planteadas por empresarios.",
     "noSupportTickets": "No hay reportes de soporte o necesidades registradas en este momento.",
@@ -705,7 +706,9 @@
   "Onboarding": {
     "subtitle": "Elegí cómo querés usar FWD Talent para continuar.",
     "loading": "Guardando...",
-    "errorGeneric": "Ocurrió un error al guardar tu perfil. Intentá de nuevo."
+    "errorGeneric": "Ocurrió un error al guardar tu perfil. Intentá de nuevo.",
+    "consentLabel": "Autorizo el cotejo de mi correo contra la base de egresados de FWD Costa Rica para validar mi condición de egresado.",
+    "consentRequired": "Necesitás autorizar el cotejo para continuar como egresado."
   },
   "Account": {
     "pendingBanner": "Tu cuenta está pendiente de aprobación por el equipo FWD. Las acciones se habilitarán una vez aprobada.",

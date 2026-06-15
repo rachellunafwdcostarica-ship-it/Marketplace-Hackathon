@@ -44,6 +44,22 @@ async function setGraduateVerification(
   }
 
   const adminClient = createSupabaseAdminClient()
+
+  // RNF-38: verificar exige que el egresado haya consentido el cotejo de su
+  // correo contra la base de egresados FWD. Rechazar no lo requiere.
+  if (estado === 'verificado') {
+    const { data: consent } = await adminClient
+      .from('consentimientos')
+      .select('id_consentimiento')
+      .eq('id_usuario', parsed.data)
+      .eq('tipo_consentimiento', 'cotejo_fwd')
+      .eq('otorgado', true)
+      .limit(1)
+    if (!consent || consent.length === 0) {
+      return err('sin_consentimiento_cotejo')
+    }
+  }
+
   const { data, error } = await adminClient
     .from('estudiantes')
     .update({

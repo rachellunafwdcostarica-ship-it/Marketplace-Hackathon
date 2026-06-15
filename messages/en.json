@@ -635,6 +635,7 @@
     "graduateVerified": "{name} verified as graduate successfully.",
     "graduateVerifyError": "Error verifying graduate. Please try again.",
     "graduateVerifyNotStudent": "This user is not a student; cannot verify as graduate.",
+    "graduateNoConsent": "This graduate hasn't authorized the check; can't verify.",
     "supportTickets": "Business Needs & Problems",
     "supportTicketsDesc": "Reports and tickets describing business needs or technical issues submitted by company owners.",
     "noSupportTickets": "No support tickets or business needs registered at this time.",
@@ -705,7 +706,9 @@
   "Onboarding": {
     "subtitle": "Choose how you want to use FWD Talent to continue.",
     "loading": "Saving...",
-    "errorGeneric": "An error occurred while saving your profile. Please try again."
+    "errorGeneric": "An error occurred while saving your profile. Please try again.",
+    "consentLabel": "I authorize checking my email against FWD Costa Rica's graduate database to validate my graduate status.",
+    "consentRequired": "You must authorize the check to continue as a graduate."
   },
   "Account": {
     "pendingBanner": "Your account is pending approval by the FWD team. Actions will be enabled once approved.",
