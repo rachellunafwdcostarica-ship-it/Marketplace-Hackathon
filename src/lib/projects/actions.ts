@@ -181,6 +181,59 @@ export async function initProjectPublishing(): Promise<
 }
 
 /**
+ * Descarta el borrador en curso del empresario (errolpendiente §3): pasa su(s)
+ * conversación(es) `en_curso` a `estado='abandonada'`. NO borra la fila (el doc
+ * prohíbe el borrado: se conserva como rastro). Scopeado por `id_empresario` +
+ * RLS, así que solo afecta lo del propio empresario. Tras esto, la próxima carga
+ * de la pantalla arranca un borrador limpio (initProjectPublishing crea uno nuevo).
+ */
+export async function discardDraft(): Promise<Result<{ discarded: boolean }>> {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return err('unauthorized')
+    }
+
+    const { data: empresario, error: empError } = await supabase
+      .from('empresarios')
+      .select('id_empresario')
+      .eq('id_usuario', user.id)
+      .maybeSingle()
+    if (empError) {
+      logger.error('discardDraft: fallo al leer empresario', {
+        error: empError.message,
+      })
+      return err('unexpected')
+    }
+    if (!empresario) {
+      return err('empresario_no_encontrado')
+    }
+
+    const { error: updError } = await supabase
+      .from('conversaciones_ia')
+      .update({ estado: 'abandonada', fecha_fin: new Date().toISOString() })
+      .eq('id_empresario', empresario.id_empresario)
+      .eq('estado', 'en_curso')
+    if (updError) {
+      logger.error('discardDraft: fallo al descartar borrador', {
+        error: updError.message,
+      })
+      return err('save_failed')
+    }
+
+    return ok({ discarded: true })
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'unexpected_error'
+    logger.error('discardDraft: error inesperado', { error: msg })
+    return err('unexpected')
+  }
+}
+
+/**
  * Guarda el borrador de la Pantalla 1 en `conversaciones_ia` (errolpendiente §1
  * paso 2, §2): la logística va a `logistica` (jsonb) y el cuadro de contexto a
  * `contexto_inicial`, para que la conversación se retome completa tras una

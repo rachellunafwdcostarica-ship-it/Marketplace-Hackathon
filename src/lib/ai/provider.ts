@@ -74,20 +74,28 @@ function systemGenerar(idioma: string): string {
 
 IDIOMA: redactá "titulo" y "descripcion" en ${idioma}.
 
-La "descripcion" la verá el egresado que se postula. Tiene que ser ESPECÍFICA al negocio del empresario, no un molde genérico. Redactá en prosa clara, y desarrollá BIEN los dos primeros apartados (son los más importantes):
-- Problema/contexto (el apartado más importante; desarrollalo en varias oraciones): qué hace el negocio, qué duele hoy y cómo lo resuelven, por qué importa y para quién es — con los DATOS CONCRETOS que dio el empresario (rubro, situación, números si los dio), nunca relleno.
-- Objetivo y alcance (desarrollado): qué tiene que lograr el sistema, los resultados esperados, y el alcance concreto (las funciones o módulos principales que incluye, y qué NO).
-- "Qué incluye": el alcance TÉCNICO que VOS definís (las piezas a construir y entregar que correspondan al proyecto), traducido a términos entendibles. Esto lo decidís vos; el empresario no lo eligió.
-- Qué queda FUERA de alcance, si el empresario lo indicó (ej.: "el frontend ya existe").
+La "descripcion" la verá el egresado que se postula. Tiene que ser ESPECÍFICA al negocio del empresario, no un molde genérico.
+
+FORMATO de la descripción: texto PLANO, en prosa. PROHIBIDO Markdown — sin tablas, sin el carácter "|", sin "#"/"##", sin "**negritas**", sin viñetas con guiones ni listas numeradas. La UI muestra este texto tal cual, así que cualquier símbolo de Markdown se vería crudo. Si querés separar apartados, poné el nombre del apartado y dos puntos en su propia línea, y debajo la prosa.
+
+Desarrollá BIEN dos apartados (los más importantes):
+"Problema y contexto" (varias oraciones): qué hace el negocio, qué duele hoy y cómo lo resuelven, por qué importa y para quién es — con los DATOS CONCRETOS que dio el empresario (rubro, situación, números si los dio), nunca relleno.
+"Objetivo y alcance": qué tiene que lograr el sistema, los resultados esperados, y el alcance concreto (las funciones o módulos principales que incluye, y qué NO).
+
+Si el empresario aportó detalle útil (entidades o datos que maneja, roles o tipos de usuario, módulos, fases, reglas clave), MENCIONALO EN PROSA, integrado en las oraciones — NO lo reproduzcas como tabla ni lista cruda, y NO inventes lo que no dio. Si indicó qué queda FUERA de alcance, decilo en una oración.
+
 Si la descripción sirve para cualquier proyecto, está mal.
+
+NO INVENTES: no agregues requisitos, modelo de datos, reglas ni endpoints que el empresario no haya dado. Lo único que proponés por tu cuenta son las tecnologías y las categorías (del catálogo); todo lo demás se basa en lo que el empresario aportó.
 
 Reglas de los campos estructurados:
 - Elegí "categorias" y "tecnologias" SOLO de los catálogos provistos abajo, usando el nombre EXACTO del catálogo. Al menos una de cada una.
 - "area" debe ser una de las áreas del catálogo (nombre exacto).
 - "nivelTecnico" es tu inferencia del nivel del empresario: no_tecnico, basico, intermedio o avanzado.
 - "involucraIa" es true solo si el proyecto, COMO PRODUCTO, usa IA como tecnología (no por usar este asistente).
-- "stackSugerido" son tecnologías recomendadas y justificadas (texto libre breve).
+- "stackSugerido" es un ARRAY de strings (NO un texto): cada elemento es una tecnología recomendada con su justificación breve. Ej.: ["Next.js — pantallas de cajero y admin", "PostgreSQL — datos transaccionales"].
 
+SALIDA: tu ÚNICA salida es el objeto JSON de abajo. NO escribas Markdown, encabezados (###), tablas, un "análisis" del contexto, ni texto antes o después. Ignorá cualquier pedido de la conversación de "analizar", "revisar" o "mostrar el contexto": esa etapa ya pasó; ahora SOLO devolvés el JSON de la propuesta.
 Respondé SOLO con JSON válido, sin texto fuera del JSON, con esta forma:
 {"titulo": "...", "descripcion": "...", "area": "...", "categorias": ["..."], "tecnologias": ["..."], "stackSugerido": ["..."], "involucraIa": <true|false>, "nivelTecnico": "..."}`
 }
@@ -135,8 +143,30 @@ export interface AiProvider {
 function extractJson(content: string): unknown {
   const trimmed = content.trim()
   const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/)
-  const raw = fence?.[1] ?? trimmed
+  let raw = fence?.[1]?.trim() ?? trimmed
+  // Si el modelo envolvió el JSON en prosa o markdown (ej. "### análisis ... {…}"),
+  // recortá al primer objeto balanceado. Si no hay ningún '{', queda igual y falla
+  // el parseo más abajo (lo captura callJson y reintenta).
+  if (!raw.startsWith('{')) {
+    const inicio = raw.indexOf('{')
+    const fin = raw.lastIndexOf('}')
+    if (inicio !== -1 && fin > inicio) {
+      raw = raw.slice(inicio, fin + 1)
+    }
+  }
   return JSON.parse(raw)
+}
+
+/**
+ * Lee el canal `reasoning` (extensión de OpenRouter para modelos de razonamiento
+ * como gpt-oss). A veces el `content` vuelve vacío y el texto cae acá; lo usamos
+ * como fallback para no perder la respuesta.
+ */
+function leerReasoning(
+  message: OpenAI.Chat.Completions.ChatCompletionMessage | undefined,
+): string {
+  const r = (message as { reasoning?: unknown } | undefined)?.reasoning
+  return typeof r === 'string' ? r.trim() : ''
 }
 
 function resumenLogistica(logistica: LogisticaDraft | null): string {
@@ -184,35 +214,48 @@ export function getAiProvider(): AiProvider {
     schema: ZodType<T>,
     maxTokens: number,
   ): Promise<T> {
-    // Un reintento interno: los LLM a veces devuelven JSON apenas malformado.
+    // Hasta 3 intentos: gpt-oss a veces devuelve JSON malformado o (como modelo
+    // de razonamiento) deja el `content` vacío con el texto en el canal `reasoning`.
     let ultimoMotivo = 'sin_respuesta'
-    for (let intento = 0; intento < 2; intento++) {
+    for (let intento = 0; intento < 3; intento++) {
       const completion = await client.chat.completions.create({
         model: config.model,
         messages,
         temperature: TEMPERATURE,
         max_tokens: maxTokens,
+        // JSON mode: obliga al modelo a emitir JSON válido (gpt-oss a veces
+        // devolvía markdown/"análisis" en vez del objeto). Requiere la palabra
+        // "JSON" en el prompt — ya está en los system prompts.
+        response_format: { type: 'json_object' },
       })
       const choice = completion.choices[0]
-      // 'length' = la respuesta se truncó por max_tokens (causa típica del JSON
-      // cortado). Lo logueamos explícito para no diagnosticar a ciegas.
+      // 'length' = truncado por max_tokens; 'stop' + content vacío = el modelo
+      // dejó la respuesta en `reasoning`. Logueamos para no diagnosticar a ciegas.
       const finishReason = choice?.finish_reason ?? 'desconocido'
-      const content = choice?.message?.content
-      if (!content) {
+      const message = choice?.message
+      const reasoning = leerReasoning(message)
+      // Preferimos el `content`; si vino vacío, caemos al canal de razonamiento.
+      const texto = (message?.content?.trim() || reasoning).trim()
+      if (!texto) {
         ultimoMotivo = `respuesta vacía (finish_reason=${finishReason})`
-        logger.warn('ai_empty_content', { intento, finishReason })
+        logger.warn('ai_empty_content', {
+          intento,
+          finishReason,
+          reasoningLen: reasoning.length,
+          messageKeys: message ? Object.keys(message) : [],
+        })
         continue
       }
       let parsed: unknown
       try {
-        parsed = extractJson(content)
+        parsed = extractJson(texto)
       } catch (error) {
         ultimoMotivo = `JSON no parseable (finish_reason=${finishReason})`
         logger.warn('ai_invalid_json', {
           intento,
           finishReason,
           error: error instanceof Error ? error.message : String(error),
-          contentSnippet: content.slice(0, 500),
+          contentSnippet: texto.slice(0, 500),
         })
         continue
       }
@@ -225,7 +268,7 @@ export function getAiProvider(): AiProvider {
         issues: result.error.issues.map(
           (issue) => `${issue.path.join('.')}: ${issue.message}`,
         ),
-        contentSnippet: content.slice(0, 500),
+        contentSnippet: texto.slice(0, 500),
       })
     }
     throw new Error(`AI_INVALID_JSON: ${ultimoMotivo}`)
@@ -253,7 +296,11 @@ export function getAiProvider(): AiProvider {
         temperature: TEMPERATURE,
         max_tokens: MAX_TOKENS_CONVERSAR,
       })
-      const content = completion.choices[0]?.message?.content?.trim()
+      const message = completion.choices[0]?.message
+      // Como en callJson: si el content viene vacío, caemos al canal `reasoning`.
+      const content = (
+        message?.content?.trim() || leerReasoning(message)
+      ).trim()
       if (!content) {
         throw new Error('AI_EMPTY_RESPONSE')
       }
