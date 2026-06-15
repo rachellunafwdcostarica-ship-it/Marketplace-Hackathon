@@ -623,6 +623,7 @@
     "representative": "Representante",
     "fullName": "Nombre completo",
     "noDescription": "Todavía no agregaste una descripción de la empresa.",
+    "noProjectsYet": "Todavía no publicaste proyectos.",
     "tabProfile": "Perfil de Empresa",
     "tabProjects": "Proyectos Activos",
     "tabHistory": "Historial de Contratación",

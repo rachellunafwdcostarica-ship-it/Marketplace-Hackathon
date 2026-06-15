@@ -22,7 +22,8 @@ import type { EstadoEfectivo, PublishedProject } from '@/lib/projects/dashboard'
 
 interface PublishedProjectsBoardProps {
   projects: PublishedProject[]
-  onRefetch: () => void
+  onRefetch?: () => void
+  readOnly?: boolean
 }
 
 const KNOWN_ERROR_CODES = new Set([
@@ -47,7 +48,7 @@ function isCancelable(project: PublishedProject): boolean {
   return project.estado !== 'finalizado' && project.estado !== 'cancelado'
 }
 
-function formatBudget(
+export function formatBudget(
   moneda: string,
   min: number | null,
   max: number | null,
@@ -62,6 +63,7 @@ function formatBudget(
 export function PublishedProjectsBoard({
   projects,
   onRefetch,
+  readOnly = false,
 }: PublishedProjectsBoardProps) {
   const t = useTranslations('ProjectsBoard')
   const tCommon = useTranslations('Common')
@@ -102,7 +104,7 @@ export function PublishedProjectsBoard({
     if (result.ok) {
       toast.success(t('cancelSuccess'))
       cerrarCancel()
-      onRefetch()
+      onRefetch?.()
       return
     }
     const code = KNOWN_ERROR_CODES.has(result.error)
@@ -185,7 +187,7 @@ export function PublishedProjectsBoard({
                     <Eye className="w-4 h-4" />
                     {t('viewDetails')}
                   </Button>
-                  {isCancelable(project) && (
+                  {!readOnly && isCancelable(project) && (
                     <Button
                       type="button"
                       variant="ghost"
@@ -377,7 +379,7 @@ function FilterButton({
   )
 }
 
-function StatusPill({
+export function StatusPill({
   estado,
   label,
 }: {
