@@ -1,37 +1,36 @@
 import { getTranslations } from 'next-intl/server'
-import { UserCheck, Users } from 'lucide-react'
+import { GraduationCap, Users } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { EmptyState } from '@/components/features/shared/EmptyState'
-import { ApproveUserButton } from '@/components/features/auth/ApproveUserButton'
 import { VerifyGraduateButton } from '@/components/features/auth/VerifyGraduateButton'
-import { getPendingUsers } from '@/lib/admin/queries'
+import { getPendingGraduateVerifications } from '@/lib/admin/queries'
 
 export default async function ValidationsPage() {
   const t = await getTranslations('Admin')
-  const result = await getPendingUsers()
-  const pendingUsers = result.ok ? result.data : []
+  const result = await getPendingGraduateVerifications()
+  const graduates = result.ok ? result.data : []
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <PageTitle
-        title={t('pendingUsers')}
-        description={t('pendingUsersDesc')}
+        title={t('graduateVerification')}
+        description={t('graduateVerificationDesc')}
         dotColor="text-magenta"
       />
 
       <div className="mt-8">
-        {pendingUsers.length === 0 ? (
+        {graduates.length === 0 ? (
           <EmptyState
-            title={t('noPendingUsers')}
-            description={t('noPendingUsersDesc')}
-            icon={UserCheck}
+            title={t('noGraduatesToVerify')}
+            description={t('noGraduatesToVerifyDesc')}
+            icon={GraduationCap}
           />
         ) : (
           <div className="space-y-3">
-            {pendingUsers.map((user) => (
+            {graduates.map((graduate) => (
               <Card
-                key={user.id_usuario}
+                key={graduate.id_usuario}
                 className="border border-border/80 bg-card/40 backdrop-blur-sm"
               >
                 <CardContent className="p-5 flex items-center justify-between gap-4">
@@ -41,30 +40,21 @@ export default async function ValidationsPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-sm text-foreground truncate">
-                        {user.nombre} {user.apellido_1}
+                        {graduate.nombre} {graduate.apellido_1}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {user.correo}
+                        {graduate.correo}
                       </p>
                       <p className="text-[10px] font-semibold text-warning mt-0.5">
-                        {t('statusPending')}
-                        {user.id_rol === null && (
-                          <span className="ml-2 text-muted-foreground/60">
-                            — {t('noRoleYet')}
-                          </span>
-                        )}
+                        {t('graduatePendingLabel')}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <ApproveUserButton
-                      userId={user.id_usuario}
-                      userName={`${user.nombre} ${user.apellido_1}`}
-                    />
                     <VerifyGraduateButton
-                      userId={user.id_usuario}
-                      userName={`${user.nombre} ${user.apellido_1}`}
+                      userId={graduate.id_usuario}
+                      userName={`${graduate.nombre} ${graduate.apellido_1}`}
                     />
                   </div>
                 </CardContent>
