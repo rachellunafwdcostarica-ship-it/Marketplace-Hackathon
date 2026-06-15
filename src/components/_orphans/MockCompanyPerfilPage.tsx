@@ -19,7 +19,7 @@ import { useAppState } from '@/lib/StateContext'
 import { CompanyProfileSidebar } from '@/components/features/companies/CompanyProfileSidebar'
 import { CompanyProfileBanner } from '@/components/features/companies/CompanyProfileBanner'
 import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
-import { CompanyProjectsTab } from '@/components/features/companies/CompanyProjectsTab'
+import { CompanyProjectsTab } from '@/components/_orphans/MockCompanyProjectsTab'
 
 type TabType = 'profile' | 'projects'
 

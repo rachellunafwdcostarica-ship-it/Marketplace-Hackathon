@@ -30,6 +30,12 @@ export function CompanyProfileSidebar({
   setActiveTab,
 }: CompanyProfileSidebarProps) {
   const t = useTranslations('EmpresaPerfil')
+  const verifKey =
+    company?.status === 'approved'
+      ? 'verifVerified'
+      : company?.status === 'rejected'
+        ? 'verifRejected'
+        : 'verifPending'
 
   const [isSupportOpen, setIsSupportOpen] = useState(false)
   const [supportDescription, setSupportDescription] = useState('')
@@ -76,8 +82,16 @@ export function CompanyProfileSidebar({
           <h3 className="font-bold text-foreground text-sm leading-tight">
             {company?.name || t('sidebarHeader')}
           </h3>
-          <span className="inline-block text-[10px] text-accent font-bold uppercase tracking-wider">
-            {t('verifiedCompany')}
+          <span
+            className={`inline-block text-[10px] font-bold uppercase tracking-wider ${
+              company?.status === 'approved'
+                ? 'text-accent'
+                : company?.status === 'rejected'
+                  ? 'text-destructive'
+                  : 'text-warning'
+            }`}
+          >
+            {t(verifKey)}
           </span>
         </div>
       </div>
@@ -112,25 +126,6 @@ export function CompanyProfileSidebar({
           {activeTab === 'projects' && (
             <span className="w-1.5 h-1.5 rounded-full bg-accent" />
           )}
-        </button>
-
-        <button
-          type="button"
-          className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
-        >
-          {t('tabHistory')}
-        </button>
-        <button
-          type="button"
-          className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
-        >
-          {t('tabTeam')}
-        </button>
-        <button
-          type="button"
-          className="w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
-        >
-          {t('tabAnalytics')}
         </button>
       </nav>
 
@@ -172,7 +167,7 @@ export function CompanyProfileSidebar({
                     className="bg-card/50 border-border focus-visible:ring-primary text-sm"
                   />
                   <p className="text-[10px] text-muted-foreground text-right">
-                    {supportDescription.length}/15 caracteres mínimo
+                    {supportDescription.length}/15 {t('supportMinCharsInfo')}
                   </p>
                 </div>
                 <div className="flex justify-end gap-3 pt-2 border-t border-border/40">
@@ -183,7 +178,7 @@ export function CompanyProfileSidebar({
                     onClick={() => setIsSupportOpen(false)}
                     className="text-xs font-semibold"
                   >
-                    Cancelar
+                    {t('cancelar')}
                   </Button>
                   <Button
                     type="submit"

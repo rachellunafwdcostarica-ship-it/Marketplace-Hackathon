@@ -1,28 +1,34 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { CompanyProfileSidebar } from '@/components/features/companies/CompanyProfileSidebar'
 import { CompanyProfileBanner } from '@/components/features/companies/CompanyProfileBanner'
 import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
-import { CompanyProjectsTab } from '@/components/features/companies/CompanyProjectsTab'
+import { PublishedProjectsBoard } from '@/components/features/projects/PublishedProjectsBoard'
 import type { Company } from '@/types'
+import type { PublishedProject } from '@/lib/projects/dashboard'
 
 type TabType = 'profile' | 'projects'
 
 interface CompanyPerfilClientProps {
   company: Company
+  projects: PublishedProject[]
 }
 
 /**
- * Cuerpo (client) del perfil del empresario. El company llega YA cargado por
- * prop desde el server component (datos reales de empresarios + usuarios, sin
- * `useEffect`). Solo maneja el estado de la pestaña activa.
+ * Cuerpo (client) del perfil del empresario. El company y los proyectos llegan
+ * YA cargados por prop desde el server component (datos reales, sin `useEffect`).
+ * La pestaña "Proyectos" reusa `PublishedProjectsBoard` (proyectos reales).
  */
-export function CompanyPerfilClient({ company }: CompanyPerfilClientProps) {
+export function CompanyPerfilClient({
+  company,
+  projects,
+}: CompanyPerfilClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>('profile')
-  const tecnologias: { id: string; nombre: string }[] = []
+  const router = useRouter()
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -46,7 +52,10 @@ export function CompanyPerfilClient({ company }: CompanyPerfilClientProps) {
           )}
 
           {activeTab === 'projects' && (
-            <CompanyProjectsTab tecnologias={tecnologias} />
+            <PublishedProjectsBoard
+              projects={projects}
+              onRefetch={() => router.refresh()}
+            />
           )}
         </main>
       </div>

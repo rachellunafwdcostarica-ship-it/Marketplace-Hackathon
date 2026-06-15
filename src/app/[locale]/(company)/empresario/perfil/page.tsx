@@ -4,6 +4,7 @@ import {
   getCompanyProfileForEdit,
   isCompanyProfileComplete,
 } from '@/lib/company/actions'
+import { getMyPublishedProjects } from '@/lib/projects/dashboard'
 import type { VerificationStatus } from '@/lib/company/schemas'
 import type { Company, CompanyStatus } from '@/types'
 import { CompanyPerfilClient } from './CompanyPerfilClient'
@@ -18,7 +19,7 @@ const VERIF_TO_STATUS: Record<VerificationStatus, CompanyStatus> = {
  * Perfil del empresario. Server Component: el guard de "perfil completo" y la
  * lectura de datos viven en el server (sin `useEffect`). Si el perfil está
  * incompleto, redirige al formulario. Los datos REALES (empresarios + usuarios)
- * se mapean a la forma `Company` y se pasan al cuerpo cliente.
+ * y los proyectos reales se pasan al cuerpo cliente.
  */
 export default async function CompanyProfilePage() {
   const locale = await getLocale()
@@ -33,6 +34,9 @@ export default async function CompanyProfilePage() {
     redirect(`/${locale}/empresario/formulario-empresa`)
   }
 
+  const projectsRes = await getMyPublishedProjects()
+  const proyectos = projectsRes.ok ? projectsRes.data : []
+
   const p = profileRes.data
   const company: Company = {
     // El perfil no expone el id de empresario y ningún sub-componente lo usa.
@@ -46,12 +50,12 @@ export default async function CompanyProfilePage() {
     status: p.verificationStatus
       ? VERIF_TO_STATUS[p.verificationStatus]
       : 'pending',
-    projectsCount: 0,
+    projectsCount: proyectos.length,
     contactEmail: p.contactEmail,
     website: p.website,
     createdAt: '',
     isProfileFilled: true,
   }
 
-  return <CompanyPerfilClient company={company} />
+  return <CompanyPerfilClient company={company} projects={proyectos} />
 }
