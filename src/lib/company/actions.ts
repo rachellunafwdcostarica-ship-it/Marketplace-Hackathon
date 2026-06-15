@@ -84,7 +84,7 @@ export async function getCompanyProfile(): Promise<
           ? 'formal'
           : 'emprendedor',
       sector: empresario.sector ?? '',
-      cedula: empresario.cedula_juridica ?? '',
+      cedula: empresario.cedula ?? '',
       description: empresario.descripcion ?? '',
       contactEmail: user.email ?? '',
       website: empresario.sitio_web ?? '',
@@ -163,7 +163,7 @@ export async function getCompanyProfileForEdit(): Promise<
           ? 'emprendedor'
           : 'formal',
       sector: empresario?.sector ?? '',
-      cedula: empresario?.cedula_juridica ?? '',
+      cedula: empresario?.cedula ?? '',
       description: empresario?.descripcion ?? '',
       contactEmail: user.email ?? '',
       website: empresario?.sitio_web ?? '',
@@ -221,11 +221,9 @@ export async function saveCompanyProfile(
         tipo_empresario:
           data.companyType === 'formal' ? 'empresa_formal' : 'emprendedor',
         sector: data.sector,
-        // Solo empresa formal tiene cédula/ID fiscal; el emprendedor guarda null.
-        cedula_juridica:
-          data.companyType === 'formal' && data.cedula?.trim()
-            ? data.cedula.trim()
-            : null,
+        // Cédula obligatoria para ambos tipos: jurídica (empresa) o de identidad
+        // (emprendedor). La validación garantiza que venga; el null es defensa.
+        cedula: data.cedula?.trim() ? data.cedula.trim() : null,
         descripcion: data.description,
         logo: data.logo,
         sitio_web: data.website,
