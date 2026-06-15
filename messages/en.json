@@ -289,6 +289,7 @@
     "rejectSuccess": "Application rejected.",
     "closeProjectSuccess": "Project closed. No more applications will be received.",
     "contactEmailInfo": "Opening email for: {email}",
+    "contactEmailSubject": "FWD Talent Marketplace contact",
     "noApplicationsYet": "You haven't received any applications for your projects yet.",
     "confirmCloseProject": "Close this project permanently?",
     "confirmActionOn": "Action on:",

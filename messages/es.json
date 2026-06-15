@@ -289,6 +289,7 @@
     "rejectSuccess": "Postulación rechazada.",
     "closeProjectSuccess": "Proyecto cerrado. Ya no recibirá más postulaciones.",
     "contactEmailInfo": "Abriendo correo para: {email}",
+    "contactEmailSubject": "Contacto FWD Talent Marketplace",
     "noApplicationsYet": "No has recibido postulaciones de candidatos en tus proyectos todavía.",
     "confirmCloseProject": "¿Cerrar este proyecto de manera permanente?",
     "confirmActionOn": "Acción sobre:",

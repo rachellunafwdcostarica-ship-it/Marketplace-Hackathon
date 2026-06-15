@@ -12,6 +12,7 @@ import {
   type ValidacionResponse,
 } from './schemas'
 import type { LogisticaDraft } from '@/lib/projects/schemas'
+import { logger } from '@/lib/logger'
 
 /**
  * Proveedor de IA intercambiable (errolpendiente §5.1): un solo modelo y una
@@ -140,7 +141,8 @@ export function getAiProvider(): AiProvider {
         try {
           const result = schema.safeParse(extractJson(content))
           if (result.success) return result.data
-        } catch {
+        } catch (error) {
+          logger.warn('ai_invalid_json', { error, intento })
           // JSON inválido: reintentamos una vez antes de rendirnos.
         }
       }
@@ -177,7 +179,8 @@ export function getAiProvider(): AiProvider {
       try {
         const result = conversarResponseSchema.safeParse(extractJson(content))
         if (result.success) return result.data
-      } catch {
+      } catch (error) {
+        logger.warn('ai_conversar_invalid_json', { error })
         // Sin JSON válido caemos a un fallback: el chat no debe romperse.
       }
       return { mensaje: content, completo: false, faltan: [] }

@@ -11,7 +11,7 @@ export function resolveCatalog(
   catalog: CatalogRef[],
 ): CatalogRef[] {
   const porNombre = new Map(
-    catalog.map((item) => [item.nombre.trim().toLowerCase(), item]),
+    catalog.map((ref) => [ref.nombre.trim().toLowerCase(), ref]),
   )
   const vistos = new Set<string>()
   const refs: CatalogRef[] = []
