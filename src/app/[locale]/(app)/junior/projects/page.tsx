@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -16,7 +16,7 @@ import { Briefcase } from 'lucide-react'
 export default function EgresadoProjectsMarketplace() {
   const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
-  const { projects } = useAppState()
+  const { projects } = useDemoData()
 
   const [search, setSearch] = useState('')
   const [selectedStack, setSelectedStack] = useState('')

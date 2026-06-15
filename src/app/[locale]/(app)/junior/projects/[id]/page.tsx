@@ -3,7 +3,7 @@
 import React from 'react'
 import { useParams } from 'next/navigation'
 import { Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -30,7 +30,7 @@ export default function ProjectDetailsPage() {
   const tEgresado = useTranslations('Egresado')
   const tAccount = useTranslations('Account')
 
-  const { projects, applications } = useAppState()
+  const { projects, applications } = useDemoData()
   const { isPending } = useAccountStatus()
   const id = params['id'] as string
   const project = projects.find((p) => p.id === id)

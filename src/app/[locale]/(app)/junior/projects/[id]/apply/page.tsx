@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -44,7 +44,7 @@ export default function ApplyProjectPage() {
   const tValidation = useTranslations('Validation')
   const tAccount = useTranslations('Account')
 
-  const { projects, addApplication } = useAppState()
+  const { projects, addApplication } = useDemoData()
   const { isPending } = useAccountStatus()
   const id = params['id'] as string
   const project = projects.find((p) => p.id === id)

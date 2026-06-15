@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -14,7 +14,7 @@ import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 
 export default function EgresadoApplicationsPage() {
   const tEgresado = useTranslations('Egresado')
-  const { applications } = useAppState()
+  const { applications } = useDemoData()
 
   const myApps = applications.filter(
     (app) => app.candidateName === MOCK_JUNIOR_NAME,

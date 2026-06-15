@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -25,7 +25,7 @@ import {
 export default function EgresadoDashboard() {
   const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
-  const { projects, applications } = useAppState()
+  const { projects, applications } = useDemoData()
 
   const myApps = applications.filter(
     (app) => app.candidateName === MOCK_JUNIOR_NAME,
