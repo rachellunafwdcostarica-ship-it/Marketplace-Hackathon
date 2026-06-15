@@ -17,14 +17,14 @@ const ROLES: {
   icon: React.ComponentType<{ className?: string }>
 }[] = [
   {
-    value: 'junior',
-    label: 'Junior',
+    value: 'egresado',
+    label: 'Egresado',
     description: 'Busco proyectos',
     icon: GraduationCap,
   },
   {
-    value: 'empresa',
-    label: 'Empresa',
+    value: 'empresario',
+    label: 'Empresario',
     description: 'Publico proyectos',
     icon: Building2,
   },

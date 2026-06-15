@@ -386,7 +386,7 @@ export async function createSupportTicket(
  */
 export async function getSupportTickets(): Promise<Result<SupportTicket[]>> {
   try {
-    const authResult = await requireRole('admin')
+    const authResult = await requireRole('administrador')
     if (!authResult.ok) {
       return err('forbidden')
     }

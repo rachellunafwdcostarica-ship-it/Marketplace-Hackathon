@@ -14,7 +14,7 @@
     "favorites": "Favorites",
     "resources": "Resources",
     "roleView": "Role view",
-    "roleJunior": "Junior",
+    "roleEgresado": "Graduate",
     "roleEmpresa": "Company",
     "roleAdmin": "Admin",
     "notifications": "Notifications",
@@ -32,7 +32,7 @@
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
-    "juniorTitle": "For Juniors",
+    "egresadoTitle": "For Graduates",
     "companyTitle": "For Companies",
     "searchProjects": "Browse Projects",
     "myApplications": "My Applications",
@@ -50,11 +50,11 @@
     "heroSubtitle": "We connect talented FWD graduates with companies looking for real short-term projects. Gain experience, expand your portfolio, and earn income.",
     "ctaFindProjects": "Find Projects",
     "ctaPublishProject": "Publish a Project",
-    "juniorTitle": "For Junior Graduates",
-    "juniorDesc": "The perfect springboard for your professional tech career.",
-    "juniorBenefit1": "Paid real-world projects to build your portfolio.",
-    "juniorBenefit2": "Mentorship and guidance to ensure your success.",
-    "juniorBenefit3": "Direct connection with companies in the tech sector.",
+    "egresadoTitle": "For Graduates",
+    "egresadoDesc": "The perfect springboard for your professional tech career.",
+    "egresadoBenefit1": "Paid real-world projects to build your portfolio.",
+    "egresadoBenefit2": "Mentorship and guidance to ensure your success.",
+    "egresadoBenefit3": "Direct connection with companies in the tech sector.",
     "companyTitle": "For Companies",
     "companyDesc": "Access the most trained and dynamic junior talent in the market.",
     "companyBenefit1": "FWD graduates ready to add value from day one.",
@@ -128,8 +128,8 @@
     "checkInbox": "Check your inbox",
     "resendEmail": "Resend email",
     "changeEmail": "Change email address",
-    "roleJuniorTitle": "Junior FWD",
-    "roleJuniorDesc": "I'm looking for projects to build professional experience.",
+    "roleEgresadoTitle": "FWD Graduate",
+    "roleEgresadoDesc": "I'm looking for projects to build professional experience.",
     "roleCompanyTitle": "Company",
     "roleCompanyDesc": "I want to publish projects and hire talent.",
     "roleAdminTitle": "Administrator",
@@ -159,7 +159,10 @@
     "emailDuplicateOAuth": "This account is already registered. Please sign in.",
     "registerSuccess": "Registration successful! Check your email to verify your account.",
     "orWithEmail": "or sign up with your email",
-    "registering": "Creating account..."
+    "registering": "Creating account...",
+    "sending": "Sending...",
+    "backToLogin": "Back to sign in",
+    "errorUnexpected": "An unexpected error occurred. Please try again."
   },
 
   "Common": {
@@ -194,8 +197,8 @@
     "presencial": "On-site",
     "minCharsLabel": "Minimum {n} characters"
   },
-  "Junior": {
-    "dashboard": "Junior Dashboard",
+  "Egresado": {
+    "dashboard": "Graduate Dashboard",
     "dashboardDesc": "Monitor your applications and discover new recommended projects.",
     "marketplace": "Projects Marketplace",
     "marketplaceDesc": "Find and apply to short-term freelance projects that match your skills.",

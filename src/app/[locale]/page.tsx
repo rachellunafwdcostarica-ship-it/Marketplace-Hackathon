@@ -15,6 +15,14 @@ const CAROUSEL_SLIDES = [
 export default async function LandingPage() {
   const tLanding = await getTranslations('Landing')
 
+  /*
+  """ ANTES """
+  La sección de beneficios de la landing page usaba claves 'juniorTitle', 'juniorDesc' y 'juniorBenefit1/2/3' que causaban errores de traducción next-intl.
+  
+  """ DESPUES """
+  Se cambiaron a 'egresadoTitle', 'egresadoDesc' y 'egresadoBenefit1/2/3' para alinearse con las claves correctas definidas en messages/es.json y messages/en.json.
+  */
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -158,18 +166,18 @@ export default async function LandingPage() {
                   <Award className="w-6 h-6" />
                 </div>
                 <h3 className="text-2xl font-bold tracking-tight font-heading">
-                  {tLanding('juniorTitle')}
+                  {tLanding('egresadoTitle')}
                   <span className="text-primary">.</span>
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  {tLanding('juniorDesc')}
+                  {tLanding('egresadoDesc')}
                 </p>
               </div>
               <ul className="space-y-4">
                 {[
-                  tLanding('juniorBenefit1'),
-                  tLanding('juniorBenefit2'),
-                  tLanding('juniorBenefit3'),
+                  tLanding('egresadoBenefit1'),
+                  tLanding('egresadoBenefit2'),
+                  tLanding('egresadoBenefit3'),
                 ].map((benefit, i) => (
                   <li key={i} className="flex gap-3 items-start">
                     <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
 import { EmptyState } from '@/components/features/shared/EmptyState'
@@ -13,7 +13,7 @@ import type { Project } from '@/types'
 
 export default function AdminProjectsPage() {
   const tAdmin = useTranslations('Admin')
-  const { projects, updateProjectStatus } = useAppState()
+  const { projects, updateProjectStatus } = useDemoData()
 
   const handleHide = (id: string, title: string) => {
     updateProjectStatus(id, 'closed')

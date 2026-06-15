@@ -19,7 +19,7 @@ import { OAuthButtons } from '@/components/features/auth/OAuthButtons'
 import { AuthFooter } from '@/components/features/auth/AuthFooter'
 import { PasswordStrengthIndicator } from '@/components/features/auth/PasswordStrengthIndicator'
 import { RoleSelector } from '@/components/features/auth/RoleSelector'
-import { useAppState } from '@/lib/StateContext'
+import { useAuth } from '@/lib/auth/AuthContext'
 import type { UserRole } from '@/types'
 
 interface RegisterFormValues {
@@ -50,10 +50,10 @@ export default function RegisterPage() {
   const tLogin = useTranslations('Login')
   const tValidation = useTranslations('Validation')
   const router = useRouter()
-  const { setUserRole } = useAppState()
+  const { setUserRole } = useAuth()
 
   const [loading, setLoading] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<UserRole>('junior')
+  const [selectedRole, setSelectedRole] = useState<UserRole>('egresado')
 
   const registerSchema = useMemo(
     () => createRegisterSchema(tValidation),
@@ -84,18 +84,23 @@ export default function RegisterPage() {
       email: data.email,
       password: data.password,
       fullName: data.fullName,
-      role: selectedRole as 'junior' | 'empresa',
+      role: selectedRole as 'egresado' | 'empresario',
     })
     setLoading(false)
     if (!result.ok) {
+      if (result.error === 'email_already_exists') {
+        // Anti-enumeración: no revelar que el correo ya está registrado.
+        // Mostrar el mismo flujo que un registro exitoso.
+        toast.success(tAuth('registerSuccess'))
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
+        return
+      }
       const message =
         result.error === 'password_breached'
           ? tAuth('passwordBreached')
           : result.error === 'pwned_check_failed'
             ? tAuth('pwnedCheckFailed')
-            : result.error === 'email_already_exists'
-              ? tAuth('emailAlreadyExists')
-              : result.error
+            : tAuth('errorUnexpected')
       toast.error(message)
       return
     }
@@ -133,7 +138,7 @@ export default function RegisterPage() {
         <RoleSelector
           selected={selectedRole}
           onChange={setSelectedRole}
-          label="¿Cómo vas a usar FWD Talent?"
+          label={tAuth('roleTitle')}
         />
 
         <OAuthButtons

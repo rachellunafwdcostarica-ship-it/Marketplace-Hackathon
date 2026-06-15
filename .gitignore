@@ -8,6 +8,14 @@ node_modules/
 .yarn/sdks
 .yarn/versions
 
+
+
+# Agent skills (dependencias de IA, se reinstalan con: npx skills add supabase/agent-skills)
+.agents/
+skills-lock.json
+
+# Logs
+analysis_results.md
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

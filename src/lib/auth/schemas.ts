@@ -2,11 +2,11 @@ import { z } from 'zod'
 
 /**
  * Schema para la asignación de rol en onboarding.
- * Solo acepta los roles que un usuario puede auto-asignarse.
- * 'admin' y 'moderador' están excluidos intencionalmente.
+ * Usa el mismo vocabulario que la BD (nombre_rol): egresado / empresario.
+ * 'administrador' excluido intencionalmente: ningún usuario se auto-asigna ese rol.
  */
 export const AssignRoleSchema = z.object({
-  role: z.enum(['junior', 'empresario']),
+  role: z.enum(['egresado', 'empresario']),
 })
 
 export type AssignRoleInput = z.infer<typeof AssignRoleSchema>

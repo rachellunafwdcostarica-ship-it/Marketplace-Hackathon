@@ -28,7 +28,7 @@ async function setGraduateVerification(
     return err('invalid_user_id')
   }
 
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }
@@ -119,7 +119,7 @@ export async function deactivateUser(userId: string): Promise<Result<void>> {
     return err('invalid_user_id')
   }
 
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }
@@ -166,7 +166,7 @@ async function setCompanyVerification(
     return err('invalid_company_id')
   }
 
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }

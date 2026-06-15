@@ -33,7 +33,7 @@ export interface GraduateVerificationItem {
 export async function listGraduateVerifications(
   estado: AdminVerificationState,
 ): Promise<Result<GraduateVerificationItem[]>> {
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }
@@ -117,7 +117,7 @@ export interface CompanyVerificationItem {
 export async function listCompanyVerifications(
   estado: AdminVerificationState,
 ): Promise<Result<CompanyVerificationItem[]>> {
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }
@@ -233,7 +233,7 @@ export type ListUsersFilters = z.input<typeof ListUsersFiltersSchema>
 export async function listUsers(
   filters: ListUsersFilters = {},
 ): Promise<Result<AdminUserListItem[]>> {
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }
@@ -332,7 +332,7 @@ export interface AdminUserStats {
  * y el cliente de servicio para bypassear RLS.
  */
 export async function getUserStats(): Promise<Result<AdminUserStats>> {
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }

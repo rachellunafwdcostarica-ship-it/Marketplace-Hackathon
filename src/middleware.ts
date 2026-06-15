@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
 import type { Database } from '@/types/database'
+import { env } from '@/lib/env'
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -29,10 +30,12 @@ function isOnboardingPath(pathname: string): boolean {
   return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
 }
 
-function getRouteRole(pathname: string): 'junior' | 'empresa' | 'admin' | null {
-  if (/^\/(es|en)\/junior/.test(pathname)) return 'junior'
-  if (/^\/(es|en)\/empresario/.test(pathname)) return 'empresa'
-  if (/^\/(es|en)\/admin/.test(pathname)) return 'admin'
+function getRouteRole(
+  pathname: string,
+): 'egresado' | 'empresario' | 'administrador' | null {
+  if (/^\/(es|en)\/junior/.test(pathname)) return 'egresado'
+  if (/^\/(es|en)\/empresario/.test(pathname)) return 'empresario'
+  if (/^\/(es|en)\/admin/.test(pathname)) return 'administrador'
   return null
 }
 
@@ -49,8 +52,8 @@ export async function middleware(request: NextRequest) {
 
   // Refrescar sesión de Supabase y propagar cookies
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {

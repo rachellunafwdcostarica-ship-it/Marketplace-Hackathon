@@ -1,7 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
+/*
+""" ANTES """
 import { useAppState } from '@/lib/StateContext'
+
+""" DESPUES """
+import { useDemoData } from '@/lib/DemoDataContext'
+*/
+import { useDemoData } from '@/lib/DemoDataContext'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,7 +37,14 @@ import {
 import type { PortfolioProject } from '@/types'
 
 export function PortfolioManager() {
+  /*
+  """ ANTES """
   const { studentPortfolio, setStudentPortfolio } = useAppState()
+
+  """ DESPUES """
+  const { studentPortfolio, setStudentPortfolio } = useDemoData()
+  */
+  const { studentPortfolio, setStudentPortfolio } = useDemoData()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<
     PortfolioProject | undefined

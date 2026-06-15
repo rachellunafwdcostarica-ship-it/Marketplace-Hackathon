@@ -62,7 +62,7 @@ export interface Company {
   userId?: string | undefined
 }
 
-export type UserRole = 'junior' | 'empresa' | 'admin'
+export type UserRole = 'egresado' | 'empresario' | 'administrador'
 
 export type SkillLevel = 'basico' | 'intermedio' | 'avanzado'
 

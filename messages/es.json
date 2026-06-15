@@ -14,7 +14,7 @@
     "favorites": "Favoritos",
     "resources": "Recursos",
     "roleView": "Vista de rol",
-    "roleJunior": "Junior",
+    "roleEgresado": "Egresado",
     "roleEmpresa": "Empresa",
     "roleAdmin": "Admin",
     "notifications": "Notificaciones",
@@ -32,7 +32,7 @@
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
-    "juniorTitle": "Para Juniors",
+    "egresadoTitle": "Para Egresados",
     "companyTitle": "Para Empresas",
     "searchProjects": "Buscar Proyectos",
     "myApplications": "Mis Postulaciones",
@@ -50,11 +50,11 @@
     "heroSubtitle": "Conectamos egresados talentosos de FWD con empresas que buscan proyectos reales de corta duración. Gana experiencia, expande tu portafolio y genera ingresos.",
     "ctaFindProjects": "Buscar Proyectos",
     "ctaPublishProject": "Publicar un Proyecto",
-    "juniorTitle": "Para Egresados Junior",
-    "juniorDesc": "El trampolín perfecto para tu carrera profesional en tecnología.",
-    "juniorBenefit1": "Proyectos reales pagados para construir tu portafolio.",
-    "juniorBenefit2": "Mentoría y seguimiento para asegurar tu éxito.",
-    "juniorBenefit3": "Conexión directa con empresas del sector tecnológico.",
+    "egresadoTitle": "Para Egresados",
+    "egresadoDesc": "El trampolín perfecto para tu carrera profesional en tecnología.",
+    "egresadoBenefit1": "Proyectos reales pagados para construir tu portafolio.",
+    "egresadoBenefit2": "Mentoría y seguimiento para asegurar tu éxito.",
+    "egresadoBenefit3": "Conexión directa con empresas del sector tecnológico.",
     "companyTitle": "Para Empresas",
     "companyDesc": "Accede al talento junior más capacitado y dinámico del mercado.",
     "companyBenefit1": "Egresados de FWD listos para aportar valor desde el primer día.",
@@ -128,8 +128,8 @@
     "checkInbox": "Revisá tu bandeja de entrada",
     "resendEmail": "Reenviar correo",
     "changeEmail": "Cambiar dirección de correo",
-    "roleJuniorTitle": "Junior FWD",
-    "roleJuniorDesc": "Busco proyectos para desarrollar experiencia profesional.",
+    "roleEgresadoTitle": "Egresado FWD",
+    "roleEgresadoDesc": "Busco proyectos para desarrollar experiencia profesional.",
     "roleCompanyTitle": "Empresa",
     "roleCompanyDesc": "Quiero publicar proyectos y contratar talento.",
     "roleAdminTitle": "Administrador",
@@ -159,7 +159,10 @@
     "emailDuplicateOAuth": "Esta cuenta ya está registrada. Por favor inicia sesión.",
     "registerSuccess": "¡Registro exitoso! Revisá tu correo para verificar tu cuenta.",
     "orWithEmail": "o registrate con tu correo",
-    "registering": "Registrando..."
+    "registering": "Registrando...",
+    "sending": "Enviando...",
+    "backToLogin": "Volver al inicio de sesión",
+    "errorUnexpected": "Ocurrió un error inesperado. Intentá de nuevo."
   },
 
   "Common": {
@@ -194,8 +197,8 @@
     "presencial": "Presencial",
     "minCharsLabel": "Mínimo {n} caracteres"
   },
-  "Junior": {
-    "dashboard": "Panel Junior",
+  "Egresado": {
+    "dashboard": "Panel Egresado",
     "dashboardDesc": "Monitorea tus postulaciones y descubre nuevos proyectos recomendados para ti.",
     "marketplace": "Marketplace de Proyectos",
     "marketplaceDesc": "Encuentra y postúlate a proyectos freelance de corta duración que se adapten a tus habilidades.",
