@@ -1,16 +1,21 @@
-'use client'
-
-import React from 'react'
-import { useTranslations } from 'next-intl'
-import { Link } from '@/i18n/routing'
+import { getTranslations } from 'next-intl/server'
 import { ArrowLeft } from 'lucide-react'
+import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { CompanyProfileForm } from '@/components/features/companies/CompanyProfileForm'
+import { getCompanyProfileForEdit } from '@/lib/company/actions'
 
-export default function CompanyProfileFormPage() {
-  const tEmpresa = useTranslations('Empresa')
+/**
+ * Formulario de empresa. Server Component: el perfil (datos de empresa + datos
+ * personales del empresario) se trae en el server y se pasa al formulario por
+ * prop (sin `useEffect` de fetch). El rol y la autenticación los garantiza el
+ * layout (company) + middleware.
+ */
+export default async function CompanyProfileFormPage() {
+  const tEmpresa = await getTranslations('Empresa')
+  const profileRes = await getCompanyProfileForEdit()
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -33,7 +38,15 @@ export default function CompanyProfileFormPage() {
           dotColor="text-secondary"
         />
 
-        <CompanyProfileForm />
+        {profileRes.ok ? (
+          <CompanyProfileForm initialProfile={profileRes.data} />
+        ) : (
+          <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">
+            <p className="text-sm font-bold text-destructive">
+              {tEmpresa('profileNotFound')}
+            </p>
+          </div>
+        )}
       </main>
 
       <Footer />

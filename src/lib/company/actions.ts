@@ -106,6 +106,87 @@ export async function getCompanyProfile(): Promise<
 }
 
 /**
+ * Igual que getCompanyProfile pero SIEMPRE devuelve la vista (nunca null), con
+ * los datos personales de `usuarios` aunque todavía no exista la fila en
+ * `empresarios` (primera visita). Lo usa el formulario para precargar el nombre
+ * del empresario y el correo de la cuenta.
+ */
+export async function getCompanyProfileForEdit(): Promise<
+  Result<CompanyProfileView>
+> {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return err('unauthorized')
+    }
+
+    const { data: usuario, error: usuarioError } = await supabase
+      .from('usuarios')
+      .select('nombre, apellido_1, apellido_2, fecha_nacimiento, foto_perfil')
+      .eq('id_usuario', user.id)
+      .maybeSingle()
+
+    if (usuarioError) {
+      logger.error('getCompanyProfileForEdit: fallo al leer datos personales', {
+        error: usuarioError.message,
+      })
+      return err(usuarioError.message)
+    }
+
+    const { data: empresario, error: empError } = await supabase
+      .from('empresarios')
+      .select('*')
+      .eq('id_usuario', user.id)
+      .maybeSingle()
+
+    if (empError) {
+      logger.error('getCompanyProfileForEdit: fallo al leer empresario', {
+        error: empError.message,
+      })
+      return err(empError.message)
+    }
+
+    const profile: CompanyProfileView = {
+      firstName: usuario?.nombre ?? '',
+      lastName1: usuario?.apellido_1 ?? '',
+      lastName2: usuario?.apellido_2 ?? '',
+      birthDate: usuario?.fecha_nacimiento ?? '',
+      profilePhoto: usuario?.foto_perfil ?? '',
+      name: empresario?.nombre_empresa ?? '',
+      companyType:
+        empresario?.tipo_empresario === 'emprendedor'
+          ? 'emprendedor'
+          : 'formal',
+      sector: empresario?.sector ?? '',
+      cedula: empresario?.cedula_juridica ?? '',
+      description: empresario?.descripcion ?? '',
+      contactEmail: user.email ?? '',
+      website: empresario?.sitio_web ?? '',
+      logo: empresario?.logo ?? '',
+      country: empresario?.pais_sede ?? '',
+      city: empresario?.ciudad_sede ?? '',
+      verificationStatus: empresario?.estado_verificacion ?? null,
+      ...(empresario?.alcance_operativo
+        ? { operatingScope: empresario.alcance_operativo }
+        : {}),
+    }
+
+    return ok(profile)
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : 'unexpected_error'
+    logger.error('getCompanyProfileForEdit: error inesperado', {
+      error: errorMsg,
+    })
+    return err(errorMsg)
+  }
+}
+
+/**
  * Guarda o actualiza el perfil del empresario para el usuario autenticado actual.
  */
 export async function saveCompanyProfile(
