@@ -18,6 +18,7 @@ import {
 } from './schemas'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
+import { toDbRole } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
@@ -76,7 +77,7 @@ export async function assignRole(
     return err('invalid_role')
   }
 
-  const dbRole = parsed.data.role === 'junior' ? 'egresado' : parsed.data.role
+  const dbRole = toDbRole(parsed.data.role)
 
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc('assign_my_role', {

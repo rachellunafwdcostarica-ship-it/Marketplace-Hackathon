@@ -48,9 +48,7 @@ export function OnboardingRoleForm({ initialRole }: OnboardingRoleFormProps) {
       }
     }
 
-    // La BD usa 'empresario'; la UI usa 'empresa'
-    const dbRole = selected === 'empresa' ? 'empresario' : 'junior'
-    const result = await assignRole({ role: dbRole })
+    const result = await assignRole({ role: selected })
 
     setLoading(false)
 

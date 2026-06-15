@@ -26,3 +26,13 @@ export function normalizeRole(
   if (dbRole === 'administrador') return 'admin'
   return null
 }
+
+/**
+ * Convierte el UserRole del frontend al nombre_rol de la BD (modelo XXI).
+ * Inversa de normalizeRole. La traducción frontend→BD vive únicamente aquí.
+ */
+export function toDbRole(role: UserRole): string {
+  if (role === 'junior') return 'egresado'
+  if (role === 'empresa') return 'empresario'
+  return 'administrador'
+}
