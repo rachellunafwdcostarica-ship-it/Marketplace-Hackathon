@@ -44,12 +44,10 @@ function buildGraduateAdmin(opts: {
 }) {
   const update = vi.fn(() => ({
     eq: vi.fn(() => ({
-      select: vi
-        .fn()
-        .mockResolvedValue({
-          data: opts.updateRows ?? [{ id_estudiante: 'e1' }],
-          error: null,
-        }),
+      select: vi.fn().mockResolvedValue({
+        data: opts.updateRows ?? [{ id_estudiante: 'e1' }],
+        error: null,
+      }),
     })),
   }))
   const client = {
@@ -81,12 +79,10 @@ function buildGraduateAdmin(opts: {
 function buildCompanyAdmin(opts: { updateRows?: unknown[] }) {
   const update = vi.fn(() => ({
     eq: vi.fn(() => ({
-      select: vi
-        .fn()
-        .mockResolvedValue({
-          data: opts.updateRows ?? [{ id_empresario: 'm1' }],
-          error: null,
-        }),
+      select: vi.fn().mockResolvedValue({
+        data: opts.updateRows ?? [{ id_empresario: 'm1' }],
+        error: null,
+      }),
     })),
   }))
   const client = { from: vi.fn(() => ({ update })), update }
