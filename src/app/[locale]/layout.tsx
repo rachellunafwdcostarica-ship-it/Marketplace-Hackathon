@@ -4,7 +4,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Archivo_Narrow, Figtree, JetBrains_Mono } from 'next/font/google'
 import { routing } from '@/i18n/routing'
-import { StateProvider } from '@/lib/StateContext'
+import { AuthProvider } from '@/lib/auth/AuthContext'
 import { Toaster } from '@/components/ui/sonner'
 import '../globals.css'
 
@@ -52,10 +52,10 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <NextIntlClientProvider messages={messages}>
-          <StateProvider>
+          <AuthProvider>
             {children}
             <Toaster richColors position="top-right" />
-          </StateProvider>
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>
