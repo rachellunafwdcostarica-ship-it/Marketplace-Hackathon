@@ -97,9 +97,12 @@ export async function assignRole(
 }
 
 /**
- * Aprueba la cuenta de un usuario (estado_cuenta → 'activa').
+ * Aprueba la cuenta de un usuario (estado_cuenta → 'activa', is_active → true).
  * Solo puede ser llamada por un usuario con rol 'admin'.
  * Usa el cliente de servicio para bypassear RLS.
+ *
+ * Setea is_active = true a propósito: aprobar reactiva también a una cuenta que
+ * el admin haya desactivado antes (ver `deactivateUser`).
  */
 export async function approveUser(userId: string): Promise<Result<void>> {
   const parsed = z.string().uuid().safeParse(userId)
@@ -117,7 +120,7 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   const adminClient = createSupabaseAdminClient()
   const { error } = await adminClient
     .from('usuarios')
-    .update({ estado_cuenta: 'activa' })
+    .update({ estado_cuenta: 'activa', is_active: true })
     .eq('id_usuario', parsed.data)
 
   if (error) {
@@ -126,6 +129,7 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   }
 
   revalidatePath('/admin/validations', 'page')
+  revalidatePath('/admin/users', 'page')
   return ok(undefined)
 }
 

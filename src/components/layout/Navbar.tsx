@@ -114,7 +114,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
       ...mockLinks,
     ],
     admin: [
-      { href: '/admin', label: t('dashboard'), icon: 'dashboard' },
+      { href: '/admin/users', label: t('users'), icon: 'users' },
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },
       { href: '/admin/validations', label: t('validations'), icon: 'shield' },
@@ -141,6 +141,8 @@ export function Navbar({ heroMode = false }: NavbarProps) {
         return <PlusCircle className={className} />
       case 'building':
         return <Building2 className={className} />
+      case 'users':
+        return <Users className={className} />
       case 'shield':
         return <ShieldCheck className={className} />
       default:
