@@ -5,40 +5,59 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
 import type { Database } from '@/types/database'
 
-export interface PendingUser {
+export interface PendingGraduate {
   id_usuario: string
   nombre: string
   apellido_1: string
   correo: string
-  id_rol: number | null
-  estado_cuenta: string
 }
 
 /**
- * Devuelve los usuarios con estado_cuenta = 'pendiente'.
- * Solo puede ser llamada por un usuario con rol 'admin'.
- * Usa el cliente de servicio para bypassear RLS.
+ * Egresados pendientes de verificación (RF-64): estudiantes con
+ * estado_verificacion = 'pendiente'. Es la bandeja del cotejo de egreso, NO la
+ * aprobación de cuenta (eso es estado_cuenta, en gestión de usuarios).
+ *
+ * Solo un admin puede invocarla. Usa el cliente de servicio para bypassear RLS.
  */
-export async function getPendingUsers(): Promise<Result<PendingUser[]>> {
-  // Verificar que el caller es admin (requireRole normaliza 'administrador' → 'admin')
+export async function getPendingGraduateVerifications(): Promise<
+  Result<PendingGraduate[]>
+> {
   const authResult = await requireRole('admin')
   if (!authResult.ok) {
     return authResult
   }
 
   const adminClient = createSupabaseAdminClient()
+
+  const { data: estudiantes, error: estudiantesError } = await adminClient
+    .from('estudiantes')
+    .select('id_usuario')
+    .eq('estado_verificacion', 'pendiente')
+  if (estudiantesError) {
+    logger.error('getPendingGraduateVerifications: fallo al leer estudiantes', {
+      error: estudiantesError.message,
+    })
+    return err(estudiantesError.message)
+  }
+
+  const ids = (estudiantes ?? []).map((e) => e.id_usuario)
+  if (ids.length === 0) {
+    return ok([])
+  }
+
   const { data, error } = await adminClient
     .from('usuarios')
-    .select('id_usuario, nombre, apellido_1, correo, id_rol, estado_cuenta')
-    .eq('estado_cuenta', 'pendiente')
+    .select('id_usuario, nombre, apellido_1, correo')
+    .in('id_usuario', ids)
     .order('fecha_registro', { ascending: true })
-
   if (error) {
-    logger.error('getPendingUsers failed', { error: error.message })
+    logger.error('getPendingGraduateVerifications failed', {
+      error: error.message,
+    })
     return err(error.message)
   }
 
-  return ok((data ?? []) as PendingUser[])
+  return ok((data ?? []) as PendingGraduate[])
 }
 
 export type AdminAccountStatus =

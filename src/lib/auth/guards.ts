@@ -8,7 +8,7 @@ import type { UserRole } from '@/types'
  * Garantiza que el usuario autenticado tenga el rol requerido.
  *
  * Centraliza el check de autorización que antes se repetía a mano en cada
- * server action de admin (approveUser, getPendingUsers, ...).
+ * server action de admin (approveUser, listUsers, ...).
  *
  * - `err('unauthenticated')` si no hay sesión o el usuario aún no tiene rol.
  * - `err('forbidden')` si el rol no coincide con el requerido.
