@@ -124,3 +124,73 @@ export async function deactivateUser(userId: string): Promise<Result<void>> {
   revalidatePath('/admin/users', 'page')
   return ok(undefined)
 }
+
+/**
+ * Mueve empresarios.estado_verificacion (RF-17). Espejo de verificarEgresado:
+ * el guard-trigger congela esta columna para `authenticated`, solo `service_role`
+ * la escribe. Registra verificado_at/por como traza (también al rechazar).
+ */
+async function setCompanyVerification(
+  idEmpresario: string,
+  estado: 'verificado' | 'rechazado',
+): Promise<Result<void>> {
+  const parsed = z.string().uuid().safeParse(idEmpresario)
+  if (!parsed.success) {
+    return err('invalid_company_id')
+  }
+
+  const authResult = await requireRole('admin')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return err('unauthenticated')
+  }
+
+  const adminClient = createSupabaseAdminClient()
+  const { data, error } = await adminClient
+    .from('empresarios')
+    .update({
+      estado_verificacion: estado,
+      verificado_at: new Date().toISOString(),
+      verificado_por: user.id,
+    })
+    .eq('id_empresario', parsed.data)
+    .select('id_empresario')
+
+  if (error) {
+    logger.error('setCompanyVerification failed', {
+      error: error.message,
+      idEmpresario,
+      estado,
+    })
+    return err(error.message)
+  }
+
+  if (!data || data.length === 0) {
+    return err('empresa_no_encontrada')
+  }
+
+  revalidatePath('/admin/validations', 'page')
+  return ok(undefined)
+}
+
+/** Verifica una empresa (estado_verificacion → 'verificado'). Solo admin. */
+export async function verificarEmpresa(
+  idEmpresario: string,
+): Promise<Result<void>> {
+  return setCompanyVerification(idEmpresario, 'verificado')
+}
+
+/** Rechaza una empresa (estado_verificacion → 'rechazado'). Solo admin. */
+export async function rechazarEmpresa(
+  idEmpresario: string,
+): Promise<Result<void>> {
+  return setCompanyVerification(idEmpresario, 'rechazado')
+}

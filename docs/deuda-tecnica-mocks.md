@@ -95,6 +95,11 @@ dashboard sea 100% real. No se tocaron porque exceden la tarea de proyectos:
     `src/components/features/admin/AdminUserFilters.tsx` (filtros, isla client).
 - **Entrada del panel** `/admin`: antes renderizaba el dashboard mock; ahora
   redirige a `/admin/users`.
+- **Validaciones** (`/admin/validations`) es un hub con pestañas:
+  - **Egresados** (RF-64): `getPendingGraduateVerifications` + `verificarEgresado`.
+  - **Empresas** (RF-17): `getPendingCompanies` + `verificarEmpresa` /
+    `rechazarEmpresa` (datos reales). Reemplaza el mock de `/admin/companies`, que
+    ahora **redirige** a `/admin/validations?tab=empresas`.
 
 ## Huérfanos (código muerto preservado)
 
@@ -105,14 +110,16 @@ dashboard sea 100% real. No se tocaron porque exceden la tarea de proyectos:
   - **Qué hacer en el futuro:** borrarlo cuando el dashboard real madure. git
     conserva el historial igual.
 
+- `src/components/_orphans/MockAdminCompanies.tsx`
+  - Era `/admin/companies` cuando "verificaba" empresas con `useAppState()` /
+    `updateCompanyStatus` (mock en memoria, sin escribir en la BD).
+  - Reemplazada por la pestaña **Empresas** de Validaciones (datos reales).
+    `/admin/companies` ahora redirige allí. **No se importa en ningún lado.**
+
 ## Mocks que SIGUEN en uso (no se tocaron — fuera de esta tarea)
 
-Estas páginas del admin siguen leyendo de `useAppState()` / `StateContext` y son
-de otras tareas (verificación de empresas y moderación de proyectos). **No** se
-orfanaron para no dejar sus rutas en 404 sin reemplazo real:
+- `src/app/[locale]/(admin)/admin/projects/page.tsx` — moderación de proyectos,
+  sigue leyendo de `useAppState()` / `StateContext`.
 
-- `src/app/[locale]/(admin)/admin/companies/page.tsx` — verificación de empresas.
-- `src/app/[locale]/(admin)/admin/projects/page.tsx` — moderación de proyectos.
-
-**Qué hacer en el futuro:** reconstruir cada una con datos reales en su propia
-tarea y, recién entonces, orfanar/borrar su versión mock.
+**Qué hacer en el futuro:** reconstruir la moderación de proyectos con datos
+reales en su propia tarea y, recién entonces, orfanar/borrar su versión mock.

@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import {
   LayoutDashboard,
   Users,
-  Building2,
   Briefcase,
   ShieldCheck,
   LogOut,
@@ -14,12 +13,7 @@ import {
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import { cn } from '@/lib/utils/cn'
 
-type AdminNavLabel =
-  | 'dashboard'
-  | 'users'
-  | 'companies'
-  | 'projects'
-  | 'validations'
+type AdminNavLabel = 'dashboard' | 'users' | 'projects' | 'validations'
 
 interface AdminNavItem {
   href: string
@@ -30,7 +24,6 @@ interface AdminNavItem {
 const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/admin/users', labelKey: 'users', icon: Users },
-  { href: '/admin/companies', labelKey: 'companies', icon: Building2 },
   { href: '/admin/projects', labelKey: 'projects', icon: Briefcase },
   { href: '/admin/validations', labelKey: 'validations', icon: ShieldCheck },
 ]

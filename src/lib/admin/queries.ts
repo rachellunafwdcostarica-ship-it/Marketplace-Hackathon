@@ -60,6 +60,95 @@ export async function getPendingGraduateVerifications(): Promise<
   return ok((data ?? []) as PendingGraduate[])
 }
 
+export interface PendingCompany {
+  id_empresario: string
+  nombre_empresa: string | null
+  tipo_empresario: Database['public']['Enums']['tipo_empresario_enum']
+  sector: string | null
+  descripcion: string | null
+  cedula: string | null
+  alcance_operativo: Database['public']['Enums']['alcance_enum'] | null
+  pais_sede: string | null
+  ciudad_sede: string | null
+  logo: string | null
+  sitio_web: string | null
+  // Representante (de usuarios)
+  nombre: string
+  apellido_1: string
+  apellido_2: string | null
+  correo: string
+}
+
+/**
+ * Empresas pendientes de verificación (RF-17): empresarios con
+ * estado_verificacion = 'pendiente', con los datos del representante para que el
+ * admin pueda decidir. Espejo de getPendingGraduateVerifications.
+ *
+ * Solo un admin puede invocarla. Usa el cliente de servicio: la policy
+ * empresarios_select_own solo deja ver el registro propio.
+ */
+export async function getPendingCompanies(): Promise<Result<PendingCompany[]>> {
+  const authResult = await requireRole('admin')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: empresas, error: empresasError } = await adminClient
+    .from('empresarios')
+    .select(
+      'id_empresario, id_usuario, nombre_empresa, tipo_empresario, sector, descripcion, cedula, alcance_operativo, pais_sede, ciudad_sede, logo, sitio_web',
+    )
+    .eq('estado_verificacion', 'pendiente')
+    .order('updated_at', { ascending: true })
+  if (empresasError) {
+    logger.error('getPendingCompanies: fallo al leer empresarios', {
+      error: empresasError.message,
+    })
+    return err(empresasError.message)
+  }
+  if (!empresas || empresas.length === 0) {
+    return ok([])
+  }
+
+  const userIds = empresas.map((e) => e.id_usuario)
+  const { data: usuarios, error: usuariosError } = await adminClient
+    .from('usuarios')
+    .select('id_usuario, nombre, apellido_1, apellido_2, correo')
+    .in('id_usuario', userIds)
+  if (usuariosError) {
+    logger.error('getPendingCompanies: fallo al leer usuarios', {
+      error: usuariosError.message,
+    })
+    return err(usuariosError.message)
+  }
+  const userById = new Map((usuarios ?? []).map((u) => [u.id_usuario, u]))
+
+  const companies: PendingCompany[] = empresas.map((e) => {
+    const u = userById.get(e.id_usuario)
+    return {
+      id_empresario: e.id_empresario,
+      nombre_empresa: e.nombre_empresa,
+      tipo_empresario: e.tipo_empresario,
+      sector: e.sector,
+      descripcion: e.descripcion,
+      cedula: e.cedula,
+      alcance_operativo: e.alcance_operativo,
+      pais_sede: e.pais_sede,
+      ciudad_sede: e.ciudad_sede,
+      logo: e.logo,
+      sitio_web: e.sitio_web,
+      nombre: u?.nombre ?? '',
+      apellido_1: u?.apellido_1 ?? '',
+      apellido_2: u?.apellido_2 ?? null,
+      correo: u?.correo ?? '',
+    }
+  })
+
+  return ok(companies)
+}
+
 export type AdminAccountStatus =
   Database['public']['Enums']['estado_cuenta_enum']
 
