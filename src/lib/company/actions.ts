@@ -221,7 +221,11 @@ export async function saveCompanyProfile(
         tipo_empresario:
           data.companyType === 'formal' ? 'empresa_formal' : 'emprendedor',
         sector: data.sector,
-        cedula_juridica: data.cedula,
+        // Solo empresa formal tiene cédula/ID fiscal; el emprendedor guarda null.
+        cedula_juridica:
+          data.companyType === 'formal' && data.cedula?.trim()
+            ? data.cedula.trim()
+            : null,
         descripcion: data.description,
         logo: data.logo,
         sitio_web: data.website,

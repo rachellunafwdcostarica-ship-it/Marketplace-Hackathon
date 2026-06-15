@@ -197,6 +197,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
                     ? {
                         ...c,
                         ...dbProf,
+                        cedula: dbProf.cedula ?? '',
                         isProfileFilled: true,
                       }
                     : c,
@@ -208,7 +209,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
                     name: dbProf.name,
                     companyType: dbProf.companyType as CompanyType,
                     sector: dbProf.sector,
-                    cedula: dbProf.cedula,
+                    cedula: dbProf.cedula ?? '',
                     description: dbProf.description,
                     logo: dbProf.logo,
                     status: 'approved' as const,
@@ -380,6 +381,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
             return {
               ...c,
               ...profile,
+              cedula: profile.cedula ?? '',
               id: id.startsWith('comp-temp-') ? `comp-${Date.now()}` : c.id,
               isProfileFilled: true,
               userId: currentUser?.id,
@@ -393,7 +395,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
           name: profile.name,
           companyType: profile.companyType as CompanyType,
           sector: profile.sector,
-          cedula: profile.cedula,
+          cedula: profile.cedula ?? '',
           description: profile.description || '',
           logo: profile.logo || '',
           status: 'approved',
