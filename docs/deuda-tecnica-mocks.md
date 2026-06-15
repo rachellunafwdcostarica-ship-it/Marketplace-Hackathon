@@ -33,8 +33,10 @@
     `PublishedProjectsBoard` (proyectos reales de `getMyPublishedProjects`).
   - `CompanyProfileDetails` ya muestra SOLO datos reales (descripción, datos de
     la empresa y representante); el showcase hardcodeado quedó en `_orphans`.
-  - **Pendiente (fase final):** `CompanyProfileForm` aún sincroniza el mock
-    `StateContext` (`updateCompany`).
+  - `CompanyProfileForm` ya **no** sincroniza el mock: guarda solo en la BD
+    (`saveCompanyProfile`) y redirige; el perfil y el dashboard releen datos
+    reales en el server. Se eliminó `updateCompany` de `StateContext` (sin uso).
+    Todo el flujo de **perfil del empresario** quedó libre de mocks.
 
 ## Huérfanos (código muerto preservado)
 

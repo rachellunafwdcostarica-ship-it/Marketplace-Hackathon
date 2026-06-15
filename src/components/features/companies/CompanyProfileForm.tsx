@@ -15,7 +15,6 @@ import {
   Building2,
   BadgeCheck,
 } from 'lucide-react'
-import { useAppState } from '@/lib/StateContext'
 import {
   createCompanyProfileSchema,
   type CompanyProfileInput,
@@ -62,9 +61,6 @@ export function CompanyProfileForm({
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
   const tValidation = useTranslations('Validation')
-  // Sincronización con el mock (StateContext): la Fase C la elimina junto al
-  // guard server-side de "perfil completo".
-  const { currentCompany: company, updateCompany } = useAppState()
   const router = useRouter()
 
   const [loading, setLoading] = useState(false)
@@ -203,10 +199,6 @@ export function CompanyProfileForm({
         if (!logoSave.ok) {
           throw new Error(logoSave.error)
         }
-      }
-
-      if (company) {
-        updateCompany(company.id, { ...baseProfile, logo: logoUrl })
       }
 
       toast.success(tEmpresa('profileSaved'))
