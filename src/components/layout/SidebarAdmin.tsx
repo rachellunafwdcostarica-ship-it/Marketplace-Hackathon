@@ -8,6 +8,7 @@ import {
   Building2,
   Briefcase,
   ShieldCheck,
+  LogOut,
   type LucideIcon,
 } from 'lucide-react'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
@@ -37,9 +38,14 @@ const ADMIN_NAV: AdminNavItem[] = [
 interface SidebarAdminProps {
   className?: string | undefined
   onNavigate?: (() => void) | undefined
+  onLogout?: (() => void) | undefined
 }
 
-export function SidebarAdmin({ className, onNavigate }: SidebarAdminProps) {
+export function SidebarAdmin({
+  className,
+  onNavigate,
+  onLogout,
+}: SidebarAdminProps) {
   const t = useTranslations('Nav')
   const pathname = usePathname()
 
@@ -82,6 +88,17 @@ export function SidebarAdmin({ className, onNavigate }: SidebarAdminProps) {
           </Link>
         )
       })}
+
+      {onLogout && (
+        <button
+          type="button"
+          onClick={onLogout}
+          className="mt-auto flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          <LogOut className="h-4 w-4" aria-hidden="true" />
+          <span>{t('logout')}</span>
+        </button>
+      )}
     </nav>
   )
 }
