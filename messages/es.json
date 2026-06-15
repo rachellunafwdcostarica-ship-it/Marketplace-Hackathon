@@ -467,6 +467,10 @@
     "notVerifiedPublish": "Tu empresa debe estar verificada para publicar.",
     "requestChanges": "Pedir cambios",
     "proposalRejected": "Revisá el chat: la IA te explica qué falta para armar la propuesta.",
+    "agentRejection": {
+      "withDetails": "Todavía no puedo armar la propuesta. Para avanzar:\n- {detalles}",
+      "noDetails": "Todavía no puedo armar la propuesta con lo que tengo. Contame un poco más del proyecto."
+    },
     "notVerifiedTitle": "Tu empresa todavía no está verificada",
     "notVerifiedDesc": "Podés completar el formulario, pero no vas a poder continuar con la IA hasta que un administrador verifique tu empresa.",
     "submit": "Publicar proyecto",
