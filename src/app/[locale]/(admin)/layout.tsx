@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import { getCurrentUser } from '@/lib/auth/dal'
 import { DemoDataProvider } from '@/lib/DemoDataContext'
 import { AdminShell } from '@/components/layout/AdminShell'
 
@@ -16,16 +17,13 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   const locale = await getLocale()
-  const supabase = await createSupabaseServerClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getCurrentUser()
 
   if (!user) {
     redirect(`/${locale}/login`)
   }
 
+  const supabase = await createSupabaseServerClient()
   const { data: roleRaw } = await supabase.rpc('get_my_role')
   const role = normalizeRole(roleRaw as string | null)
 
