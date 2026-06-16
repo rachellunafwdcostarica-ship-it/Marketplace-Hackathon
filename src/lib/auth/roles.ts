@@ -3,26 +3,31 @@ import type { UserRole } from '@/types'
 /**
  * Ruta home por rol — fuente única de verdad.
  * Usada en middleware, callbacks y layouts.
+ *
+ * El egresado aterriza en la raíz localizada ('' → /es), la landing
+ * compartida. /junior sigue existiendo y es accesible desde el navbar; solo
+ * cambia el destino por defecto post-login. El empresario y el administrador
+ * mantienen sus rutas. El valor de rol ya coincide con el nombre_rol de la BD.
  */
 export const ROLE_HOME: Record<UserRole, string> = {
-  junior: '/junior',
-  empresa: '/empresario',
-  admin: '/admin',
+  egresado: '',
+  empresario: '/empresario',
+  administrador: '/admin',
 }
 
 /**
- * Convierte el nombre_rol de la BD (modelo XXI) al UserRole del frontend.
+ * Valida que el nombre_rol recibido de la BD sea un UserRole conocido.
  *
- * La BD almacena 'egresado' pero la ruta/UI usa 'junior';
- * 'empresario' mapea a 'empresa' y 'administrador' a 'admin'.
- * Cualquier valor desconocido retorna null (sin home propio).
+ * El frontend y la BD ahora usan el mismo vocabulario
+ * (egresado / empresario / administrador). Esta función descarta valores
+ * nulos o desconocidos y devuelve el tipo correcto — ya no hace traducción.
  */
 export function normalizeRole(
   dbRole: string | null | undefined,
 ): UserRole | null {
   if (!dbRole) return null
-  if (dbRole === 'egresado') return 'junior'
-  if (dbRole === 'empresario') return 'empresa'
-  if (dbRole === 'administrador') return 'admin'
+  if (dbRole === 'egresado') return 'egresado'
+  if (dbRole === 'empresario') return 'empresario'
+  if (dbRole === 'administrador') return 'administrador'
   return null
 }

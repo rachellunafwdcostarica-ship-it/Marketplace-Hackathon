@@ -37,7 +37,7 @@ export function ProjectFilters({
   onClear,
 }: ProjectFiltersProps) {
   const tCommon = useTranslations('Common')
-  const tJunior = useTranslations('Junior')
+  const tEgresado = useTranslations('Egresado')
 
   const showClearBtn =
     selectedStack || selectedMode || selectedDuration || selectedBudget
@@ -47,7 +47,7 @@ export function ProjectFilters({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {tJunior('selectStack')}
+            {tEgresado('selectStack')}
           </label>
           <Select
             value={selectedStack || 'all'}
@@ -56,7 +56,7 @@ export function ProjectFilters({
             }
           >
             <SelectTrigger className="w-full h-10 bg-card border-border hover:border-primary/40 focus:ring-primary">
-              <SelectValue placeholder={tJunior('selectStack')} />
+              <SelectValue placeholder={tEgresado('selectStack')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon('clearFilters')}</SelectItem>
@@ -71,7 +71,7 @@ export function ProjectFilters({
 
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {tJunior('selectMode')}
+            {tEgresado('selectMode')}
           </label>
           <Select
             value={selectedMode || 'all'}
@@ -80,7 +80,7 @@ export function ProjectFilters({
             }
           >
             <SelectTrigger className="w-full h-10 bg-card border-border hover:border-primary/40 focus:ring-primary">
-              <SelectValue placeholder={tJunior('selectMode')} />
+              <SelectValue placeholder={tEgresado('selectMode')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon('clearFilters')}</SelectItem>
@@ -95,7 +95,7 @@ export function ProjectFilters({
 
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {tJunior('selectDuration')}
+            {tEgresado('selectDuration')}
           </label>
           <Select
             value={selectedDuration || 'all'}
@@ -104,7 +104,7 @@ export function ProjectFilters({
             }
           >
             <SelectTrigger className="w-full h-10 bg-card border-border hover:border-primary/40 focus:ring-primary">
-              <SelectValue placeholder={tJunior('selectDuration')} />
+              <SelectValue placeholder={tEgresado('selectDuration')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon('clearFilters')}</SelectItem>
@@ -117,7 +117,7 @@ export function ProjectFilters({
 
         <div className="space-y-1.5">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {tJunior('selectBudget')}
+            {tEgresado('selectBudget')}
           </label>
           <Select
             value={selectedBudget || 'all'}
@@ -126,7 +126,7 @@ export function ProjectFilters({
             }
           >
             <SelectTrigger className="w-full h-10 bg-card border-border hover:border-primary/40 focus:ring-primary">
-              <SelectValue placeholder={tJunior('selectBudget')} />
+              <SelectValue placeholder={tEgresado('selectBudget')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon('clearFilters')}</SelectItem>

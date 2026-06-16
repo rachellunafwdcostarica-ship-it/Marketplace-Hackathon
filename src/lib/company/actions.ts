@@ -1,6 +1,7 @@
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth/dal'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import {
@@ -115,16 +116,10 @@ export async function getCompanyProfileForEdit(): Promise<
   Result<CompanyProfileView>
 > {
   try {
+    const user = await getCurrentUser()
+    if (!user) return err('unauthorized')
+
     const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return err('unauthorized')
-    }
-
     const { data: usuario, error: usuarioError } = await supabase
       .from('usuarios')
       .select('nombre, apellido_1, apellido_2, fecha_nacimiento, foto_perfil')
@@ -295,16 +290,10 @@ export async function saveCompanyProfile(
  */
 export async function isCompanyProfileComplete(): Promise<Result<boolean>> {
   try {
+    const user = await getCurrentUser()
+    if (!user) return err('unauthorized')
+
     const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return err('unauthorized')
-    }
-
     const { data: empresario, error } = await supabase
       .from('empresarios')
       .select('nombre_empresa, tipo_empresario')
@@ -386,7 +375,7 @@ export async function createSupportTicket(
  */
 export async function getSupportTickets(): Promise<Result<SupportTicket[]>> {
   try {
-    const authResult = await requireRole('admin')
+    const authResult = await requireRole('administrador')
     if (!authResult.ok) {
       return err('forbidden')
     }

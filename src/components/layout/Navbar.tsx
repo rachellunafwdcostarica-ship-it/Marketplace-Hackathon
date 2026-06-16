@@ -4,13 +4,15 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { Link, usePathname, useRouter } from '@/i18n/routing'
 import { useLocale, useTranslations } from 'next-intl'
 import type { UserRole } from '@/types'
-import { useAppState } from '@/lib/StateContext'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import {
   Menu,
   X,
   Briefcase,
+  Search,
+  FolderOpen,
   Send,
   Heart,
   GraduationCap,
@@ -39,7 +41,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
-  const { userRole: role, resetAll } = useAppState()
+  const { userRole: role, resetAuth } = useAuth()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -55,26 +57,26 @@ export function Navbar({ heroMode = false }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Configuracion de rol con tokens FWD (§5.1): junior=primary, empresa=secondary, admin=magenta.
+  // Configuracion de rol con tokens FWD (§5.1): egresado=primary, empresario=secondary, administrador=magenta.
   const roleConfig: Record<
     UserRole,
     { label: string; text: string; dot: string; chip: string; icon: ReactNode }
   > = {
-    junior: {
-      label: t('roleJunior'),
+    egresado: {
+      label: t('roleEgresado'),
       text: 'text-primary',
       dot: 'bg-primary',
       chip: 'bg-primary text-primary-foreground',
       icon: <User className="w-3.5 h-3.5" />,
     },
-    empresa: {
+    empresario: {
       label: t('roleEmpresa'),
       text: 'text-secondary',
       dot: 'bg-secondary',
       chip: 'bg-secondary text-secondary-foreground',
       icon: <Users className="w-3.5 h-3.5" />,
     },
-    admin: {
+    administrador: {
       label: t('roleAdmin'),
       text: 'text-magenta',
       dot: 'bg-magenta',
@@ -98,22 +100,26 @@ export function Navbar({ heroMode = false }: NavbarProps) {
   ]
 
   const navLinksByRole: Record<UserRole, NavLink[]> = {
-    junior: [
+    egresado: [
       { href: '/junior', label: t('dashboard'), icon: 'dashboard' },
-      { href: '/junior/projects', label: t('jobs'), icon: 'briefcase' },
-      { href: '/junior/applications', label: t('applications'), icon: 'send' },
-      ...mockLinks,
+      { href: '/junior/projects', label: t('searchProjects'), icon: 'search' },
+      { href: '/applications', label: t('applications'), icon: 'send' },
+      { href: '/junior/portfolio', label: t('portfolio'), icon: 'portfolio' },
     ],
-    empresa: [
+    empresario: [
       { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },
       {
         href: '/empresario/new-project',
         label: t('publishProject'),
         icon: 'plus',
       },
-      ...mockLinks,
+      {
+        href: '/empresario/formulario-empresa',
+        label: t('myCompany'),
+        icon: 'building',
+      },
     ],
-    admin: [
+    administrador: [
       { href: '/admin/users', label: t('users'), icon: 'users' },
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },
@@ -131,6 +137,10 @@ export function Navbar({ heroMode = false }: NavbarProps) {
         return <LayoutDashboard className={className} />
       case 'briefcase':
         return <Briefcase className={className} />
+      case 'search':
+        return <Search className={className} />
+      case 'portfolio':
+        return <FolderOpen className={className} />
       case 'send':
         return <Send className={className} />
       case 'heart':
@@ -287,7 +297,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
                   onClick={async () => {
                     const { signOut } = await import('@/lib/auth/actions')
                     await signOut()
-                    resetAll()
+                    resetAuth()
                     router.push('/login')
                   }}
                   className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"

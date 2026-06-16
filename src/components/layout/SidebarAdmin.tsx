@@ -7,6 +7,7 @@ import {
   Users,
   Briefcase,
   ShieldCheck,
+  Settings,
   LogOut,
   type LucideIcon,
 } from 'lucide-react'
@@ -14,7 +15,12 @@ import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 import { cn } from '@/lib/utils/cn'
 
-type AdminNavLabel = 'dashboard' | 'users' | 'projects' | 'validations'
+type AdminNavLabel =
+  | 'dashboard'
+  | 'users'
+  | 'projects'
+  | 'validations'
+  | 'settings'
 
 interface AdminNavItem {
   href: string
@@ -27,6 +33,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/users', labelKey: 'users', icon: Users },
   { href: '/admin/projects', labelKey: 'projects', icon: Briefcase },
   { href: '/admin/validations', labelKey: 'validations', icon: ShieldCheck },
+  { href: '/admin/settings', labelKey: 'settings', icon: Settings },
 ]
 
 interface SidebarAdminProps {

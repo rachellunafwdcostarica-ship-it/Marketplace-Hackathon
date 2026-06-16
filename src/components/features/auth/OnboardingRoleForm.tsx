@@ -13,7 +13,7 @@ import { assignRole, registrarConsentimientoCotejo } from '@/lib/auth/actions'
 import { ROLE_HOME } from '@/lib/auth/roles'
 import type { UserRole } from '@/types'
 
-type OnboardingRole = 'junior' | 'empresa'
+type OnboardingRole = 'egresado' | 'empresario'
 
 interface OnboardingRoleFormProps {
   /** Rol elegido en el registro (user metadata); se usa como preselección. */
@@ -32,14 +32,14 @@ export function OnboardingRoleForm({ initialRole }: OnboardingRoleFormProps) {
   const handleContinue = async () => {
     // RNF-38: el egresado debe consentir el cotejo de su correo contra la base
     // de egresados FWD antes de continuar.
-    if (selected === 'junior' && !consent) {
+    if (selected === 'egresado' && !consent) {
       toast.error(tOnboarding('consentRequired'))
       return
     }
 
     setLoading(true)
 
-    if (selected === 'junior') {
+    if (selected === 'egresado') {
       const consentResult = await registrarConsentimientoCotejo()
       if (!consentResult.ok) {
         setLoading(false)
@@ -48,15 +48,14 @@ export function OnboardingRoleForm({ initialRole }: OnboardingRoleFormProps) {
       }
     }
 
-    // La BD usa 'empresario'; la UI usa 'empresa'
-    const dbRole = selected === 'empresa' ? 'empresario' : 'junior'
-    const result = await assignRole({ role: dbRole })
+    const result = await assignRole({ role: selected })
 
     setLoading(false)
 
     if (result.ok || result.error === 'role_already_assigned') {
-      // Idempotente: si ya tenía rol, ir a su home igualmente
-      router.push(ROLE_HOME[selected as UserRole])
+      // Idempotente: si ya tenía rol, ir a su home igualmente. El egresado
+      // usa '' (raíz localizada), así que se normaliza a '/' para el router.
+      router.push(ROLE_HOME[selected as UserRole] || '/')
       return
     }
 
@@ -74,23 +73,23 @@ export function OnboardingRoleForm({ initialRole }: OnboardingRoleFormProps) {
 
         <div className="space-y-3.5 my-6">
           <RoleCard
-            title={tAuth('roleJuniorTitle')}
-            description={tAuth('roleJuniorDesc')}
+            title={tAuth('roleEgresadoTitle')}
+            description={tAuth('roleEgresadoDesc')}
             iconName="GraduationCap"
-            selected={selected === 'junior'}
-            onClick={() => setSelected('junior')}
+            selected={selected === 'egresado'}
+            onClick={() => setSelected('egresado')}
           />
 
           <RoleCard
             title={tAuth('roleCompanyTitle')}
             description={tAuth('roleCompanyDesc')}
             iconName="Building2"
-            selected={selected === 'empresa'}
-            onClick={() => setSelected('empresa')}
+            selected={selected === 'empresario'}
+            onClick={() => setSelected('empresario')}
           />
         </div>
 
-        {selected === 'junior' && (
+        {selected === 'egresado' && (
           <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border/80 bg-muted/20 p-3 text-xs text-muted-foreground">
             <input
               type="checkbox"

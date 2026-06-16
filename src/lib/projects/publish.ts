@@ -109,6 +109,15 @@ export async function publishProject(
     ) {
       return err('invalid_input')
     }
+    // Colones solo enteros (céntimos en desuso); USD admite decimales. Mitad
+    // backend de la regla; el form y el schema de logística validan lo mismo.
+    if (
+      logistica.moneda === 'CRC' &&
+      (!Number.isInteger(logistica.presupuestoMin) ||
+        !Number.isInteger(logistica.presupuestoMax))
+    ) {
+      return err('presupuestoEntero')
+    }
     // Plazo en días y en rango (defensa por borradores viejos que guardaban
     // `fechaCierre` en vez de `plazoDias`). El RPC lo re-valida y calcula la fecha.
     if (

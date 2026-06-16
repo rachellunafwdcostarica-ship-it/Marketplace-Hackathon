@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { env } from '@/lib/env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import {
   AssignRoleSchema,
@@ -27,8 +28,8 @@ export async function signOut(): Promise<Result<void>> {
   const cookieStore = await cookies()
 
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -59,11 +60,45 @@ export async function signOut(): Promise<Result<void>> {
 }
 
 /**
+ * Solicita un enlace de recuperación de contraseña (RF-04).
+ *
+ * Supabase Auth devuelve éxito incluso si el correo no existe en el sistema,
+ * de modo que la respuesta nunca revela si una cuenta está registrada
+ * (anti-enumeración por diseño del proveedor). Si llega un error es operacional
+ * (rate limit, config inválida) — se registra pero no se expone al usuario.
+ */
+export async function requestPasswordReset(
+  email: string,
+): Promise<Result<void>> {
+  const parsed = z.string().email().safeParse(email)
+  if (!parsed.success) return err('invalid_email')
+
+  const reqHeaders = await headers()
+  const host =
+    reqHeaders.get('x-forwarded-host') ??
+    reqHeaders.get('host') ??
+    'localhost:3000'
+  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+  const redirectTo = `${proto}://${host}/auth/callback?next=/reset-password`
+
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+    redirectTo,
+  })
+
+  if (error) {
+    logger.error('requestPasswordReset failed', { error: error.message })
+    return err('reset_failed')
+  }
+
+  return ok(undefined)
+}
+
+/**
  * Asigna el rol al usuario actual durante el onboarding.
  *
- * - Solo acepta 'junior' o 'empresario' (Q6: nunca admin).
- * - En la BD (modelo XXI) el rol del junior se llama 'egresado';
- *   la traducción ocurre aquí, en la frontera.
+ * - Solo acepta 'egresado' o 'empresario' (nunca 'administrador'; Q6).
+ * - El valor ya coincide con nombre_rol de la BD: no se necesita traducción.
  * - El rol es PERMANENTE: si ya tiene uno, retorna err('role_already_assigned').
  * - La permanencia se refuerza también a nivel BD en assign_my_role().
  */
@@ -75,11 +110,9 @@ export async function assignRole(
     return err('invalid_role')
   }
 
-  const dbRole = parsed.data.role === 'junior' ? 'egresado' : parsed.data.role
-
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc('assign_my_role', {
-    p_role: dbRole,
+    p_role: parsed.data.role,
   })
 
   if (error) {
@@ -151,7 +184,7 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   }
 
   // Verificar que el caller es admin
-  const authResult = await requireRole('admin')
+  const authResult = await requireRole('administrador')
   if (!authResult.ok) {
     return authResult
   }
@@ -177,14 +210,14 @@ export async function signUpWithPassword(input: {
   email: string
   password: string
   fullName: string
-  role: 'junior' | 'empresa'
+  role: 'egresado' | 'empresario'
 }): Promise<Result<void>> {
   const parsed = z
     .object({
       email: z.string().email(),
       password: z.string().min(8),
       fullName: z.string().min(2),
-      role: z.enum(['junior', 'empresa']),
+      role: z.enum(['egresado', 'empresario']),
     })
     .safeParse(input)
 
@@ -215,6 +248,8 @@ export async function signUpWithPassword(input: {
     .maybeSingle()
 
   if (existingUser) {
+    // Anti-enumeración: la UI debe mostrar el mismo mensaje de éxito que un
+    // registro nuevo. No revelar que el correo ya está registrado.
     return err('email_already_exists')
   }
 
@@ -247,8 +282,10 @@ export async function signUpWithPassword(input: {
  * pasar por RLS. OTP y OAuth quedan fuera del contador.
  *
  * - Pre-chequea `bloqueado_hasta`; si sigue vigente devuelve err('account_locked').
- * - En credenciales inválidas incrementa `intentos_fallidos`; al alcanzar
- *   `intentos_login_max` fija `bloqueado_hasta = now() + tiempo_bloqueo_minutos`.
+ * - Solo en credenciales inválidas (código `invalid_credentials`) invoca el RPC
+ *   `register_failed_login`, que realiza el incremento de forma atómica en una
+ *   sola sentencia UPDATE (sin race condition de lectura previa). Otros errores
+ *   de Supabase (email sin confirmar, rate-limit, etc.) NO incrementan el contador.
  * - En login exitoso resetea el contador.
  * - El error de credenciales es neutro: no revela si el correo existe.
  */
@@ -261,20 +298,6 @@ export async function signInWithPassword(
   const { email, password } = parsed.data
 
   const admin = createSupabaseAdminClient()
-
-  // Configuración del bloqueo (con defaults si faltara alguna fila).
-  const { data: configRows } = await admin
-    .from('configuracion_sistema')
-    .select('clave, valor')
-    .in('clave', ['intentos_login_max', 'tiempo_bloqueo_minutos'])
-
-  const readIntConfig = (clave: string, fallback: number): number => {
-    const row = configRows?.find((r) => r.clave === clave)
-    const value = row ? Number.parseInt(row.valor, 10) : Number.NaN
-    return Number.isFinite(value) ? value : fallback
-  }
-  const maxAttempts = readIntConfig('intentos_login_max', 5)
-  const lockMinutes = readIntConfig('tiempo_bloqueo_minutos', 30)
 
   // Estado de bloqueo actual del usuario (si la cuenta existe).
   const { data: usuario } = await admin
@@ -294,23 +317,16 @@ export async function signInWithPassword(
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    if (usuario) {
-      const newCount = usuario.intentos_fallidos + 1
-      const updates: { intentos_fallidos: number; bloqueado_hasta?: string } = {
-        intentos_fallidos: newCount,
-      }
-      if (newCount >= maxAttempts) {
-        updates.bloqueado_hasta = new Date(
-          Date.now() + lockMinutes * 60_000,
-        ).toISOString()
-      }
-      const { error: updateError } = await admin
-        .from('usuarios')
-        .update(updates)
-        .eq('id_usuario', usuario.id_usuario)
-      if (updateError) {
-        logger.error('signInWithPassword: fallo al incrementar intentos', {
-          error: updateError.message,
+    // Solo incrementar el contador si el error es de credenciales inválidas.
+    // Otros códigos (email_not_confirmed, over_request_rate_limit, etc.) no
+    // representan un intento de fuerza bruta y no deben penalizar al usuario.
+    if (usuario && error.code === 'invalid_credentials') {
+      const { error: rpcError } = await admin.rpc('register_failed_login', {
+        p_email: email,
+      })
+      if (rpcError) {
+        logger.error('signInWithPassword: fallo al registrar intento fallido', {
+          error: rpcError.message,
         })
       }
     }

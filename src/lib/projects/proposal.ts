@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger'
 import type { Json } from '@/types/database'
 import { getAiProvider } from '@/lib/ai/provider'
 import type { HistorialEntry } from '@/lib/ai/types'
+import type { PropuestaGeneradaRaw } from '@/lib/ai/schemas'
 import { getProjectCatalogs } from './actions'
 import { parseHistorial, parseLogistica } from './persistence'
 import { resolveCatalog } from './proposal-mapping'
@@ -91,22 +92,49 @@ export async function generateProposal(
 
     let ajustes: string[] = []
     let ultimasRazones: string[] = []
+    // Distingue un fallo TÉCNICO (la IA no devolvió JSON válido / timeout) de un
+    // rechazo de CONTENIDO (validación #3 o catálogo). El técnico se reintenta y,
+    // si persiste, sale como 'ai_failed' ("probá de nuevo"); el de contenido cae
+    // a 'rechazada' (la IA explica en el chat qué falta).
+    let ultimoFalloTecnico = false
 
     for (let intento = 0; intento < MAX_INTENTOS; intento++) {
-      const raw = await provider.generarPropuesta({
-        contextoInicial,
-        logistica,
-        historial,
-        catalogos: {
-          areas: catalogs.areas.map((area) => area.nombre),
-          categorias: catalogs.categorias.map((categoria) => categoria.nombre),
-          tecnologias: catalogs.tecnologias.map(
-            (tecnologia) => tecnologia.nombre,
-          ),
-        },
-        ajustes,
-        locale,
-      })
+      let raw: PropuestaGeneradaRaw
+      try {
+        raw = await provider.generarPropuesta({
+          contextoInicial,
+          logistica,
+          historial,
+          catalogos: {
+            areas: catalogs.areas.map((area) => area.nombre),
+            categorias: catalogs.categorias.map(
+              (categoria) => categoria.nombre,
+            ),
+            tecnologias: catalogs.tecnologias.map(
+              (tecnologia) => tecnologia.nombre,
+            ),
+          },
+          ajustes,
+          locale,
+        })
+        ultimoFalloTecnico = false
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : 'error_desconocido'
+        // AI_NOT_CONFIGURED no se reintenta: lo mapea el catch externo.
+        if (msg === 'AI_NOT_CONFIGURED') throw e
+        // callJson ya reintentó 3 veces internamente; repetir la ronda completa
+        // sería lento (y agravaría el "spinner infinito"). Cortamos y salimos
+        // como fallo técnico → 'ai_failed' (mensaje claro, no un cuelgue).
+        logger.error(
+          'generateProposal: la IA no devolvió una propuesta válida',
+          {
+            intento,
+            error: msg,
+          },
+        )
+        ultimoFalloTecnico = true
+        break
+      }
 
       const categorias = resolveCatalog(raw.categorias, catalogs.categorias)
       const tecnologias = resolveCatalog(raw.tecnologias, catalogs.tecnologias)
@@ -176,6 +204,13 @@ export async function generateProposal(
         propuesta,
         historial: historialFinal,
       })
+    }
+
+    // Si lo último fue un fallo técnico (no de contenido), un mensaje de "qué
+    // falta" confundiría al empresario: pedimos reintentar.
+    if (ultimoFalloTecnico) {
+      logger.error('generateProposal: fallo técnico de la IA tras reintentos')
+      return err('ai_failed')
     }
 
     // Rechazada tras los reintentos: la IA le explica al empresario qué falta,

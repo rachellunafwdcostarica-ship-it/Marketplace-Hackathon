@@ -4,7 +4,11 @@ import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Archivo_Narrow, Figtree, JetBrains_Mono } from 'next/font/google'
 import { routing } from '@/i18n/routing'
-import { StateProvider } from '@/lib/StateContext'
+import { AuthProvider } from '@/lib/auth/AuthContext'
+import { getCurrentUser } from '@/lib/auth/dal'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { normalizeRole } from '@/lib/auth/roles'
+import type { UserRole } from '@/types'
 import { Toaster } from '@/components/ui/sonner'
 import '../globals.css'
 
@@ -44,6 +48,17 @@ export default async function LocaleLayout({
   setRequestLocale(locale)
   const messages = await getMessages()
 
+  // Rol autoritativo desde el servidor: el cliente ya no depende solo de
+  // localStorage para conocer el rol, evitando que un empresario vea la vista
+  // de egresado por un valor rancio. Solo se consulta si hay sesion.
+  const user = await getCurrentUser()
+  let initialRole: UserRole | null = null
+  if (user) {
+    const supabase = await createSupabaseServerClient()
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    initialRole = normalizeRole(roleRaw as string | null)
+  }
+
   return (
     <html
       lang={locale}
@@ -52,10 +67,10 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <NextIntlClientProvider messages={messages}>
-          <StateProvider>
+          <AuthProvider initialRole={initialRole}>
             {children}
             <Toaster richColors position="top-right" />
-          </StateProvider>
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

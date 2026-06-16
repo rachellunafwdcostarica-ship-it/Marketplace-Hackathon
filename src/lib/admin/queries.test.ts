@@ -15,7 +15,7 @@ const mockedAdmin = vi.mocked(createSupabaseAdminClient)
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockedRequireRole.mockResolvedValue({ ok: true, data: 'admin' })
+  mockedRequireRole.mockResolvedValue({ ok: true, data: 'administrador' })
 })
 
 describe('listGraduateVerifications', () => {

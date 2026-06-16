@@ -14,8 +14,8 @@ import type { UserRole } from '@/types'
  * - `err('forbidden')` si el rol no coincide con el requerido.
  * - `ok(role)` con el UserRole normalizado si coincide.
  *
- * Normaliza el nombre_rol de la BD ('empresario') al UserRole del frontend
- * ('empresa'), de modo que `requireRole('empresa')` funcione correctamente.
+ * El frontend y la BD ahora usan el mismo vocabulario (egresado/empresario/
+ * administrador), por lo que no hay traducción: `normalizeRole` solo valida.
  */
 export async function requireRole(role: UserRole): Promise<Result<UserRole>> {
   const roleResult = await getUserRole()
