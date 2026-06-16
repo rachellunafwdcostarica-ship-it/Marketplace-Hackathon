@@ -43,7 +43,7 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
         .url(t('errorDemoInvalid'))
         .optional()
         .or(z.literal('')),
-      visibility: z.enum(['publico', 'empresas']).default('publico'),
+      visibility: z.enum(['publico', 'empresas']),
     })
   }, [t])
 

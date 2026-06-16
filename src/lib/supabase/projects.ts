@@ -1,6 +1,31 @@
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import type { PortfolioProject } from '@/types'
 
+function mapToPortfolioProject(row: Record<string, unknown>): PortfolioProject {
+  const result: PortfolioProject = {
+    id: String(row.id_portafolio || row.id_participacion || ''),
+    title: String(row.titulo || ''),
+    description: String(row.descripcion || ''),
+    technologies: [], // Not present in DB schema
+    completionDate: String(row.fecha || ''),
+  }
+  if (row.url_repositorio) result.repositoryUrl = String(row.url_repositorio)
+  if (row.url_demo) result.demoUrl = String(row.url_demo)
+  return result
+}
+
+// Helper to map PortfolioProject to DB row
+function mapToDBRow(project: Partial<PortfolioProject>) {
+  const row: Record<string, unknown> = {}
+  if (project.title !== undefined) row.titulo = project.title
+  if (project.description !== undefined) row.descripcion = project.description
+  if (project.completionDate !== undefined) row.fecha = project.completionDate
+  if (project.repositoryUrl !== undefined)
+    row.url_repositorio = project.repositoryUrl
+  if (project.demoUrl !== undefined) row.url_demo = project.demoUrl
+  return row
+}
+
 // Fetch all portfolio projects visible to the current user
 export async function getProjects(): Promise<PortfolioProject[]> {
   const supabase = createSupabaseBrowserClient()
@@ -11,7 +36,9 @@ export async function getProjects(): Promise<PortfolioProject[]> {
     console.error('Error fetching projects:', error)
     return []
   }
-  return data as PortfolioProject[]
+  return (data || []).map((row) =>
+    mapToPortfolioProject(row as Record<string, unknown>),
+  )
 }
 
 // Create a new portfolio project
@@ -19,19 +46,18 @@ export async function createProject(
   project: Omit<PortfolioProject, 'id' | 'createdAt'>,
 ): Promise<PortfolioProject | null> {
   const supabase = createSupabaseBrowserClient()
+  const dbRow = mapToDBRow(project)
+  // id_estudiante might be required, but we'll try to insert what we have
   const { data, error } = await supabase
     .from('proyectos_portafolio')
-    .insert({
-      ...project,
-      created_at: new Date().toISOString(),
-    })
+    .insert(dbRow as never)
     .select()
     .single()
   if (error) {
     console.error('Error creating project:', error)
     return null
   }
-  return data as PortfolioProject
+  return mapToPortfolioProject(data as Record<string, unknown>)
 }
 
 // Update a portfolio project
@@ -40,17 +66,18 @@ export async function updateProject(
   updates: Partial<PortfolioProject>,
 ): Promise<PortfolioProject | null> {
   const supabase = createSupabaseBrowserClient()
+  const dbRow = mapToDBRow(updates)
   const { data, error } = await supabase
     .from('proyectos_portafolio')
-    .update({ ...updates })
-    .eq('id', id)
+    .update(dbRow as never)
+    .eq('id_portafolio', id)
     .select()
     .single()
   if (error) {
     console.error('Error updating project:', error)
     return null
   }
-  return data as PortfolioProject
+  return mapToPortfolioProject(data as Record<string, unknown>)
 }
 
 // Delete a portfolio project
@@ -59,7 +86,7 @@ export async function deleteProject(id: string): Promise<boolean> {
   const { error } = await supabase
     .from('proyectos_portafolio')
     .delete()
-    .eq('id', id)
+    .eq('id_portafolio', id)
   if (error) {
     console.error('Error deleting project:', error)
     return false
