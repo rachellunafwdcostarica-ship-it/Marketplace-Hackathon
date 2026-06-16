@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useAppState } from '@/lib/StateContext'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -35,6 +36,7 @@ export function PortfolioManager() {
   const [editingProject, setEditingProject] = useState<
     PortfolioProject | undefined
   >(undefined)
+  const t = useTranslations('Portfolio')
 
   const projects = studentPortfolio?.projects || []
 
@@ -81,19 +83,22 @@ export function PortfolioManager() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold tracking-tight">
-          Proyectos del Portafolio
+          {t('managerTitle')}
         </h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleAddNew}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Agregar Proyecto
+              {t('addProject')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogContent
+            id="portfolio-dialog"
+            className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto"
+          >
             <DialogHeader>
               <DialogTitle>
-                {editingProject ? 'Editar Proyecto' : 'Nuevo Proyecto'}
+                {editingProject ? t('editProject') : t('newProject')}
               </DialogTitle>
             </DialogHeader>
             <PortfolioProjectForm
@@ -107,9 +112,7 @@ export function PortfolioManager() {
 
       {projects.length === 0 ? (
         <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
-          <p className="text-muted-foreground">
-            Aún no hay proyectos en tu portafolio.
-          </p>
+          <p className="text-muted-foreground">{t('noProjects')}</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -118,8 +121,8 @@ export function PortfolioManager() {
               <CardHeader>
                 <CardTitle className="line-clamp-1">{project.title}</CardTitle>
                 <CardDescription className="text-sm">
-                  Finalizado:{' '}
-                  {new Date(project.completionDate).toLocaleDateString('es-ES')}
+                  {t('finishedPrefix')}{' '}
+                  {new Date(project.completionDate).toLocaleDateString()}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-1 space-y-4">
@@ -141,7 +144,7 @@ export function PortfolioManager() {
                       rel="noopener noreferrer"
                       className="flex items-center text-primary hover:underline"
                     >
-                      <GitBranch className="mr-1 h-4 w-4" /> Repo
+                      <GitBranch className="mr-1 h-4 w-4" /> {t('repo')}
                     </a>
                   )}
                   {project.demoUrl && (
@@ -151,7 +154,7 @@ export function PortfolioManager() {
                       rel="noopener noreferrer"
                       className="flex items-center text-primary hover:underline"
                     >
-                      <ExternalLink className="mr-1 h-4 w-4" /> Demo
+                      <ExternalLink className="mr-1 h-4 w-4" /> {t('demo')}
                     </a>
                   )}
                 </div>
@@ -162,14 +165,14 @@ export function PortfolioManager() {
                   size="sm"
                   onClick={() => handleEdit(project)}
                 >
-                  <Pencil className="mr-2 h-4 w-4" /> Editar
+                  <Pencil className="mr-2 h-4 w-4" /> {t('edit')}
                 </Button>
                 <Button
                   variant="warning"
                   size="sm"
                   onClick={() => handleDelete(project.id)}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                  <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
                 </Button>
               </CardFooter>
             </Card>
