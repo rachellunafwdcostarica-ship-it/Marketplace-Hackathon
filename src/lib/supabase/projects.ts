@@ -1,5 +1,6 @@
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import type { PortfolioProject } from '@/types'
+import { logger } from '@/lib/logger'
 
 function mapToPortfolioProject(row: Record<string, unknown>): PortfolioProject {
   const result: PortfolioProject = {
@@ -33,7 +34,7 @@ export async function getProjects(): Promise<PortfolioProject[]> {
     .from('proyectos_portafolio')
     .select('*')
   if (error) {
-    console.error('Error fetching projects:', error)
+    logger.error('Error fetching projects:', { error })
     return []
   }
   return (data || []).map((row) =>
@@ -54,7 +55,7 @@ export async function createProject(
     .select()
     .single()
   if (error) {
-    console.error('Error creating project:', error)
+    logger.error('Error creating project:', { error })
     return null
   }
   return mapToPortfolioProject(data as Record<string, unknown>)
@@ -74,7 +75,7 @@ export async function updateProject(
     .select()
     .single()
   if (error) {
-    console.error('Error updating project:', error)
+    logger.error('Error updating project:', { error })
     return null
   }
   return mapToPortfolioProject(data as Record<string, unknown>)
@@ -88,7 +89,7 @@ export async function deleteProject(id: string): Promise<boolean> {
     .delete()
     .eq('id_portafolio', id)
   if (error) {
-    console.error('Error deleting project:', error)
+    logger.error('Error deleting project:', { error })
     return false
   }
   return true
