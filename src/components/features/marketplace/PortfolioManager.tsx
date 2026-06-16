@@ -1,16 +1,10 @@
 'use client'
 
 import React, { useState } from 'react'
-/*
-""" ANTES """
-import { useAppState } from '@/lib/StateContext'
-
-""" DESPUES """
-import { useDemoData } from '@/lib/DemoDataContext'
-*/
 import { useDemoData } from '@/lib/DemoDataContext'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
 import { useTranslations } from 'next-intl'
+import { addOrUpdateSkill, deleteSkill } from '@/lib/portfolio/skills'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -59,12 +53,14 @@ function SkillForm({
     })
   }
 
-  // TODO(RF-09): Reemplazar input de texto libre con el componente SkillPicker cuando la BD esté conectada.
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">{t('skillName')}</label>
+        <label htmlFor="skill-name" className="text-sm font-medium">
+          {t('skillName')}
+        </label>
         <input
+          id="skill-name"
           type="text"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={name}
@@ -73,8 +69,11 @@ function SkillForm({
         />
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">{t('skillLevel')}</label>
+        <label htmlFor="skill-level" className="text-sm font-medium">
+          {t('skillLevel')}
+        </label>
         <select
+          id="skill-level"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={level}
           onChange={(e) => setLevel(e.target.value as SkillLevel)}
@@ -95,13 +94,6 @@ function SkillForm({
 }
 
 export function PortfolioManager() {
-  /*
-  """ ANTES """
-  const { studentPortfolio, setStudentPortfolio } = useAppState()
-
-  """ DESPUES """
-  const { studentPortfolio, setStudentPortfolio } = useDemoData()
-  */
   const { studentPortfolio, setStudentPortfolio } = useDemoData()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false)
@@ -157,15 +149,9 @@ export function PortfolioManager() {
 
   const handleSaveSkill = (skill: StudentSkill) => {
     if (!studentPortfolio) return
-    let updatedSkills = [...skills]
-    if (editingSkill) {
-      updatedSkills = updatedSkills.map((s) => (s.id === skill.id ? skill : s))
-    } else {
-      updatedSkills = [...updatedSkills, skill]
-    }
     setStudentPortfolio({
       ...studentPortfolio,
-      skills: updatedSkills,
+      skills: addOrUpdateSkill(skills, skill),
     })
     setIsSkillDialogOpen(false)
     setEditingSkill(undefined)
@@ -175,7 +161,7 @@ export function PortfolioManager() {
     if (!studentPortfolio) return
     setStudentPortfolio({
       ...studentPortfolio,
-      skills: skills.filter((s) => s.id !== id),
+      skills: deleteSkill(skills, id),
     })
   }
 
