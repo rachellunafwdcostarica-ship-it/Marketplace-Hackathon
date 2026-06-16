@@ -1,9 +1,9 @@
 import { getTranslations } from 'next-intl/server'
-import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { ArrowRight, CheckCircle2, Users, Award, Sparkles } from 'lucide-react'
+import { CheckCircle2, Users, Award, Sparkles } from 'lucide-react'
 import { HeroBgCarousel } from '@/components/ui/HeroBgCarousel'
+import { LandingHeroCtas } from '@/components/features/landing/LandingHeroCtas'
 
 const CAROUSEL_SLIDES = [
   { src: '/images/carousel/carousel-1.jpg', alt: 'Equipo FWD trabajando' },
@@ -94,33 +94,7 @@ export default async function LandingPage() {
                   {tLanding('heroSubtitle')}
                 </p>
 
-                <div className="flex flex-wrap gap-4 pt-2">
-                  <Link
-                    href="/login"
-                    className="shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
-                    style={{
-                      background: 'var(--primary)',
-                      color: 'var(--primary-foreground)',
-                    }}
-                  >
-                    {tLanding('ctaFindProjects')}
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
-                    style={{
-                      border:
-                        '1.5px solid color-mix(in oklch, var(--surface) 60%, transparent)',
-                      color: 'var(--surface)',
-                      background:
-                        'color-mix(in oklch, var(--surface) 8%, transparent)',
-                      backdropFilter: 'blur(6px)',
-                    }}
-                  >
-                    {tLanding('ctaPublishProject')}
-                  </Link>
-                </div>
+                <LandingHeroCtas />
               </div>
             </div>
           </div>

@@ -4,12 +4,13 @@ import type { UserRole } from '@/types'
  * Ruta home por rol — fuente única de verdad.
  * Usada en middleware, callbacks y layouts.
  *
- * Nota: las URL siguen siendo /junior y /empresario por decisión de equipo
- * (cambiarlas rompería bookmarks y hrefs existentes). El valor de rol ya
- * coincide con el nombre_rol de la BD (egresado/empresario/administrador).
+ * El egresado aterriza en la raíz localizada ('' → /es), la landing
+ * compartida. /junior sigue existiendo y es accesible desde el navbar; solo
+ * cambia el destino por defecto post-login. El empresario y el administrador
+ * mantienen sus rutas. El valor de rol ya coincide con el nombre_rol de la BD.
  */
 export const ROLE_HOME: Record<UserRole, string> = {
-  egresado: '/junior',
+  egresado: '',
   empresario: '/empresario',
   administrador: '/admin',
 }
