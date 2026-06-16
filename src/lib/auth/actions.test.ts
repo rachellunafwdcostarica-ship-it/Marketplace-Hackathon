@@ -23,11 +23,6 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 const mockedAdmin = vi.mocked(createSupabaseAdminClient)
 const mockedServer = vi.mocked(createSupabaseServerClient)
 
-const DEFAULT_CONFIG = [
-  { clave: 'intentos_login_max', valor: '5' },
-  { clave: 'tiempo_bloqueo_minutos', valor: '30' },
-]
-
 interface UsuarioRow {
   id_usuario: string
   intentos_fallidos: number
@@ -35,9 +30,9 @@ interface UsuarioRow {
 }
 
 function buildAdmin(opts: {
-  configRows?: Array<{ clave: string; valor: string }>
   usuario: UsuarioRow | null
   updateError?: { message: string } | null
+  rpcError?: { message: string } | null
 }) {
   const usuariosUpdate = vi.fn<
     (updates: {
@@ -51,27 +46,20 @@ function buildAdmin(opts: {
     eq: vi.fn().mockResolvedValue({ error: opts.updateError ?? null }),
   })
 
+  const rpc = vi.fn().mockResolvedValue({ error: opts.rpcError ?? null })
+
   const client = {
-    from: vi.fn((table: string) => {
-      if (table === 'configuracion_sistema') {
-        return {
-          select: vi.fn(() => ({
-            in: vi
-              .fn()
-              .mockResolvedValue({ data: opts.configRows ?? DEFAULT_CONFIG }),
-          })),
-        }
-      }
-      // usuarios
-      return {
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            maybeSingle: vi.fn().mockResolvedValue({ data: opts.usuario }),
-          })),
+    from: vi.fn((_table: string) => ({
+      // Solo 'usuarios' se consulta desde el action ahora.
+      // La config de bloqueo vive en el RPC de la BD.
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn().mockResolvedValue({ data: opts.usuario }),
         })),
-        update: usuariosUpdate,
-      }
-    }),
+      })),
+      update: usuariosUpdate,
+    })),
+    rpc,
     usuariosUpdate,
   }
 
@@ -80,7 +68,9 @@ function buildAdmin(opts: {
   return client
 }
 
-function buildServer(signInError: { message: string } | null) {
+/** Simula la respuesta de supabase.auth.signInWithPassword.
+ *  `code` es el campo que usa el action para discriminar el tipo de error. */
+function buildServer(signInError: { message: string; code?: string } | null) {
   const signInWithPasswordFn = vi.fn().mockResolvedValue({ error: signInError })
   mockedServer.mockResolvedValue({
     auth: { signInWithPassword: signInWithPasswordFn },
@@ -122,7 +112,7 @@ describe('signInWithPassword', () => {
     expect(signIn).not.toHaveBeenCalled()
   })
 
-  it('incrementa intentos_fallidos en credenciales inválidas sin bloquear', async () => {
+  it('invoca el RPC atómico en credenciales inválidas (usuario conocido)', async () => {
     const admin = buildAdmin({
       usuario: {
         id_usuario: 'u1',
@@ -130,32 +120,57 @@ describe('signInWithPassword', () => {
         bloqueado_hasta: null,
       },
     })
-    buildServer({ message: 'Invalid login credentials' })
+    buildServer({
+      message: 'Invalid login credentials',
+      code: 'invalid_credentials',
+    })
 
     const result = await signInWithPassword(CREDENTIALS)
 
     expect(result).toEqual({ ok: false, error: 'invalid_credentials' })
-    expect(admin.usuariosUpdate).toHaveBeenCalledTimes(1)
-    const updateArg = admin.usuariosUpdate.mock.calls[0]?.[0]
-    expect(updateArg).toEqual({ intentos_fallidos: 3 })
+    expect(admin.rpc).toHaveBeenCalledTimes(1)
+    expect(admin.rpc).toHaveBeenCalledWith('register_failed_login', {
+      p_email: CREDENTIALS.email,
+    })
+    // El reset vía UPDATE solo ocurre en login exitoso.
+    expect(admin.usuariosUpdate).not.toHaveBeenCalled()
   })
 
-  it('fija bloqueado_hasta al alcanzar el máximo de intentos', async () => {
+  it('NO invoca el RPC si el error es email_not_confirmed (anti-falso-positivo)', async () => {
     const admin = buildAdmin({
       usuario: {
         id_usuario: 'u1',
-        intentos_fallidos: 4,
+        intentos_fallidos: 0,
         bloqueado_hasta: null,
       },
     })
-    buildServer({ message: 'Invalid login credentials' })
+    buildServer({ message: 'Email not confirmed', code: 'email_not_confirmed' })
 
     const result = await signInWithPassword(CREDENTIALS)
 
     expect(result).toEqual({ ok: false, error: 'invalid_credentials' })
-    const updateArg = admin.usuariosUpdate.mock.calls[0]?.[0]
-    expect(updateArg?.intentos_fallidos).toBe(5)
-    expect(typeof updateArg?.bloqueado_hasta).toBe('string')
+    expect(admin.rpc).not.toHaveBeenCalled()
+    expect(admin.usuariosUpdate).not.toHaveBeenCalled()
+  })
+
+  it('NO invoca el RPC si el error es over_request_rate_limit (anti-falso-positivo)', async () => {
+    const admin = buildAdmin({
+      usuario: {
+        id_usuario: 'u1',
+        intentos_fallidos: 0,
+        bloqueado_hasta: null,
+      },
+    })
+    buildServer({
+      message: 'Too many requests',
+      code: 'over_request_rate_limit',
+    })
+
+    const result = await signInWithPassword(CREDENTIALS)
+
+    expect(result).toEqual({ ok: false, error: 'invalid_credentials' })
+    expect(admin.rpc).not.toHaveBeenCalled()
+    expect(admin.usuariosUpdate).not.toHaveBeenCalled()
   })
 
   it('resetea el contador tras un login exitoso', async () => {
@@ -172,19 +187,25 @@ describe('signInWithPassword', () => {
 
     expect(result).toEqual({ ok: true, data: undefined })
     expect(signIn).toHaveBeenCalledTimes(1)
+    expect(admin.rpc).not.toHaveBeenCalled()
     expect(admin.usuariosUpdate).toHaveBeenCalledWith({
       intentos_fallidos: 0,
       bloqueado_hasta: null,
     })
   })
 
-  it('autentica correos desconocidos sin crear contador', async () => {
+  it('NO invoca el RPC para correos desconocidos (usuario null)', async () => {
     const admin = buildAdmin({ usuario: null })
-    buildServer({ message: 'Invalid login credentials' })
+    buildServer({
+      message: 'Invalid login credentials',
+      code: 'invalid_credentials',
+    })
 
     const result = await signInWithPassword(CREDENTIALS)
 
     expect(result).toEqual({ ok: false, error: 'invalid_credentials' })
+    // Sin usuario conocido no tiene sentido llamar el RPC (el correo no existe en usuarios).
+    expect(admin.rpc).not.toHaveBeenCalled()
     expect(admin.usuariosUpdate).not.toHaveBeenCalled()
   })
 })

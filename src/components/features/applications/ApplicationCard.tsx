@@ -15,7 +15,7 @@ import { useTranslations } from 'next-intl'
 
 interface ApplicationCardProps {
   application: Application
-  viewMode: 'junior' | 'empresa'
+  viewMode: 'egresado' | 'empresario'
   onAccept?: () => void
   onReject?: () => void
   onContact?: () => void
@@ -30,7 +30,7 @@ export function ApplicationCard({
   onContact,
   onWithdraw,
 }: ApplicationCardProps) {
-  const tJunior = useTranslations('Junior')
+  const tEgresado = useTranslations('Egresado')
   const tEmpresa = useTranslations('Empresa')
 
   return (
@@ -39,14 +39,14 @@ export function ApplicationCard({
         <div className="space-y-1 min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <CardTitle className="text-lg font-bold tracking-tight text-foreground">
-              {viewMode === 'junior'
+              {viewMode === 'egresado'
                 ? application.projectTitle
                 : application.candidateName}
             </CardTitle>
             <StatusPill status={application.status} />
           </div>
           <p className="text-sm font-semibold text-primary font-heading">
-            {viewMode === 'junior'
+            {viewMode === 'egresado'
               ? application.companyName
               : application.candidateEmail}
           </p>
@@ -61,7 +61,7 @@ export function ApplicationCard({
         {/* Cover letter section */}
         <div className="bg-muted/30 dark:bg-muted/10 p-4 rounded-xl border border-border/40">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            {tJunior('coverLetter')}
+            {tEgresado('coverLetter')}
           </p>
           <p className="text-sm text-foreground leading-relaxed whitespace-pre-line italic">
             &quot;{application.coverLetter}&quot;
@@ -69,7 +69,7 @@ export function ApplicationCard({
         </div>
 
         {/* Links section */}
-        {viewMode === 'empresa' && (
+        {viewMode === 'empresario' && (
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             {application.portfolioUrl && (
               <a
@@ -79,7 +79,7 @@ export function ApplicationCard({
                 className="flex items-center gap-2 text-xs font-medium text-primary hover:underline"
               >
                 <Globe className="w-4 h-4" />
-                {tJunior('portfolioUrl')}
+                {tEgresado('portfolioUrl')}
               </a>
             )}
             {application.cvUrl && (
@@ -90,15 +90,15 @@ export function ApplicationCard({
                 className="flex items-center gap-2 text-xs font-medium text-primary hover:underline"
               >
                 <FileText className="w-4 h-4" />
-                {tJunior('cvUrl')}
+                {tEgresado('cvUrl')}
               </a>
             )}
           </div>
         )}
       </CardContent>
 
-      {/* Action buttons para Empresa */}
-      {viewMode === 'empresa' &&
+      {/* Action buttons (only for Empresario and if the status is sent/viewed) */}
+      {viewMode === 'empresario' &&
         (application.status === 'sent' || application.status === 'viewed') && (
           <CardFooter className="p-6 pt-0 border-t border-border/40 bg-muted/10 flex flex-wrap gap-2 pt-4">
             {onAccept && (
@@ -137,7 +137,7 @@ export function ApplicationCard({
         )}
 
       {/* Action buttons para Junior */}
-      {viewMode === 'junior' && onWithdraw && (
+      {viewMode === 'egresado' && onWithdraw && (
         <CardFooter className="p-6 pt-0 border-t border-border/40 bg-muted/10 flex flex-wrap gap-2 pt-4">
           <Button
             size="sm"
@@ -146,7 +146,7 @@ export function ApplicationCard({
             className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5 px-4"
           >
             <X className="w-4 h-4" />
-            {tJunior('withdrawOffer')}
+            {tEgresado('withdrawOffer')}
           </Button>
         </CardFooter>
       )}

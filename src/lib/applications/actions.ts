@@ -32,7 +32,7 @@ export async function postularse(
   }
 
   // Asegurar que el usuario sea Junior (Egresado)
-  const roleResult = await requireRole('junior')
+  const roleResult = await requireRole('egresado')
   if (!roleResult.ok) {
     return roleResult
   }
@@ -115,7 +115,7 @@ export async function retirarPostulacion(
     return err('invalid_input')
   }
 
-  const roleResult = await requireRole('junior')
+  const roleResult = await requireRole('egresado')
   if (!roleResult.ok) {
     return roleResult
   }

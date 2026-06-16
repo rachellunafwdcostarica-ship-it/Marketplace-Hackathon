@@ -6,12 +6,12 @@ import React, {
   useState,
   useEffect,
   useMemo,
+  useRef,
 } from 'react'
 import {
   Project,
   Application,
   Company,
-  UserRole,
   ProjectStatus,
   ApplicationStatus,
   CompanyStatus,
@@ -26,18 +26,17 @@ import {
   mockStudentSkills,
   mockStudentPortfolio,
 } from '@/lib/constants/mockData'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { normalizeRole } from '@/lib/auth/roles'
+import { FWD_STORAGE_KEYS, useAuth } from '@/lib/auth/AuthContext'
 import { getCompanyProfile } from '@/lib/company/actions'
 
-import type { User } from '@supabase/supabase-js'
-
-interface StateContextType {
+interface DemoDataContextType {
   projects: Project[]
   applications: Application[]
   companies: Company[]
-  userRole: UserRole
-  setUserRole: (role: UserRole) => void
+  studentSkills: StudentSkill[]
+  setStudentSkills: (skills: StudentSkill[]) => void
+  studentPortfolio: StudentPortfolio | null
+  setStudentPortfolio: (portfolio: StudentPortfolio | null) => void
   addProject: (
     project: Omit<Project, 'id' | 'createdAt' | 'companyId' | 'companyName'>,
   ) => void
@@ -50,46 +49,53 @@ interface StateContextType {
   ) => void
   updateApplicationStatus: (id: string, status: ApplicationStatus) => void
   updateCompanyStatus: (id: string, status: CompanyStatus) => void
-  resetAll: () => void
   currentCompany: Company | undefined
-  currentUser: User | null
-  studentSkills: StudentSkill[]
-  setStudentSkills: (skills: StudentSkill[]) => void
-  studentPortfolio: StudentPortfolio | null
-  setStudentPortfolio: (portfolio: StudentPortfolio | null) => void
 }
 
-const StateContext = createContext<StateContextType | undefined>(undefined)
+const DemoDataContext = createContext<DemoDataContextType | undefined>(
+  undefined,
+)
 
-export function StateProvider({ children }: { children: React.ReactNode }) {
+export function DemoDataProvider({ children }: { children: React.ReactNode }) {
+  const { currentUser, userRole } = useAuth()
+
   const [projects, setProjects] = useState<Project[]>([])
   const [applications, setApplications] = useState<Application[]>([])
   const [companies, setCompanies] = useState<Company[]>([])
   const [studentSkills, setStudentSkills] = useState<StudentSkill[]>([])
   const [studentPortfolio, setStudentPortfolio] =
     useState<StudentPortfolio | null>(null)
-  const [userRole, setUserRoleState] = useState<UserRole>('junior')
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [initialized, setInitialized] = useState(false)
 
+  const fetchedProfileForUser = useRef<string | null>(null)
+
   useEffect(() => {
-    const localProjects = localStorage.getItem('fwd_projects')
-    const localApps = localStorage.getItem('fwd_applications')
-    const localCompanies = localStorage.getItem('fwd_companies')
-    const localStudentSkills = localStorage.getItem('fwd_student_skills')
-    const localStudentPortfolio = localStorage.getItem('fwd_student_portfolio')
-    const localRole = localStorage.getItem('fwd_role')
+    const localProjects = localStorage.getItem(FWD_STORAGE_KEYS.PROJECTS)
+    const localApps = localStorage.getItem(FWD_STORAGE_KEYS.APPLICATIONS)
+    const localCompanies = localStorage.getItem(FWD_STORAGE_KEYS.COMPANIES)
+    const localStudentSkills = localStorage.getItem(
+      FWD_STORAGE_KEYS.STUDENT_SKILLS,
+    )
+    const localStudentPortfolio = localStorage.getItem(
+      FWD_STORAGE_KEYS.STUDENT_PORTFOLIO,
+    )
 
     const timer = setTimeout(() => {
       try {
         if (localProjects) setProjects(JSON.parse(localProjects) as Project[])
         else {
           setProjects(mockProjects)
-          localStorage.setItem('fwd_projects', JSON.stringify(mockProjects))
+          localStorage.setItem(
+            FWD_STORAGE_KEYS.PROJECTS,
+            JSON.stringify(mockProjects),
+          )
         }
       } catch {
         setProjects(mockProjects)
-        localStorage.setItem('fwd_projects', JSON.stringify(mockProjects))
+        localStorage.setItem(
+          FWD_STORAGE_KEYS.PROJECTS,
+          JSON.stringify(mockProjects),
+        )
       }
 
       try {
@@ -97,14 +103,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         else {
           setApplications(mockApplications)
           localStorage.setItem(
-            'fwd_applications',
+            FWD_STORAGE_KEYS.APPLICATIONS,
             JSON.stringify(mockApplications),
           )
         }
       } catch {
         setApplications(mockApplications)
         localStorage.setItem(
-          'fwd_applications',
+          FWD_STORAGE_KEYS.APPLICATIONS,
           JSON.stringify(mockApplications),
         )
       }
@@ -114,11 +120,17 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
           setCompanies(JSON.parse(localCompanies) as Company[])
         else {
           setCompanies(mockCompanies)
-          localStorage.setItem('fwd_companies', JSON.stringify(mockCompanies))
+          localStorage.setItem(
+            FWD_STORAGE_KEYS.COMPANIES,
+            JSON.stringify(mockCompanies),
+          )
         }
       } catch {
         setCompanies(mockCompanies)
-        localStorage.setItem('fwd_companies', JSON.stringify(mockCompanies))
+        localStorage.setItem(
+          FWD_STORAGE_KEYS.COMPANIES,
+          JSON.stringify(mockCompanies),
+        )
       }
 
       try {
@@ -127,14 +139,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         else {
           setStudentSkills(mockStudentSkills)
           localStorage.setItem(
-            'fwd_student_skills',
+            FWD_STORAGE_KEYS.STUDENT_SKILLS,
             JSON.stringify(mockStudentSkills),
           )
         }
       } catch {
         setStudentSkills(mockStudentSkills)
         localStorage.setItem(
-          'fwd_student_skills',
+          FWD_STORAGE_KEYS.STUDENT_SKILLS,
           JSON.stringify(mockStudentSkills),
         )
       }
@@ -147,20 +159,17 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         else {
           setStudentPortfolio(mockStudentPortfolio)
           localStorage.setItem(
-            'fwd_student_portfolio',
+            FWD_STORAGE_KEYS.STUDENT_PORTFOLIO,
             JSON.stringify(mockStudentPortfolio),
           )
         }
       } catch {
         setStudentPortfolio(mockStudentPortfolio)
         localStorage.setItem(
-          'fwd_student_portfolio',
+          FWD_STORAGE_KEYS.STUDENT_PORTFOLIO,
           JSON.stringify(mockStudentPortfolio),
         )
       }
-
-      if (localRole) setUserRoleState(localRole as UserRole)
-      else setUserRoleState('junior')
 
       setInitialized(true)
     }, 0)
@@ -170,128 +179,96 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Suscribirse al estado de autenticación y sincronizar datos de Supabase tras inicialización local
   useEffect(() => {
     if (!initialized) return
+    if (userRole !== 'empresario' || !currentUser) return
+    if (fetchedProfileForUser.current === currentUser.id) return
+    fetchedProfileForUser.current = currentUser.id
 
-    const supabase = createSupabaseBrowserClient()
-
-    const fetchCompanyAndRole = async (user: User) => {
-      setCurrentUser(user)
-      const { data: roleRaw } = await supabase.rpc('get_my_role')
-      const role = normalizeRole(roleRaw)
-      if (role) {
-        setUserRoleState(role)
-        if (role === 'empresa') {
-          const res = await getCompanyProfile()
-          if (res.ok && res.data) {
-            const dbProf = res.data
-            setCompanies((prev) => {
-              const exists = prev.some((c) => c.userId === user.id)
-              if (exists) {
-                return prev.map((c) =>
-                  c.userId === user.id
-                    ? {
-                        ...c,
-                        ...dbProf,
-                        cedula: dbProf.cedula ?? '',
-                        isProfileFilled: true,
-                      }
-                    : c,
-                )
-              } else {
-                return [
-                  {
-                    id: `comp-${Date.now()}`,
-                    name: dbProf.name,
-                    companyType: dbProf.companyType as CompanyType,
-                    sector: dbProf.sector,
-                    cedula: dbProf.cedula ?? '',
-                    description: dbProf.description,
-                    logo: dbProf.logo,
-                    status: 'approved' as const,
-                    projectsCount: 0,
-                    contactEmail: dbProf.contactEmail,
-                    website: dbProf.website,
-                    createdAt: new Date().toISOString(),
-                    isProfileFilled: true,
-                    userId: user.id,
-                  },
-                  ...prev,
-                ]
-              }
-            })
-          }
+    void getCompanyProfile().then((res) => {
+      if (!res.ok || !res.data) return
+      const dbProf = res.data
+      setCompanies((prev) => {
+        const exists = prev.some((c) => c.userId === currentUser.id)
+        if (exists) {
+          return prev.map((c) =>
+            c.userId === currentUser.id
+              ? {
+                  ...c,
+                  ...dbProf,
+                  cedula: dbProf.cedula ?? '',
+                  isProfileFilled: true,
+                }
+              : c,
+          )
         }
-      }
-    }
-
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        await fetchCompanyAndRole(user)
-      }
+        return [
+          {
+            id: `comp-${currentUser.id}`,
+            name: dbProf.name,
+            companyType: dbProf.companyType as CompanyType,
+            sector: dbProf.sector,
+            cedula: dbProf.cedula ?? '',
+            description: dbProf.description,
+            logo: dbProf.logo,
+            status: 'approved' as const,
+            projectsCount: 0,
+            contactEmail: dbProf.contactEmail,
+            website: dbProf.website,
+            createdAt: new Date().toISOString(),
+            isProfileFilled: true,
+            userId: currentUser.id,
+          },
+          ...prev,
+        ]
+      })
     })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user ?? null
-      setCurrentUser(user)
-      if (user) {
-        await fetchCompanyAndRole(user)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [initialized])
+  }, [initialized, currentUser, userRole])
 
   useEffect(() => {
     if (!initialized) return
-    localStorage.setItem('fwd_projects', JSON.stringify(projects))
+    localStorage.setItem(FWD_STORAGE_KEYS.PROJECTS, JSON.stringify(projects))
   }, [projects, initialized])
 
   useEffect(() => {
     if (!initialized) return
-    localStorage.setItem('fwd_applications', JSON.stringify(applications))
+    localStorage.setItem(
+      FWD_STORAGE_KEYS.APPLICATIONS,
+      JSON.stringify(applications),
+    )
   }, [applications, initialized])
 
   useEffect(() => {
     if (!initialized) return
-    localStorage.setItem('fwd_companies', JSON.stringify(companies))
+    localStorage.setItem(FWD_STORAGE_KEYS.COMPANIES, JSON.stringify(companies))
   }, [companies, initialized])
 
   useEffect(() => {
     if (!initialized) return
-    localStorage.setItem('fwd_student_skills', JSON.stringify(studentSkills))
+    localStorage.setItem(
+      FWD_STORAGE_KEYS.STUDENT_SKILLS,
+      JSON.stringify(studentSkills),
+    )
   }, [studentSkills, initialized])
 
   useEffect(() => {
     if (!initialized) return
     localStorage.setItem(
-      'fwd_student_portfolio',
+      FWD_STORAGE_KEYS.STUDENT_PORTFOLIO,
       JSON.stringify(studentPortfolio),
     )
   }, [studentPortfolio, initialized])
-
-  useEffect(() => {
-    if (!initialized) return
-    localStorage.setItem('fwd_role', userRole)
-    if (typeof window !== 'undefined') {
-      document.cookie = `fwd_role=${userRole}; path=/; max-age=31536000; SameSite=Lax`
-    }
-  }, [userRole, initialized])
 
   const currentCompany = useMemo(() => {
     if (!currentUser) return undefined
     const found = companies.find((c) => c.userId === currentUser.id)
     if (found) return found
 
-    if (userRole === 'empresa') {
+    if (userRole === 'empresario') {
       return {
         id: `comp-temp-${currentUser.id}`,
-        name: currentUser.user_metadata?.full_name || '',
+        name:
+          (currentUser.user_metadata?.full_name as string | undefined) ?? '',
         companyType: 'formal' as const,
         sector: '',
         cedula: '',
@@ -299,7 +276,7 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         logo: '',
         status: 'pending' as const,
         projectsCount: 0,
-        contactEmail: currentUser.email || '',
+        contactEmail: currentUser.email ?? '',
         website: '',
         createdAt: new Date().toISOString(),
         isProfileFilled: false,
@@ -309,18 +286,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     return undefined
   }, [companies, currentUser, userRole])
 
-  const setUserRole = (role: UserRole) => {
-    setUserRoleState(role)
-  }
-
   const addProject = (
     proj: Omit<Project, 'id' | 'createdAt' | 'companyId' | 'companyName'>,
   ) => {
     const newProj: Project = {
       ...proj,
       id: `proj-${Date.now()}`,
-      companyId: currentCompany?.id || 'comp-1',
-      companyName: currentCompany?.name || 'TechFlow Solutions',
+      companyId: currentCompany?.id ?? 'comp-1',
+      companyName: currentCompany?.name ?? 'TechFlow Solutions',
       createdAt: new Date().toISOString(),
     }
     setProjects((prev) => [newProj, ...prev])
@@ -359,31 +332,8 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const resetAll = () => {
-    const supabase = createSupabaseBrowserClient()
-    supabase.auth.signOut().then(() => {
-      localStorage.removeItem('fwd_projects')
-      localStorage.removeItem('fwd_applications')
-      localStorage.removeItem('fwd_companies')
-      localStorage.removeItem('fwd_student_skills')
-      localStorage.removeItem('fwd_student_portfolio')
-      localStorage.removeItem('fwd_role')
-      if (typeof window !== 'undefined') {
-        document.cookie =
-          'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-      }
-      setProjects(mockProjects)
-      setApplications(mockApplications)
-      setCompanies(mockCompanies)
-      setStudentSkills(mockStudentSkills)
-      setStudentPortfolio(mockStudentPortfolio)
-      setUserRoleState('junior')
-      setCurrentUser(null)
-    })
-  }
-
   return (
-    <StateContext.Provider
+    <DemoDataContext.Provider
       value={{
         projects,
         applications,
@@ -392,27 +342,23 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
         setStudentSkills,
         studentPortfolio,
         setStudentPortfolio,
-        userRole,
-        setUserRole,
         addProject,
         updateProjectStatus,
         addApplication,
         updateApplicationStatus,
         updateCompanyStatus,
-        resetAll,
         currentCompany,
-        currentUser,
       }}
     >
       {children}
-    </StateContext.Provider>
+    </DemoDataContext.Provider>
   )
 }
 
-export function useAppState() {
-  const context = useContext(StateContext)
+export function useDemoData() {
+  const context = useContext(DemoDataContext)
   if (context === undefined) {
-    throw new Error('useAppState must be used within a StateProvider')
+    throw new Error('useDemoData must be used within a DemoDataProvider')
   }
   return context
 }

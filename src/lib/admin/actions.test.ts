@@ -28,7 +28,7 @@ const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000'
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockedRequireRole.mockResolvedValue({ ok: true, data: 'admin' })
+  mockedRequireRole.mockResolvedValue({ ok: true, data: 'administrador' })
   mockedServer.mockResolvedValue({
     auth: {
       getUser: vi
@@ -44,12 +44,10 @@ function buildGraduateAdmin(opts: {
 }) {
   const update = vi.fn(() => ({
     eq: vi.fn(() => ({
-      select: vi
-        .fn()
-        .mockResolvedValue({
-          data: opts.updateRows ?? [{ id_estudiante: 'e1' }],
-          error: null,
-        }),
+      select: vi.fn().mockResolvedValue({
+        data: opts.updateRows ?? [{ id_estudiante: 'e1' }],
+        error: null,
+      }),
     })),
   }))
   const client = {
@@ -81,12 +79,10 @@ function buildGraduateAdmin(opts: {
 function buildCompanyAdmin(opts: { updateRows?: unknown[] }) {
   const update = vi.fn(() => ({
     eq: vi.fn(() => ({
-      select: vi
-        .fn()
-        .mockResolvedValue({
-          data: opts.updateRows ?? [{ id_empresario: 'm1' }],
-          error: null,
-        }),
+      select: vi.fn().mockResolvedValue({
+        data: opts.updateRows ?? [{ id_empresario: 'm1' }],
+        error: null,
+      }),
     })),
   }))
   const client = { from: vi.fn(() => ({ update })), update }

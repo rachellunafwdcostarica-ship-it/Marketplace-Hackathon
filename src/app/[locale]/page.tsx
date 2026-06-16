@@ -1,9 +1,9 @@
 import { getTranslations } from 'next-intl/server'
-import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
-import { ArrowRight, CheckCircle2, Users, Award, Sparkles } from 'lucide-react'
+import { CheckCircle2, Users, Award, Sparkles } from 'lucide-react'
 import { HeroBgCarousel } from '@/components/ui/HeroBgCarousel'
+import { LandingHeroCtas } from '@/components/features/landing/LandingHeroCtas'
 
 const CAROUSEL_SLIDES = [
   { src: '/images/carousel/carousel-1.jpg', alt: 'Equipo FWD trabajando' },
@@ -14,6 +14,14 @@ const CAROUSEL_SLIDES = [
 
 export default async function LandingPage() {
   const tLanding = await getTranslations('Landing')
+
+  /*
+  """ ANTES """
+  La sección de beneficios de la landing page usaba claves 'juniorTitle', 'juniorDesc' y 'juniorBenefit1/2/3' que causaban errores de traducción next-intl.
+  
+  """ DESPUES """
+  Se cambiaron a 'egresadoTitle', 'egresadoDesc' y 'egresadoBenefit1/2/3' para alinearse con las claves correctas definidas en messages/es.json y messages/en.json.
+  */
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -86,33 +94,7 @@ export default async function LandingPage() {
                   {tLanding('heroSubtitle')}
                 </p>
 
-                <div className="flex flex-wrap gap-4 pt-2">
-                  <Link
-                    href="/login"
-                    className="shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
-                    style={{
-                      background: 'var(--primary)',
-                      color: 'var(--primary-foreground)',
-                    }}
-                  >
-                    {tLanding('ctaFindProjects')}
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
-                    style={{
-                      border:
-                        '1.5px solid color-mix(in oklch, var(--surface) 60%, transparent)',
-                      color: 'var(--surface)',
-                      background:
-                        'color-mix(in oklch, var(--surface) 8%, transparent)',
-                      backdropFilter: 'blur(6px)',
-                    }}
-                  >
-                    {tLanding('ctaPublishProject')}
-                  </Link>
-                </div>
+                <LandingHeroCtas />
               </div>
             </div>
           </div>
@@ -158,18 +140,18 @@ export default async function LandingPage() {
                   <Award className="w-6 h-6" />
                 </div>
                 <h3 className="text-2xl font-bold tracking-tight font-heading">
-                  {tLanding('juniorTitle')}
+                  {tLanding('egresadoTitle')}
                   <span className="text-primary">.</span>
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  {tLanding('juniorDesc')}
+                  {tLanding('egresadoDesc')}
                 </p>
               </div>
               <ul className="space-y-4">
                 {[
-                  tLanding('juniorBenefit1'),
-                  tLanding('juniorBenefit2'),
-                  tLanding('juniorBenefit3'),
+                  tLanding('egresadoBenefit1'),
+                  tLanding('egresadoBenefit2'),
+                  tLanding('egresadoBenefit3'),
                 ].map((benefit, i) => (
                   <li key={i} className="flex gap-3 items-start">
                     <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />

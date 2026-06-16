@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -14,9 +15,10 @@ import { retirarPostulacion } from '@/lib/applications/actions'
 import { toast } from 'sonner'
 import type { Application } from '@/types'
 
-export default function JuniorApplicationsPage() {
-  const tJunior = useTranslations('Junior')
+export default function EgresadoApplicationsPage() {
+  const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
+  const { applications } = useDemoData()
 
   type MyApp = Application & { dbStatus: string }
   const [myApps, setMyApps] = useState<MyApp[]>([])
@@ -131,8 +133,8 @@ export default function JuniorApplicationsPage() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
-          title={tJunior('applications')}
-          description={tJunior('applicationsDesc')}
+          title={tEgresado('applications')}
+          description={tEgresado('applicationsDesc')}
           dotColor="text-primary"
         />
 
@@ -143,10 +145,10 @@ export default function JuniorApplicationsPage() {
             </p>
           ) : myApps.length === 0 ? (
             <EmptyState
-              title={tJunior('emptyApplications')}
-              description={tJunior('emptyApplicationsDesc')}
+              title={tEgresado('emptyApplications')}
+              description={tEgresado('emptyApplicationsDesc')}
               icon={Briefcase}
-              actionText={tJunior('exploreMarketplace')}
+              actionText={tEgresado('exploreMarketplace')}
               onAction={() => (window.location.href = '/junior/projects')}
             />
           ) : (
@@ -155,7 +157,7 @@ export default function JuniorApplicationsPage() {
                 <ApplicationCard
                   key={application.id}
                   application={application}
-                  viewMode="junior"
+                  viewMode="egresado"
                   {...(['enviada', 'en_revision'].includes(application.dbStatus)
                     ? {
                         onWithdraw: () => {
@@ -175,7 +177,7 @@ export default function JuniorApplicationsPage() {
               href="/junior/projects"
               className="text-sm font-semibold text-primary hover:underline"
             >
-              {tJunior('exploreMoreProjects')}
+              {tEgresado('exploreMoreProjects')}
             </Link>
           </div>
         )}

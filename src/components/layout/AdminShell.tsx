@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '@/i18n/routing'
 import { Menu, X, ShieldCheck, User } from 'lucide-react'
-import { useAppState } from '@/lib/StateContext'
+import { useAuth } from '@/lib/auth/AuthContext'
 import { SidebarAdmin } from './SidebarAdmin'
 import { cn } from '@/lib/utils/cn'
 
@@ -23,7 +23,7 @@ export function AdminShell({ children }: AdminShellProps) {
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
-  const { resetAll, currentUser } = useAppState()
+  const { resetAuth, currentUser } = useAuth()
 
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -44,7 +44,7 @@ export function AdminShell({ children }: AdminShellProps) {
   const handleLogout = async () => {
     const { signOut } = await import('@/lib/auth/actions')
     await signOut()
-    resetAll()
+    resetAuth()
     router.push('/login')
   }
 

@@ -25,8 +25,19 @@ export function Footer() {
 
           {/* Junior Sections */}
           <div className="space-y-3">
+            {/*
+            """ ANTES """
             <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
               {t('juniorTitle')}
+            </h4>
+
+            """ DESPUES """
+            <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
+              {t('egresadoTitle')}
+            </h4>
+            */}
+            <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
+              {t('egresadoTitle')}
             </h4>
             <ul className="space-y-2 text-sm text-secondary-foreground/70">
               <li>

@@ -63,7 +63,7 @@ import { FwdGeoBackdrop } from '@/components/features/brand'
 import {
   NotificationCenter,
   SidebarAdmin,
-  JuniorShell,
+  EgresadoShell,
   CompanyShell,
   AdminShell,
 } from '@/components/layout'
@@ -258,7 +258,7 @@ export default function ShowcasePage() {
           />
           <ApplicationCard
             application={sampleApplication}
-            viewMode="empresa"
+            viewMode="empresario"
             onAccept={() => {}}
             onReject={() => {}}
             onContact={() => {}}
@@ -448,11 +448,11 @@ export default function ShowcasePage() {
       <Section title="Shells de layout">
         <div className="space-y-4">
           <div className="h-72 overflow-hidden rounded-2xl border border-border">
-            <JuniorShell>
+            <EgresadoShell>
               <div className="p-6 text-sm text-muted-foreground">
                 Contenido junior de ejemplo.
               </div>
-            </JuniorShell>
+            </EgresadoShell>
           </div>
           <div className="h-72 overflow-hidden rounded-2xl border border-border">
             <CompanyShell>
