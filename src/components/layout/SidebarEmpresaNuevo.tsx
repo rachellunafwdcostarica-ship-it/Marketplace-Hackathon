@@ -1,7 +1,7 @@
 'use client'
 
 // """ ANTES """: Se usaba activeMenu (useState) y botones tradicionales para cambiar la pestaña explorar/postulaciones/mensajes/configuracion, y se mostraba un boton de "Actualizar Plan" al final.
-// """ DESPUES """: Se usa next-intl Link con hrefs directas y pathname para detectar la ruta activa, y se elimino el boton de "Actualizar Plan".
+// """ DESPUES """: Se usa next-intl Link con hrefs directas y pathname para detectar la ruta activa, y se elimino el boton de "Actualizar Plan". También se renombra submittingSupport a isSubmittingSupport para cumplir con el estándar de booleanos con prefijo.
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/routing'
@@ -32,7 +32,7 @@ export function SidebarEmpresaNuevo() {
   const pathname = usePathname()
   const [isSupportOpen, setIsSupportOpen] = useState(false)
   const [supportDescription, setSupportDescription] = useState('')
-  const [submittingSupport, setSubmittingSupport] = useState(false)
+  const [isSubmittingSupport, setIsSubmittingSupport] = useState(false)
 
   const handleSupportSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,9 +40,9 @@ export function SidebarEmpresaNuevo() {
       toast.error(t('supportMinLength'))
       return
     }
-    setSubmittingSupport(true)
+    setIsSubmittingSupport(true)
     const res = await createSupportTicket(supportDescription)
-    setSubmittingSupport(false)
+    setIsSubmittingSupport(false)
     if (res.ok) {
       toast.success(t('supportSuccess'))
       setSupportDescription('')
@@ -156,11 +156,11 @@ export function SidebarEmpresaNuevo() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={submittingSupport}
+                  disabled={isSubmittingSupport}
                   size="sm"
                   className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs flex items-center gap-1.5"
                 >
-                  {submittingSupport && (
+                  {isSubmittingSupport && (
                     <Loader2 className="w-3 h-3 animate-spin" />
                   )}
                   {t('supportSubmit')}
