@@ -750,7 +750,7 @@
     "consentRequired": "You must authorize the check to continue as a graduate."
   },
   "Account": {
-    "pendingBanner": "Your account is pending approval by the FWD team. Actions will be enabled once approved.",
+    "pendingBanner": "Your account is pending activation. Please verify your email.",
     "actionDisabledPending": "Your account must be approved by an administrator to perform this action.",
     "pendingTitle": "Account pending approval",
     "pendingDesc": "The FWD team will review your request. We will notify you when your account is active."
@@ -885,8 +885,5 @@
     "errorDateReq": "Completion date is required",
     "errorRepoInvalid": "Invalid repository URL",
     "errorDemoInvalid": "Invalid demo URL"
-  },
-  "Account": {
-    "pendingBanner": "Your account is pending activation. Please verify your email."
   }
 }
