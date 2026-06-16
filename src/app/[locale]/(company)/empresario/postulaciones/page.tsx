@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/StateContext'
+import { Project, Application } from '@/types'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
@@ -68,7 +69,7 @@ export default function CompanyPostulationsPage() {
   const t = useTranslations('CompanyPostulations')
   const tEmpresa = useTranslations('Empresa')
 
-  const { projects, applications, currentCompany } = useAppState()
+  const { projects, applications, currentCompany } = useDemoData()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedProject, setSelectedProject] = useState('all')
   const [activeTab, setActiveTab] = useState<
@@ -79,15 +80,17 @@ export default function CompanyPostulationsPage() {
   // Retrieve projects published by this company
   const companyProjects = useMemo(() => {
     return projects.filter(
-      (p) => p.companyId === (currentCompany?.id || 'comp-1'),
+      (p: Project) => p.companyId === (currentCompany?.id || 'comp-1'),
     )
   }, [projects, currentCompany])
 
   // Combine real applications and mockup items
   const allCandidates = useMemo(() => {
     const realApps = applications
-      .filter((app) => companyProjects.some((p) => p.id === app.projectId))
-      .map((app) => {
+      .filter((app: Application) =>
+        companyProjects.some((p: Project) => p.id === app.projectId),
+      )
+      .map((app: Application) => {
         // Map real application status to mockup status
         let mappedStatus = 'nuevo'
         if (app.status === 'viewed') mappedStatus = 'revision'

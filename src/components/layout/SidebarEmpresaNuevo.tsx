@@ -1,7 +1,7 @@
 'use client'
 
-// """ ANTES """: Se usaba activeMenu (useState) y botones tradicionales para cambiar la pestaña explorar/postulaciones/mensajes/configuracion.
-// """ DESPUES """: Se usa next-intl Link con hrefs directas y pathname para detectar la ruta activa.
+// """ ANTES """: Se usaba activeMenu (useState) y botones tradicionales para cambiar la pestaña explorar/postulaciones/mensajes/configuracion, y se mostraba un boton de "Actualizar Plan" al final.
+// """ DESPUES """: Se usa next-intl Link con hrefs directas y pathname para detectar la ruta activa, y se elimino el boton de "Actualizar Plan".
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/routing'
@@ -170,19 +170,6 @@ export function SidebarEmpresaNuevo() {
           </DialogContent>
         </Dialog>
       </nav>
-
-      {/* Botón de Actualizar Plan (Estilo botón púrpura del mockup) */}
-      <div className="pt-2 px-1">
-        <button
-          type="button"
-          onClick={() => {
-            toast.info(t('actualizarPlanToast'))
-          }}
-          className="w-full bg-secondary hover:bg-secondary/95 text-secondary-foreground font-bold py-3.5 px-4 rounded-xl text-sm text-center transition-all flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {t('menuActualizarPlan')}
-        </button>
-      </div>
     </aside>
   )
 }
