@@ -531,3 +531,233 @@ export async function getSystemConfig(): Promise<Result<SystemConfigItem[]>> {
 
   return ok(items)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MODERACIÓN — Usuarios con strikes
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AdminStrikeUserItem {
+  id_usuario: string
+  nombre: string
+  apellido_1: string
+  apellido_2: string | null
+  correo: string
+  estado_cuenta: AdminAccountStatus
+  is_active: boolean
+  cantidad_strikes: number
+  fecha_registro: string
+  nombre_rol: string | null
+}
+
+/**
+ * Lista usuarios con al menos `minStrikes` strikes (default: 1) para el panel
+ * de moderación. Solo un admin puede invocarla. Usa el cliente de servicio para
+ * bypassear RLS.
+ */
+export async function listUsersWithStrikes(
+  minStrikes = 1,
+): Promise<Result<AdminStrikeUserItem[]>> {
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: rolesRows, error: rolesError } = await adminClient
+    .from('roles')
+    .select('id_rol, nombre_rol')
+  if (rolesError) {
+    logger.error('listUsersWithStrikes: fallo al leer roles', {
+      error: rolesError.message,
+    })
+    return err(rolesError.message)
+  }
+  const roleNameById = new Map<number, string>(
+    (rolesRows ?? []).map((r) => [r.id_rol, r.nombre_rol]),
+  )
+
+  const { data, error } = await adminClient
+    .from('usuarios')
+    .select(
+      'id_usuario, nombre, apellido_1, apellido_2, correo, estado_cuenta, is_active, cantidad_strikes, fecha_registro, id_rol',
+    )
+    .gte('cantidad_strikes', minStrikes)
+    .order('cantidad_strikes', { ascending: false })
+    .limit(200)
+
+  if (error) {
+    logger.error('listUsersWithStrikes: fallo al leer usuarios', {
+      error: error.message,
+    })
+    return err(error.message)
+  }
+
+  const users: AdminStrikeUserItem[] = (data ?? []).map((u) => ({
+    id_usuario: u.id_usuario,
+    nombre: u.nombre,
+    apellido_1: u.apellido_1,
+    apellido_2: u.apellido_2,
+    correo: u.correo,
+    estado_cuenta: u.estado_cuenta,
+    is_active: u.is_active,
+    cantidad_strikes: u.cantidad_strikes,
+    fecha_registro: u.fecha_registro,
+    nombre_rol: u.id_rol === null ? null : (roleNameById.get(u.id_rol) ?? null),
+  }))
+
+  return ok(users)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROYECTOS — Lista filtrada y estadísticas
+// ─────────────────────────────────────────────────────────────────────────────
+
+type EstadoProyectoEnum = Database['public']['Enums']['estado_proyecto_enum']
+type ModalidadEnum = Database['public']['Enums']['modalidad_enum']
+
+export const ADMIN_PROJECT_ESTADOS: EstadoProyectoEnum[] = [
+  'borrador',
+  'abierto',
+  'en_recepcion',
+  'adjudicado',
+  'en_desarrollo',
+  'finalizado',
+  'cancelado',
+]
+
+export const ADMIN_PROJECT_MODALIDADES: ModalidadEnum[] = [
+  'remoto',
+  'hibrido',
+  'presencial',
+]
+
+export interface AdminProjectFilters {
+  estado?: EstadoProyectoEnum
+  modalidad?: ModalidadEnum
+}
+
+/**
+ * Lista proyectos para el admin con filtros opcionales de estado y modalidad.
+ * Es una extensión filtrada de `listAllProjectsForAdmin`. La función original
+ * sigue intacta; esta la complementa cuando se necesitan filtros.
+ *
+ * Solo un admin puede invocarla. Usa el cliente de servicio para bypassear RLS.
+ */
+export async function listProjectsForAdmin(
+  filters: AdminProjectFilters = {},
+): Promise<Result<AdminProjectListItem[]>> {
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const adminClient = createSupabaseAdminClient()
+  let query = adminClient
+    .from('proyectos')
+    .select(ADMIN_PROYECTO_SELECT)
+    .order('created_at', { ascending: false })
+
+  if (filters.estado) {
+    query = query.eq('estado', filters.estado)
+  }
+  if (filters.modalidad) {
+    query = query.eq('modalidad', filters.modalidad)
+  }
+
+  const { data, error } = await query
+  if (error) {
+    logger.error('listProjectsForAdmin: fallo al leer proyectos', {
+      error: error.message,
+    })
+    return err(error.message)
+  }
+
+  const filas = (data ?? []) as unknown as RawAdminProyecto[]
+  const proyectos: AdminProjectListItem[] = filas.map((p) => ({
+    id_proyecto: p.id_proyecto,
+    id_empresario: p.id_empresario,
+    titulo: p.titulo,
+    descripcion: p.descripcion,
+    estado: p.estado,
+    modalidad: p.modalidad,
+    moneda: p.moneda,
+    presupuesto_min: p.presupuesto_min,
+    presupuesto_max: p.presupuesto_max,
+    fecha_publicacion: p.fecha_publicacion,
+    fecha_cierre: p.fecha_cierre,
+    nombre_empresa: p.empresarios?.nombre_empresa ?? null,
+    tecnologias: p.proyecto_tecnologias
+      .map((pt) => pt.tecnologias?.nombre)
+      .filter((nombre): nombre is string => Boolean(nombre)),
+  }))
+
+  return ok(proyectos)
+}
+
+export interface AdminProjectStats {
+  total: number
+  borrador: number
+  abierto: number
+  en_recepcion: number
+  adjudicado: number
+  en_desarrollo: number
+  finalizado: number
+  cancelado: number
+}
+
+/**
+ * Conteos de proyectos por estado para el dashboard admin. Solo un admin puede
+ * invocarla. Usa `count: 'exact', head: true` para contar sin traer filas.
+ */
+export async function getProjectStats(): Promise<Result<AdminProjectStats>> {
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const adminClient = createSupabaseAdminClient()
+  const countProyectos = () =>
+    adminClient.from('proyectos').select('*', { count: 'exact', head: true })
+
+  const [
+    totalRes,
+    borradorRes,
+    abiertoRes,
+    enRecepcionRes,
+    adjudicadoRes,
+    enDesarrolloRes,
+    finalizadoRes,
+    canceladoRes,
+  ] = await Promise.all([
+    countProyectos(),
+    countProyectos().eq('estado', 'borrador'),
+    countProyectos().eq('estado', 'abierto'),
+    countProyectos().eq('estado', 'en_recepcion'),
+    countProyectos().eq('estado', 'adjudicado'),
+    countProyectos().eq('estado', 'en_desarrollo'),
+    countProyectos().eq('estado', 'finalizado'),
+    countProyectos().eq('estado', 'cancelado'),
+  ])
+
+  const failed = [
+    totalRes, borradorRes, abiertoRes, enRecepcionRes,
+    adjudicadoRes, enDesarrolloRes, finalizadoRes, canceladoRes,
+  ].find((r) => r.error)
+
+  if (failed?.error) {
+    logger.error('getProjectStats failed', { error: failed.error.message })
+    return err(failed.error.message)
+  }
+
+  return ok({
+    total: totalRes.count ?? 0,
+    borrador: borradorRes.count ?? 0,
+    abierto: abiertoRes.count ?? 0,
+    en_recepcion: enRecepcionRes.count ?? 0,
+    adjudicado: adjudicadoRes.count ?? 0,
+    en_desarrollo: enDesarrolloRes.count ?? 0,
+    finalizado: finalizadoRes.count ?? 0,
+    cancelado: canceladoRes.count ?? 0,
+  })
+}

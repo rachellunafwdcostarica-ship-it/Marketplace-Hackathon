@@ -9,13 +9,23 @@ import {
   Building2,
   ShieldAlert,
   ArrowRight,
+  Briefcase,
+  FolderOpen,
+  PlayCircle,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import {
   DashboardStats,
   type StatItem,
 } from '@/components/features/DashboardStats'
-import { getUserStats, type AdminUserStats } from '@/lib/admin/queries'
+import {
+  getUserStats,
+  getProjectStats,
+  type AdminUserStats,
+  type AdminProjectStats,
+} from '@/lib/admin/queries'
 
 const EMPTY_STATS: AdminUserStats = {
   total: 0,
@@ -27,10 +37,27 @@ const EMPTY_STATS: AdminUserStats = {
   administradores: 0,
 }
 
+const EMPTY_PROJECT_STATS: AdminProjectStats = {
+  total: 0,
+  borrador: 0,
+  abierto: 0,
+  en_recepcion: 0,
+  adjudicado: 0,
+  en_desarrollo: 0,
+  finalizado: 0,
+  cancelado: 0,
+}
+
 export default async function AdminDashboardPage() {
   const t = await getTranslations('Admin')
-  const result = await getUserStats()
-  const stats = result.ok ? result.data : EMPTY_STATS
+  
+  const [userStatsResult, projectStatsResult] = await Promise.all([
+    getUserStats(),
+    getProjectStats(),
+  ])
+
+  const stats = userStatsResult.ok ? userStatsResult.data : EMPTY_STATS
+  const projectStats = projectStatsResult.ok ? projectStatsResult.data : EMPTY_PROJECT_STATS
 
   const cards: StatItem[] = [
     {
@@ -84,17 +111,64 @@ export default async function AdminDashboardPage() {
     },
   ]
 
+  const projectCards: StatItem[] = [
+    {
+      title: t('statTotalProjects'),
+      value: projectStats.total,
+      icon: Briefcase,
+      description: t('statTotalProjectsDesc'),
+      colorClass: 'text-primary bg-primary/10',
+    },
+    {
+      title: t('statOpenProjects'),
+      value: projectStats.abierto,
+      icon: FolderOpen,
+      description: t('statOpenProjectsDesc'),
+      colorClass: 'text-accent bg-accent/10',
+    },
+    {
+      title: t('statActiveProjects'),
+      value: projectStats.en_desarrollo,
+      icon: PlayCircle,
+      description: t('statActiveProjectsDesc'),
+      colorClass: 'text-secondary bg-secondary/10',
+    },
+    {
+      title: t('statFinishedProjects'),
+      value: projectStats.finalizado,
+      icon: CheckCircle2,
+      description: t('statFinishedProjectsDesc'),
+      colorClass: 'text-highlight bg-highlight/10',
+    },
+    {
+      title: t('statCancelledProjects'),
+      value: projectStats.cancelado,
+      icon: AlertTriangle,
+      description: t('statCancelledProjectsDesc'),
+      colorClass: 'text-destructive bg-destructive/10',
+    },
+  ]
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <PageTitle
-        title={t('dashboard')}
-        description={t('dashboardOverviewDesc')}
-        dotColor="text-magenta"
-      />
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-10">
+      <div>
+        <PageTitle
+          title={t('dashboard')}
+          description={t('dashboardOverviewDesc')}
+          dotColor="text-magenta"
+        />
 
-      <DashboardStats stats={cards} className="xl:grid-cols-4" />
+        <DashboardStats stats={cards} className="xl:grid-cols-4 mt-6" />
+      </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="border-t border-border/40 pt-8">
+        <h2 className="text-xl font-bold font-heading text-foreground mb-4">
+          {t('projectStatsTitle')}
+        </h2>
+        <DashboardStats stats={projectCards} className="xl:grid-cols-5" />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Link
           href="/admin/validations"
           className="group flex items-center justify-between rounded-xl border border-border/80 bg-card/40 p-5 backdrop-blur-sm transition-colors hover:border-warning/40"

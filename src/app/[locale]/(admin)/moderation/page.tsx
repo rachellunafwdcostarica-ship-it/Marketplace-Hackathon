@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server'
-import { Users, AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
@@ -11,15 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { AdminUserFilters } from '@/components/features/admin/AdminUserFilters'
-import { AccountStatusActions } from '@/components/features/admin/AccountStatusActions'
+import { StrikeActions } from '@/components/features/admin/StrikeActions'
 import { getCurrentUser } from '@/lib/auth/dal'
 import {
-  listUsers,
-  ADMIN_USER_ROLES,
-  ADMIN_ACCOUNT_STATUSES,
+  listUsersWithStrikes,
   type AdminAccountStatus,
-  type ListUsersFilters,
 } from '@/lib/admin/queries'
 
 const STATUS_BADGE_CLASS: Record<AdminAccountStatus, string> = {
@@ -29,27 +25,11 @@ const STATUS_BADGE_CLASS: Record<AdminAccountStatus, string> = {
   suspendida_severa: 'bg-destructive/10 text-destructive border-destructive/20',
 }
 
-interface AdminUsersPageProps {
-  searchParams: Promise<{ q?: string; role?: string; status?: string }>
-}
-
-export default async function AdminUsersPage({
-  searchParams,
-}: AdminUsersPageProps) {
+export default async function AdminModerationPage() {
   const t = await getTranslations('Admin')
   const locale = await getLocale()
-  const params = await searchParams
 
-  const search = params.q?.trim() || undefined
-  const role = ADMIN_USER_ROLES.find((value) => value === params.role)
-  const status = ADMIN_ACCOUNT_STATUSES.find((value) => value === params.status)
-
-  const filters: ListUsersFilters = {}
-  if (search) filters.search = search
-  if (role) filters.role = role
-  if (status) filters.status = status
-
-  const result = await listUsers(filters)
+  const result = await listUsersWithStrikes(1)
   const users = result.ok ? result.data : []
 
   const currentUser = await getCurrentUser()
@@ -81,42 +61,26 @@ export default async function AdminUsersPage({
     }
   }
 
-  return {(
-    < div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  return (
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <PageTitle
-        title={t('usersManagement')}
-        description={t('usersManagementDesc')}
-        dotColor="text-magenta"
+        title={t('strikeManagement')}
+        description={t('strikeManagementDesc')}
+        dotColor="text-warning"
       />
-    >
 
       <div className="mt-8 space-y-6">
-        <AdminUserFilters
-          initialSearch={search ?? ''}
-          initialRole={role ?? ''}
-          initialStatus={status ?? ''}
-        />
-
         {users.length === 0 ? (
           <EmptyState
-            title={t('noUsersFound')}
-            description={t('noUsersFoundDesc')}
-            icon={Users}
+            title={t('noUsersWithStrikes')}
+            description={t('noUsersWithStrikesDesc')}
+            icon={AlertTriangle}
           />
         ) : (
-          <div className="space-y-4">
-            {users.length >= 100 && (
-              <div className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning-foreground">
-                <AlertTriangle className="h-5 w-5 shrink-0 text-warning" />
-                <div>
-                  <p className="font-semibold">{t('usersLimitWarning')}</p>
-                </div>
-              </div>
-            )}
-            <div className="rounded-xl border border-border/80 bg-card/40 backdrop-blur-sm">
-              <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground">
-                {t('usersCount', { count: users.length })}
-              </div>
+          <div className="rounded-xl border border-border/80 bg-card/40 backdrop-blur-sm">
+            <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground">
+              {t('usersCount', { count: users.length })}
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -159,7 +123,7 @@ export default async function AdminUsersPage({
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="text-center tabular-nums">
+                    <TableCell className="text-center tabular-nums font-semibold text-warning">
                       {user.cantidad_strikes}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -169,12 +133,11 @@ export default async function AdminUsersPage({
                       )}
                     </TableCell>
                     <TableCell>
-                      <AccountStatusActions
+                      <StrikeActions
                         userId={user.id_usuario}
-                        estadoCuenta={user.estado_cuenta}
-                        isActive={user.is_active}
-                        isSelf={user.id_usuario === currentUserId}
                         userName={`${user.nombre} ${user.apellido_1}`}
+                        cantidadStrikes={user.cantidad_strikes}
+                        isSelf={user.id_usuario === currentUserId}
                       />
                     </TableCell>
                   </TableRow>
@@ -182,8 +145,8 @@ export default async function AdminUsersPage({
               </TableBody>
             </Table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

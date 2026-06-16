@@ -4,8 +4,12 @@ import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
 import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
+import { AdminProjectFilters } from '@/components/features/admin/AdminProjectFilters'
+import { AdminCancelProjectButton } from '@/components/features/admin/AdminCancelProjectButton'
 import {
-  listAllProjectsForAdmin,
+  listProjectsForAdmin,
+  ADMIN_PROJECT_ESTADOS,
+  ADMIN_PROJECT_MODALIDADES,
   type AdminProjectListItem,
 } from '@/lib/admin/queries'
 import type { Database } from '@/types/database'
@@ -37,12 +41,22 @@ function estadoToStatus(estado: EstadoProyecto): ProjectStatus {
   }
 }
 
-export default async function AdminProjectsPage() {
+interface AdminProjectsPageProps {
+  searchParams: Promise<{ estado?: string; modalidad?: string }>
+}
+
+export default async function AdminProjectsPage({
+  searchParams,
+}: AdminProjectsPageProps) {
   const t = await getTranslations('Admin')
   const tBoard = await getTranslations('ProjectsBoard')
   const locale = await getLocale()
+  const params = await searchParams
 
-  const result = await listAllProjectsForAdmin()
+  const estado = ADMIN_PROJECT_ESTADOS.find((v) => v === params.estado)
+  const modalidad = ADMIN_PROJECT_MODALIDADES.find((v) => v === params.modalidad)
+
+  const result = await listProjectsForAdmin({ estado, modalidad })
   const projects = result.ok ? result.data : []
 
   const formatCurrency = (amount: number, moneda: string): string =>
@@ -114,6 +128,11 @@ export default async function AdminProjectsPage() {
         dotColor="text-magenta"
       />
 
+      <AdminProjectFilters
+        initialEstado={estado ?? ''}
+        initialModalidad={modalidad ?? ''}
+      />
+
       {projects.length === 0 ? (
         <EmptyState
           title={t('noProjects')}
@@ -136,12 +155,20 @@ export default async function AdminProjectsPage() {
                   project.moneda,
                 )}
                 actionButton={
-                  <Badge
-                    variant="outline"
-                    className={`w-full justify-center rounded-full border px-2 py-1.5 text-xs font-semibold ${ESTADO_BADGE_CLASS[project.estado]}`}
-                  >
-                    {tBoard(`status_${project.estado}`)}
-                  </Badge>
+                  <div className="flex flex-col gap-2 w-full">
+                    <Badge
+                      variant="outline"
+                      className={`w-full justify-center rounded-full border px-2 py-1.5 text-xs font-semibold ${ESTADO_BADGE_CLASS[project.estado]}`}
+                    >
+                      {tBoard(`status_${project.estado}`)}
+                    </Badge>
+                    {project.estado !== 'cancelado' && project.estado !== 'finalizado' && (
+                      <AdminCancelProjectButton
+                        projectId={project.id_proyecto}
+                        projectTitle={project.titulo}
+                      />
+                    )}
+                  </div>
                 }
               />
             ))}
