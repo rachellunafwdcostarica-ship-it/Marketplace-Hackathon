@@ -49,8 +49,12 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                {/*
+                """ ANTES """ href="/junior/applications" — ruta inexistente (404); el listado vive en (app)/applications, no bajo el rol.
+                """ DESPUES """ href="/applications" — ruta real del listado de postulaciones.
+                */}
                 <Link
-                  href="/junior/applications"
+                  href="/applications"
                   className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
                   {t('myApplications')}

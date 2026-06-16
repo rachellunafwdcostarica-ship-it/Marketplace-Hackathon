@@ -14,7 +14,6 @@ export default async function ApplyProjectPage({ params }: PageProps) {
   if (!projectResult.ok) {
     notFound()
   }
-
   const { id: projectId, title, companyName } = projectResult.data
 
   return (

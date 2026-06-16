@@ -134,7 +134,7 @@ export function ApplyProjectClient({
         toast.error('Error al postularse: ' + result.error)
       } else {
         toast.success(tEgresado('applySuccess'))
-        router.push('/junior/applications')
+        router.push('/applications')
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
