@@ -750,7 +750,7 @@
     "consentRequired": "You must authorize the check to continue as a graduate."
   },
   "Account": {
-    "pendingBanner": "Your account is pending approval by the FWD team. Actions will be enabled once approved.",
+    "pendingBanner": "Your account is pending activation. Please verify your email.",
     "actionDisabledPending": "Your account must be approved by an administrator to perform this action.",
     "pendingTitle": "Account pending approval",
     "pendingDesc": "The FWD team will review your request. We will notify you when your account is active."
@@ -848,5 +848,42 @@
     "actualizarPlanToast": "Plan upgrade in simulation",
     "cancelar": "Cancel",
     "supportMinCharsInfo": "characters minimum"
+  },
+  "Portfolio": {
+    "title": "My Professional Portfolio",
+    "description": "Manage your portfolio projects to showcase your experience, skills, and completed projects to recruiting companies.",
+    "managerTitle": "Portfolio Projects",
+    "addProject": "Add Project",
+    "editProject": "Edit Project",
+    "newProject": "New Project",
+    "noProjects": "There are no projects in your portfolio yet.",
+    "finishedPrefix": "Finished:",
+    "repo": "Repo",
+    "demo": "Demo",
+    "edit": "Edit",
+    "delete": "Delete",
+    "formTitleLabel": "Project Title",
+    "formTitlePlaceholder": "E.g. Inventory System",
+    "formDescriptionLabel": "Description",
+    "formDescriptionPlaceholder": "Brief description of deliverables and goals",
+    "formTechLabel": "Technologies (comma separated)",
+    "formTechPlaceholder": "React, Next.js, Tailwind CSS",
+    "formDateLabel": "Completion Date",
+    "formRepoLabel": "Repository URL (optional)",
+    "formRepoPlaceholder": "https://github.com/user/repo",
+    "formDemoLabel": "Demo URL (optional)",
+    "formDemoPlaceholder": "https://mydemo.app",
+    "formVisibilityLabel": "Visibility",
+    "formVisibilityPlaceholder": "Select visibility",
+    "visibilityPublic": "Public",
+    "visibilityCompanies": "Companies",
+    "cancel": "Cancel",
+    "save": "Save Project",
+    "errorTitleReq": "Title is required",
+    "errorDescReq": "Description is required",
+    "errorTechReq": "Add at least one technology",
+    "errorDateReq": "Completion date is required",
+    "errorRepoInvalid": "Invalid repository URL",
+    "errorDemoInvalid": "Invalid demo URL"
   }
 }
