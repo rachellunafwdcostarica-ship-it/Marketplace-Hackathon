@@ -102,7 +102,11 @@ export default function ApplyProjectPage() {
       })
       setIsSubmitting(false)
       toast.success(tEgresado('applySuccess'))
-      router.push('/junior/applications')
+      /*
+      """ ANTES """ router.push('/egresado/applications') — ruta inexistente; las postulaciones viven en (app)/applications, no bajo el rol.
+      """ DESPUES """ router.push('/applications') — ruta real del listado de postulaciones.
+      */
+      router.push('/applications')
     }, 1200)
   }
 
