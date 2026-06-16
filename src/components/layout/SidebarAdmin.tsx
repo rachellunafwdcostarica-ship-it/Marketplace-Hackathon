@@ -57,55 +57,83 @@ export function SidebarAdmin({
     <nav
       aria-label={t('roleAdmin')}
       className={cn(
-        'flex w-60 shrink-0 flex-col gap-1 bg-surface-admin p-4 text-white',
+        'flex w-56 shrink-0 flex-col bg-[#3d1a6e] text-white',
         className,
       )}
     >
+      {/* Logo + Brand */}
       <Link
         href="/admin"
         onClick={onNavigate}
-        className="mb-4 flex items-center gap-2.5 px-2 py-1"
+        className="flex items-center gap-3 px-5 py-5 hover:opacity-90 transition-opacity"
       >
-        <FwdLogo className="h-7 w-7" />
-        <span className="font-heading text-lg font-bold tracking-tight">
-          Marketplace FWD<span className="text-primary">.</span>
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
+          <FwdLogo className="h-6 w-6" />
+        </div>
+        <span className="font-heading text-base font-bold tracking-tight leading-tight text-white">
+          Marketplace<span className="text-[#ec008c]"> FWD</span>
         </span>
       </Link>
 
-      {ADMIN_NAV.map(({ href, labelKey, icon: Icon }) => {
-        const isActive = pathname === href
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            aria-current={isActive ? 'page' : undefined}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-              isActive
-                ? 'bg-white/15 text-white'
-                : 'text-white/70 hover:bg-white/10 hover:text-white',
-            )}
-          >
-            <Icon className="h-4 w-4" aria-hidden="true" />
-            <span>{t(labelKey)}</span>
-          </Link>
-        )
-      })}
+      {/* Divider */}
+      <div className="mx-4 mb-3 h-px bg-white/10" />
 
+      {/* Nav Items */}
+      <div className="flex flex-col gap-0.5 px-3 flex-1">
+        {ADMIN_NAV.map(({ href, labelKey, icon: Icon }) => {
+          const isActive =
+            href === '/admin'
+              ? pathname === '/admin'
+              : pathname.startsWith(href)
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={onNavigate}
+              aria-current={isActive ? 'page' : undefined}
+              className={cn(
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
+                isActive
+                  ? 'bg-white/15 text-white shadow-sm'
+                  : 'text-white/65 hover:bg-white/8 hover:text-white/90',
+              )}
+            >
+              <Icon
+                className={cn(
+                  'h-4 w-4 shrink-0 transition-colors',
+                  isActive ? 'text-white' : 'text-white/55',
+                )}
+                aria-hidden="true"
+              />
+              <span>{t(labelKey)}</span>
+              {isActive && (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#ec008c]" />
+              )}
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Logout */}
       {onLogout && (
-        <ConfirmButton
-          onConfirm={onLogout}
-          title={t('confirmLogoutTitle')}
-          description={t('confirmLogoutDesc')}
-          confirmLabel={t('logout')}
-          variant="ghost"
-          size="default"
-          className="mt-auto flex items-center justify-start gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white"
-        >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-          {t('logout')}
-        </ConfirmButton>
+        <div className="p-3 pt-0">
+          <div className="h-px bg-white/10 mb-3" />
+          <ConfirmButton
+            onConfirm={onLogout}
+            title={t('confirmLogoutTitle')}
+            description={t('confirmLogoutDesc')}
+            confirmLabel={t('logout')}
+            variant="ghost"
+            size="default"
+            className="w-full flex items-center justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white/90 transition-all"
+          >
+            <LogOut
+              className="h-4 w-4 shrink-0 text-white/55"
+              aria-hidden="true"
+            />
+            {t('logout')}
+          </ConfirmButton>
+        </div>
       )}
     </nav>
   )

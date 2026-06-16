@@ -11,7 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StrikeActions } from '@/components/features/admin/StrikeActions'
+import { StrikeAuditHistory } from '@/components/features/admin/StrikeAuditHistory'
 import { getCurrentUser } from '@/lib/auth/dal'
 import {
   listUsersWithStrikes,
@@ -70,82 +72,95 @@ export default async function AdminModerationPage() {
       />
 
       <div className="mt-8 space-y-6">
-        {users.length === 0 ? (
-          <EmptyState
-            title={t('noUsersWithStrikes')}
-            description={t('noUsersWithStrikesDesc')}
-            icon={AlertTriangle}
-          />
-        ) : (
-          <div className="rounded-xl border border-border/80 bg-card/40 backdrop-blur-sm">
-            <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground">
-              {t('usersCount', { count: users.length })}
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('colName')}</TableHead>
-                  <TableHead>{t('colEmail')}</TableHead>
-                  <TableHead>{t('colRole')}</TableHead>
-                  <TableHead>{t('colStatus')}</TableHead>
-                  <TableHead className="text-center">
-                    {t('colStrikes')}
-                  </TableHead>
-                  <TableHead>{t('colRegistered')}</TableHead>
-                  <TableHead>{t('colActions')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id_usuario}>
-                    <TableCell className="font-semibold text-foreground">
-                      {user.nombre} {user.apellido_1}
-                      {user.apellido_2 ? ` ${user.apellido_2}` : ''}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {user.correo}
-                    </TableCell>
-                    <TableCell>{roleLabel(user.nombre_rol)}</TableCell>
-                    <TableCell>
-                      {user.is_active ? (
-                        <Badge
-                          variant="outline"
-                          className={`rounded-full border px-2 text-[10px] font-semibold ${STATUS_BADGE_CLASS[user.estado_cuenta]}`}
-                        >
-                          {statusLabel(user.estado_cuenta)}
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="rounded-full border border-magenta/20 bg-magenta/10 px-2 text-[10px] font-semibold text-magenta"
-                        >
-                          {t('accountInactive')}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums font-semibold text-warning">
-                      {user.cantidad_strikes}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(user.fecha_registro).toLocaleDateString(
-                        locale,
-                        { year: 'numeric', month: 'short', day: 'numeric' },
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <StrikeActions
-                        userId={user.id_usuario}
-                        userName={`${user.nombre} ${user.apellido_1}`}
-                        cantidadStrikes={user.cantidad_strikes}
-                        isSelf={user.id_usuario === currentUserId}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <Tabs defaultValue="moderation" className="w-full">
+          <TabsList label="Moderación" className="mb-4">
+            <TabsTrigger value="moderation">Usuarios Penalizados</TabsTrigger>
+            <TabsTrigger value="audit">Historial de Auditoría</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="moderation" className="space-y-6">
+            {users.length === 0 ? (
+              <EmptyState
+                title={t('noUsersWithStrikes')}
+                description={t('noUsersWithStrikesDesc')}
+                icon={AlertTriangle}
+              />
+            ) : (
+              <div className="rounded-xl border border-border/80 bg-card/40 backdrop-blur-sm">
+                <div className="border-b border-border/60 px-4 py-3 text-sm font-semibold text-muted-foreground">
+                  {t('usersCount', { count: users.length })}
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('colName')}</TableHead>
+                      <TableHead>{t('colEmail')}</TableHead>
+                      <TableHead>{t('colRole')}</TableHead>
+                      <TableHead>{t('colStatus')}</TableHead>
+                      <TableHead className="text-center">
+                        {t('colStrikes')}
+                      </TableHead>
+                      <TableHead>{t('colRegistered')}</TableHead>
+                      <TableHead>{t('colActions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id_usuario}>
+                        <TableCell className="font-semibold text-foreground">
+                          {user.nombre} {user.apellido_1}
+                          {user.apellido_2 ? ` ${user.apellido_2}` : ''}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {user.correo}
+                        </TableCell>
+                        <TableCell>{roleLabel(user.nombre_rol)}</TableCell>
+                        <TableCell>
+                          {user.is_active ? (
+                            <Badge
+                              variant="outline"
+                              className={`rounded-full border px-2 text-[10px] font-semibold ${STATUS_BADGE_CLASS[user.estado_cuenta]}`}
+                            >
+                              {statusLabel(user.estado_cuenta)}
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="rounded-full border border-magenta/20 bg-magenta/10 px-2 text-[10px] font-semibold text-magenta"
+                            >
+                              {t('accountInactive')}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center tabular-nums font-semibold text-warning">
+                          {user.cantidad_strikes}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(user.fecha_registro).toLocaleDateString(
+                            locale,
+                            { year: 'numeric', month: 'short', day: 'numeric' },
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <StrikeActions
+                            userId={user.id_usuario}
+                            userName={`${user.nombre} ${user.apellido_1}`}
+                            cantidadStrikes={user.cantidad_strikes}
+                            isSelf={user.id_usuario === currentUserId}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <StrikeAuditHistory />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

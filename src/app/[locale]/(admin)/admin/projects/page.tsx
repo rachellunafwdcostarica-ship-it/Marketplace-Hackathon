@@ -42,7 +42,7 @@ function estadoToStatus(estado: EstadoProyecto): ProjectStatus {
 }
 
 interface AdminProjectsPageProps {
-  searchParams: Promise<{ estado?: string; modalidad?: string }>
+  searchParams: Promise<{ estado?: string; modalidad?: string; q?: string }>
 }
 
 export default async function AdminProjectsPage({
@@ -53,10 +53,18 @@ export default async function AdminProjectsPage({
   const locale = await getLocale()
   const params = await searchParams
 
+  const search = params.q?.trim() || undefined
   const estado = ADMIN_PROJECT_ESTADOS.find((v) => v === params.estado)
-  const modalidad = ADMIN_PROJECT_MODALIDADES.find((v) => v === params.modalidad)
+  const modalidad = ADMIN_PROJECT_MODALIDADES.find(
+    (v) => v === params.modalidad,
+  )
 
-  const result = await listProjectsForAdmin({ estado, modalidad })
+  const filters: import('@/lib/admin/queries').AdminProjectFilters = {}
+  if (estado) filters.estado = estado
+  if (modalidad) filters.modalidad = modalidad
+  if (search) filters.search = search
+
+  const result = await listProjectsForAdmin(filters)
   const projects = result.ok ? result.data : []
 
   const formatCurrency = (amount: number, moneda: string): string =>
@@ -129,6 +137,7 @@ export default async function AdminProjectsPage({
       />
 
       <AdminProjectFilters
+        initialSearch={search ?? ''}
         initialEstado={estado ?? ''}
         initialModalidad={modalidad ?? ''}
       />
@@ -162,12 +171,13 @@ export default async function AdminProjectsPage({
                     >
                       {tBoard(`status_${project.estado}`)}
                     </Badge>
-                    {project.estado !== 'cancelado' && project.estado !== 'finalizado' && (
-                      <AdminCancelProjectButton
-                        projectId={project.id_proyecto}
-                        projectTitle={project.titulo}
-                      />
-                    )}
+                    {project.estado !== 'cancelado' &&
+                      project.estado !== 'finalizado' && (
+                        <AdminCancelProjectButton
+                          projectId={project.id_proyecto}
+                          projectTitle={project.titulo}
+                        />
+                      )}
                   </div>
                 }
               />

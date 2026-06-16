@@ -212,6 +212,8 @@ export interface AdminUserListItem {
   nombre_rol: string | null
 }
 
+export const MAX_STRIKES_LIMIT = 3
+
 const MAX_USERS_PER_QUERY = 100
 
 const ListUsersFiltersSchema = z.object({
@@ -635,10 +637,11 @@ export const ADMIN_PROJECT_MODALIDADES: ModalidadEnum[] = [
 export interface AdminProjectFilters {
   estado?: EstadoProyectoEnum
   modalidad?: ModalidadEnum
+  search?: string
 }
 
 /**
- * Lista proyectos para el admin con filtros opcionales de estado y modalidad.
+ * Lista proyectos para el admin con filtros opcionales de estado, modalidad y búsqueda.
  * Es una extensión filtrada de `listAllProjectsForAdmin`. La función original
  * sigue intacta; esta la complementa cuando se necesitan filtros.
  *
@@ -663,6 +666,12 @@ export async function listProjectsForAdmin(
   }
   if (filters.modalidad) {
     query = query.eq('modalidad', filters.modalidad)
+  }
+  if (filters.search) {
+    const term = filters.search.replace(/[,()*%]/g, ' ').trim()
+    if (term.length > 0) {
+      query = query.or(`titulo.ilike.%${term}%,descripcion.ilike.%${term}%`)
+    }
   }
 
   const { data, error } = await query
@@ -741,8 +750,14 @@ export async function getProjectStats(): Promise<Result<AdminProjectStats>> {
   ])
 
   const failed = [
-    totalRes, borradorRes, abiertoRes, enRecepcionRes,
-    adjudicadoRes, enDesarrolloRes, finalizadoRes, canceladoRes,
+    totalRes,
+    borradorRes,
+    abiertoRes,
+    enRecepcionRes,
+    adjudicadoRes,
+    enDesarrolloRes,
+    finalizadoRes,
+    canceladoRes,
   ].find((r) => r.error)
 
   if (failed?.error) {

@@ -52,9 +52,37 @@ export async function addStrike(
 
   const nuevaCantidad = (usuario.cantidad_strikes ?? 0) + 1
 
+  // Determinar si debemos suspender automáticamente la cuenta del usuario
+  const { data: configRows } = await adminClient
+    .from('configuracion_sistema')
+    .select('valor')
+    .eq('clave', 'max_strikes_limit')
+    .maybeSingle()
+
+  const maxStrikesLimit = configRows ? parseInt(configRows.valor, 10) : 3
+
+  const updateFields: {
+    cantidad_strikes: number
+    estado_cuenta?: 'suspendida'
+  } = {
+    cantidad_strikes: nuevaCantidad,
+  }
+
+  if (nuevaCantidad >= maxStrikesLimit) {
+    updateFields.estado_cuenta = 'suspendida'
+    logger.warn(
+      'addStrike: usuario suspendido automáticamente por alcanzar límite de strikes',
+      {
+        userId,
+        nuevaCantidad,
+        maxStrikesLimit,
+      },
+    )
+  }
+
   const { error } = await adminClient
     .from('usuarios')
-    .update({ cantidad_strikes: nuevaCantidad })
+    .update(updateFields)
     .eq('id_usuario', parsedId.data)
 
   if (error) {
@@ -70,6 +98,7 @@ export async function addStrike(
     userId,
     nuevaCantidad,
     motivo: parsedMotivo.data ?? 'sin motivo',
+    autoSuspended: nuevaCantidad >= maxStrikesLimit,
   })
 
   revalidatePath('/admin/moderation', 'page')

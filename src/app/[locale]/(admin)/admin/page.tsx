@@ -20,6 +20,7 @@ import {
   DashboardStats,
   type StatItem,
 } from '@/components/features/DashboardStats'
+import { AdminProjectCharts } from '@/components/features/admin/AdminProjectCharts'
 import {
   getUserStats,
   getProjectStats,
@@ -50,14 +51,16 @@ const EMPTY_PROJECT_STATS: AdminProjectStats = {
 
 export default async function AdminDashboardPage() {
   const t = await getTranslations('Admin')
-  
+
   const [userStatsResult, projectStatsResult] = await Promise.all([
     getUserStats(),
     getProjectStats(),
   ])
 
   const stats = userStatsResult.ok ? userStatsResult.data : EMPTY_STATS
-  const projectStats = projectStatsResult.ok ? projectStatsResult.data : EMPTY_PROJECT_STATS
+  const projectStats = projectStatsResult.ok
+    ? projectStatsResult.data
+    : EMPTY_PROJECT_STATS
 
   const cards: StatItem[] = [
     {
@@ -166,6 +169,9 @@ export default async function AdminDashboardPage() {
           {t('projectStatsTitle')}
         </h2>
         <DashboardStats stats={projectCards} className="xl:grid-cols-5" />
+
+        {/* Renderizado de gráficos interactivos */}
+        <AdminProjectCharts stats={projectStats} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
