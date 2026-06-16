@@ -256,7 +256,16 @@
     "emptyApplications": "Aún no te has postulado a ningún proyecto. ¡Explora el marketplace!",
     "emptyApplicationsDesc": "Navega por nuestro catálogo de proyectos, encuentra el que mejor se adapte a tu stack y envíale tu propuesta a la empresa.",
     "exploreMarketplace": "Explorar Marketplace",
-    "exploreMoreProjects": "Explorar más proyectos en el Marketplace"
+    "exploreMoreProjects": "Explorar más proyectos en el Marketplace",
+    "solutionApproach": "Planteamiento de Solución",
+    "solutionApproachPlaceholder": "Explica cómo resolverías el reto de este proyecto...",
+    "prototypeLink": "Enlace de prototipo / externo (Opcional)",
+    "uploadPrototype": "Subir Prototipo Funcional (Opcional)",
+    "uploadTechnicalDoc": "Documentación Técnica (PDF)",
+    "prototypeUploadError": "Error al subir prototipo",
+    "docUploadError": "Error al subir documentación",
+    "unexpectedError": "Ocurrió un error inesperado",
+    "withdrawOffer": "Retirar Oferta"
   },
   "Validation": {
     "emailInvalid": "Debe ingresar un correo electrónico válido.",
@@ -915,6 +924,17 @@
     "errorTechReq": "Agrega al menos una tecnología",
     "errorDateReq": "La fecha de finalización es requerida",
     "errorRepoInvalid": "URL de repositorio inválida",
-    "errorDemoInvalid": "URL de demo inválida"
+    "errorDemoInvalid": "URL de demo inválida",
+    "skillsTitle": "Habilidades Técnicas",
+    "addSkill": "Agregar Habilidad",
+    "newSkill": "Nueva Habilidad",
+    "editSkill": "Editar Habilidad",
+    "noSkills": "No hay habilidades registradas",
+    "skillName": "Nombre de habilidad",
+    "skillLevel": "Nivel",
+    "levelBasic": "Básico",
+    "levelIntermediate": "Intermedio",
+    "levelAdvanced": "Avanzado",
+    "saveSkill": "Guardar Habilidad"
   }
 }
