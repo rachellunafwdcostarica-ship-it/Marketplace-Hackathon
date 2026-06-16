@@ -18,9 +18,19 @@ interface ProjectCardProps {
   showAdminActions?: boolean
   onAdminHide?: () => void
   onAdminApprove?: () => void
+  /**
+   * Etiqueta de presupuesto ya formateada (rango + moneda real). Cuando viene,
+   * reemplaza el `${project.budget} USD` por defecto. Pensada para datos reales
+   * donde el presupuesto es un rango y la moneda puede no ser USD.
+   */
+  budgetLabel?: string | undefined
 }
 
-export function ProjectCard({ project, actionButton }: ProjectCardProps) {
+export function ProjectCard({
+  project,
+  actionButton,
+  budgetLabel,
+}: ProjectCardProps) {
   const tCommon = useTranslations('Common')
 
   // Modalidad mapeada a tokens FWD (§5.1): remoto=success/accent, hibrido=atencion/warning,
@@ -94,7 +104,7 @@ export function ProjectCard({ project, actionButton }: ProjectCardProps) {
                 {tCommon('budget')}
               </p>
               <p className="font-bold text-foreground truncate mt-0.5">
-                ${project.budget} USD
+                {budgetLabel ?? `$${project.budget} USD`}
               </p>
             </div>
           </div>

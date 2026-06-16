@@ -7,6 +7,12 @@ import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
+import {
+  validateConfigValue,
+  checkPlazoOrder,
+  PLAZO_MIN_KEY,
+  PLAZO_MAX_KEY,
+} from '@/lib/admin/config-validation'
 
 /**
  * Mueve `estudiantes.estado_verificacion` (RF-64). Productor del campo que la
@@ -220,4 +226,115 @@ export async function rechazarEmpresa(
   idEmpresario: string,
 ): Promise<Result<void>> {
   return setCompanyVerification(idEmpresario, 'rechazado')
+}
+
+const UpdateSystemConfigSchema = z.object({
+  updates: z
+    .array(
+      z.object({
+        clave: z.string().trim().min(1).max(100),
+        valor: z.string().max(500),
+      }),
+    )
+    .min(1)
+    .max(50),
+})
+
+export type UpdateSystemConfigInput = z.input<typeof UpdateSystemConfigSchema>
+
+/**
+ * Modifica parámetros de `configuracion_sistema` (RF: solo el admin configura el
+ * sistema). Valida cada valor según su `tipo_dato` y el invariante
+ * `plazo_min <= plazo_max` sobre el conjunto resultante.
+ *
+ * La tabla no tiene policy de escritura: solo `service_role` puede modificarla.
+ * Por eso usa el cliente de servicio, gateado por `requireRole('administrador')`.
+ * Registra `modificado_por`/`modificado_at` como traza. Solo aplica las claves que
+ * realmente cambian.
+ */
+export async function updateSystemConfig(
+  input: UpdateSystemConfigInput,
+): Promise<Result<void>> {
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const parsed = UpdateSystemConfigSchema.safeParse(input)
+  if (!parsed.success) {
+    return err('invalid_input')
+  }
+
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return err('unauthenticated')
+  }
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: rows, error: rowsError } = await adminClient
+    .from('configuracion_sistema')
+    .select('clave, valor, tipo_dato')
+  if (rowsError) {
+    logger.error('updateSystemConfig: fallo al leer configuracion_sistema', {
+      error: rowsError.message,
+    })
+    return err(rowsError.message)
+  }
+
+  const rowByClave = new Map((rows ?? []).map((r) => [r.clave, r]))
+  // Conjunto efectivo: valores actuales con los cambios validados aplicados.
+  const efectivo = new Map((rows ?? []).map((r) => [r.clave, r.valor]))
+  const cambios: { clave: string; valor: string }[] = []
+
+  for (const update of parsed.data.updates) {
+    const row = rowByClave.get(update.clave)
+    if (!row) {
+      return err('unknown_key')
+    }
+    const validated = validateConfigValue(row.tipo_dato, update.valor)
+    if (!validated.ok) {
+      return err(validated.error)
+    }
+    efectivo.set(update.clave, validated.data)
+    if (validated.data !== row.valor) {
+      cambios.push({ clave: update.clave, valor: validated.data })
+    }
+  }
+
+  if (
+    !checkPlazoOrder(efectivo.get(PLAZO_MIN_KEY), efectivo.get(PLAZO_MAX_KEY))
+  ) {
+    return err('plazo_order')
+  }
+
+  if (cambios.length === 0) {
+    return ok(undefined)
+  }
+
+  const modificadoAt = new Date().toISOString()
+  for (const cambio of cambios) {
+    const { error } = await adminClient
+      .from('configuracion_sistema')
+      .update({
+        valor: cambio.valor,
+        modificado_por: user.id,
+        modificado_at: modificadoAt,
+      })
+      .eq('clave', cambio.clave)
+    if (error) {
+      logger.error('updateSystemConfig: fallo al actualizar clave', {
+        error: error.message,
+        clave: cambio.clave,
+      })
+      return err(error.message)
+    }
+  }
+
+  revalidatePath('/admin/settings', 'page')
+  return ok(undefined)
 }
