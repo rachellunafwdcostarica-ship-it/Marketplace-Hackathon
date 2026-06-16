@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   Briefcase,
+  Search,
+  FolderOpen,
   Send,
   Heart,
   GraduationCap,
@@ -100,9 +102,9 @@ export function Navbar({ heroMode = false }: NavbarProps) {
   const navLinksByRole: Record<UserRole, NavLink[]> = {
     egresado: [
       { href: '/junior', label: t('dashboard'), icon: 'dashboard' },
-      { href: '/junior/projects', label: t('jobs'), icon: 'briefcase' },
-      { href: '/junior/applications', label: t('applications'), icon: 'send' },
-      ...mockLinks,
+      { href: '/junior/projects', label: t('searchProjects'), icon: 'search' },
+      { href: '/applications', label: t('applications'), icon: 'send' },
+      { href: '/junior/portfolio', label: t('portfolio'), icon: 'portfolio' },
     ],
     empresario: [
       { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },
@@ -111,7 +113,11 @@ export function Navbar({ heroMode = false }: NavbarProps) {
         label: t('publishProject'),
         icon: 'plus',
       },
-      ...mockLinks,
+      {
+        href: '/empresario/formulario-empresa',
+        label: t('myCompany'),
+        icon: 'building',
+      },
     ],
     administrador: [
       { href: '/admin/users', label: t('users'), icon: 'users' },
@@ -131,6 +137,10 @@ export function Navbar({ heroMode = false }: NavbarProps) {
         return <LayoutDashboard className={className} />
       case 'briefcase':
         return <Briefcase className={className} />
+      case 'search':
+        return <Search className={className} />
+      case 'portfolio':
+        return <FolderOpen className={className} />
       case 'send':
         return <Send className={className} />
       case 'heart':
