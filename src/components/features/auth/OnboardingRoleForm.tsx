@@ -53,8 +53,9 @@ export function OnboardingRoleForm({ initialRole }: OnboardingRoleFormProps) {
     setLoading(false)
 
     if (result.ok || result.error === 'role_already_assigned') {
-      // Idempotente: si ya tenía rol, ir a su home igualmente
-      router.push(ROLE_HOME[selected as UserRole])
+      // Idempotente: si ya tenía rol, ir a su home igualmente. El egresado
+      // usa '' (raíz localizada), así que se normaliza a '/' para el router.
+      router.push(ROLE_HOME[selected as UserRole] || '/')
       return
     }
 
