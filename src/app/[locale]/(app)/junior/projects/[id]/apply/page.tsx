@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Link } from '@/i18n/routing'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -40,11 +40,11 @@ export default function ApplyProjectPage() {
   const params = useParams()
   const router = useRouter()
   const tCommon = useTranslations('Common')
-  const tJunior = useTranslations('Junior')
+  const tEgresado = useTranslations('Egresado')
   const tValidation = useTranslations('Validation')
   const tAccount = useTranslations('Account')
 
-  const { projects, addApplication } = useAppState()
+  const { projects, addApplication } = useDemoData()
   const { isPending } = useAccountStatus()
   const id = params['id'] as string
   const project = projects.find((p) => p.id === id)
@@ -75,12 +75,12 @@ export default function ApplyProjectPage() {
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center p-8">
           <Briefcase className="w-12 h-12 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-bold">{tJunior('projectNotFound')}</h2>
+          <h2 className="text-xl font-bold">{tEgresado('projectNotFound')}</h2>
           <Link
             href="/junior/projects"
             className="mt-4 inline-flex items-center justify-center rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/95 h-9 px-4"
           >
-            {tJunior('backToMarketplace')}
+            {tEgresado('backToMarketplace')}
           </Link>
         </main>
         <Footer />
@@ -101,7 +101,7 @@ export default function ApplyProjectPage() {
         cvUrl: data.cvUrl,
       })
       setIsSubmitting(false)
-      toast.success(tJunior('applySuccess'))
+      toast.success(tEgresado('applySuccess'))
       router.push('/junior/applications')
     }, 1200)
   }
@@ -117,13 +117,13 @@ export default function ApplyProjectPage() {
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />
-            {tJunior('backToProjectDetail')}
+            {tEgresado('backToProjectDetail')}
           </Link>
         </div>
 
         <PageTitle
-          title={tJunior('applyFormTitle')}
-          description={tJunior('applyFormProjectInfo', {
+          title={tEgresado('applyFormTitle')}
+          description={tEgresado('applyFormProjectInfo', {
             title: project.title,
             company: project.companyName,
           })}
@@ -139,7 +139,7 @@ export default function ApplyProjectPage() {
                   htmlFor="coverLetter"
                   className="text-sm font-bold flex justify-between"
                 >
-                  <span>{tJunior('coverLetter')}</span>
+                  <span>{tEgresado('coverLetter')}</span>
                   <span className="text-xs font-normal text-muted-foreground">
                     {tCommon('minCharsLabel', { n: 30 })}
                   </span>
@@ -147,7 +147,7 @@ export default function ApplyProjectPage() {
                 <Textarea
                   id="coverLetter"
                   rows={6}
-                  placeholder={tJunior('coverLetterPlaceholder')}
+                  placeholder={tEgresado('coverLetterPlaceholder')}
                   className={`bg-card/50 border-border ${errors.coverLetter ? 'border-destructive' : 'focus-visible:ring-primary'}`}
                   {...register('coverLetter')}
                 />
@@ -164,12 +164,12 @@ export default function ApplyProjectPage() {
                   className="text-sm font-bold flex items-center gap-1.5"
                 >
                   <FileText className="w-4 h-4 text-primary" />
-                  {tJunior('portfolioUrl')}
+                  {tEgresado('portfolioUrl')}
                 </Label>
                 <Input
                   id="portfolioUrl"
                   type="url"
-                  placeholder={tJunior('portfolioPlaceholder')}
+                  placeholder={tEgresado('portfolioPlaceholder')}
                   className={`bg-card/50 border-border ${errors.portfolioUrl ? 'border-destructive' : 'focus-visible:ring-primary'}`}
                   {...register('portfolioUrl')}
                 />
@@ -186,12 +186,12 @@ export default function ApplyProjectPage() {
                   className="text-sm font-bold flex items-center gap-1.5"
                 >
                   <FileText className="w-4 h-4 text-secondary" />
-                  {tJunior('cvUrl')}
+                  {tEgresado('cvUrl')}
                 </Label>
                 <Input
                   id="cvUrl"
                   type="url"
-                  placeholder={tJunior('cvPlaceholder')}
+                  placeholder={tEgresado('cvPlaceholder')}
                   className={`bg-card/50 border-border ${errors.cvUrl ? 'border-destructive' : 'focus-visible:ring-primary'}`}
                   {...register('cvUrl')}
                 />

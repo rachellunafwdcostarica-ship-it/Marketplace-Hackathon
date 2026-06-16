@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -14,9 +14,9 @@ import { Briefcase } from 'lucide-react'
 import { ProjectGrid } from '@/components/features/marketplace/ProjectGrid'
 
 export default function MarketplacePage() {
-  const tJunior = useTranslations('Junior')
+  const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
-  const { projects } = useAppState()
+  const { projects } = useDemoData()
 
   const [search, setSearch] = useState('')
   const [selectedStack, setSelectedStack] = useState('')
@@ -97,8 +97,8 @@ export default function MarketplacePage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PageTitle
-          title={tJunior('marketplace')}
-          description={tJunior('marketplaceDesc')}
+          title={tEgresado('marketplace')}
+          description={tEgresado('marketplaceDesc')}
           dotColor="text-accent"
         />
 
@@ -106,7 +106,7 @@ export default function MarketplacePage() {
           <SearchBar
             value={search}
             onChange={setSearch}
-            placeholder={tJunior('searchPlaceholder')}
+            placeholder={tEgresado('searchPlaceholder')}
           />
 
           <ProjectFilters
@@ -125,8 +125,8 @@ export default function MarketplacePage() {
           <div className="pt-4">
             {filteredProjects.length === 0 ? (
               <EmptyState
-                title={tJunior('emptyState')}
-                description={tJunior('emptyStateDesc')}
+                title={tEgresado('emptyState')}
+                description={tEgresado('emptyStateDesc')}
                 icon={Briefcase}
                 actionText={tCommon('clearFilters')}
                 onAction={handleClearFilters}

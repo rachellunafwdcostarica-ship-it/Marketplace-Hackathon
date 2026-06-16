@@ -122,16 +122,18 @@ export async function generateProposal(
         const msg = e instanceof Error ? e.message : 'error_desconocido'
         // AI_NOT_CONFIGURED no se reintenta: lo mapea el catch externo.
         if (msg === 'AI_NOT_CONFIGURED') throw e
-        logger.warn('generateProposal: generación falló, reintento', {
-          intento,
-          error: msg,
-        })
+        // callJson ya reintentó 3 veces internamente; repetir la ronda completa
+        // sería lento (y agravaría el "spinner infinito"). Cortamos y salimos
+        // como fallo técnico → 'ai_failed' (mensaje claro, no un cuelgue).
+        logger.error(
+          'generateProposal: la IA no devolvió una propuesta válida',
+          {
+            intento,
+            error: msg,
+          },
+        )
         ultimoFalloTecnico = true
-        ajustes = [
-          'Devolvé SOLO un JSON válido y completo con los campos pedidos, sin texto extra.',
-        ]
-        ultimasRazones = ['La IA no devolvió una propuesta válida.']
-        continue
+        break
       }
 
       const categorias = resolveCatalog(raw.categorias, catalogs.categorias)

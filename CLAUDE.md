@@ -75,3 +75,6 @@ Agent: He terminado de revisar los cambios y he realizado el commit.
 
 ## migraciones supabase
 A la hora de realizar migracioes, no se enviaran directamente. Tendrás que comunicarte con el dueño de la base de datos [Samir] y pedirle que te de permiso para enviar las migraciones y hacer pruebas locales. una vez que te de permiso, puedes hacer las migraciones y pruebas locales. luego tendras que comunicarte de nuevo con [Samir] y pedirle que te de permiso para enviar las migraciones a la base de datos remota. no hagas push directo al dev. Solo después de que Samir apruebe, haras el push al dev. Asimismo, no haras migraciones a la base de datos local sin antes haber hecho las pruebas locales y recibido la aprobacion de Samir. 
+
+## importante
+Todo esto tiene que estar ligado al archivo @reglas.md y lo mas importante es que respetes las reglas de CLAUDE, estas son la prioridad ante cualquier otra instrucción, asi mismo como con las de [reglas.md], ya que son las que definen el comportamiento que debes seguir. si no estas seguro de algo, pregunta. Si algo puede cambiar en el futuro, implementa de manera modular. no implementes código que sea difícil de cambiar o modificar, piensa en el futuro. 

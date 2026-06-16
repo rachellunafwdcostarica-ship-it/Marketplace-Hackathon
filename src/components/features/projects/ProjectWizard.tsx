@@ -9,6 +9,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Info,
+  RotateCcw,
   ShieldAlert,
   Sparkles,
 } from 'lucide-react'
@@ -24,11 +25,12 @@ import {
   buildLogisticsSchema,
   draftToFormValues,
   toLogisticaDraft,
+  CONTEXTO_MAX,
   type LogisticaDraft,
   type LogisticsFormValues,
   type PropuestaProyecto,
 } from '@/lib/projects/schemas'
-import { saveLogisticsDraft } from '@/lib/projects/actions'
+import { saveLogisticsDraft, discardDraft } from '@/lib/projects/actions'
 import { sendChatMessage } from '@/lib/projects/chat'
 import { generateProposal } from '@/lib/projects/proposal'
 import { publishProject } from '@/lib/projects/publish'
@@ -82,6 +84,7 @@ export function ProjectWizard({
   const [loading, setLoading] = useState(false)
   const [armando, setArmando] = useState(false)
   const [publicando, setPublicando] = useState(false)
+  const [descartando, setDescartando] = useState(false)
   const [historial, setHistorial] = useState<HistorialEntry[]>(historialInicial)
   const [contexto, setContexto] = useState(contextoInicial)
   const [propuesta, setPropuesta] = useState<PropuestaProyecto | null>(
@@ -108,6 +111,9 @@ export function ProjectWizard({
     handleSubmit,
     formState: { errors },
   } = form
+
+  // Largo actual del contexto para el contador (tope CONTEXTO_MAX caracteres).
+  const contextoLen = (form.watch('contextoInicial') ?? '').length
 
   const onSubmit = async (values: LogisticsFormValues) => {
     setLoading(true)
@@ -190,6 +196,42 @@ export function ProjectWizard({
     )
   }
 
+  const hayBorrador =
+    historial.length > 0 ||
+    contexto.trim().length > 0 ||
+    logisticaActual != null
+
+  const onDescartar = async () => {
+    setDescartando(true)
+    const result = await discardDraft()
+    if (result.ok) {
+      toast.success(t('draftDiscarded'))
+      // Recarga: el server vuelve a correr initProjectPublishing y, sin una
+      // conversación en_curso, arranca un borrador limpio.
+      window.location.reload()
+      return
+    }
+    setDescartando(false)
+    toast.error(
+      t(
+        `errors.${KNOWN_ERROR_CODES.has(result.error) ? result.error : 'unexpected'}`,
+      ),
+    )
+  }
+
+  const botonDescartar = (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={onDescartar}
+      disabled={descartando || loading || armando || publicando}
+      className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-destructive"
+    >
+      <RotateCcw className="w-4 h-4" />
+      {descartando ? t('discarding') : t('discardDraft')}
+    </Button>
+  )
+
   if (step === 3 && propuesta) {
     return (
       <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative mt-6">
@@ -212,6 +254,7 @@ export function ProjectWizard({
             onAceptar={onAceptar}
             onPedirCambios={() => setStep(2)}
           />
+          <div className="pt-3 border-t border-border/40">{botonDescartar}</div>
         </CardContent>
       </Card>
     )
@@ -242,7 +285,7 @@ export function ProjectWizard({
             armando={armando}
           />
 
-          <div className="pt-3 border-t border-border/40">
+          <div className="flex items-center justify-between pt-3 border-t border-border/40">
             <Button
               type="button"
               variant="outline"
@@ -252,6 +295,7 @@ export function ProjectWizard({
               <ArrowLeft className="w-4 h-4" />
               {t('back')}
             </Button>
+            {botonDescartar}
           </div>
         </CardContent>
       </Card>
@@ -295,33 +339,47 @@ export function ProjectWizard({
               <Textarea
                 id="contextoInicial"
                 rows={5}
+                maxLength={CONTEXTO_MAX}
                 disabled={loading}
                 placeholder={t('fieldBackgroundPlaceholder')}
                 className="bg-card/50 border-border focus-visible:ring-primary"
                 {...register('contextoInicial')}
               />
-              {errors.contextoInicial?.message && (
-                <p className="text-xs font-semibold text-destructive">
-                  {t(`errors.${errors.contextoInicial.message}`)}
+              <div className="flex justify-between gap-2">
+                {errors.contextoInicial?.message ? (
+                  <p className="text-xs font-semibold text-destructive">
+                    {t(`errors.${errors.contextoInicial.message}`)}
+                  </p>
+                ) : (
+                  <span />
+                )}
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {t('fieldBackgroundCounter', {
+                    count: String(contextoLen),
+                    max: String(CONTEXTO_MAX),
+                  })}
                 </p>
-              )}
+              </div>
             </section>
 
-            <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
-              <Link
-                href="/empresario"
-                className="border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center rounded-lg text-sm font-semibold h-8 px-3"
-              >
-                {tCommon('cancel')}
-              </Link>
-              <Button
-                type="submit"
-                disabled={loading || !isVerified}
-                className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? t('continuing') : t('continueWithAi')}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+            <div className="flex gap-3 items-center justify-between pt-4 border-t border-border/40">
+              <div>{hayBorrador && botonDescartar}</div>
+              <div className="flex gap-3 items-center">
+                <Link
+                  href="/empresario"
+                  className="border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center rounded-lg text-sm font-semibold h-8 px-3"
+                >
+                  {tCommon('cancel')}
+                </Link>
+                <Button
+                  type="submit"
+                  disabled={loading || !isVerified}
+                  className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold flex items-center gap-1.5 shadow-sm px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? t('continuing') : t('continueWithAi')}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </form>
         </FormProvider>

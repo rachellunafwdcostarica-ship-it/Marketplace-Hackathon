@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useAppState } from '@/lib/StateContext'
+import { useDemoData } from '@/lib/DemoDataContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -41,7 +41,7 @@ interface CompanyDashboardClientProps {
  * Cuerpo (client) del dashboard del empresario. Los proyectos llegan YA cargados
  * por prop desde el server component (sin useEffect de fetch); el refetch tras
  * cancelar usa `router.refresh()`. Postulaciones y stats de postulaciones siguen
- * en mock (StateContext) — ver docs/deuda-tecnica-mocks.md.
+ * en mock (DemoDataContext) — ver docs/deuda-tecnica-mocks.md.
  */
 export function CompanyDashboardClient({
   initialProjects,
@@ -56,7 +56,7 @@ export function CompanyDashboardClient({
     applications,
     updateApplicationStatus,
     currentCompany: company,
-  } = useAppState()
+  } = useDemoData()
 
   const router = useRouter()
 
@@ -204,7 +204,7 @@ export function CompanyDashboardClient({
                     <ApplicationCard
                       key={app.id}
                       application={app}
-                      viewMode="empresa"
+                      viewMode="empresario"
                       onAccept={() =>
                         handleActionClick('accept', app.id, app.candidateName)
                       }
