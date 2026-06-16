@@ -919,6 +919,17 @@
     "errorTechReq": "Add at least one technology",
     "errorDateReq": "Completion date is required",
     "errorRepoInvalid": "Invalid repository URL",
-    "errorDemoInvalid": "Invalid demo URL"
+    "errorDemoInvalid": "Invalid demo URL",
+    "skillsTitle": "Technical Skills",
+    "addSkill": "Add Skill",
+    "newSkill": "New Skill",
+    "editSkill": "Edit Skill",
+    "noSkills": "No skills registered yet",
+    "skillName": "Skill name",
+    "skillLevel": "Level",
+    "levelBasic": "Basic",
+    "levelIntermediate": "Intermediate",
+    "levelAdvanced": "Advanced",
+    "saveSkill": "Save Skill"
   }
 }

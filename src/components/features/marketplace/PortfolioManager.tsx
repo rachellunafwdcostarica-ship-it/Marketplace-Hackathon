@@ -48,6 +48,7 @@ function SkillForm({
 }) {
   const [name, setName] = useState(initialData?.name || '')
   const [level, setLevel] = useState<SkillLevel>(initialData?.level || 'basico')
+  const t = useTranslations('Portfolio')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,10 +59,11 @@ function SkillForm({
     })
   }
 
+  // TODO(RF-09): Reemplazar input de texto libre con el componente SkillPicker cuando la BD esté conectada.
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium">Nombre de habilidad</label>
+        <label className="text-sm font-medium">{t('skillName')}</label>
         <input
           type="text"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -71,22 +73,22 @@ function SkillForm({
         />
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium">Nivel</label>
+        <label className="text-sm font-medium">{t('skillLevel')}</label>
         <select
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={level}
           onChange={(e) => setLevel(e.target.value as SkillLevel)}
         >
-          <option value="basico">Básico</option>
-          <option value="intermedio">Intermedio</option>
-          <option value="avanzado">Avanzado</option>
+          <option value="basico">{t('levelBasic')}</option>
+          <option value="intermedio">{t('levelIntermediate')}</option>
+          <option value="avanzado">{t('levelAdvanced')}</option>
         </select>
       </div>
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
+          {t('cancel')}
         </Button>
-        <Button type="submit">Guardar Habilidad</Button>
+        <Button type="submit">{t('saveSkill')}</Button>
       </div>
     </form>
   )
@@ -295,19 +297,19 @@ export function PortfolioManager() {
       <div className="space-y-6 pt-8 border-t">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">
-            Habilidades Técnicas
+            {t('skillsTitle')}
           </h2>
           <Dialog open={isSkillDialogOpen} onOpenChange={setIsSkillDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleAddNewSkill}>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Agregar Habilidad
+                {t('addSkill')}
               </Button>
             </DialogTrigger>
             <DialogContent id="skill-dialog" className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>
-                  {editingSkill ? 'Editar Habilidad' : 'Nueva Habilidad'}
+                  {editingSkill ? t('editSkill') : t('newSkill')}
                 </DialogTitle>
               </DialogHeader>
               <SkillForm
@@ -321,9 +323,7 @@ export function PortfolioManager() {
 
         {skills.length === 0 ? (
           <div className="flex h-20 items-center justify-center rounded-lg border border-dashed">
-            <p className="text-muted-foreground">
-              No hay habilidades registradas
-            </p>
+            <p className="text-muted-foreground">{t('noSkills')}</p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -341,7 +341,11 @@ export function PortfolioManager() {
                             : 'outline'
                       }
                     >
-                      {skill.level}
+                      {skill.level === 'avanzado'
+                        ? t('levelAdvanced')
+                        : skill.level === 'intermedio'
+                          ? t('levelIntermediate')
+                          : t('levelBasic')}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -356,7 +360,7 @@ export function PortfolioManager() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-500 hover:text-red-700"
+                    className="text-destructive hover:text-destructive/80"
                     onClick={() => handleDeleteSkill(skill.id)}
                   >
                     <Trash2 className="h-4 w-4" />

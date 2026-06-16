@@ -915,6 +915,17 @@
     "errorTechReq": "Agrega al menos una tecnología",
     "errorDateReq": "La fecha de finalización es requerida",
     "errorRepoInvalid": "URL de repositorio inválida",
-    "errorDemoInvalid": "URL de demo inválida"
+    "errorDemoInvalid": "URL de demo inválida",
+    "skillsTitle": "Habilidades Técnicas",
+    "addSkill": "Agregar Habilidad",
+    "newSkill": "Nueva Habilidad",
+    "editSkill": "Editar Habilidad",
+    "noSkills": "No hay habilidades registradas",
+    "skillName": "Nombre de habilidad",
+    "skillLevel": "Nivel",
+    "levelBasic": "Básico",
+    "levelIntermediate": "Intermedio",
+    "levelAdvanced": "Avanzado",
+    "saveSkill": "Guardar Habilidad"
   }
 }
