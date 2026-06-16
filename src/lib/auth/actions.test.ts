@@ -49,7 +49,7 @@ function buildAdmin(opts: {
   const rpc = vi.fn().mockResolvedValue({ error: opts.rpcError ?? null })
 
   const client = {
-    from: vi.fn((_table: string) => ({
+    from: vi.fn(() => ({
       // Solo 'usuarios' se consulta desde el action ahora.
       // La config de bloqueo vive en el RPC de la BD.
       select: vi.fn(() => ({
