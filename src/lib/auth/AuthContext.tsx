@@ -24,14 +24,29 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+  initialRole = null,
+}: {
+  children: React.ReactNode
+  initialRole?: UserRole | null
+}) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [userRole, setUserRoleState] = useState<UserRole>('egresado')
+  const [userRole, setUserRoleState] = useState<UserRole>(
+    initialRole ?? 'egresado',
+  )
 
   useEffect(() => {
     const stored = normalizeRole(localStorage.getItem(FWD_STORAGE_KEYS.ROLE))
     if (stored) setUserRoleState(stored)
   }, [])
+
+  // Rol autoritativo provisto por el servidor (layout raíz). Se re-afirma
+  // cuando cambia entre navegaciones para ganar sobre el valor en memoria o el
+  // almacenado localmente, de modo que el rol real del servidor siempre prime.
+  useEffect(() => {
+    if (initialRole) setUserRoleState(initialRole)
+  }, [initialRole])
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient()
