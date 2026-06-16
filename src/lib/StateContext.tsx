@@ -26,7 +26,6 @@ import {
   mockStudentSkills,
   mockStudentPortfolio,
 } from '@/lib/constants/mockData'
-import { createProject, getProjects } from '@/lib/supabase/projects'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { normalizeRole } from '@/lib/auth/roles'
 import { getCompanyProfile } from '@/lib/company/actions'
@@ -248,28 +247,10 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [initialized])
 
-  // Sync projects with Supabase when initialized and when projects change
   useEffect(() => {
     if (!initialized) return
-    // Persist local changes to Supabase (optional, could be handled in add/update/delete functions)
-    // For now, ensure local storage stays in sync for offline fallback
     localStorage.setItem('fwd_projects', JSON.stringify(projects))
   }, [projects, initialized])
-
-  // Load projects from Supabase on first load if user is authenticated
-  useEffect(() => {
-    if (!initialized) return
-    const supabase = createSupabaseBrowserClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        getProjects()
-          .then((dbProjects) => {
-            if (dbProjects.length) setProjects(dbProjects)
-          })
-          .catch((e) => console.error('Error loading projects:', e))
-      }
-    })
-  }, [initialized])
 
   useEffect(() => {
     if (!initialized) return
@@ -335,21 +316,14 @@ export function StateProvider({ children }: { children: React.ReactNode }) {
   const addProject = (
     proj: Omit<Project, 'id' | 'createdAt' | 'companyId' | 'companyName'>,
   ) => {
-    // Persist the project in Supabase and update local state
-    const newProj: Omit<Project, 'id' | 'createdAt'> = {
+    const newProj: Project = {
       ...proj,
+      id: `proj-${Date.now()}`,
       companyId: currentCompany?.id || 'comp-1',
       companyName: currentCompany?.name || 'TechFlow Solutions',
+      createdAt: new Date().toISOString(),
     }
-    createProject(newProj)
-      .then((saved) => {
-        if (saved) {
-          setProjects((prev) => [saved, ...prev])
-        } else {
-          console.error('Failed to create project in Supabase')
-        }
-      })
-      .catch((e) => console.error('Supabase error:', e))
+    setProjects((prev) => [newProj, ...prev])
   }
 
   const updateProjectStatus = (id: string, status: ProjectStatus) => {
