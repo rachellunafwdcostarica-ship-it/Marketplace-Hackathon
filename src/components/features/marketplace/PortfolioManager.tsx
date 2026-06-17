@@ -1,11 +1,14 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useDemoData } from '@/lib/DemoDataContext'
+import React, { useState, useEffect } from 'react'
+import { useDemoData as useAppState } from '@/lib/StateContext'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
 import { useTranslations } from 'next-intl'
 import { addOrUpdateSkill, deleteSkill } from '@/lib/portfolio/skills'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 import {
   Card,
   CardHeader,
@@ -28,8 +31,14 @@ import {
   Trash2,
   ExternalLink,
   GitBranch,
+  Globe,
+  Lock,
+  BookOpen,
 } from 'lucide-react'
 import type { PortfolioProject, StudentSkill, SkillLevel } from '@/types'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 function SkillForm({
   initialData,
@@ -40,21 +49,38 @@ function SkillForm({
   onSave: (skill: StudentSkill) => void
   onCancel: () => void
 }) {
-  const [name, setName] = useState(initialData?.name || '')
-  const [level, setLevel] = useState<SkillLevel>(initialData?.level || 'basico')
   const t = useTranslations('Portfolio')
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const skillSchema = React.useMemo(() => {
+    return z.object({
+      name: z.string().min(2, t('errorTitleReq')),
+      level: z.enum(['basico', 'intermedio', 'avanzado']),
+    })
+  }, [t])
+  type SkillFormValues = z.infer<typeof skillSchema>
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SkillFormValues>({
+    resolver: zodResolver(skillSchema),
+    defaultValues: {
+      name: initialData?.name || '',
+      level: initialData?.level || 'basico',
+    },
+  })
+
+  const onSubmit = (data: SkillFormValues) => {
     onSave({
       id: initialData?.id || `skill-${Date.now()}`,
-      name,
-      level,
+      name: data.name,
+      level: data.level,
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <label htmlFor="skill-name" className="text-sm font-medium">
           {t('skillName')}
@@ -63,10 +89,11 @@ function SkillForm({
           id="skill-name"
           type="text"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
+          {...register('name')}
         />
+        {errors.name && (
+          <p className="text-xs text-destructive">{errors.name.message}</p>
+        )}
       </div>
       <div className="space-y-2">
         <label htmlFor="skill-level" className="text-sm font-medium">
@@ -75,13 +102,15 @@ function SkillForm({
         <select
           id="skill-level"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          value={level}
-          onChange={(e) => setLevel(e.target.value as SkillLevel)}
+          {...register('level')}
         >
           <option value="basico">{t('levelBasic')}</option>
           <option value="intermedio">{t('levelIntermediate')}</option>
           <option value="avanzado">{t('levelAdvanced')}</option>
         </select>
+        {errors.level && (
+          <p className="text-xs text-destructive">{errors.level.message}</p>
+        )}
       </div>
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
@@ -94,7 +123,7 @@ function SkillForm({
 }
 
 export function PortfolioManager() {
-  const { studentPortfolio, setStudentPortfolio } = useDemoData()
+  const { studentPortfolio, setStudentPortfolio } = useAppState()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<
@@ -105,8 +134,51 @@ export function PortfolioManager() {
   )
   const t = useTranslations('Portfolio')
 
+  const bioSchema = React.useMemo(() => {
+    return z.object({
+      bio: z.string().max(2000, t('errorBioMax')),
+    })
+  }, [t])
+  type BioValues = z.infer<typeof bioSchema>
+
   const projects = studentPortfolio?.projects || []
   const skills = studentPortfolio?.skills || []
+
+  const portfolioBio = studentPortfolio?.bio
+
+  const {
+    register: registerBio,
+    handleSubmit: handleBioSubmit,
+    formState: { errors: bioErrors },
+    reset: resetBio,
+  } = useForm<BioValues>({
+    resolver: zodResolver(bioSchema),
+    defaultValues: {
+      bio: portfolioBio || '',
+    },
+  })
+
+  useEffect(() => {
+    resetBio({ bio: portfolioBio || '' })
+  }, [portfolioBio, resetBio])
+
+  const handleVisibilityChange = (visibility: 'publico' | 'empresas') => {
+    if (!studentPortfolio) return
+    setStudentPortfolio({
+      ...studentPortfolio,
+      visibility,
+    })
+    toast.success(t('toastVisibilityUpdated'))
+  }
+
+  const handleBioSave = (data: BioValues) => {
+    if (!studentPortfolio) return
+    setStudentPortfolio({
+      ...studentPortfolio,
+      bio: data.bio || '',
+    })
+    toast.success(t('toastBioSaved'))
+  }
 
   const handleSave = (project: PortfolioProject) => {
     if (!studentPortfolio) return
@@ -177,7 +249,254 @@ export function PortfolioManager() {
 
   return (
     <div className="space-y-12">
-      <div className="space-y-6">
+      {/* Visibility Settings, Biography Editor & Profile Preview (RF-14 & RF-15) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Settings */}
+        <div className="lg:col-span-5 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Globe className="h-5 w-5 text-primary" />
+                {t('formVisibilityLabel')}
+              </CardTitle>
+              <CardDescription>{t('visibilityDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={
+                    studentPortfolio?.visibility === 'publico'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  className="flex-1 justify-center gap-2"
+                  onClick={() => handleVisibilityChange('publico')}
+                >
+                  <Globe className="h-4 w-4" />
+                  {t('visibilityPublic')}
+                </Button>
+                <Button
+                  type="button"
+                  variant={
+                    studentPortfolio?.visibility === 'empresas'
+                      ? 'default'
+                      : 'outline'
+                  }
+                  className="flex-1 justify-center gap-2"
+                  onClick={() => handleVisibilityChange('empresas')}
+                >
+                  <Lock className="h-4 w-4" />
+                  {t('visibilityCompanies')}
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md">
+                {studentPortfolio?.visibility === 'publico'
+                  ? t('visibilityPublicDesc')
+                  : t('visibilityCompaniesDesc')}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                {t('bioTitle')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form
+                onSubmit={handleBioSubmit(handleBioSave)}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="portfolio-bio-textarea" className="sr-only">
+                    {t('bioTitle')}
+                  </Label>
+                  <Textarea
+                    id="portfolio-bio-textarea"
+                    placeholder={t('bioPlaceholder')}
+                    {...registerBio('bio')}
+                    rows={6}
+                  />
+                  {bioErrors.bio && (
+                    <p className="text-xs text-destructive">
+                      {bioErrors.bio.message}
+                    </p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full">
+                  {t('saveBio')}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Preview */}
+        <div className="lg:col-span-7">
+          <Card className="h-full border border-primary/20 bg-surface shadow-sm">
+            <CardHeader className="border-b bg-muted/20 pb-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-xl font-bold font-display">
+                    {t('profilePreview')}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('visibilityText')}{' '}
+                    <span className="font-semibold text-primary">
+                      {studentPortfolio?.visibility === 'publico'
+                        ? t('visibilityPublic')
+                        : t('visibilityCompanies')}
+                    </span>
+                  </p>
+                </div>
+                <Badge
+                  variant={
+                    studentPortfolio?.visibility === 'publico'
+                      ? 'default'
+                      : 'secondary'
+                  }
+                  className="gap-1"
+                >
+                  {studentPortfolio?.visibility === 'publico' ? (
+                    <Globe className="h-3 w-3" />
+                  ) : (
+                    <Lock className="h-3 w-3" />
+                  )}
+                  {studentPortfolio?.visibility === 'publico'
+                    ? t('visibilityPublic')
+                    : t('visibilityCompanies')}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 pt-6 font-sans">
+              {/* === Biografía === */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-primary/20"></div>
+                  <div className="text-sm font-semibold tracking-wider text-muted-foreground font-display uppercase">
+                    {t('bioSection')}
+                  </div>
+                  <div className="h-px flex-1 bg-primary/20"></div>
+                </div>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  {studentPortfolio?.bio ? (
+                    studentPortfolio.bio
+                  ) : (
+                    <span className="text-muted-foreground italic">
+                      {t('noBio')}
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              {/* === Habilidades === */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-primary/20"></div>
+                  <div className="text-sm font-semibold tracking-wider text-muted-foreground font-display uppercase">
+                    {t('skillsSection')}
+                  </div>
+                  <div className="h-px flex-1 bg-primary/20"></div>
+                </div>
+                {skills.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">
+                    {t('noSkills')}
+                  </p>
+                ) : (
+                  <div className="space-y-1 pl-2 border-l-2 border-primary/20">
+                    {skills.map((skill) => (
+                      <div key={skill.id} className="text-sm text-foreground">
+                        {skill.name} <span className="opacity-50 mx-1">—</span>{' '}
+                        {skill.level === 'avanzado'
+                          ? t('levelAdvanced')
+                          : skill.level === 'intermedio'
+                            ? t('levelIntermediate')
+                            : t('levelBasic')}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* === Proyectos === */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-primary/20"></div>
+                  <div className="text-sm font-semibold tracking-wider text-muted-foreground font-display uppercase">
+                    {t('projectsSection')}
+                  </div>
+                  <div className="h-px flex-1 bg-primary/20"></div>
+                </div>
+                {projects.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">
+                    {t('noProjects')}
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {projects.map((proj) => (
+                      <div
+                        key={proj.id}
+                        className="space-y-1 pl-2 border-l-2 border-primary/20"
+                      >
+                        <div className="font-semibold text-sm text-foreground flex items-center justify-between">
+                          <span>{proj.title}</span>
+                          {proj.completionDate && (
+                            <span className="text-xs text-muted-foreground font-normal">
+                              (
+                              {new Date(
+                                proj.completionDate,
+                              ).toLocaleDateString()}
+                              )
+                            </span>
+                          )}
+                        </div>
+                        {proj.description && (
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {proj.description}
+                          </p>
+                        )}
+                        <div className="text-xs text-muted-foreground font-semibold pt-1">
+                          {t('technologiesUsed')}:
+                        </div>
+                        <div className="text-xs text-foreground font-medium">
+                          {proj.technologies.join(', ')}
+                        </div>
+                        <div className="flex gap-2 pt-1 text-xs">
+                          {proj.repositoryUrl && (
+                            <a
+                              href={proj.repositoryUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-0.5"
+                            >
+                              <GitBranch className="h-3 w-3" /> {t('repo')}
+                            </a>
+                          )}
+                          {proj.demoUrl && (
+                            <a
+                              href={proj.demoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-0.5"
+                            >
+                              <ExternalLink className="h-3 w-3" /> {t('demo')}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="space-y-6 pt-8 border-t">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">
             {t('managerTitle')}
