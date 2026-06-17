@@ -8,7 +8,10 @@ export default function PortfolioPage() {
   return (
     <div className="container mx-auto py-10 space-y-8 max-w-6xl">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t('title')}
+          <span className="text-primary">.</span>
+        </h1>
         <p className="text-muted-foreground mt-2">{t('description')}</p>
       </div>
 
