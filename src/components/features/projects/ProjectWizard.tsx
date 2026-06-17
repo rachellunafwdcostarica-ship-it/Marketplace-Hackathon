@@ -25,6 +25,7 @@ import {
   buildLogisticsSchema,
   draftToFormValues,
   toLogisticaDraft,
+  CONTEXTO_MIN,
   CONTEXTO_MAX,
   type LogisticaDraft,
   type LogisticsFormValues,
@@ -348,7 +349,12 @@ export function ProjectWizard({
               <div className="flex justify-between gap-2">
                 {errors.contextoInicial?.message ? (
                   <p className="text-xs font-semibold text-destructive">
-                    {t(`errors.${errors.contextoInicial.message}`)}
+                    {errors.contextoInicial.message === 'fondoMin'
+                      ? t('errors.fondoMin', {
+                          count: String(contextoLen),
+                          min: String(CONTEXTO_MIN),
+                        })
+                      : t(`errors.${errors.contextoInicial.message}`)}
                   </p>
                 ) : (
                   <span />
@@ -357,6 +363,7 @@ export function ProjectWizard({
                   {t('fieldBackgroundCounter', {
                     count: String(contextoLen),
                     max: String(CONTEXTO_MAX),
+                    min: String(CONTEXTO_MIN),
                   })}
                 </p>
               </div>
