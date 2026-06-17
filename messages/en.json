@@ -929,5 +929,11 @@
     "errorDateReq": "Completion date is required",
     "errorRepoInvalid": "Invalid repository URL",
     "errorDemoInvalid": "Invalid demo URL"
+  },
+  "CompanyMensajes": {
+    "title": "Messages Hub",
+    "description": "Connect and chat directly with FWD Talent graduates.",
+    "placeholderTitle": "Messages Hub Coming Soon",
+    "placeholderDesc": "Soon you will be able to chat in real-time with candidates and graduates interested in your projects right from this platform."
   }
 }

@@ -67,7 +67,7 @@ export function SidebarEmpresaNuevo() {
     },
     {
       id: 'mensajes',
-      href: '/empresario',
+      href: '/empresario/mensajes',
       label: t('menuMensajes'),
       icon: MessageSquare,
     },

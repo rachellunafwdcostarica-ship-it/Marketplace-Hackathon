@@ -925,5 +925,11 @@
     "errorDateReq": "La fecha de finalización es requerida",
     "errorRepoInvalid": "URL de repositorio inválida",
     "errorDemoInvalid": "URL de demo inválida"
+  },
+  "CompanyMensajes": {
+    "title": "Centro de Mensajes",
+    "description": "Conéctate y chatea directamente con los egresados de FWD Talent.",
+    "placeholderTitle": "Centro de Mensajes en camino",
+    "placeholderDesc": "Próximamente podrás chatear en tiempo real con los candidatos y egresados interesados en tus proyectos directamente desde aquí."
   }
 }
