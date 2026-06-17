@@ -330,7 +330,9 @@
     "urlPhoto": "Please enter a valid photo URL or leave the field empty.",
     "countryRequired": "Enter the country.",
     "scopeRequired": "Select the operating scope.",
-    "cedulaRequired": "Formal companies must provide a business or tax ID."
+    "cedulaRequired": "Formal companies must provide a business or tax ID.",
+    "birthDateRequired": "You must enter your date of birth.",
+    "birthDateMinAge": "You must be at least 18 years old."
   },
   "Empresa": {
     "dashboard": "Company Dashboard",
@@ -462,7 +464,7 @@
     "plazoHint": "The application window must last between {min} and {max} days.",
     "fieldBackground": "Project context (brief)",
     "fieldBackgroundPlaceholder": "Tell the AI what your project is about, what you need, and for whom...",
-    "fieldBackgroundCounter": "{count} / {max} characters",
+    "fieldBackgroundCounter": "{count} / {max} characters · min. {min}",
     "flowIntro": "First tell us the project logistics and context. Then the AI helps you build the proposal (title, description, categories, and technologies).",
     "fieldTitleOptional": "Optional — if left empty, the AI generates it",
     "continueWithAi": "Continue with the AI",
@@ -521,7 +523,7 @@
       "presupuestoEntero": "In colones the budget must be a whole number (no decimals).",
       "plazo": "The application window must be 5 to 15 days.",
       "fechaCierreRequerida": "Provide the application close date.",
-      "fondoMin": "Tell us a bit more about the project (at least 20 characters).",
+      "fondoMin": "You've written {count} of {min} required characters.",
       "fondoMax": "The context can't exceed 3000 characters.",
       "invalid_input": "Please review the form fields.",
       "not_verified": "Your company is not verified. You cannot continue yet.",
@@ -985,6 +987,22 @@
     "formVisibilityPlaceholder": "Select visibility",
     "visibilityPublic": "Public",
     "visibilityCompanies": "Companies",
+    "visibilityPublicDesc": "Anyone or recruiter can view your portfolio.",
+    "visibilityCompaniesDesc": "Only verified FWD companies can view your portfolio.",
+    "visibilityDesc": "Define who can view your professional portfolio.",
+    "errorBioMax": "The biography cannot exceed 2000 characters.",
+    "bioTitle": "Biography",
+    "bioPlaceholder": "Write a brief biography about yourself...",
+    "saveBio": "Save Biography",
+    "profilePreview": "Professional Profile Preview",
+    "bioSection": "Biography",
+    "skillsSection": "Skills",
+    "projectsSection": "Projects",
+    "noBio": "No biography added yet.",
+    "visibilityText": "Visibility status:",
+    "technologiesUsed": "Technologies",
+    "toastVisibilityUpdated": "Portfolio visibility updated.",
+    "toastBioSaved": "Portfolio biography saved.",
     "cancel": "Cancel",
     "save": "Save Project",
     "errorTitleReq": "Title is required",
@@ -1004,5 +1022,11 @@
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
     "saveSkill": "Save Skill"
+  },
+  "CompanyMensajes": {
+    "title": "Messages Hub",
+    "description": "Connect and chat directly with FWD Talent graduates.",
+    "placeholderTitle": "Messages Hub Coming Soon",
+    "placeholderDesc": "Soon you will be able to chat in real-time with candidates and graduates interested in your projects right from this platform."
   }
 }

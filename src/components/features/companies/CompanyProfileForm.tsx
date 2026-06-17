@@ -17,10 +17,12 @@ import {
 } from 'lucide-react'
 import {
   createCompanyProfileSchema,
+  MINIMUM_EMPRESARIO_AGE,
   type CompanyProfileInput,
   type CompanyProfileView,
   type VerificationStatus,
 } from '@/lib/company/schemas'
+import { maxBirthDateForMinAge } from '@/lib/utils/age'
 import { saveCompanyProfile } from '@/lib/company/actions'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -81,6 +83,11 @@ export function CompanyProfileForm({
   const profileSchema = useMemo(
     () => createCompanyProfileSchema(tValidation),
     [tValidation],
+  )
+  // Tope del selector: la fecha de quien cumple la mayoría de edad justo hoy.
+  const maxBirthDate = useMemo(
+    () => maxBirthDateForMinAge(MINIMUM_EMPRESARIO_AGE, new Date()),
+    [],
   )
 
   const {
@@ -297,12 +304,12 @@ export function CompanyProfileForm({
               <Field
                 id="birthDate"
                 label={tEmpresa('fieldBirthDate')}
-                optional={tEmpresa('optionalTag')}
                 error={errors.birthDate?.message}
               >
                 <Input
                   id="birthDate"
                   type="date"
+                  max={maxBirthDate}
                   className="bg-card/50 border-border focus-visible:ring-primary"
                   {...register('birthDate')}
                 />

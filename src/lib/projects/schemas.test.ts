@@ -21,7 +21,8 @@ function baseValues(
     plazoDias: '7', // dentro de 5..15
     paisProyecto: '',
     ciudadProyecto: '',
-    contextoInicial: 'Queremos una landing para captar leads de la marca.',
+    contextoInicial:
+      'Somos una marca de café de especialidad de Costa Rica y necesitamos una landing page para captar leads, con formulario de contacto integrado a nuestro CRM, una sección de testimonios de clientes, un blog para publicar contenido de marketing y analítica para medir las conversiones de cada campaña que lancemos durante el año.',
     ...overrides,
   }
 }
@@ -140,6 +141,25 @@ describe('buildLogisticsSchema', () => {
         true,
       )
     }
+  })
+
+  it('rechaza el contexto justo por debajo del mínimo (89)', () => {
+    const result = schema.safeParse(
+      baseValues({ contextoInicial: 'a'.repeat(89) }),
+    )
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues.some((i) => i.message === 'fondoMin')).toBe(
+        true,
+      )
+    }
+  })
+
+  it('acepta el contexto en el borde inferior (90)', () => {
+    const result = schema.safeParse(
+      baseValues({ contextoInicial: 'a'.repeat(90) }),
+    )
+    expect(result.success).toBe(true)
   })
 })
 

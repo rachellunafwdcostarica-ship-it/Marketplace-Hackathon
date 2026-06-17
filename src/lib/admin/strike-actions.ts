@@ -6,39 +6,53 @@ import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
+import { getCurrentUser } from '@/lib/auth/dal'
+import type { Database } from '@/types/database'
+
+type MotivoStrikeEnum = Database['public']['Enums']['motivo_strike_enum']
 
 const UserIdSchema = z.string().uuid()
-const MotivoSchema = z.string().trim().min(1).max(500).optional()
+const MotivoEnumSchema = z.enum([
+  'no_entrego',
+  'abandono_proyecto',
+  'conducta_inapropiada',
+  'calificacion_baja_repetida',
+  'fraude',
+  'ghosting',
+  'otro',
+] as const)
+const DescripcionSchema = z.string().trim().min(1).max(500).optional()
 
 /**
- * Incrementa en 1 los strikes de un usuario.
- * Solo un admin puede invocarla. Self-guard: no permite modificar la propia cuenta.
+ * Incrementa en 1 los strikes de un usuario e inserta un registro en la tabla
+ * `strikes` para auditoría. Solo un admin puede invocarla.
  */
 export async function addStrike(
   userId: string,
-  motivo?: string,
+  motivoEnum: MotivoStrikeEnum,
+  descripcion?: string,
 ): Promise<Result<void>> {
   const parsedId = UserIdSchema.safeParse(userId)
-  if (!parsedId.success) {
-    return err('invalid_user_id')
-  }
+  if (!parsedId.success) return err('invalid_user_id')
 
-  const parsedMotivo = MotivoSchema.safeParse(motivo)
-  if (!parsedMotivo.success) {
-    return err('invalid_motivo')
-  }
+  const parsedMotivo = MotivoEnumSchema.safeParse(motivoEnum)
+  if (!parsedMotivo.success) return err('invalid_motivo')
+
+  const parsedDesc = DescripcionSchema.safeParse(descripcion)
+  if (!parsedDesc.success) return err('invalid_descripcion')
 
   const authResult = await requireRole('administrador')
-  if (!authResult.ok) {
-    return authResult
-  }
+  if (!authResult.ok) return authResult
+
+  const me = await getCurrentUser()
+  if (!me) return err('unauthenticated')
 
   const adminClient = createSupabaseAdminClient()
 
-  // Leer el valor actual
+  // Leer estado actual del usuario
   const { data: usuario, error: readError } = await adminClient
     .from('usuarios')
-    .select('cantidad_strikes')
+    .select('cantidad_strikes, id_usuario')
     .eq('id_usuario', parsedId.data)
     .single()
 
@@ -52,7 +66,7 @@ export async function addStrike(
 
   const nuevaCantidad = (usuario.cantidad_strikes ?? 0) + 1
 
-  // Determinar si debemos suspender automáticamente la cuenta del usuario
+  // Leer límite de strikes de configuración (default: 3)
   const { data: configRows } = await adminClient
     .from('configuracion_sistema')
     .select('valor')
@@ -70,34 +84,48 @@ export async function addStrike(
 
   if (nuevaCantidad >= maxStrikesLimit) {
     updateFields.estado_cuenta = 'suspendida'
-    logger.warn(
-      'addStrike: usuario suspendido automáticamente por alcanzar límite de strikes',
-      {
-        userId,
-        nuevaCantidad,
-        maxStrikesLimit,
-      },
-    )
+    logger.warn('addStrike: usuario suspendido automáticamente', {
+      userId,
+      nuevaCantidad,
+    })
   }
 
-  const { error } = await adminClient
+  // Actualizar contador en usuarios
+  const { error: updateError } = await adminClient
     .from('usuarios')
     .update(updateFields)
     .eq('id_usuario', parsedId.data)
 
-  if (error) {
-    logger.error('addStrike: fallo al actualizar strikes', {
+  if (updateError) {
+    logger.error('addStrike: fallo al actualizar', {
       userId,
-      error: error.message,
-      motivo: parsedMotivo.data,
+      error: updateError.message,
     })
-    return err(error.message)
+    return err(updateError.message)
+  }
+
+  // Insertar registro de auditoría en tabla strikes
+  const { error: insertError } = await adminClient.from('strikes').insert({
+    id_usuario: parsedId.data,
+    aplicado_por: me.id,
+    motivo: parsedMotivo.data,
+    descripcion: parsedDesc.data ?? null,
+    revocado: false,
+  })
+
+  if (insertError) {
+    logger.error('addStrike: fallo al insertar en strikes', {
+      userId,
+      error: insertError.message,
+    })
+    // No revertimos el contador — el strike ya está aplicado; solo logamos el fallo de auditoría.
   }
 
   logger.info('addStrike: strike añadido', {
     userId,
     nuevaCantidad,
-    motivo: parsedMotivo.data ?? 'sin motivo',
+    motivo: parsedMotivo.data,
+    descripcion: parsedDesc.data ?? 'sin descripción',
     autoSuspended: nuevaCantidad >= maxStrikesLimit,
   })
 
@@ -107,19 +135,21 @@ export async function addStrike(
 }
 
 /**
- * Decrementa en 1 los strikes de un usuario (mínimo 0).
- * Solo un admin puede invocarla.
+ * Revoca (marca como revocado) el strike más reciente no revocado del usuario
+ * y decrementa el contador. Solo un admin puede invocarla.
  */
-export async function removeStrike(userId: string): Promise<Result<void>> {
+export async function removeStrike(
+  userId: string,
+  motivo?: string,
+): Promise<Result<void>> {
   const parsedId = UserIdSchema.safeParse(userId)
-  if (!parsedId.success) {
-    return err('invalid_user_id')
-  }
+  if (!parsedId.success) return err('invalid_user_id')
 
   const authResult = await requireRole('administrador')
-  if (!authResult.ok) {
-    return authResult
-  }
+  if (!authResult.ok) return authResult
+
+  const me = await getCurrentUser()
+  if (!me) return err('unauthenticated')
 
   const adminClient = createSupabaseAdminClient()
 
@@ -139,17 +169,39 @@ export async function removeStrike(userId: string): Promise<Result<void>> {
 
   const nuevaCantidad = Math.max(0, (usuario.cantidad_strikes ?? 0) - 1)
 
-  const { error } = await adminClient
+  const { error: updateError } = await adminClient
     .from('usuarios')
     .update({ cantidad_strikes: nuevaCantidad })
     .eq('id_usuario', parsedId.data)
 
-  if (error) {
-    logger.error('removeStrike: fallo al actualizar strikes', {
+  if (updateError) {
+    logger.error('removeStrike: fallo al actualizar', {
       userId,
-      error: error.message,
+      error: updateError.message,
     })
-    return err(error.message)
+    return err(updateError.message)
+  }
+
+  // Marcar como revocado el strike más reciente no revocado
+  const { data: strikeToRevoke } = await adminClient
+    .from('strikes')
+    .select('id_strike')
+    .eq('id_usuario', parsedId.data)
+    .eq('revocado', false)
+    .order('aplicado_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (strikeToRevoke) {
+    await adminClient
+      .from('strikes')
+      .update({
+        revocado: true,
+        revocado_at: new Date().toISOString(),
+        revocado_por: me.id,
+        motivo_revocacion: motivo ?? 'Reducción manual por administrador',
+      })
+      .eq('id_strike', strikeToRevoke.id_strike)
   }
 
   logger.info('removeStrike: strike reducido', { userId, nuevaCantidad })
@@ -160,42 +212,51 @@ export async function removeStrike(userId: string): Promise<Result<void>> {
 }
 
 /**
- * Resetea a 0 los strikes de un usuario. Motivo obligatorio (auditoría).
- * Solo un admin puede invocarla.
+ * Resetea a 0 los strikes de un usuario. Motivo obligatorio.
+ * Revoca todos los strikes activos del usuario.
  */
 export async function resetStrikes(
   userId: string,
   motivo: string,
 ): Promise<Result<void>> {
   const parsedId = UserIdSchema.safeParse(userId)
-  if (!parsedId.success) {
-    return err('invalid_user_id')
-  }
+  if (!parsedId.success) return err('invalid_user_id')
 
   const parsedMotivo = z.string().trim().min(5).max(500).safeParse(motivo)
-  if (!parsedMotivo.success) {
-    return err('motivo_requerido')
-  }
+  if (!parsedMotivo.success) return err('motivo_requerido')
 
   const authResult = await requireRole('administrador')
-  if (!authResult.ok) {
-    return authResult
-  }
+  if (!authResult.ok) return authResult
+
+  const me = await getCurrentUser()
+  if (!me) return err('unauthenticated')
 
   const adminClient = createSupabaseAdminClient()
 
-  const { error } = await adminClient
+  const { error: updateError } = await adminClient
     .from('usuarios')
     .update({ cantidad_strikes: 0 })
     .eq('id_usuario', parsedId.data)
 
-  if (error) {
-    logger.error('resetStrikes: fallo al resetear strikes', {
+  if (updateError) {
+    logger.error('resetStrikes: fallo al resetear', {
       userId,
-      error: error.message,
+      error: updateError.message,
     })
-    return err(error.message)
+    return err(updateError.message)
   }
+
+  // Revocar todos los strikes activos
+  await adminClient
+    .from('strikes')
+    .update({
+      revocado: true,
+      revocado_at: new Date().toISOString(),
+      revocado_por: me.id,
+      motivo_revocacion: parsedMotivo.data,
+    })
+    .eq('id_usuario', parsedId.data)
+    .eq('revocado', false)
 
   logger.info('resetStrikes: strikes reseteados', {
     userId,

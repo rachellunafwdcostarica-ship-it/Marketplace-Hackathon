@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
-import { Plus, Minus, RotateCcw } from 'lucide-react'
+import { Plus, Minus, RotateCcw, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +16,21 @@ import {
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { addStrike, removeStrike, resetStrikes } from '@/lib/admin/strike-actions'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  addStrike,
+  removeStrike,
+  resetStrikes,
+} from '@/lib/admin/strike-actions'
+import type { Database } from '@/types/database'
+
+type MotivoStrikeEnum = Database['public']['Enums']['motivo_strike_enum']
 
 interface StrikeActionsProps {
   userId: string
@@ -27,10 +41,22 @@ interface StrikeActionsProps {
 
 type ActionType = 'add' | 'remove' | 'reset'
 
+// Mapeo legible de cada motivo enum para el selector
+const MOTIVO_LABELS: Record<MotivoStrikeEnum, string> = {
+  no_entrego: 'No entregó el proyecto',
+  abandono_proyecto: 'Abandonó el proyecto',
+  conducta_inapropiada: 'Conducta inapropiada',
+  calificacion_baja_repetida: 'Calificación baja repetida',
+  fraude: 'Fraude o engaño',
+  ghosting: 'Ghosting (sin respuesta)',
+  otro: 'Otro motivo',
+}
+
+const MOTIVOS = Object.keys(MOTIVO_LABELS) as MotivoStrikeEnum[]
+
 /**
  * Acciones de moderación de strikes por usuario (panel de moderación).
- * Añadir, reducir y resetear, cada una con diálogo de confirmación.
- * El motivo es opcional en añadir, obligatorio en resetear (mínimo 5 chars).
+ * Añadir (con motivo enum + descripción), reducir y resetear.
  * Self-guard: oculta las acciones si el usuario es el propio admin.
  */
 export function StrikeActions({
@@ -44,7 +70,8 @@ export function StrikeActions({
   const router = useRouter()
 
   const [openAction, setOpenAction] = useState<ActionType | null>(null)
-  const [motivo, setMotivo] = useState('')
+  const [motivoEnum, setMotivoEnum] = useState<MotivoStrikeEnum>('otro')
+  const [descripcion, setDescripcion] = useState('')
   const [loading, setLoading] = useState(false)
 
   if (isSelf) {
@@ -52,7 +79,8 @@ export function StrikeActions({
   }
 
   const handleOpen = (action: ActionType) => {
-    setMotivo('')
+    setMotivoEnum('otro')
+    setDescripcion('')
     setOpenAction(action)
   }
 
@@ -66,20 +94,18 @@ export function StrikeActions({
       let result
 
       if (openAction === 'add') {
-        result = await addStrike(userId, motivo.trim() || undefined)
-        if (result.ok) {
-          toast.success(t('strikeAdded', { name: userName }))
-        }
+        result = await addStrike(
+          userId,
+          motivoEnum,
+          descripcion.trim() || undefined,
+        )
+        if (result.ok) toast.success(t('strikeAdded', { name: userName }))
       } else if (openAction === 'remove') {
-        result = await removeStrike(userId)
-        if (result.ok) {
-          toast.success(t('strikeRemoved', { name: userName }))
-        }
+        result = await removeStrike(userId, descripcion.trim() || undefined)
+        if (result.ok) toast.success(t('strikeRemoved', { name: userName }))
       } else if (openAction === 'reset') {
-        result = await resetStrikes(userId, motivo.trim())
-        if (result.ok) {
-          toast.success(t('strikesReset', { name: userName }))
-        }
+        result = await resetStrikes(userId, descripcion.trim())
+        if (result.ok) toast.success(t('strikesReset', { name: userName }))
       } else {
         return
       }
@@ -102,23 +128,9 @@ export function StrikeActions({
     }
   }
 
-  const isResetDisabled = openAction === 'reset' && motivo.trim().length < 5
+  const isResetDisabled =
+    openAction === 'reset' && descripcion.trim().length < 5
   const isConfirmDisabled = loading || isResetDisabled
-
-  const dialogMeta: Record<ActionType, { title: string; desc: string }> = {
-    add: {
-      title: t('addStrikeTitle', { name: userName }),
-      desc: t('addStrikeDesc', { name: userName }),
-    },
-    remove: {
-      title: t('removeStrikeTitle', { name: userName }),
-      desc: t('removeStrikeDesc', { name: userName, count: cantidadStrikes }),
-    },
-    reset: {
-      title: t('resetStrikesTitle', { name: userName }),
-      desc: t('resetStrikesDesc', { name: userName, count: cantidadStrikes }),
-    },
-  }
 
   return (
     <>
@@ -164,45 +176,130 @@ export function StrikeActions({
         )}
       </div>
 
-      {/* Diálogo de confirmación compartido */}
+      {/* Diálogo compartido */}
       <Dialog open={openAction !== null} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md border border-border">
           {openAction && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold font-heading">
-                  {dialogMeta[openAction].title}
+                <DialogTitle className="text-xl font-bold font-heading flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-warning" />
+                  {openAction === 'add'
+                    ? t('addStrikeTitle', { name: userName })
+                    : openAction === 'remove'
+                      ? t('removeStrikeTitle', { name: userName })
+                      : t('resetStrikesTitle', { name: userName })}
                 </DialogTitle>
                 <DialogDescription className="mt-2 text-sm text-muted-foreground">
-                  {dialogMeta[openAction].desc}
+                  {openAction === 'add'
+                    ? t('addStrikeDesc', { name: userName })
+                    : openAction === 'remove'
+                      ? t('removeStrikeDesc', {
+                          name: userName,
+                          count: cantidadStrikes,
+                        })
+                      : t('resetStrikesDesc', {
+                          name: userName,
+                          count: cantidadStrikes,
+                        })}
                 </DialogDescription>
               </DialogHeader>
 
-              {/* Campo motivo — opcional en 'add', obligatorio en 'reset' */}
-              {(openAction === 'add' || openAction === 'reset') && (
-                <div className="mt-3 space-y-1.5">
-                  <Label htmlFor="strike-motivo" className="text-xs font-semibold text-muted-foreground">
-                    {openAction === 'reset'
-                      ? t('strikeMotivo') + ' *'
-                      : t('strikeMotivo') + ' (' + t('strikeOptional') + ')'}
-                  </Label>
-                  <Textarea
-                    id="strike-motivo"
-                    value={motivo}
-                    onChange={(e) => setMotivo(e.target.value)}
-                    placeholder={t('strikeMotivoPlaceholder')}
-                    rows={3}
-                    className="resize-none text-sm"
-                    maxLength={500}
-                  />
-                  {openAction === 'reset' && motivo.trim().length < 5 && motivo.length > 0 && (
-                    <p className="text-xs text-destructive">{t('strikeMotivoMin')}</p>
-                  )}
-                </div>
-              )}
+              <div className="mt-3 space-y-4">
+                {/* Selector de motivo — solo para añadir */}
+                {openAction === 'add' && (
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="strike-motivo-enum"
+                      className="text-xs font-semibold text-muted-foreground"
+                    >
+                      Motivo del strike *
+                    </Label>
+                    <Select
+                      value={motivoEnum}
+                      onValueChange={(v) =>
+                        setMotivoEnum(v as MotivoStrikeEnum)
+                      }
+                    >
+                      <SelectTrigger id="strike-motivo-enum" className="w-full">
+                        <SelectValue placeholder="Seleccioná el motivo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MOTIVOS.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {MOTIVO_LABELS[m]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* Descripción libre */}
+                {(openAction === 'add' || openAction === 'reset') && (
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="strike-descripcion"
+                      className="text-xs font-semibold text-muted-foreground"
+                    >
+                      {openAction === 'reset'
+                        ? 'Justificación del reseteo *'
+                        : 'Descripción adicional (opcional)'}
+                    </Label>
+                    <Textarea
+                      id="strike-descripcion"
+                      value={descripcion}
+                      onChange={(e) => setDescripcion(e.target.value)}
+                      placeholder={
+                        openAction === 'reset'
+                          ? 'Explicá por qué se resetean los strikes...'
+                          : 'Describí brevemente el incidente...'
+                      }
+                      rows={3}
+                      className="resize-none text-sm"
+                      maxLength={500}
+                    />
+                    {openAction === 'reset' &&
+                      descripcion.trim().length < 5 &&
+                      descripcion.length > 0 && (
+                        <p className="text-xs text-destructive">
+                          {t('strikeMotivoMin')}
+                        </p>
+                      )}
+                    <p className="text-right text-[10px] text-muted-foreground">
+                      {descripcion.length}/500
+                    </p>
+                  </div>
+                )}
+
+                {/* Descripción para "reducir" */}
+                {openAction === 'remove' && (
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="strike-remove-motivo"
+                      className="text-xs font-semibold text-muted-foreground"
+                    >
+                      Motivo de reducción (opcional)
+                    </Label>
+                    <Textarea
+                      id="strike-remove-motivo"
+                      value={descripcion}
+                      onChange={(e) => setDescripcion(e.target.value)}
+                      placeholder="Indicá por qué se reduce el strike..."
+                      rows={2}
+                      className="resize-none text-sm"
+                      maxLength={500}
+                    />
+                  </div>
+                )}
+              </div>
 
               <DialogFooter className="mt-4 flex gap-2 border-t border-border/40 pt-4 sm:justify-end">
-                <Button variant="outline" onClick={handleClose} disabled={loading}>
+                <Button
+                  variant="outline"
+                  onClick={handleClose}
+                  disabled={loading}
+                >
                   {tCommon('cancel')}
                 </Button>
                 <Button
