@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
+import { isAtLeastYearsOld } from '@/lib/utils/age'
 
 /**
  * Schema del perfil del empresario (SRS RF-16). Datos de la empresa
@@ -17,6 +18,8 @@ const HTTP_URL_REGEX = /^https?:\/\/.+/
 const COMPANY_TYPES = ['formal', 'emprendedor'] as const
 const OPERATING_SCOPES = ['nacional', 'internacional', 'ambos'] as const
 const MIN_TAX_ID_LENGTH = 4
+/** Edad mínima legal para registrarse como empresario (mayoría de edad CR). */
+export const MINIMUM_EMPRESARIO_AGE = 18
 
 export type CompanyType = (typeof COMPANY_TYPES)[number]
 export type OperatingScope = (typeof OPERATING_SCOPES)[number]
@@ -47,7 +50,7 @@ export function createCompanyProfileSchema(
       firstName: z.string().min(2, { message: t('firstNameMin') }),
       lastName1: z.string().min(2, { message: t('lastNameMin') }),
       lastName2: z.string().optional(),
-      birthDate: z.string().optional(),
+      birthDate: z.string(),
       profilePhoto: optionalUrl(t('urlPhoto')),
       // Datos de la empresa (tabla empresarios).
       name: z.string().min(2, { message: t('companyNameMin') }),
@@ -80,6 +83,22 @@ export function createCompanyProfileSchema(
           message: t('scopeRequired'),
         })
       }
+      // Fecha de nacimiento obligatoria y con la mayoría de edad cumplida.
+      if (data.birthDate.trim() === '') {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['birthDate'],
+          message: t('birthDateRequired'),
+        })
+      } else if (
+        !isAtLeastYearsOld(data.birthDate, MINIMUM_EMPRESARIO_AGE, new Date())
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['birthDate'],
+          message: t('birthDateMinAge'),
+        })
+      }
     })
 }
 
@@ -88,7 +107,7 @@ export const CompanyProfileDbSchema = z
     firstName: z.string().min(2),
     lastName1: z.string().min(2),
     lastName2: z.string().optional(),
-    birthDate: z.string().optional(),
+    birthDate: z.string(),
     profilePhoto: optionalUrl(),
     name: z.string().min(2),
     companyType: z.enum(COMPANY_TYPES),
@@ -115,6 +134,21 @@ export const CompanyProfileDbSchema = z
         code: 'custom',
         path: ['operatingScope'],
         message: 'scopeRequired',
+      })
+    }
+    if (data.birthDate.trim() === '') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['birthDate'],
+        message: 'birthDateRequired',
+      })
+    } else if (
+      !isAtLeastYearsOld(data.birthDate, MINIMUM_EMPRESARIO_AGE, new Date())
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['birthDate'],
+        message: 'birthDateMinAge',
       })
     }
   })

@@ -330,7 +330,9 @@
     "urlPhoto": "Please enter a valid photo URL or leave the field empty.",
     "countryRequired": "Enter the country.",
     "scopeRequired": "Select the operating scope.",
-    "cedulaRequired": "Formal companies must provide a business or tax ID."
+    "cedulaRequired": "Formal companies must provide a business or tax ID.",
+    "birthDateRequired": "You must enter your date of birth.",
+    "birthDateMinAge": "You must be at least 18 years old."
   },
   "Empresa": {
     "dashboard": "Company Dashboard",

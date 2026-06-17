@@ -330,7 +330,9 @@
     "urlPhoto": "Debe ingresar una URL de foto válida o dejar el campo vacío.",
     "countryRequired": "Indicá el país.",
     "scopeRequired": "Seleccioná el alcance operativo.",
-    "cedulaRequired": "La empresa formal debe indicar su cédula jurídica o identificación fiscal."
+    "cedulaRequired": "La empresa formal debe indicar su cédula jurídica o identificación fiscal.",
+    "birthDateRequired": "Debés indicar tu fecha de nacimiento.",
+    "birthDateMinAge": "Debés tener al menos 18 años."
   },
   "Empresa": {
     "dashboard": "Panel Empresa",
