@@ -286,6 +286,201 @@ export async function getEmpresarioParticipations(): Promise<
   return ok(items)
 }
 
+const CalificarParticipacionSchema = z.object({
+  idParticipacion: z.string().uuid(),
+  calificacion: z.number().int().min(1).max(5),
+  comentario: z.string().max(1000).optional(),
+})
+
+/**
+ * Guarda la calificación (1-5) y el comentario opcional del empresario sobre el
+ * prototipo de un postulante (RF-36). Solo aplicable cuando `estado === 'en_revision'`.
+ * No modifica el estado — el trigger de transición no se dispara.
+ */
+export async function calificarParticipacion(
+  input: z.infer<typeof CalificarParticipacionSchema>,
+): Promise<Result<void>> {
+  const parsed = CalificarParticipacionSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const user = await getCurrentUser()
+  if (!user) return err('unauthorized')
+
+  const supabase = await createSupabaseServerClient()
+
+  const { data: empresario, error: empError } = await supabase
+    .from('empresarios')
+    .select('id_empresario')
+    .eq('id_usuario', user.id)
+    .maybeSingle()
+  if (empError) {
+    logger.error('calificarParticipacion: fallo al leer empresario', {
+      error: empError.message,
+    })
+    return err('unexpected')
+  }
+  if (!empresario) return err('empresario_no_encontrado')
+
+  const { data: participacion, error: readError } = await supabase
+    .from('participaciones')
+    .select('id_participacion, estado, id_proyecto')
+    .eq('id_participacion', parsed.data.idParticipacion)
+    .maybeSingle()
+  if (readError) {
+    logger.error('calificarParticipacion: fallo al leer participacion', {
+      error: readError.message,
+    })
+    return err('unexpected')
+  }
+  if (!participacion) return err('participacion_no_encontrada')
+  if (participacion.estado !== 'en_revision') return err('transicion_invalida')
+
+  const { data: proyectoOwned, error: proyError } = await supabase
+    .from('proyectos')
+    .select('id_proyecto')
+    .eq('id_proyecto', participacion.id_proyecto)
+    .eq('id_empresario', empresario.id_empresario)
+    .maybeSingle()
+  if (proyError) {
+    logger.error('calificarParticipacion: fallo al verificar proyecto', {
+      error: proyError.message,
+    })
+    return err('unexpected')
+  }
+  if (!proyectoOwned) return err('unauthorized')
+
+  const { error: updateError } = await supabase
+    .from('participaciones')
+    .update({
+      calificacion_prototipo: parsed.data.calificacion,
+      ...(parsed.data.comentario !== undefined
+        ? { comentario_prototipo: parsed.data.comentario }
+        : {}),
+    })
+    .eq('id_participacion', parsed.data.idParticipacion)
+  if (updateError) {
+    logger.error('calificarParticipacion: fallo al actualizar', {
+      error: updateError.message,
+    })
+    return err('calificacion_fallida')
+  }
+
+  return ok(undefined)
+}
+
+const AdjudicarParticipacionSchema = z.object({
+  idParticipacion: z.string().uuid(),
+  idProyecto: z.string().uuid(),
+})
+
+/**
+ * Adjudica el proyecto al postulante seleccionado (RF-37 + RF-39). Hace 3 updates
+ * secuenciales (no atómicos — MVP aceptable, riesgo documentado):
+ *   1. Ganador → `contratada` (dispara trigger crear_contratacion_al_adjudicar)
+ *   2. Resto `en_revision` del proyecto → `no_seleccionada` (batch)
+ *   3. Proyecto → `adjudicado`
+ * Si el paso 1 falla devuelve `adjudicacion_fallida`. Si fallan 2 o 3 devuelve
+ * `adjudicacion_parcial` (inconsistencia recuperable por admin).
+ */
+export async function adjudicarParticipacion(
+  input: z.infer<typeof AdjudicarParticipacionSchema>,
+): Promise<Result<void>> {
+  const parsed = AdjudicarParticipacionSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const user = await getCurrentUser()
+  if (!user) return err('unauthorized')
+
+  const supabase = await createSupabaseServerClient()
+
+  const { data: empresario, error: empError } = await supabase
+    .from('empresarios')
+    .select('id_empresario')
+    .eq('id_usuario', user.id)
+    .maybeSingle()
+  if (empError) {
+    logger.error('adjudicarParticipacion: fallo al leer empresario', {
+      error: empError.message,
+    })
+    return err('unexpected')
+  }
+  if (!empresario) return err('empresario_no_encontrado')
+
+  const { data: proyecto, error: proyError } = await supabase
+    .from('proyectos')
+    .select('id_proyecto')
+    .eq('id_proyecto', parsed.data.idProyecto)
+    .eq('id_empresario', empresario.id_empresario)
+    .maybeSingle()
+  if (proyError) {
+    logger.error('adjudicarParticipacion: fallo al verificar proyecto', {
+      error: proyError.message,
+    })
+    return err('unexpected')
+  }
+  if (!proyecto) return err('proyecto_no_encontrado')
+
+  const { data: participacion, error: partError } = await supabase
+    .from('participaciones')
+    .select('id_participacion, estado')
+    .eq('id_participacion', parsed.data.idParticipacion)
+    .eq('id_proyecto', parsed.data.idProyecto)
+    .maybeSingle()
+  if (partError) {
+    logger.error('adjudicarParticipacion: fallo al leer participacion', {
+      error: partError.message,
+    })
+    return err('unexpected')
+  }
+  if (!participacion) return err('participacion_no_encontrada')
+  if (participacion.estado !== 'en_revision') return err('transicion_invalida')
+
+  const { error: contratarError } = await supabase
+    .from('participaciones')
+    .update({ estado: 'contratada' })
+    .eq('id_participacion', parsed.data.idParticipacion)
+  if (contratarError) {
+    logger.error('adjudicarParticipacion: fallo al contratar ganador', {
+      error: contratarError.message,
+    })
+    if (contratarError.code === CHECK_VIOLATION)
+      return err('transicion_invalida')
+    return err('adjudicacion_fallida')
+  }
+
+  const { error: batchError } = await supabase
+    .from('participaciones')
+    .update({ estado: 'no_seleccionada' })
+    .eq('id_proyecto', parsed.data.idProyecto)
+    .eq('estado', 'en_revision')
+    .neq('id_participacion', parsed.data.idParticipacion)
+  if (batchError) {
+    logger.error(
+      'adjudicarParticipacion: fallo al cerrar otras participaciones',
+      {
+        error: batchError.message,
+        idProyecto: parsed.data.idProyecto,
+      },
+    )
+    return err('adjudicacion_parcial')
+  }
+
+  const { error: adjError } = await supabase
+    .from('proyectos')
+    .update({ estado: 'adjudicado' })
+    .eq('id_proyecto', parsed.data.idProyecto)
+    .eq('id_empresario', empresario.id_empresario)
+  if (adjError) {
+    logger.error('adjudicarParticipacion: fallo al adjudicar proyecto', {
+      error: adjError.message,
+      idProyecto: parsed.data.idProyecto,
+    })
+    return err('adjudicacion_parcial')
+  }
+
+  return ok(undefined)
+}
+
 /**
  * Conteos para las stats del dashboard del empresario. No usa el RPC: la RLS
  * (`participaciones_select`) ya limita la lectura a las participaciones de los

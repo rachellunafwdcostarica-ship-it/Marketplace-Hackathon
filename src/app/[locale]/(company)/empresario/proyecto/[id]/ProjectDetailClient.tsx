@@ -263,7 +263,10 @@ export function ProjectDetailClient({
                 {t('participationsDesc')}
               </p>
             </div>
-            <ParticipationsPanel result={participationsResult} />
+            <ParticipationsPanel
+              result={participationsResult}
+              projectId={project.id}
+            />
           </section>
         </main>
       </div>
