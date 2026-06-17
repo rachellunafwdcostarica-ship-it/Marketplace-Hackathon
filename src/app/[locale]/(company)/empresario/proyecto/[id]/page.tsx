@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { getMyPublishedProjects } from '@/lib/projects/dashboard'
 import { getProjectParticipations } from '@/lib/projects/project-detail'
+import { getEntregablesDeProyecto } from '@/lib/deliverables/queries'
 import { isCompanyProfileComplete } from '@/lib/company/actions'
 import { ProjectDetailClient } from './ProjectDetailClient'
 
@@ -9,12 +10,6 @@ interface ProjectDetailPageProps {
   params: Promise<{ id: string }>
 }
 
-/**
- * Detalle de un proyecto del empresario. Server component: reusa el guard de
- * "perfil completo" del dashboard y trae el proyecto (datos reales) más sus
- * participaciones (vía RPC). Si el proyecto no es del empresario o no existe,
- * `getMyPublishedProjects` (RLS) no lo devuelve y respondemos 404.
- */
 export default async function ProjectDetailPage({
   params,
 }: ProjectDetailPageProps) {
@@ -34,12 +29,16 @@ export default async function ProjectDetailPage({
     notFound()
   }
 
-  const participationsResult = await getProjectParticipations(id)
+  const [participationsResult, entregablesResult] = await Promise.all([
+    getProjectParticipations(id),
+    getEntregablesDeProyecto(id),
+  ])
 
   return (
     <ProjectDetailClient
       project={project}
       participationsResult={participationsResult}
+      entregablesResult={entregablesResult}
     />
   )
 }
