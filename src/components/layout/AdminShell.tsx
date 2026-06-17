@@ -50,7 +50,10 @@ export function AdminShell({ children }: AdminShellProps) {
 
   return (
     <div className="flex min-h-screen bg-canvas">
-      <SidebarAdmin className="hidden md:flex" onLogout={handleLogout} />
+      <SidebarAdmin
+        className="hidden md:sticky md:top-0 md:flex md:h-screen md:overflow-y-auto"
+        onLogout={handleLogout}
+      />
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
