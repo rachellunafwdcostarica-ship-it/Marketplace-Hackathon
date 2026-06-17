@@ -1,5 +1,5 @@
 import type { Json } from '@/types/database'
-import type { HistorialEntry } from '@/lib/ai/types'
+import type { HistorialEntry } from '@/lib/proposal-ai/types'
 import type { LogisticaDraft, PropuestaProyecto } from './schemas'
 
 /** Lee el historial (jsonb) como arreglo tipado; vacío si no es un arreglo. */

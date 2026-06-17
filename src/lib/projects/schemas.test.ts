@@ -143,9 +143,9 @@ describe('buildLogisticsSchema', () => {
     }
   })
 
-  it('rechaza el contexto justo por debajo del mínimo (239)', () => {
+  it('rechaza el contexto justo por debajo del mínimo (89)', () => {
     const result = schema.safeParse(
-      baseValues({ contextoInicial: 'a'.repeat(239) }),
+      baseValues({ contextoInicial: 'a'.repeat(89) }),
     )
     expect(result.success).toBe(false)
     if (!result.success) {
@@ -155,9 +155,9 @@ describe('buildLogisticsSchema', () => {
     }
   })
 
-  it('acepta el contexto en el borde inferior (240)', () => {
+  it('acepta el contexto en el borde inferior (90)', () => {
     const result = schema.safeParse(
-      baseValues({ contextoInicial: 'a'.repeat(240) }),
+      baseValues({ contextoInicial: 'a'.repeat(90) }),
     )
     expect(result.success).toBe(true)
   })

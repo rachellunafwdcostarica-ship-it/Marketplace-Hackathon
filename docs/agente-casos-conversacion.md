@@ -61,7 +61,9 @@
 ## Caso 3 — Brief vago (preguntar en negocio, acotado)
 
 **Logística:** modalidad remoto · USD · 300–800 · plazo 5 días.
-**Contexto inicial:** "Necesito una app para mi negocio."
+**Contexto inicial:** "Necesito una app para mi negocio, algo moderno y práctico que se vea profesional. Todavía no tengo claros los detalles, ya iremos viendo."
+
+> **Por qué tan largo y tan vacío.** El mínimo de caracteres del cuadro de contexto frena el "Necesito una app para mi negocio" original (33 chars). El texto se estiró solo para cruzar ese piso, **sin** agregar info concreta del negocio: sigue sin decir qué hace, para quién ni qué problema resuelve. No lo recortes "para que sea más corto": perdería el sentido del caso.
 
 **Debe pasar:**
 - Pregunta en negocio qué hace el negocio, qué problema resolver, para quién — máximo 2–3 rondas.
@@ -147,7 +149,7 @@ Quiero una página web para mi panadería 'La Espiga' que muestre el catálogo d
 
 **Caso 3** — logística: remoto · USD · 300–800 · 5 días
 ```text
-Necesito una app para mi negocio.
+Necesito una app para mi negocio, algo moderno y práctico que se vea profesional. Todavía no tengo claros los detalles, ya iremos viendo.
 ```
 
 **Caso 4** — logística: presencial · CRC · 1000–3000 · 12 días · Costa Rica / Heredia
