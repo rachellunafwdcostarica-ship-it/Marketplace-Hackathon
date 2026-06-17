@@ -39,6 +39,7 @@ import { cn } from '@/lib/utils/cn'
 
 interface CompanyProfileFormProps {
   initialProfile: CompanyProfileView
+  userId: string
 }
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
@@ -57,6 +58,7 @@ const VERIF_STYLE: Record<VerificationStatus, string> = {
 
 export function CompanyProfileForm({
   initialProfile,
+  userId,
 }: CompanyProfileFormProps) {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
@@ -160,19 +162,11 @@ export function CompanyProfileForm({
   const onSubmit = async (values: CompanyProfileInput) => {
     setLoading(true)
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-      if (userError || !user) {
-        throw new Error(tCommon('error'))
-      }
-
       // La foto va al bucket fotos-perfil (no exige fila empresario).
       let photoUrl = values.profilePhoto
       if (photoFile) {
         setUploadingPhoto(true)
-        photoUrl = await uploadImage('fotos-perfil', photoFile, user.id)
+        photoUrl = await uploadImage('fotos-perfil', photoFile, userId)
         setUploadingPhoto(false)
       }
 
@@ -190,7 +184,7 @@ export function CompanyProfileForm({
       let logoUrl = values.logo
       if (logoFile) {
         setUploadingLogo(true)
-        logoUrl = await uploadImage('logos', logoFile, user.id)
+        logoUrl = await uploadImage('logos', logoFile, userId)
         setUploadingLogo(false)
         const logoSave = await saveCompanyProfile({
           ...baseProfile,
