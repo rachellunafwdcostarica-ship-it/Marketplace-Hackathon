@@ -64,7 +64,9 @@ describe('Company Ratings Server Actions', () => {
       },
     }
     vi.mocked(createSupabaseServerClient).mockResolvedValue(
-      mockSupabase as unknown as ReturnType<typeof createSupabaseServerClient>,
+      mockSupabase as unknown as Awaited<
+        ReturnType<typeof createSupabaseServerClient>
+      >,
     )
 
     const res = await rateCompany({
@@ -81,24 +83,20 @@ describe('Company Ratings Server Actions', () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockSupabase = {
       auth: {
-        getUser: vi
-          .fn()
-          .mockResolvedValue({
-            data: { user: { id: 'usr-123' } },
-            error: null,
-          }),
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'usr-123' } },
+          error: null,
+        }),
       },
       from: vi.fn().mockImplementation((table) => {
         if (table === 'estudiantes') {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            maybeSingle: vi
-              .fn()
-              .mockResolvedValue({
-                data: { id_estudiante: 'est-456' },
-                error: null,
-              }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id_estudiante: 'est-456' },
+              error: null,
+            }),
           }
         }
         if (table === 'contrataciones') {
@@ -112,7 +110,9 @@ describe('Company Ratings Server Actions', () => {
       }),
     }
     vi.mocked(createSupabaseServerClient).mockResolvedValue(
-      mockSupabase as unknown as ReturnType<typeof createSupabaseServerClient>,
+      mockSupabase as unknown as Awaited<
+        ReturnType<typeof createSupabaseServerClient>
+      >,
     )
 
     const res = await rateCompany({
@@ -130,24 +130,20 @@ describe('Company Ratings Server Actions', () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockSupabase = {
       auth: {
-        getUser: vi
-          .fn()
-          .mockResolvedValue({
-            data: { user: { id: 'usr-123' } },
-            error: null,
-          }),
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'usr-123' } },
+          error: null,
+        }),
       },
       from: vi.fn().mockImplementation((table) => {
         if (table === 'estudiantes') {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            maybeSingle: vi
-              .fn()
-              .mockResolvedValue({
-                data: { id_estudiante: 'est-456' },
-                error: null,
-              }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id_estudiante: 'est-456' },
+              error: null,
+            }),
           }
         }
         if (table === 'contrataciones') {
@@ -175,7 +171,9 @@ describe('Company Ratings Server Actions', () => {
       }),
     }
     vi.mocked(createSupabaseServerClient).mockResolvedValue(
-      mockSupabase as unknown as ReturnType<typeof createSupabaseServerClient>,
+      mockSupabase as unknown as Awaited<
+        ReturnType<typeof createSupabaseServerClient>
+      >,
     )
 
     const res = await rateCompany({
@@ -193,24 +191,20 @@ describe('Company Ratings Server Actions', () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockSupabase = {
       auth: {
-        getUser: vi
-          .fn()
-          .mockResolvedValue({
-            data: { user: { id: 'usr-123' } },
-            error: null,
-          }),
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'usr-123' } },
+          error: null,
+        }),
       },
       from: vi.fn().mockImplementation((table) => {
         if (table === 'estudiantes') {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            maybeSingle: vi
-              .fn()
-              .mockResolvedValue({
-                data: { id_estudiante: 'est-456' },
-                error: null,
-              }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id_estudiante: 'est-456' },
+              error: null,
+            }),
           }
         }
         if (table === 'contrataciones') {
@@ -238,7 +232,9 @@ describe('Company Ratings Server Actions', () => {
       }),
     }
     vi.mocked(createSupabaseServerClient).mockResolvedValue(
-      mockSupabase as unknown as ReturnType<typeof createSupabaseServerClient>,
+      mockSupabase as unknown as Awaited<
+        ReturnType<typeof createSupabaseServerClient>
+      >,
     )
 
     const res = await rateCompany({
@@ -257,24 +253,20 @@ describe('Company Ratings Server Actions', () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     const mockSupabase = {
       auth: {
-        getUser: vi
-          .fn()
-          .mockResolvedValue({
-            data: { user: { id: 'usr-123' } },
-            error: null,
-          }),
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'usr-123' } },
+          error: null,
+        }),
       },
       from: vi.fn().mockImplementation((table) => {
         if (table === 'estudiantes') {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            maybeSingle: vi
-              .fn()
-              .mockResolvedValue({
-                data: { id_estudiante: 'est-456' },
-                error: null,
-              }),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id_estudiante: 'est-456' },
+              error: null,
+            }),
           }
         }
         if (table === 'contrataciones') {
@@ -310,7 +302,9 @@ describe('Company Ratings Server Actions', () => {
       }),
     }
     vi.mocked(createSupabaseServerClient).mockResolvedValue(
-      mockSupabase as unknown as ReturnType<typeof createSupabaseServerClient>,
+      mockSupabase as unknown as Awaited<
+        ReturnType<typeof createSupabaseServerClient>
+      >,
     )
 
     const res = await rateCompany({
