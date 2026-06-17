@@ -141,7 +141,7 @@ export function ApplyProjectClient({
         toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
       } else {
         toast.success(tEgresado('applySuccess'))
-        router.push('/applications')
+        router.push('/junior/applications')
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

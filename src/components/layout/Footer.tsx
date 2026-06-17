@@ -25,17 +25,6 @@ export function Footer() {
 
           {/* Junior Sections */}
           <div className="space-y-3">
-            {/*
-            """ ANTES """
-            <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
-              {t('juniorTitle')}
-            </h4>
-
-            """ DESPUES """
-            <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
-              {t('egresadoTitle')}
-            </h4>
-            */}
             <h4 className="text-sm font-bold uppercase tracking-wider text-accent font-heading">
               {t('egresadoTitle')}
             </h4>
@@ -49,12 +38,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                {/*
-                """ ANTES """ href="/junior/applications" — ruta inexistente (404); el listado vive en (app)/applications, no bajo el rol.
-                """ DESPUES """ href="/applications" — ruta real del listado de postulaciones.
-                */}
                 <Link
-                  href="/applications"
+                  href="/junior/applications"
                   className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
                   {t('myApplications')}
