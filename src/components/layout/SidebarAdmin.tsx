@@ -57,15 +57,19 @@ export function SidebarAdmin({
     <nav
       aria-label={t('roleAdmin')}
       className={cn(
-        'flex w-56 shrink-0 flex-col bg-[#3d1a6e] text-white',
+        'flex w-56 shrink-0 flex-col text-white relative overflow-hidden',
         className,
       )}
+      style={{
+        backgroundColor: '#662D91',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
+      }}
     >
       {/* Logo + Brand */}
       <Link
         href="/admin"
         onClick={onNavigate}
-        className="flex items-center gap-3 px-5 py-5 hover:opacity-90 transition-opacity"
+        className="flex items-center gap-3 px-5 py-5 hover:opacity-90 transition-opacity z-10"
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
           <FwdLogo className="h-6 w-6" />
@@ -76,10 +80,10 @@ export function SidebarAdmin({
       </Link>
 
       {/* Divider */}
-      <div className="mx-4 mb-3 h-px bg-white/10" />
+      <div className="mx-4 mb-3 h-px bg-white/10 z-10" />
 
       {/* Nav Items */}
-      <div className="flex flex-col gap-0.5 px-3 flex-1">
+      <div className="flex flex-col gap-1.5 px-3 flex-1 z-10">
         {ADMIN_NAV.map(({ href, labelKey, icon: Icon }) => {
           const isActive =
             href === '/admin'
@@ -92,23 +96,20 @@ export function SidebarAdmin({
               onClick={onNavigate}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
+                'flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
                 isActive
-                  ? 'bg-white/15 text-white shadow-sm'
-                  : 'text-white/65 hover:bg-white/8 hover:text-white/90',
+                  ? 'bg-gradient-to-r from-[#a25ddc] to-[#ec008c] text-white shadow-md'
+                  : 'text-white/75 hover:bg-white/10 hover:text-white/90',
               )}
             >
               <Icon
                 className={cn(
                   'h-4 w-4 shrink-0 transition-colors',
-                  isActive ? 'text-white' : 'text-white/55',
+                  isActive ? 'text-white' : 'text-white/60',
                 )}
                 aria-hidden="true"
               />
               <span>{t(labelKey)}</span>
-              {isActive && (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#ec008c]" />
-              )}
             </Link>
           )
         })}

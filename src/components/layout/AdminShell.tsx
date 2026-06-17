@@ -6,6 +6,7 @@ import { usePathname, useRouter } from '@/i18n/routing'
 import { Menu, X, ShieldCheck, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { SidebarAdmin } from './SidebarAdmin'
+import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import { cn } from '@/lib/utils/cn'
 
 interface AdminShellProps {
@@ -79,17 +80,17 @@ export function AdminShell({ children }: AdminShellProps) {
 
       {/* ── Main content column ── */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* ── Top Header Bar ── */}
+        {/* ── Top Header Bar (White / very light gray) ── */}
         <header
-          className="sticky top-0 z-30 flex h-[52px] items-center gap-3 px-5"
-          style={{ background: '#662d91' }}
+          className="sticky top-0 z-30 flex h-[52px] items-center gap-3 px-5 border-b border-gray-100 shadow-sm"
+          style={{ background: '#ffffff' }}
         >
           {/* Mobile hamburger */}
           <button
             type="button"
             aria-label={mobileOpen ? t('closeMenu') : t('openMenu')}
             onClick={() => setMobileOpen((open) => !open)}
-            className="rounded-lg p-1.5 text-white/90 hover:bg-white/10 md:hidden transition-colors"
+            className="rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 md:hidden transition-colors"
           >
             {mobileOpen ? (
               <X className="h-5 w-5" />
@@ -100,8 +101,8 @@ export function AdminShell({ children }: AdminShellProps) {
 
           {/* Foundation brand pill */}
           <span className="flex items-center gap-2 mr-2">
-            <ShieldCheck className="h-4 w-4 text-white/80 shrink-0" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/80 hidden sm:inline">
+            <ShieldCheck className="h-4 w-4 text-purple-700 shrink-0" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gray-700 hidden sm:inline">
               {t('adminEyebrow')}
             </span>
           </span>
@@ -111,17 +112,17 @@ export function AdminShell({ children }: AdminShellProps) {
 
           {/* Language switcher */}
           <div
-            className="flex items-center rounded-full border border-white/25 bg-white/10 p-0.5"
+            className="flex items-center rounded-full border border-gray-250 bg-gray-100 p-0.5"
             aria-label={t('language')}
           >
             <button
               type="button"
               onClick={() => handleLocaleChange('es')}
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-bold transition-colors duration-[var(--duration-fast)]',
+                'rounded-full px-3 py-1 text-xs font-bold transition-all duration-[var(--duration-fast)]',
                 locale === 'es'
-                  ? 'bg-white/25 text-white'
-                  : 'text-white/70 hover:text-white',
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800',
               )}
             >
               ES
@@ -130,10 +131,10 @@ export function AdminShell({ children }: AdminShellProps) {
               type="button"
               onClick={() => handleLocaleChange('en')}
               className={cn(
-                'rounded-full px-3 py-1 text-xs font-bold transition-colors duration-[var(--duration-fast)]',
+                'rounded-full px-3 py-1 text-xs font-bold transition-all duration-[var(--duration-fast)]',
                 locale === 'en'
-                  ? 'bg-white/25 text-white'
-                  : 'text-white/70 hover:text-white',
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800',
               )}
             >
               EN
@@ -141,7 +142,7 @@ export function AdminShell({ children }: AdminShellProps) {
           </div>
 
           {/* Role badge */}
-          <span className="flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-bold text-white">
+          <span className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-100/60 px-3 py-1 text-xs font-bold text-gray-700">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#ec008c]" />
             {t('roleAdmin')}
           </span>
@@ -150,21 +151,21 @@ export function AdminShell({ children }: AdminShellProps) {
           <button
             type="button"
             title={adminEmail || undefined}
-            className="flex items-center gap-2.5 rounded-full border border-white/20 bg-white/10 pl-1 pr-3 py-1 hover:bg-white/15 transition-colors"
+            className="flex items-center gap-2.5 rounded-full border border-gray-200 bg-gray-100/60 pl-1 pr-3 py-1 hover:bg-gray-100 transition-colors"
           >
             {/* Avatar circle */}
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ec008c] text-[10px] font-bold text-white">
               {initials || '?'}
             </span>
             <span className="hidden sm:flex flex-col items-start leading-tight max-w-[10rem]">
-              <span className="truncate text-xs font-bold text-white leading-none">
+              <span className="truncate text-xs font-bold text-gray-800 leading-none">
                 {adminName}
               </span>
-              <span className="truncate text-[10px] text-white/65 leading-none mt-0.5">
+              <span className="truncate text-[10px] text-gray-500 leading-none mt-0.5">
                 {adminEmail}
               </span>
             </span>
-            <ChevronDown className="h-3 w-3 text-white/60 hidden sm:block shrink-0" />
+            <ChevronDown className="h-3 w-3 text-gray-500 hidden sm:block shrink-0" />
           </button>
         </header>
 
@@ -178,8 +179,16 @@ export function AdminShell({ children }: AdminShellProps) {
           <div className="flex-1" style={{ background: '#ec008c' }} />
         </div>
 
-        {/* ── Page content ── */}
-        <main className="flex-1 overflow-x-hidden bg-white">{children}</main>
+        {/* ── Page content with watermark background ── */}
+        <main className="flex-1 overflow-x-hidden bg-[#f5f6fa] relative">
+          {/* Bottom-left blurred watermark */}
+          <div className="absolute -bottom-24 -left-24 z-0 w-96 h-96 opacity-[0.04] blur-[1px] pointer-events-none">
+            <FwdLogo className="w-full h-full" />
+          </div>
+
+          {/* Real children wrapper */}
+          <div className="relative z-10 min-h-full">{children}</div>
+        </main>
       </div>
     </div>
   )
