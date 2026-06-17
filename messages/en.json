@@ -95,7 +95,6 @@
     "invalidCredentials": "Incorrect email or password.",
     "accountLocked": "Too many failed attempts. Try again in a few minutes.",
     "oauthError": "Could not sign in with the provider. Please try again.",
-    "oauthErrorEmailExists": "An account with that email already exists. Sign in with your original method.",
     "simulatingOAuth": "Simulating login with {provider}...",
     "noAccount": "No account?",
     "signUpViaGoogle": "Sign up with Google above."
