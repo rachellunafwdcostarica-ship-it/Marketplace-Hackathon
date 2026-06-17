@@ -253,6 +253,10 @@
     "cvPlaceholder": "https://drive.google.com/...",
     "applySuccess": "¡Postulación enviada exitosamente!",
     "applyError": "Error al enviar la postulación. Por favor verifica los campos.",
+    "applyErrorCuentaNoVerificada": "Tu cuenta de egresado no está verificada. Un administrador de FWD debe aprobar tu perfil antes de que puedas postularte.",
+    "applyErrorCupoExcedido": "Ya alcanzaste el máximo de postulaciones activas permitidas.",
+    "applyErrorProyectoCerrado": "Este proyecto ya no acepta nuevas postulaciones.",
+    "applyErrorPlazoVencido": "El plazo de postulación a este proyecto ha vencido.",
     "emptyApplications": "Aún no te has postulado a ningún proyecto. ¡Explora el marketplace!",
     "emptyApplicationsDesc": "Navega por nuestro catálogo de proyectos, encuentra el que mejor se adapte a tu stack y envíale tu propuesta a la empresa.",
     "exploreMarketplace": "Explorar Marketplace",
@@ -610,13 +614,21 @@
     "actionContratar": "Contratar",
     "actionRechazar": "Rechazar",
     "confirmContratarTitle": "¿Contratar a {name}?",
-    "confirmContratarDesc": "Vas a adjudicar la oferta a este postulante. Después podés rechazar al resto.",
+    "confirmContratarDesc": "Los demás postulantes en revisión quedarán no seleccionados automáticamente y el proyecto pasará a adjudicado. Esta acción es irreversible.",
     "confirmRechazarTitle": "¿Rechazar a {name}?",
     "confirmRechazarDesc": "El postulante quedará como no seleccionado y se le notificará.",
     "participationUpdateSuccess": "Postulación actualizada.",
+    "ratePrototypeTitle": "Calificar prototipo",
+    "ratingCommentPlaceholder": "¿Qué destacarías del trabajo? (opcional)",
+    "saveRating": "Guardar calificación",
+    "ratingSuccess": "Calificación guardada.",
+    "adjudicarSuccess": "Proyecto adjudicado.",
     "errors": {
       "transicion_invalida": "Ese cambio de estado no está permitido.",
-      "generic": "No pudimos completar la acción. Intentá de nuevo."
+      "generic": "No pudimos completar la acción. Intentá de nuevo.",
+      "adjudicacion_fallida": "No se pudo adjudicar. Intentá de nuevo.",
+      "adjudicacion_parcial": "Adjudicación incompleta. Contactá al administrador.",
+      "calificacion_fallida": "No pudimos guardar la calificación."
     }
   },
   "Admin": {

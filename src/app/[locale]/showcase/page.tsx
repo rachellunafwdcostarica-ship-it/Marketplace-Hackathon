@@ -13,7 +13,7 @@ import {
   Rocket,
   Inbox,
 } from 'lucide-react'
-import type { Application, Company, Project } from '@/types'
+import type { Company, Project } from '@/types'
 
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { DashboardStats } from '@/components/features/DashboardStats'
@@ -24,7 +24,10 @@ import { SearchBar } from '@/components/features/SearchBar'
 import { StatusPill } from '@/components/features/shared/StatusPill'
 import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
 import { ProjectFilters } from '@/components/features/marketplace/ProjectFilters'
-import { ApplicationCard } from '@/components/features/applications/ApplicationCard'
+import {
+  PostulacionCard,
+  type PostulacionPropia,
+} from '@/components/features/applications/PostulacionCard'
 import { CompanyCard } from '@/components/features/companies/CompanyCard'
 
 import { Button } from '@/components/ui/button'
@@ -88,20 +91,15 @@ const sampleProject: Project = {
   createdAt: '2026-06-01',
 }
 
-const sampleApplication: Application = {
-  id: 'a1',
-  projectId: '1',
+const samplePostulacion: PostulacionPropia = {
+  id_participacion: 'a1',
+  id_proyecto: '1',
   projectTitle: 'Landing page para una fintech',
-  companyId: 'c1',
   companyName: 'Acme Capital',
-  candidateName: 'María Soto',
-  candidateEmail: 'maria@example.com',
-  coverLetter:
+  carta_postulacion:
     'Me entusiasma este proyecto porque ya trabajé en landings de alto rendimiento y me gusta cuidar el detalle visual.',
-  portfolioUrl: 'https://example.com',
-  cvUrl: 'https://example.com/cv.pdf',
-  status: 'sent',
-  createdAt: '2026-06-02',
+  estado: 'enviada',
+  fecha_postulacion: '2026-06-02T00:00:00Z',
 }
 
 const sampleCompany: Company = {
@@ -256,13 +254,7 @@ export default function ShowcasePage() {
             onApprove={() => {}}
             onReject={() => {}}
           />
-          <ApplicationCard
-            application={sampleApplication}
-            viewMode="empresario"
-            onAccept={() => {}}
-            onReject={() => {}}
-            onContact={() => {}}
-          />
+          <PostulacionCard postulacion={samplePostulacion} />
         </div>
       </Section>
 

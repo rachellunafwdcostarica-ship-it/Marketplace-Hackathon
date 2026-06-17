@@ -47,6 +47,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Server actions son POSTs. Ya hacen requireRole() internamente.
+  // El middleware no agrega valor y sus llamadas a Supabase cuelgan la petición.
+  if (request.method === 'POST') {
+    return NextResponse.next()
+  }
+
   // Construir respuesta base con next-intl
   const intlResponse = intlMiddleware(request)
 

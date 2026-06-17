@@ -31,7 +31,6 @@ export async function postularse(
     return err('invalid_input')
   }
 
-  // Asegurar que el usuario sea Junior (Egresado)
   const roleResult = await requireRole('egresado')
   if (!roleResult.ok) {
     return roleResult
@@ -39,16 +38,14 @@ export async function postularse(
 
   const supabase = await createSupabaseServerClient()
 
-  // Obtener el ID del estudiante asociado al usuario actual
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) {
     return err('unauthenticated')
   }
 
-  // Obtener id_estudiante
   const { data: estudiante, error: estudianteError } = await supabase
     .from('estudiantes')
-    .select('id_estudiante')
+    .select('id_estudiante, estado_verificacion')
     .eq('id_usuario', userData.user.id)
     .single()
 
@@ -56,7 +53,10 @@ export async function postularse(
     return err('estudiante_not_found')
   }
 
-  // Validar proyecto: Abierto o En Recepción y dentro del plazo
+  if (estudiante.estado_verificacion !== 'verificado') {
+    return err('cuenta_no_verificada')
+  }
+
   const { data: proyecto, error: proyectoError } = await supabase
     .from('proyectos')
     .select('estado, fecha_cierre, is_active')
@@ -78,7 +78,6 @@ export async function postularse(
     return err('plazo_vencido')
   }
 
-  // Realizar el INSERT en participaciones
   const { error: insertError } = await supabase.from('participaciones').insert({
     id_proyecto: parsed.data.id_proyecto,
     id_estudiante: estudiante.id_estudiante,
@@ -91,14 +90,13 @@ export async function postularse(
 
   if (insertError) {
     logger.error('postularse failed', { error: insertError.message })
-    // El trigger en DB de maximo 3 participaciones activas fallará aquí si aplica
     if (insertError.code === 'P0001' || insertError.message.includes('cupo')) {
       return err('cupo_excedido')
     }
     return err('database_error')
   }
 
-  revalidatePath('/junior/applications')
+  revalidatePath('/applications')
   revalidatePath(`/junior/projects/${parsed.data.id_proyecto}`)
 
   return ok(undefined)
@@ -166,6 +164,6 @@ export async function retirarPostulacion(
     return err('database_error')
   }
 
-  revalidatePath('/junior/applications')
+  revalidatePath('/applications')
   return ok(undefined)
 }

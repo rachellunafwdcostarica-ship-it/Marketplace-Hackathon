@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -26,7 +27,11 @@ import {
 import { Link, useRouter } from '@/i18n/routing'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { cn } from '@/lib/utils/cn'
-import { setParticipacionEstado } from '@/lib/projects/project-detail'
+import {
+  adjudicarParticipacion,
+  calificarParticipacion,
+  setParticipacionEstado,
+} from '@/lib/projects/project-detail'
 import type { ParticipacionEmpresario } from '@/lib/projects/project-detail'
 import type { Result } from '@/lib/result'
 import {
@@ -49,6 +54,9 @@ export type ParticipacionPanelItem = ParticipacionEmpresario & {
 
 interface ParticipationsPanelProps {
   result: Result<ParticipacionPanelItem[]>
+  /** ID del proyecto en la vista de detalle. En la vista cross-project cada
+   *  item trae `participacion.proyecto.id`. */
+  projectId?: string
 }
 
 const ESTADO_STYLE: Record<EstadoParticipacion, string> = {
@@ -66,7 +74,10 @@ interface ConfirmState {
   participacion: ParticipacionPanelItem
 }
 
-export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
+export function ParticipationsPanel({
+  result,
+  projectId,
+}: ParticipationsPanelProps) {
   const t = useTranslations('ProjectDetail')
   const tCommon = useTranslations('Common')
   const tAccount = useTranslations('Account')
@@ -76,6 +87,7 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
   const [filter, setFilter] = useState<ParticipacionFilter>('todos')
   const [confirm, setConfirm] = useState<ConfirmState | null>(null)
   const [mutatingId, setMutatingId] = useState<string | null>(null)
+  const [ratingMutatingId, setRatingMutatingId] = useState<string | null>(null)
 
   const participaciones = useMemo(
     () => (result.ok ? result.data : []),
@@ -92,12 +104,38 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
     accion: ParticipacionAction,
   ) => {
     setMutatingId(participacion.idParticipacion)
+    setConfirm(null)
+
+    if (accion === 'contratar') {
+      const idProyecto = participacion.proyecto?.id ?? projectId
+      if (!idProyecto) {
+        setMutatingId(null)
+        toast.error(t('errors.generic'))
+        return
+      }
+      const res = await adjudicarParticipacion({
+        idParticipacion: participacion.idParticipacion,
+        idProyecto,
+      })
+      setMutatingId(null)
+      if (res.ok) {
+        toast.success(t('adjudicarSuccess'))
+        router.refresh()
+        return
+      }
+      toast.error(
+        res.error === 'adjudicacion_parcial'
+          ? t('errors.adjudicacion_parcial')
+          : t('errors.adjudicacion_fallida'),
+      )
+      return
+    }
+
     const res = await setParticipacionEstado({
       idParticipacion: participacion.idParticipacion,
       accion,
     })
     setMutatingId(null)
-    setConfirm(null)
     if (res.ok) {
       toast.success(t('participationUpdateSuccess'))
       router.refresh()
@@ -108,6 +146,26 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
         ? t('errors.transicion_invalida')
         : t('errors.generic'),
     )
+  }
+
+  const runRate = async (
+    participacion: ParticipacionPanelItem,
+    calificacion: number,
+    comentario: string | undefined,
+  ) => {
+    setRatingMutatingId(participacion.idParticipacion)
+    const res = await calificarParticipacion({
+      idParticipacion: participacion.idParticipacion,
+      calificacion,
+      ...(comentario !== undefined ? { comentario } : {}),
+    })
+    setRatingMutatingId(null)
+    if (res.ok) {
+      toast.success(t('ratingSuccess'))
+      router.refresh()
+      return
+    }
+    toast.error(t('errors.calificacion_fallida'))
   }
 
   if (!result.ok) {
@@ -142,6 +200,9 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
               key={participacion.idParticipacion}
               participacion={participacion}
               isMutating={mutatingId === participacion.idParticipacion}
+              isRatingMutating={
+                ratingMutatingId === participacion.idParticipacion
+              }
               isPending={isPending}
               pendingTitle={tAccount('actionDisabledPending')}
               onRevisar={() => void runAction(participacion, 'revisar')}
@@ -150,6 +211,9 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
               }
               onRechazar={() =>
                 setConfirm({ accion: 'rechazar', participacion })
+              }
+              onRate={(calificacion, comentario) =>
+                runRate(participacion, calificacion, comentario)
               }
             />
           ))}
@@ -215,21 +279,28 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
 interface ParticipationCardProps {
   participacion: ParticipacionPanelItem
   isMutating: boolean
+  isRatingMutating: boolean
   isPending: boolean
   pendingTitle: string
   onRevisar: () => void
   onContratar: () => void
   onRechazar: () => void
+  onRate: (
+    calificacion: number,
+    comentario: string | undefined,
+  ) => Promise<void>
 }
 
 function ParticipationCard({
   participacion,
   isMutating,
+  isRatingMutating,
   isPending,
   pendingTitle,
   onRevisar,
   onContratar,
   onRechazar,
+  onRate,
 }: ParticipationCardProps) {
   const t = useTranslations('ProjectDetail')
   const acciones = getParticipacionActions(participacion.estado)
@@ -337,16 +408,25 @@ function ParticipationCard({
                 </span>
               </span>
             )}
-            {participacion.calificacionPrototipo !== null && (
-              <span>
-                {t('prototypeRatingLabel')}:{' '}
-                <span className="font-semibold text-foreground">
-                  {participacion.calificacionPrototipo}/5
+            {participacion.calificacionPrototipo !== null &&
+              participacion.estado !== 'en_revision' && (
+                <span>
+                  {t('prototypeRatingLabel')}:{' '}
+                  <span className="font-semibold text-foreground">
+                    {participacion.calificacionPrototipo}/5
+                  </span>
                 </span>
-              </span>
-            )}
+              )}
           </div>
         </div>
+
+        {participacion.estado === 'en_revision' && (
+          <StarRatingForm
+            participacion={participacion}
+            disabled={isMutating || isRatingMutating}
+            onRate={onRate}
+          />
+        )}
 
         {acciones.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
@@ -374,6 +454,102 @@ function ParticipationCard({
         )}
       </CardContent>
     </Card>
+  )
+}
+
+interface StarRatingFormProps {
+  participacion: ParticipacionPanelItem
+  disabled: boolean
+  onRate: (
+    calificacion: number,
+    comentario: string | undefined,
+  ) => Promise<void>
+}
+
+function StarRatingForm({
+  participacion,
+  disabled,
+  onRate,
+}: StarRatingFormProps) {
+  const t = useTranslations('ProjectDetail')
+  const [stars, setStars] = useState(participacion.calificacionPrototipo ?? 0)
+  const [comment, setComment] = useState(
+    participacion.comentarioPrototipo ?? '',
+  )
+  const [submitting, setSubmitting] = useState(false)
+
+  const isDisabled = disabled || submitting
+
+  const handleSave = async () => {
+    if (stars === 0 || isDisabled) return
+    setSubmitting(true)
+    await onRate(stars, comment.trim() !== '' ? comment.trim() : undefined)
+    setSubmitting(false)
+  }
+
+  return (
+    <div className="space-y-3 pt-3 border-t border-border/40">
+      <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+        {t('ratePrototypeTitle')}
+      </h4>
+      <StarRating value={stars} onChange={setStars} disabled={isDisabled} />
+      <Textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        disabled={isDisabled}
+        placeholder={t('ratingCommentPlaceholder')}
+        rows={2}
+        className="bg-card/50 border-border text-sm resize-none"
+      />
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={stars === 0 || isDisabled}
+        onClick={() => void handleSave()}
+        className="font-semibold"
+      >
+        {t('saveRating')}
+      </Button>
+    </div>
+  )
+}
+
+function StarRating({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number
+  onChange: (v: number) => void
+  disabled: boolean
+}) {
+  const [hovered, setHovered] = useState(0)
+  const active = hovered > 0 ? hovered : value
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(n)}
+          onMouseEnter={() => setHovered(n)}
+          onMouseLeave={() => setHovered(0)}
+          aria-label={String(n)}
+          className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded disabled:cursor-not-allowed"
+        >
+          <Star
+            className={cn(
+              'w-5 h-5 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]',
+              active >= n
+                ? 'text-highlight fill-highlight'
+                : 'text-muted-foreground/30',
+            )}
+          />
+        </button>
+      ))}
+    </div>
   )
 }
 

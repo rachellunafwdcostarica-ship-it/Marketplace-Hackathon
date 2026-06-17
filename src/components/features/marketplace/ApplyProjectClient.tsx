@@ -131,7 +131,14 @@ export function ApplyProjectClient({
       })
 
       if (!result.ok) {
-        toast.error('Error al postularse: ' + result.error)
+        const errorMessages: Partial<Record<string, string>> = {
+          cuenta_no_verificada: tEgresado('applyErrorCuentaNoVerificada'),
+          cupo_excedido: tEgresado('applyErrorCupoExcedido'),
+          proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
+          plazo_vencido: tEgresado('applyErrorPlazoVencido'),
+          proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
+        }
+        toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
       } else {
         toast.success(tEgresado('applySuccess'))
         router.push('/applications')

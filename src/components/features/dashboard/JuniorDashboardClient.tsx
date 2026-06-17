@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { useTranslations } from 'next-intl'
-import { useDemoData } from '@/lib/DemoDataContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -10,8 +9,8 @@ import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
 import { ProjectCard } from '@/components/features/marketplace/ProjectCard'
 import { InsightSection } from '@/components/features/brand/InsightSection'
 import { Link } from '@/i18n/routing'
-import { MOCK_JUNIOR_NAME } from '@/lib/constants/mockData'
 import { Project } from '@/types'
+import type { MisPostulacionesStats } from '@/lib/applications/queries'
 import {
   Send,
   CheckCircle2,
@@ -25,42 +24,34 @@ import {
 
 interface JuniorDashboardClientProps {
   recommendedProjects: Project[]
+  stats: MisPostulacionesStats
 }
 
 export function JuniorDashboardClient({
   recommendedProjects,
+  stats,
 }: JuniorDashboardClientProps) {
   const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
-  const { applications } = useDemoData()
 
-  const myApps = applications.filter(
-    (app) => app.candidateName === MOCK_JUNIOR_NAME,
-  )
-  const sentCount = myApps.filter(
-    (app) => app.status === 'sent' || app.status === 'viewed',
-  ).length
-  const acceptedCount = myApps.filter((app) => app.status === 'accepted').length
-  const totalCount = myApps.length
-
-  const stats: StatItem[] = [
+  const dashboardStats: StatItem[] = [
     {
       title: tEgresado('appliedProjects'),
-      value: totalCount,
+      value: stats.total,
       icon: FileText,
       description: tEgresado('statAppliedDesc'),
       colorClass: 'text-primary bg-primary/10',
     },
     {
       title: tEgresado('activeApplications'),
-      value: sentCount,
+      value: stats.activas,
       icon: Send,
       description: tEgresado('statActiveDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
     {
       title: tEgresado('acceptedProjects'),
-      value: acceptedCount,
+      value: stats.contratadas,
       icon: CheckCircle2,
       description: tEgresado('statAcceptedDesc'),
       colorClass: 'text-accent bg-accent/10',
@@ -96,7 +87,7 @@ export function JuniorDashboardClient({
           dotColor="text-primary"
         />
 
-        <DashboardStats stats={stats} />
+        <DashboardStats stats={dashboardStats} />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-10">
           <div className="lg:col-span-8 space-y-6">
