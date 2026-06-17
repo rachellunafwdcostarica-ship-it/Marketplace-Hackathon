@@ -1,7 +1,5 @@
 'use client'
 
-// """ ANTES """: Se usaba activeMenu (useState) y botones tradicionales para cambiar la pestaña explorar/postulaciones/mensajes/configuracion, y se mostraba un boton de "Actualizar Plan" al final.
-// """ DESPUES """: Se usa next-intl Link con hrefs directas y pathname para detectar la ruta activa, y se elimino el boton de "Actualizar Plan". También se renombra submittingSupport a isSubmittingSupport para cumplir con el estándar de booleanos con prefijo.
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/routing'
@@ -20,12 +18,20 @@ import { toast } from 'sonner'
 import { createSupportTicket } from '@/lib/company/actions'
 import {
   Loader2,
-  Compass,
+  LayoutDashboard,
   Send,
   MessageSquare,
-  Settings,
+  Building2,
   HelpCircle,
 } from 'lucide-react'
+
+interface NavItem {
+  id: string
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  isActive: (pathname: string) => boolean
+}
 
 export function SidebarEmpresaNuevo() {
   const t = useTranslations('EmpresaPerfil')
@@ -52,48 +58,50 @@ export function SidebarEmpresaNuevo() {
     }
   }
 
-  const menuItems = [
+  // El highlight sigue la SECCIÓN, no solo la URL exacta: las subrutas de
+  // proyecto/new-project cuentan como Panel; formulario-empresa como Perfil.
+  const navItems: NavItem[] = [
     {
-      id: 'explorar',
+      id: 'panel',
       href: '/empresario',
-      label: t('menuExplorar'),
-      icon: Compass,
+      label: t('menuPanel'),
+      icon: LayoutDashboard,
+      isActive: (path) =>
+        path === '/empresario' ||
+        path.startsWith('/empresario/proyecto') ||
+        path.startsWith('/empresario/new-project'),
     },
     {
       id: 'postulaciones',
       href: '/empresario/postulaciones',
       label: t('menuPostulaciones'),
       icon: Send,
+      isActive: (path) => path.startsWith('/empresario/postulaciones'),
     },
     {
-      id: 'mensajes',
-      href: '/empresario',
-      label: t('menuMensajes'),
-      icon: MessageSquare,
-    },
-    {
-      id: 'configuracion',
+      id: 'perfil',
       href: '/empresario/perfil',
-      label: t('menuConfiguracion'),
-      icon: Settings,
+      label: t('menuPerfil'),
+      icon: Building2,
+      isActive: (path) =>
+        path.startsWith('/empresario/perfil') ||
+        path.startsWith('/empresario/formulario-empresa'),
     },
   ]
 
   return (
     <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6">
-      {/* Menú de navegación principal */}
       <nav className="flex flex-col gap-1 px-1">
-        {menuItems.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon
-          const isActive =
-            pathname === item.href ||
-            (item.id === 'explorar' && pathname === '/empresario')
+          const active = item.isActive(pathname)
           return (
             <Link
               key={item.id}
               href={item.href}
+              aria-current={active ? 'page' : undefined}
               className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
-                isActive
+                active
                   ? 'bg-primary text-primary-foreground shadow-sm font-bold'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
               }`}
@@ -103,6 +111,19 @@ export function SidebarEmpresaNuevo() {
             </Link>
           )
         })}
+
+        {/* Mensajes: fuera del MVP. Se muestra deshabilitado con "Próximamente". */}
+        <div
+          aria-disabled="true"
+          title={t('comingSoon')}
+          className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-muted-foreground/50 cursor-not-allowed select-none"
+        >
+          <MessageSquare className="w-4 h-4 shrink-0" />
+          <span>{t('menuMensajes')}</span>
+          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground/70 px-1.5 py-0.5 rounded">
+            {t('comingSoon')}
+          </span>
+        </div>
 
         {/* Ayuda / Soporte Técnico abre el Dialog */}
         <Dialog open={isSupportOpen} onOpenChange={setIsSupportOpen}>
