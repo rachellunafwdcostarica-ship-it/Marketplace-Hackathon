@@ -74,3 +74,93 @@ export async function subirEntregableFinal(
   if (!parsed.success) return err('invalid_input')
   return registrarEntregable(parsed.data, 'final')
 }
+
+const ResponderEntregableSchema = z.object({
+  idEntregable: z.string().uuid(),
+  decision: z.enum(['aprobado', 'con_cambios']),
+  comentario: z.string().max(1000).optional(),
+})
+
+/**
+ * El empresario aprueba o solicita cambios sobre un entregable (RF-44).
+ * Solo se puede responder cuando estado === 'enviado'.
+ * Revalida la vista del empresario y la del egresado.
+ */
+export async function responderEntregable(
+  input: z.infer<typeof ResponderEntregableSchema>,
+): Promise<Result<void>> {
+  const parsed = ResponderEntregableSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const supabase = await createSupabaseServerClient()
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData.user) return err('unauthenticated')
+
+  const { data: entregable, error: entErr } = await supabase
+    .from('entregables')
+    .select('id_entregable, estado, id_contratacion')
+    .eq('id_entregable', parsed.data.idEntregable)
+    .maybeSingle()
+  if (entErr) {
+    logger.error('responderEntregable: entregable query failed', {
+      error: entErr.message,
+    })
+    return err('database_error')
+  }
+  if (!entregable) return err('entregable_not_found')
+  if (entregable.estado !== 'enviado') return err('estado_invalido')
+
+  const { data: contratacion, error: contErr } = await supabase
+    .from('contrataciones')
+    .select('id_participacion')
+    .eq('id_contratacion', entregable.id_contratacion)
+    .maybeSingle()
+  if (contErr || !contratacion) return err('unauthorized')
+
+  const { data: participacion, error: partErr } = await supabase
+    .from('participaciones')
+    .select('id_proyecto')
+    .eq('id_participacion', contratacion.id_participacion)
+    .maybeSingle()
+  if (partErr || !participacion) return err('unauthorized')
+
+  const { data: empresario, error: empErr } = await supabase
+    .from('empresarios')
+    .select('id_empresario')
+    .eq('id_usuario', userData.user.id)
+    .maybeSingle()
+  if (empErr || !empresario) return err('unauthorized')
+
+  const { data: proyectoOwned, error: proyErr } = await supabase
+    .from('proyectos')
+    .select('id_proyecto')
+    .eq('id_proyecto', participacion.id_proyecto)
+    .eq('id_empresario', empresario.id_empresario)
+    .maybeSingle()
+  if (proyErr || !proyectoOwned) return err('unauthorized')
+
+  const updateData: {
+    estado: 'aprobado' | 'con_cambios'
+    comentario_empresario?: string
+  } = {
+    estado: parsed.data.decision,
+    ...(parsed.data.comentario
+      ? { comentario_empresario: parsed.data.comentario }
+      : {}),
+  }
+
+  const { error: updateErr } = await supabase
+    .from('entregables')
+    .update(updateData)
+    .eq('id_entregable', parsed.data.idEntregable)
+  if (updateErr) {
+    logger.error('responderEntregable: update failed', {
+      error: updateErr.message,
+    })
+    return err('database_error')
+  }
+
+  revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
+  revalidatePath(`/junior/projects/${participacion.id_proyecto}/entregables`)
+  return ok(undefined)
+}
