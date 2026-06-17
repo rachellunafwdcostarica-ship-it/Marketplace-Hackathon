@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { CompanyProfileForm } from '@/components/features/companies/CompanyProfileForm'
 import { getCompanyProfileForEdit } from '@/lib/company/actions'
+import { getCurrentUser } from '@/lib/auth/dal'
 
 /**
  * Formulario de empresa. Server Component: el perfil (datos de empresa + datos
@@ -16,6 +17,7 @@ import { getCompanyProfileForEdit } from '@/lib/company/actions'
 export default async function CompanyProfileFormPage() {
   const tEmpresa = await getTranslations('Empresa')
   const profileRes = await getCompanyProfileForEdit()
+  const user = await getCurrentUser()
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -38,8 +40,11 @@ export default async function CompanyProfileFormPage() {
           dotColor="text-secondary"
         />
 
-        {profileRes.ok ? (
-          <CompanyProfileForm initialProfile={profileRes.data} />
+        {profileRes.ok && user ? (
+          <CompanyProfileForm
+            initialProfile={profileRes.data}
+            userId={user.id}
+          />
         ) : (
           <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">
             <p className="text-sm font-bold text-destructive">

@@ -330,7 +330,9 @@
     "urlPhoto": "Please enter a valid photo URL or leave the field empty.",
     "countryRequired": "Enter the country.",
     "scopeRequired": "Select the operating scope.",
-    "cedulaRequired": "Formal companies must provide a business or tax ID."
+    "cedulaRequired": "Formal companies must provide a business or tax ID.",
+    "birthDateRequired": "You must enter your date of birth.",
+    "birthDateMinAge": "You must be at least 18 years old."
   },
   "Empresa": {
     "dashboard": "Company Dashboard",
@@ -462,7 +464,7 @@
     "plazoHint": "The application window must last between {min} and {max} days.",
     "fieldBackground": "Project context (brief)",
     "fieldBackgroundPlaceholder": "Tell the AI what your project is about, what you need, and for whom...",
-    "fieldBackgroundCounter": "{count} / {max} characters",
+    "fieldBackgroundCounter": "{count} / {max} characters · min. {min}",
     "flowIntro": "First tell us the project logistics and context. Then the AI helps you build the proposal (title, description, categories, and technologies).",
     "fieldTitleOptional": "Optional — if left empty, the AI generates it",
     "continueWithAi": "Continue with the AI",
@@ -521,7 +523,7 @@
       "presupuestoEntero": "In colones the budget must be a whole number (no decimals).",
       "plazo": "The application window must be 5 to 15 days.",
       "fechaCierreRequerida": "Provide the application close date.",
-      "fondoMin": "Tell us a bit more about the project (at least 20 characters).",
+      "fondoMin": "You've written {count} of {min} required characters.",
       "fondoMax": "The context can't exceed 3000 characters.",
       "invalid_input": "Please review the form fields.",
       "not_verified": "Your company is not verified. You cannot continue yet.",
