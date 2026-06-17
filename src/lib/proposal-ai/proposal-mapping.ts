@@ -1,4 +1,4 @@
-import type { CatalogRef } from './schemas'
+import type { CatalogRef } from '@/lib/projects/schemas'
 
 /**
  * Resuelve los nombres que propone la IA contra el catálogo real

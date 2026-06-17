@@ -20,7 +20,7 @@ export type Moneda = (typeof MONEDAS)[number]
 
 export const TITULO_MAX = 120
 export const UBICACION_MAX = 80
-export const CONTEXTO_MIN = 240
+export const CONTEXTO_MIN = 90
 export const CONTEXTO_MAX = 3000
 export const PLAZO_MIN_DIAS = 5
 export const PLAZO_MAX_DIAS = 15
