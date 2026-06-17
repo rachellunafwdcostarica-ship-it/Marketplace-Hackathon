@@ -79,6 +79,13 @@ export function SidebarEmpresaNuevo() {
       isActive: (path) => path.startsWith('/empresario/postulaciones'),
     },
     {
+      id: 'mensajes',
+      href: '/empresario/mensajes',
+      label: t('menuMensajes'),
+      icon: MessageSquare,
+      isActive: (path) => path.startsWith('/empresario/mensajes'),
+    },
+    {
       id: 'perfil',
       href: '/empresario/perfil',
       label: t('menuPerfil'),
@@ -111,19 +118,6 @@ export function SidebarEmpresaNuevo() {
             </Link>
           )
         })}
-
-        {/* Mensajes: fuera del MVP. Se muestra deshabilitado con "Próximamente". */}
-        <div
-          aria-disabled="true"
-          title={t('comingSoon')}
-          className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-muted-foreground/50 cursor-not-allowed select-none"
-        >
-          <MessageSquare className="w-4 h-4 shrink-0" />
-          <span>{t('menuMensajes')}</span>
-          <span className="ml-auto text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground/70 px-1.5 py-0.5 rounded">
-            {t('comingSoon')}
-          </span>
-        </div>
 
         {/* Ayuda / Soporte Técnico abre el Dialog */}
         <Dialog open={isSupportOpen} onOpenChange={setIsSupportOpen}>

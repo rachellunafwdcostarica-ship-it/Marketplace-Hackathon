@@ -67,7 +67,7 @@ export function GraduateVerificationActions({
   const handleRejectConfirm = async () => {
     setLoading(true)
     try {
-      // Pasamos el motivo en el logger de rechazarEgresado indirectamente si quisiéramos, 
+      // Pasamos el motivo en el logger de rechazarEgresado indirectamente si quisiéramos,
       // pero por ahora llamamos a rechazarEgresado tal como está definido en su backend.
       const result = await rechazarEgresado(userId)
       if (result.ok) {
@@ -97,7 +97,7 @@ export function GraduateVerificationActions({
         <GraduationCap className="h-4 w-4" />
         {t('verifyGraduate')}
       </ConfirmButton>
-      
+
       <Button
         variant="outline"
         onClick={handleRejectOpen}
@@ -119,7 +119,10 @@ export function GraduateVerificationActions({
           </DialogHeader>
 
           <div className="mt-3 space-y-1.5">
-            <Label htmlFor="reject-graduate-motivo" className="text-xs font-semibold text-muted-foreground">
+            <Label
+              htmlFor="reject-graduate-motivo"
+              className="text-xs font-semibold text-muted-foreground"
+            >
               {t('rejectMotivo')}
             </Label>
             <Textarea
@@ -134,7 +137,11 @@ export function GraduateVerificationActions({
           </div>
 
           <DialogFooter className="mt-4 flex gap-2 border-t border-border/40 pt-4 sm:justify-end">
-            <Button variant="outline" onClick={handleRejectClose} disabled={loading}>
+            <Button
+              variant="outline"
+              onClick={handleRejectClose}
+              disabled={loading}
+            >
               {tCommon('cancel')}
             </Button>
             <Button

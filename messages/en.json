@@ -1022,5 +1022,11 @@
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
     "saveSkill": "Save Skill"
+  },
+  "CompanyMensajes": {
+    "title": "Messages Hub",
+    "description": "Connect and chat directly with FWD Talent graduates.",
+    "placeholderTitle": "Messages Hub Coming Soon",
+    "placeholderDesc": "Soon you will be able to chat in real-time with candidates and graduates interested in your projects right from this platform."
   }
 }

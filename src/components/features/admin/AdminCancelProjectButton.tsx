@@ -51,7 +51,10 @@ export function AdminCancelProjectButton({
   const handleConfirm = async () => {
     setLoading(true)
     try {
-      const result = await cancelProjectAsAdmin(projectId, motivo.trim() || undefined)
+      const result = await cancelProjectAsAdmin(
+        projectId,
+        motivo.trim() || undefined,
+      )
       if (result.ok) {
         toast.success(t('cancelProjectSuccess'))
         setOpen(false)
@@ -93,7 +96,10 @@ export function AdminCancelProjectButton({
           </DialogHeader>
 
           <div className="mt-3 space-y-1.5">
-            <Label htmlFor="cancel-project-motivo" className="text-xs font-semibold text-muted-foreground">
+            <Label
+              htmlFor="cancel-project-motivo"
+              className="text-xs font-semibold text-muted-foreground"
+            >
               {t('cancelProjectMotivo')}
             </Label>
             <Textarea
