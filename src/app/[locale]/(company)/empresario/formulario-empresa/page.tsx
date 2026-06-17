@@ -16,6 +16,7 @@ import { getCurrentUser } from '@/lib/auth/dal'
  */
 export default async function CompanyProfileFormPage() {
   const tEmpresa = await getTranslations('Empresa')
+  const user = await getCurrentUser()
   const profileRes = await getCompanyProfileForEdit()
   const user = await getCurrentUser()
 
@@ -40,7 +41,7 @@ export default async function CompanyProfileFormPage() {
           dotColor="text-secondary"
         />
 
-        {profileRes.ok && user ? (
+        {user && profileRes.ok ? (
           <CompanyProfileForm
             initialProfile={profileRes.data}
             userId={user.id}
