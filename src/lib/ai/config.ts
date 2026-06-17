@@ -2,14 +2,18 @@ import 'server-only'
 import { z } from 'zod'
 
 /**
- * Configuración de la IA leída de variables de entorno y validada con Zod
- * (reglas §5). Un solo proveedor compatible con OpenAI vía OpenRouter
- * (errolpendiente §5.1). Lanza 'AI_NOT_CONFIGURED' si falta o es inválida.
+ * Configuración del GENERADOR DE PROPUESTAS (feature new-project) leída de
+ * variables de entorno y validada con Zod (reglas §5). Usa las variables
+ * PROPOSAL_AI_* EXCLUSIVAS de esta feature: este es el único módulo que las lee
+ * y la key se pasa explícita al cliente, así ninguna otra parte de la app
+ * consume estos tokens. Cada feature de IA debe usar su propio prefijo
+ * <FEATURE>_AI_* con su propia key. Un solo proveedor compatible con OpenAI vía
+ * OpenRouter (errolpendiente §5.1). Lanza 'AI_NOT_CONFIGURED' si falta o es inválida.
  */
 const aiEnvSchema = z.object({
-  OPENAI_API_KEY: z.string().min(1),
-  OPENAI_MODEL: z.string().min(1),
-  OPENAI_BASE_URL: z.url(),
+  PROPOSAL_AI_API_KEY: z.string().min(1),
+  PROPOSAL_AI_MODEL: z.string().min(1),
+  PROPOSAL_AI_BASE_URL: z.url(),
 })
 
 export interface AiConfig {
@@ -20,16 +24,16 @@ export interface AiConfig {
 
 export function getAiConfig(): AiConfig {
   const parsed = aiEnvSchema.safeParse({
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    OPENAI_MODEL: process.env.OPENAI_MODEL,
-    OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
+    PROPOSAL_AI_API_KEY: process.env.PROPOSAL_AI_API_KEY,
+    PROPOSAL_AI_MODEL: process.env.PROPOSAL_AI_MODEL,
+    PROPOSAL_AI_BASE_URL: process.env.PROPOSAL_AI_BASE_URL,
   })
   if (!parsed.success) {
     throw new Error('AI_NOT_CONFIGURED')
   }
   return {
-    apiKey: parsed.data.OPENAI_API_KEY,
-    model: parsed.data.OPENAI_MODEL,
-    baseUrl: parsed.data.OPENAI_BASE_URL,
+    apiKey: parsed.data.PROPOSAL_AI_API_KEY,
+    model: parsed.data.PROPOSAL_AI_MODEL,
+    baseUrl: parsed.data.PROPOSAL_AI_BASE_URL,
   }
 }
