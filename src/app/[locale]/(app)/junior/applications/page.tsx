@@ -96,16 +96,14 @@ export default function EgresadoApplicationsPage() {
   }, [])
 
   const handleWithdraw = async (id_participacion: string) => {
-    const confirmed = window.confirm(
-      '¿Estás seguro de que deseas retirar tu postulación?',
-    )
+    const confirmed = window.confirm(tEgresado('confirmWithdraw'))
     if (!confirmed) return
 
     const result = await retirarPostulacion({ id_participacion })
     if (!result.ok) {
-      toast.error('Error al retirar la postulación: ' + result.error)
+      toast.error(tEgresado('withdrawError'))
     } else {
-      toast.success('Postulación retirada con éxito')
+      toast.success(tEgresado('withdrawSuccess'))
       fetchApplications()
     }
   }
