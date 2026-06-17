@@ -10,6 +10,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import {
+  saveStudentProfile,
+  type StudentProfileView,
+} from '@/lib/portfolio/actions'
+import {
   Card,
   CardHeader,
   CardTitle,
@@ -122,10 +126,21 @@ function SkillForm({
   )
 }
 
-export function PortfolioManager() {
+export function PortfolioManager({
+  initialProfile,
+}: {
+  initialProfile?: StudentProfileView | null
+}) {
   const { studentPortfolio, setStudentPortfolio } = useAppState()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false)
+  const [isSavingVis, setIsSavingVis] = useState(false)
+  const [isSavingBio, setIsSavingBio] = useState(false)
+  const [visibility, setVisibility] = useState<'publico' | 'empresas'>(
+    initialProfile?.portafolio_visible_publicamente === false
+      ? 'empresas'
+      : 'publico',
+  )
   const [editingProject, setEditingProject] = useState<
     PortfolioProject | undefined
   >(undefined)
@@ -133,6 +148,15 @@ export function PortfolioManager() {
     undefined,
   )
   const t = useTranslations('Portfolio')
+
+  useEffect(() => {
+    if (initialProfile) {
+      const fullName =
+        `${initialProfile.firstName} ${initialProfile.lastName1} ${initialProfile.lastName2}`.trim()
+      console.log('User Full Name:', fullName)
+      console.log('User ID:', initialProfile.id_usuario)
+    }
+  }, [initialProfile])
 
   const bioSchema = React.useMemo(() => {
     return z.object({
@@ -144,7 +168,9 @@ export function PortfolioManager() {
   const projects = studentPortfolio?.projects || []
   const skills = studentPortfolio?.skills || []
 
-  const portfolioBio = studentPortfolio?.bio
+  const [portfolioBio, setPortfolioBio] = useState(
+    initialProfile?.descripcion || '',
+  )
 
   const {
     register: registerBio,
@@ -162,22 +188,34 @@ export function PortfolioManager() {
     resetBio({ bio: portfolioBio || '' })
   }, [portfolioBio, resetBio])
 
-  const handleVisibilityChange = (visibility: 'publico' | 'empresas') => {
-    if (!studentPortfolio) return
-    setStudentPortfolio({
-      ...studentPortfolio,
-      visibility,
+  const handleVisibilityChange = async (newVis: 'publico' | 'empresas') => {
+    setIsSavingVis(true)
+    const res = await saveStudentProfile({
+      portafolio_visible_publicamente: newVis === 'publico',
     })
-    toast.success(t('toastVisibilityUpdated'))
+    setIsSavingVis(false)
+
+    if (res.ok) {
+      setVisibility(newVis)
+      toast.success(t('toastVisibilityUpdated'))
+    } else {
+      toast.error('Error al actualizar la visibilidad')
+    }
   }
 
-  const handleBioSave = (data: BioValues) => {
-    if (!studentPortfolio) return
-    setStudentPortfolio({
-      ...studentPortfolio,
-      bio: data.bio || '',
+  const handleBioSave = async (data: BioValues) => {
+    setIsSavingBio(true)
+    const res = await saveStudentProfile({
+      descripcion: data.bio || '',
     })
-    toast.success(t('toastBioSaved'))
+    setIsSavingBio(false)
+
+    if (res.ok) {
+      setPortfolioBio(data.bio || '')
+      toast.success(t('toastBioSaved'))
+    } else {
+      toast.error('Error al guardar la biografía')
+    }
   }
 
   const handleSave = (project: PortfolioProject) => {
@@ -265,33 +303,27 @@ export function PortfolioManager() {
               <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant={
-                    studentPortfolio?.visibility === 'publico'
-                      ? 'default'
-                      : 'outline'
-                  }
+                  variant={visibility === 'publico' ? 'default' : 'outline'}
                   className="flex-1 justify-center gap-2"
                   onClick={() => handleVisibilityChange('publico')}
+                  disabled={isSavingVis}
                 >
                   <Globe className="h-4 w-4" />
                   {t('visibilityPublic')}
                 </Button>
                 <Button
                   type="button"
-                  variant={
-                    studentPortfolio?.visibility === 'empresas'
-                      ? 'default'
-                      : 'outline'
-                  }
+                  variant={visibility === 'empresas' ? 'default' : 'outline'}
                   className="flex-1 justify-center gap-2"
                   onClick={() => handleVisibilityChange('empresas')}
+                  disabled={isSavingVis}
                 >
                   <Lock className="h-4 w-4" />
                   {t('visibilityCompanies')}
                 </Button>
               </div>
               <div className="text-xs text-muted-foreground bg-muted p-3 rounded-md">
-                {studentPortfolio?.visibility === 'publico'
+                {visibility === 'publico'
                   ? t('visibilityPublicDesc')
                   : t('visibilityCompaniesDesc')}
               </div>
@@ -326,7 +358,7 @@ export function PortfolioManager() {
                     </p>
                   )}
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" disabled={isSavingBio}>
                   {t('saveBio')}
                 </Button>
               </form>
@@ -339,33 +371,46 @@ export function PortfolioManager() {
           <Card className="h-full border border-primary/20 bg-surface shadow-sm">
             <CardHeader className="border-b bg-muted/20 pb-4">
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl font-bold font-display">
-                    {t('profilePreview')}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t('visibilityText')}{' '}
-                    <span className="font-semibold text-primary">
-                      {studentPortfolio?.visibility === 'publico'
-                        ? t('visibilityPublic')
-                        : t('visibilityCompanies')}
-                    </span>
-                  </p>
+                <div className="flex items-center gap-4">
+                  {initialProfile?.profilePhoto ? (
+                    <img
+                      src={initialProfile.profilePhoto}
+                      alt="Profile"
+                      className="w-12 h-12 rounded-full object-cover border border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-bold">
+                      {initialProfile?.firstName?.charAt(0) || 'U'}
+                    </div>
+                  )}
+                  <div>
+                    <CardTitle className="text-xl font-bold font-display">
+                      {initialProfile?.firstName} {initialProfile?.lastName1}{' '}
+                      {initialProfile?.lastName2}
+                    </CardTitle>
+                    <p className="text-sm font-medium text-primary mt-0.5 capitalize">
+                      {initialProfile?.tituloFwd || 'Estudiante FWD'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t('visibilityText')}{' '}
+                      <span className="font-semibold text-primary">
+                        {visibility === 'publico'
+                          ? t('visibilityPublic')
+                          : t('visibilityCompanies')}
+                      </span>
+                    </p>
+                  </div>
                 </div>
                 <Badge
-                  variant={
-                    studentPortfolio?.visibility === 'publico'
-                      ? 'default'
-                      : 'secondary'
-                  }
+                  variant={visibility === 'publico' ? 'default' : 'secondary'}
                   className="gap-1"
                 >
-                  {studentPortfolio?.visibility === 'publico' ? (
+                  {visibility === 'publico' ? (
                     <Globe className="h-3 w-3" />
                   ) : (
                     <Lock className="h-3 w-3" />
                   )}
-                  {studentPortfolio?.visibility === 'publico'
+                  {visibility === 'publico'
                     ? t('visibilityPublic')
                     : t('visibilityCompanies')}
                 </Badge>
@@ -382,8 +427,8 @@ export function PortfolioManager() {
                   <div className="h-px flex-1 bg-primary/20"></div>
                 </div>
                 <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {studentPortfolio?.bio ? (
-                    studentPortfolio.bio
+                  {portfolioBio ? (
+                    portfolioBio
                   ) : (
                     <span className="text-muted-foreground italic">
                       {t('noBio')}
