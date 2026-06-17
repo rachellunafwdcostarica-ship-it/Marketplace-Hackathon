@@ -9,7 +9,7 @@ import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
 import { PublishedProjectsBoard } from '@/components/features/projects/PublishedProjectsBoard'
 import { Link } from '@/i18n/routing'
 import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
-import { Briefcase, Users, Plus, UserCheck, Building2 } from 'lucide-react'
+import { Briefcase, Users, Plus, UserCheck } from 'lucide-react'
 import type { PublishedProject } from '@/lib/projects/dashboard'
 
 interface CompanyDashboardClientProps {
@@ -73,13 +73,6 @@ export function CompanyDashboardClient({
             dotColor="text-secondary"
             action={
               <div className="flex items-center gap-2">
-                <Link
-                  href="/empresario/perfil"
-                  className="border border-border bg-background text-foreground hover:bg-muted font-semibold flex items-center justify-center gap-1.5 rounded-lg text-sm h-8 px-3 cursor-pointer"
-                >
-                  <Building2 className="w-4 h-4" />
-                  {tEmpresa('myProfile')}
-                </Link>
                 {isPending ? (
                   <span
                     aria-disabled="true"
