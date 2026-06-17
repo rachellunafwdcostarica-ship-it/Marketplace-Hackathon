@@ -24,6 +24,7 @@ import {
   Building2,
   HelpCircle,
 } from 'lucide-react'
+import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import { cn } from '@/lib/utils/cn'
 
 interface NavItem {
@@ -107,10 +108,27 @@ export function SidebarEmpresaNuevo({
   return (
     <aside
       className={cn(
-        'w-full md:w-56 shrink-0 flex flex-col bg-[#3d1a6e] text-white py-6',
+        'flex w-56 shrink-0 flex-col bg-[#3d1a6e] text-white',
         className,
       )}
     >
+      {/* Brand logo header */}
+      <Link
+        href="/empresario"
+        onClick={onNavigate}
+        className="flex items-center gap-3 px-5 py-5 hover:opacity-90 transition-opacity"
+      >
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
+          <FwdLogo className="h-6 w-6" />
+        </div>
+        <span className="font-heading text-base font-bold tracking-tight leading-tight text-white">
+          Marketplace<span className="text-[#ec008c]"> FWD</span>
+        </span>
+      </Link>
+
+      {/* Divider */}
+      <div className="mx-4 mb-3 h-px bg-white/10" />
+
       {/* Nav list */}
       <nav className="flex flex-col gap-0.5 px-3 flex-1">
         {navItems.map((item) => {

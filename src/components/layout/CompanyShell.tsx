@@ -10,18 +10,22 @@ interface CompanyShellProps {
 }
 
 /**
- * Shell para la vista de Empresario (Empresa) que mantiene la Navbar principal y el Footer,
- * integrando el nuevo sidebar morado en el layout de dos columnas.
+ * Shell para la vista de Empresario (Empresa) que mantiene la Navbar principal en la parte superior.
+ * El sidebar morado se posiciona a la izquierda, ocupando todo el alto disponible debajo de la Navbar en escritorio.
  */
 export function CompanyShell({ children }: CompanyShellProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-[#f5f6fa]">
       <Navbar />
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <SidebarEmpresaNuevo className="rounded-2xl border border-border/40 shadow-sm" />
+      <div className="flex-1 flex flex-col md:flex-row w-full">
+        {/* Sidebar morado de alto completo debajo de la Navbar en desktop */}
+        <SidebarEmpresaNuevo className="w-full md:w-56 bg-[#3d1a6e] text-white shrink-0 md:sticky md:top-16 md:h-[calc(100vh-64px)]" />
 
-        <main className="flex-1 space-y-8">{children}</main>
+        {/* Área de contenido principal */}
+        <main className="flex-1 p-6 md:p-8 min-w-0 bg-[#f5f6fa]">
+          {children}
+        </main>
       </div>
 
       <Footer />
