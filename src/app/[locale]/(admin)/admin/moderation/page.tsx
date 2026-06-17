@@ -14,9 +14,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StrikeActions } from '@/components/features/admin/StrikeActions'
 import { StrikeAuditHistory } from '@/components/features/admin/StrikeAuditHistory'
+import { CreateStrikeButton } from '@/components/features/admin/CreateStrikeButton'
 import { getCurrentUser } from '@/lib/auth/dal'
 import {
   listUsersWithStrikes,
+  listUsers,
   type AdminAccountStatus,
   MAX_STRIKES_LIMIT,
 } from '@/lib/admin/queries'
@@ -71,6 +73,9 @@ export default async function AdminModerationPage() {
   const result = await listUsersWithStrikes(1)
   const users = result.ok ? result.data : []
 
+  const allUsersRes = await listUsers()
+  const allUsers = allUsersRes.ok ? allUsersRes.data : []
+
   const currentUser = await getCurrentUser()
   const currentUserId = currentUser?.id ?? null
 
@@ -106,6 +111,9 @@ export default async function AdminModerationPage() {
         title={t('strikeManagement')}
         description={t('strikeManagementDesc')}
         dotColor="text-warning"
+        action={
+          <CreateStrikeButton users={allUsers} currentUserId={currentUserId} />
+        }
       />
 
       <div className="mt-6 space-y-6">

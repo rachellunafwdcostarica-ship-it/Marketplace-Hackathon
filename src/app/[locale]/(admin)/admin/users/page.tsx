@@ -123,9 +123,6 @@ export default async function AdminUsersPage({
                     <TableHead>{t('colEmail')}</TableHead>
                     <TableHead>{t('colRole')}</TableHead>
                     <TableHead>{t('colStatus')}</TableHead>
-                    <TableHead className="text-center">
-                      {t('colStrikes')}
-                    </TableHead>
                     <TableHead>{t('colRegistered')}</TableHead>
                     <TableHead>{t('colActions')}</TableHead>
                   </TableRow>
@@ -157,9 +154,6 @@ export default async function AdminUsersPage({
                             {t('accountInactive')}
                           </Badge>
                         )}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">
-                        {user.cantidad_strikes}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(user.fecha_registro).toLocaleDateString(
