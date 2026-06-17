@@ -776,3 +776,83 @@ export async function getProjectStats(): Promise<Result<AdminProjectStats>> {
     cancelado: canceladoRes.count ?? 0,
   })
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDITORÍA — Historial real de strikes desde la tabla `strikes`
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface StrikeAuditItem {
+  id_strike: string
+  id_usuario: string
+  nombre_usuario: string
+  motivo: Database['public']['Enums']['motivo_strike_enum']
+  descripcion: string | null
+  revocado: boolean
+  motivo_revocacion: string | null
+  aplicado_at: string
+  revocado_at: string | null
+}
+
+/**
+ * Lista el historial completo de strikes (activos y revocados) para la
+ * pantalla de auditoría del panel de moderación.
+ * Solo un admin puede invocarla.
+ */
+export async function listStrikeAudit(
+  limit = 100,
+): Promise<Result<StrikeAuditItem[]>> {
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) return authResult
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data, error } = await adminClient
+    .from('strikes')
+    .select(
+      'id_strike, id_usuario, motivo, descripcion, revocado, motivo_revocacion, aplicado_at, revocado_at',
+    )
+    .order('aplicado_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    logger.error('listStrikeAudit: fallo al leer strikes', {
+      error: error.message,
+    })
+    return err(error.message)
+  }
+
+  const rows = data ?? []
+  if (rows.length === 0) return ok([])
+
+  // Traer los nombres de los usuarios involucrados
+  const userIds = [...new Set(rows.map((r) => r.id_usuario))]
+  const { data: usuarios, error: usersError } = await adminClient
+    .from('usuarios')
+    .select('id_usuario, nombre, apellido_1')
+    .in('id_usuario', userIds)
+
+  if (usersError) {
+    logger.error('listStrikeAudit: fallo al leer usuarios', {
+      error: usersError.message,
+    })
+    return err(usersError.message)
+  }
+
+  const userNameById = new Map(
+    (usuarios ?? []).map((u) => [u.id_usuario, `${u.nombre} ${u.apellido_1}`]),
+  )
+
+  const items: StrikeAuditItem[] = rows.map((r) => ({
+    id_strike: r.id_strike,
+    id_usuario: r.id_usuario,
+    nombre_usuario: userNameById.get(r.id_usuario) ?? 'Usuario desconocido',
+    motivo: r.motivo,
+    descripcion: r.descripcion,
+    revocado: r.revocado,
+    motivo_revocacion: r.motivo_revocacion,
+    aplicado_at: r.aplicado_at,
+    revocado_at: r.revocado_at,
+  }))
+
+  return ok(items)
+}
