@@ -54,7 +54,7 @@ export function CompanyPerfilClient({
           )}
 
           {activeTab === 'projects' && (
-            <PublishedProjectsBoard projects={projects} readOnly />
+            <PublishedProjectsBoard projects={projects} />
           )}
         </main>
       </div>

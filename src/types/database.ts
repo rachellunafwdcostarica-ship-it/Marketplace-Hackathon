@@ -1320,6 +1320,28 @@ export type Database = {
       assign_my_role: { Args: { p_role: string }; Returns: boolean }
       get_my_account_status: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
+      get_participaciones_de_proyecto: {
+        Args: { p_id_proyecto: string }
+        Returns: {
+          id_participacion: string
+          estado: Database['public']['Enums']['estado_participacion_enum']
+          estudiante_nombre: string
+          estudiante_apellido_1: string
+          estudiante_apellido_2: string | null
+          foto_perfil: string | null
+          reputacion: number | null
+          titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
+          carta_postulacion: string | null
+          planteamiento_solucion: string | null
+          prototipo_enlaces: string[] | null
+          documentacion_tecnica: string | null
+          url_repositorio_proyecto: string | null
+          fecha_postulacion: string
+          fecha_entrega_prototipo: string | null
+          calificacion_prototipo: number | null
+          comentario_prototipo: string | null
+        }[]
+      }
       register_failed_login: { Args: { p_email: string }; Returns: undefined }
     }
     Enums: {
