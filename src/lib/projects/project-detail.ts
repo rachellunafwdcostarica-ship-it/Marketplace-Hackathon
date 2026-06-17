@@ -14,8 +14,11 @@ import {
   type EstadoParticipacion,
   type EstadoProyecto,
 } from './project-detail-logic'
+import { getMyPublishedProjects } from './dashboard'
 
 type TituloFwd = Database['public']['Enums']['titulo_fwd_enum']
+type RpcParticipacionRow =
+  Database['public']['Functions']['get_participaciones_de_proyecto']['Returns'][number]
 
 /** Postgres `check_violation`: lo emite el trigger ante una transición ilegal. */
 const CHECK_VIOLATION = '23514'
@@ -37,6 +40,37 @@ export interface ParticipacionEmpresario {
   fechaEntregaPrototipo: string | null
   calificacionPrototipo: number | null
   comentarioPrototipo: string | null
+}
+
+/** Participación cross-project: lleva el proyecto al que pertenece la oferta. */
+export interface ParticipacionConProyecto extends ParticipacionEmpresario {
+  proyecto: { id: string; titulo: string }
+}
+
+/** Mapea una fila cruda del RPC al shape camelCase que consume la UI. */
+function mapParticipacionRow(
+  fila: RpcParticipacionRow,
+): ParticipacionEmpresario {
+  return {
+    idParticipacion: fila.id_participacion,
+    estado: fila.estado,
+    estudianteNombre: fila.estudiante_nombre,
+    estudianteApellidos: fila.estudiante_apellido_2
+      ? `${fila.estudiante_apellido_1} ${fila.estudiante_apellido_2}`
+      : fila.estudiante_apellido_1,
+    fotoPerfil: fila.foto_perfil,
+    reputacion: fila.reputacion,
+    tituloFwd: fila.titulo_fwd,
+    cartaPostulacion: fila.carta_postulacion,
+    planteamientoSolucion: fila.planteamiento_solucion,
+    prototipoEnlaces: fila.prototipo_enlaces ?? [],
+    documentacionTecnica: fila.documentacion_tecnica,
+    urlRepositorioProyecto: fila.url_repositorio_proyecto,
+    fechaPostulacion: fila.fecha_postulacion,
+    fechaEntregaPrototipo: fila.fecha_entrega_prototipo,
+    calificacionPrototipo: fila.calificacion_prototipo,
+    comentarioPrototipo: fila.comentario_prototipo,
+  }
 }
 
 /**
@@ -66,30 +100,7 @@ export async function getProjectParticipations(
     return err('participaciones_load_failed')
   }
 
-  const participaciones: ParticipacionEmpresario[] = (data ?? []).map(
-    (fila) => ({
-      idParticipacion: fila.id_participacion,
-      estado: fila.estado,
-      estudianteNombre: fila.estudiante_nombre,
-      estudianteApellidos: fila.estudiante_apellido_2
-        ? `${fila.estudiante_apellido_1} ${fila.estudiante_apellido_2}`
-        : fila.estudiante_apellido_1,
-      fotoPerfil: fila.foto_perfil,
-      reputacion: fila.reputacion,
-      tituloFwd: fila.titulo_fwd,
-      cartaPostulacion: fila.carta_postulacion,
-      planteamientoSolucion: fila.planteamiento_solucion,
-      prototipoEnlaces: fila.prototipo_enlaces ?? [],
-      documentacionTecnica: fila.documentacion_tecnica,
-      urlRepositorioProyecto: fila.url_repositorio_proyecto,
-      fechaPostulacion: fila.fecha_postulacion,
-      fechaEntregaPrototipo: fila.fecha_entrega_prototipo,
-      calificacionPrototipo: fila.calificacion_prototipo,
-      comentarioPrototipo: fila.comentario_prototipo,
-    }),
-  )
-
-  return ok(participaciones)
+  return ok((data ?? []).map(mapParticipacionRow))
 }
 
 const CambiarEstadoProyectoSchema = z.object({
@@ -222,4 +233,86 @@ export async function setParticipacionEstado(
   if (!actualizada) return err('update_failed')
 
   return ok({ estado: destino })
+}
+
+/**
+ * Todas las participaciones de TODOS los proyectos del empresario, con la
+ * identidad del estudiante (RF-34) y el proyecto al que pertenecen. Reusa el RPC
+ * por proyecto (N+1) en vez de un RPC dedicado: a escala del MVP es aceptable y
+ * evita una migración. Resiliente: si un proyecto falla se omite; si TODOS los
+ * proyectos fallan se devuelve error (para distinguir "roto" de "sin ofertas").
+ */
+export async function getEmpresarioParticipations(): Promise<
+  Result<ParticipacionConProyecto[]>
+> {
+  const user = await getCurrentUser()
+  if (!user) return err('unauthorized')
+
+  const projectsResult = await getMyPublishedProjects()
+  if (!projectsResult.ok) return err('participaciones_load_failed')
+  const proyectos = projectsResult.data
+  if (proyectos.length === 0) return ok([])
+
+  const supabase = await createSupabaseServerClient()
+  const porProyecto = await Promise.all(
+    proyectos.map(async (proyecto) => {
+      const { data, error } = await supabase.rpc(
+        'get_participaciones_de_proyecto',
+        { p_id_proyecto: proyecto.id },
+      )
+      if (error) {
+        logger.error('getEmpresarioParticipations: fallo en RPC', {
+          error: error.message,
+          proyecto: proyecto.id,
+        })
+        return null
+      }
+      return { proyecto, filas: data ?? [] }
+    }),
+  )
+
+  const cargados = porProyecto.filter(
+    (entrada): entrada is NonNullable<typeof entrada> => entrada !== null,
+  )
+  if (cargados.length === 0) return err('participaciones_load_failed')
+
+  const items = cargados.flatMap(({ proyecto, filas }) =>
+    filas.map((fila) => ({
+      ...mapParticipacionRow(fila),
+      proyecto: { id: proyecto.id, titulo: proyecto.titulo },
+    })),
+  )
+
+  return ok(items)
+}
+
+/**
+ * Conteos para las stats del dashboard del empresario. No usa el RPC: la RLS
+ * (`participaciones_select`) ya limita la lectura a las participaciones de los
+ * proyectos del empresario, y los conteos no necesitan la identidad del
+ * estudiante. Una sola query.
+ */
+export async function getEmpresarioParticipationStats(): Promise<
+  Result<{ total: number; hired: number }>
+> {
+  const user = await getCurrentUser()
+  if (!user) return err('unauthorized')
+
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase
+    .from('participaciones')
+    .select('estado')
+  if (error) {
+    logger.error('getEmpresarioParticipationStats: fallo al contar', {
+      error: error.message,
+    })
+    return err('unexpected')
+  }
+
+  const filas = data ?? []
+  const total = filas.length
+  const hired = filas.filter(
+    (fila) => fila.estado === 'contratada' || fila.estado === 'finalizada',
+  ).length
+  return ok({ total, hired })
 }

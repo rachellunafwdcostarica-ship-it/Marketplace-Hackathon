@@ -35,7 +35,7 @@ import {
   StatusPill,
   formatBudget,
 } from '@/components/features/projects/PublishedProjectsBoard'
-import { ParticipationsPanel } from './ParticipationsPanel'
+import { ParticipationsPanel } from '@/components/features/projects/ParticipationsPanel'
 
 interface ProjectDetailClientProps {
   project: PublishedProject
