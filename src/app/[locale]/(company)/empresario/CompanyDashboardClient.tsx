@@ -11,7 +11,7 @@ import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
 import { ApplicationCard } from '@/components/features/applications/ApplicationCard'
 import { PublishedProjectsBoard } from '@/components/features/projects/PublishedProjectsBoard'
 import { Button } from '@/components/ui/button'
-import { Link, useRouter } from '@/i18n/routing'
+import { Link } from '@/i18n/routing'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -57,8 +57,6 @@ export function CompanyDashboardClient({
     updateApplicationStatus,
     currentCompany: company,
   } = useDemoData()
-
-  const router = useRouter()
 
   // Postulaciones recibidas: mock, filtradas por los proyectos mock del contexto.
   const myProjectIds = projects
@@ -181,10 +179,7 @@ export function CompanyDashboardClient({
                 <span className="text-secondary">.</span>
               </h2>
 
-              <PublishedProjectsBoard
-                projects={initialProjects}
-                onRefetch={() => router.refresh()}
-              />
+              <PublishedProjectsBoard projects={initialProjects} />
             </div>
 
             <div className="lg:col-span-6 space-y-6">
