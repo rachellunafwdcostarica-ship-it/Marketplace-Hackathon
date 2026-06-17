@@ -219,9 +219,7 @@ function LoginContent() {
             >
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <p className="text-xs font-semibold leading-relaxed">
-                {oauthError === 'email_already_exists'
-                  ? tLogin('oauthErrorEmailExists')
-                  : tLogin('oauthError')}
+                {tLogin('oauthError')}
               </p>
             </div>
           )}

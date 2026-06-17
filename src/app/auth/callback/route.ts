@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
-import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { env } from '@/lib/env'
 
 function resolveLocale(value: string | undefined): 'es' | 'en' {
@@ -60,32 +59,9 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (user?.email) {
-    const adminClient = createSupabaseAdminClient()
-    const { data: duplicateUser } = await adminClient
-      .from('usuarios')
-      .select('id_usuario')
-      .eq('correo', user.email)
-      .neq('id_usuario', user.id)
-      .maybeSingle()
-
-    if (duplicateUser) {
-      logger.warn('auth/callback: OAuth email duplicate block', {
-        email: user.email,
-        existingId: duplicateUser.id_usuario,
-        newId: user.id,
-      })
-      await adminClient.auth.admin.deleteUser(user.id)
-      await supabase.auth.signOut()
-      return NextResponse.redirect(
-        `${origin}/${locale}/login?error=email_already_exists`,
-      )
-    }
-  }
+  // Un correo ya registrado con otro proveedor no produce duplicado: Supabase
+  // enlaza automáticamente la nueva identidad al usuario existente cuando el
+  // correo está verificado (default). No hay nada que rechazar aquí.
 
   // Flujos con destino explícito (p.ej. recuperación de contraseña →
   // /reset-password). Tiene prioridad sobre el enrutado por rol.
