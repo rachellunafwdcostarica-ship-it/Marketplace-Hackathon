@@ -352,6 +352,7 @@ export type Database = {
           logo: string | null
           nombre_empresa: string | null
           pais_sede: string | null
+          reputacion: number | null
           sector: string | null
           sitio_web: string | null
           tipo_empresario: Database['public']['Enums']['tipo_empresario_enum']
@@ -370,6 +371,7 @@ export type Database = {
           logo?: string | null
           nombre_empresa?: string | null
           pais_sede?: string | null
+          reputacion?: number | null
           sector?: string | null
           sitio_web?: string | null
           tipo_empresario: Database['public']['Enums']['tipo_empresario_enum']
@@ -388,6 +390,7 @@ export type Database = {
           logo?: string | null
           nombre_empresa?: string | null
           pais_sede?: string | null
+          reputacion?: number | null
           sector?: string | null
           sitio_web?: string | null
           tipo_empresario?: Database['public']['Enums']['tipo_empresario_enum']
@@ -576,6 +579,58 @@ export type Database = {
           },
           {
             foreignKeyName: 'evaluaciones_id_estudiante_fkey'
+            columns: ['id_estudiante']
+            isOneToOne: false
+            referencedRelation: 'estudiantes'
+            referencedColumns: ['id_estudiante']
+          },
+        ]
+      }
+      evaluaciones_empresarios: {
+        Row: {
+          comentario: string | null
+          evaluado_at: string
+          id_contratacion: string | null
+          id_empresario: string
+          id_estudiante: string
+          id_evaluacion: string
+          puntuacion: number
+        }
+        Insert: {
+          comentario?: string | null
+          evaluado_at?: string
+          id_contratacion?: string | null
+          id_empresario: string
+          id_estudiante: string
+          id_evaluacion?: string
+          puntuacion: number
+        }
+        Update: {
+          comentario?: string | null
+          evaluado_at?: string
+          id_contratacion?: string | null
+          id_empresario?: string
+          id_estudiante?: string
+          id_evaluacion?: string
+          puntuacion?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'evaluaciones_empresarios_id_contratacion_fkey'
+            columns: ['id_contratacion']
+            isOneToOne: false
+            referencedRelation: 'contrataciones'
+            referencedColumns: ['id_contratacion']
+          },
+          {
+            foreignKeyName: 'evaluaciones_empresarios_id_empresario_fkey'
+            columns: ['id_empresario']
+            isOneToOne: false
+            referencedRelation: 'empresarios'
+            referencedColumns: ['id_empresario']
+          },
+          {
+            foreignKeyName: 'evaluaciones_empresarios_id_estudiante_fkey'
             columns: ['id_estudiante']
             isOneToOne: false
             referencedRelation: 'estudiantes'

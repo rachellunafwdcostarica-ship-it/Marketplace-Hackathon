@@ -3,6 +3,8 @@ import {
   getMarketplaceProjectById,
   checkIfApplied,
 } from '@/lib/projects/marketplace'
+import { getMiContratacion } from '@/lib/deliverables/queries'
+import { getCompanyRatingForStudent } from '@/lib/company/ratings'
 import { ProjectDetailClient } from '@/components/features/marketplace/ProjectDetailClient'
 
 interface PageProps {
@@ -18,13 +20,25 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
     notFound()
   }
 
-  const appliedResult = await checkIfApplied(id)
+  const [appliedResult, contratacionResult] = await Promise.all([
+    checkIfApplied(id),
+    getMiContratacion(id),
+  ])
+
   const alreadyApplied = appliedResult.ok ? appliedResult.data : false
+  const contratacion = contratacionResult.ok ? contratacionResult.data : null
+
+  const ratingResult = await getCompanyRatingForStudent(
+    projectResult.data.companyId,
+  )
+  const existingRating = ratingResult.ok ? ratingResult.data : null
 
   return (
     <ProjectDetailClient
       project={projectResult.data}
       alreadyApplied={alreadyApplied}
+      contratacion={contratacion}
+      existingRating={existingRating}
     />
   )
 }

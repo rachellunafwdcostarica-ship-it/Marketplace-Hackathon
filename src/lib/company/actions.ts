@@ -93,6 +93,7 @@ export async function getCompanyProfile(): Promise<
       country: empresario.pais_sede ?? '',
       city: empresario.ciudad_sede ?? '',
       verificationStatus: empresario.estado_verificacion ?? null,
+      reputacion: empresario.reputacion ? Number(empresario.reputacion) : 0,
       ...(empresario.alcance_operativo
         ? { operatingScope: empresario.alcance_operativo }
         : {}),
@@ -166,6 +167,7 @@ export async function getCompanyProfileForEdit(): Promise<
       country: empresario?.pais_sede ?? '',
       city: empresario?.ciudad_sede ?? '',
       verificationStatus: empresario?.estado_verificacion ?? null,
+      reputacion: empresario?.reputacion ? Number(empresario.reputacion) : 0,
       ...(empresario?.alcance_operativo
         ? { operatingScope: empresario.alcance_operativo }
         : {}),
