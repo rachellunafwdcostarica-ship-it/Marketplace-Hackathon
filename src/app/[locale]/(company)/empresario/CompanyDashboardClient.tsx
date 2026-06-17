@@ -1,81 +1,39 @@
 'use client'
 
-import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useDemoData } from '@/lib/DemoDataContext'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { DashboardStats, StatItem } from '@/components/features/DashboardStats'
-import { ApplicationCard } from '@/components/features/applications/ApplicationCard'
 import { PublishedProjectsBoard } from '@/components/features/projects/PublishedProjectsBoard'
-import { Button } from '@/components/ui/button'
 import { Link } from '@/i18n/routing'
-import { toast } from 'sonner'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
-import {
-  Briefcase,
-  Users,
-  CheckCircle,
-  Plus,
-  UserCheck,
-  AlertTriangle,
-  Building2,
-} from 'lucide-react'
+import { Briefcase, Users, Plus, UserCheck, Building2 } from 'lucide-react'
 import type { PublishedProject } from '@/lib/projects/dashboard'
 
 interface CompanyDashboardClientProps {
   initialProjects: PublishedProject[]
+  participationStats: { total: number; hired: number }
 }
 
 /**
- * Cuerpo (client) del dashboard del empresario. Los proyectos llegan YA cargados
- * por prop desde el server component (sin useEffect de fetch); el refetch tras
- * cancelar usa `router.refresh()`. Postulaciones y stats de postulaciones siguen
- * en mock (DemoDataContext) — ver docs/deuda-tecnica-mocks.md.
+ * Cuerpo (client) del dashboard del empresario. Proyectos y stats llegan YA
+ * cargados por prop desde el server component (datos REALES, sin mock ni
+ * useEffect de fetch). Las postulaciones se revisan en `/empresario/postulaciones`
+ * y dentro de cada proyecto, no en el dashboard.
  */
 export function CompanyDashboardClient({
   initialProjects,
+  participationStats,
 }: CompanyDashboardClientProps) {
   const tEmpresa = useTranslations('Empresa')
-  const tCommon = useTranslations('Common')
   const tAccount = useTranslations('Account')
   const { isPending } = useAccountStatus()
-
-  const {
-    projects,
-    applications,
-    updateApplicationStatus,
-    currentCompany: company,
-  } = useDemoData()
-
-  // Postulaciones recibidas: mock, filtradas por los proyectos mock del contexto.
-  const myProjectIds = projects
-    .filter((p) => p.companyId === (company?.id || 'comp-1'))
-    .map((p) => p.id)
-  const receivedApps = applications.filter((app) =>
-    myProjectIds.includes(app.projectId),
-  )
 
   const activeRealCount = initialProjects.filter(
     (p) => p.estadoEfectivo === 'abierto',
   ).length
-
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean
-    type: 'accept' | 'reject'
-    targetId: string
-    title: string
-  }>({ isOpen: false, type: 'accept', targetId: '', title: '' })
 
   const stats: StatItem[] = [
     {
@@ -87,45 +45,19 @@ export function CompanyDashboardClient({
     },
     {
       title: tEmpresa('statsTotalApplications'),
-      value: receivedApps.length,
+      value: participationStats.total,
       icon: Users,
       description: tEmpresa('statsTotalAppsDesc'),
       colorClass: 'text-secondary bg-secondary/10',
     },
     {
       title: tEmpresa('statsHired'),
-      value: receivedApps.filter((app) => app.status === 'accepted').length,
+      value: participationStats.hired,
       icon: UserCheck,
       description: tEmpresa('statsHiredDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
   ]
-
-  const handleActionClick = (
-    type: 'accept' | 'reject',
-    targetId: string,
-    title: string,
-  ) => {
-    setConfirmDialog({ isOpen: true, type, targetId, title })
-  }
-
-  const handleConfirmAction = () => {
-    const { type, targetId } = confirmDialog
-    if (type === 'accept') {
-      updateApplicationStatus(targetId, 'accepted')
-      toast.success(tEmpresa('acceptSuccess'))
-    } else {
-      updateApplicationStatus(targetId, 'rejected')
-      toast.error(tEmpresa('rejectSuccess'))
-    }
-    setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
-  }
-
-  const handleContactCandidate = (email: string) => {
-    toast.info(tEmpresa('contactEmailInfo', { email }))
-    const subject = encodeURIComponent(tEmpresa('contactEmailSubject'))
-    window.location.assign(`mailto:${email}?subject=${subject}`)
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -172,107 +104,14 @@ export function CompanyDashboardClient({
 
           <DashboardStats stats={stats} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-10">
-            <div className="lg:col-span-6 space-y-6">
-              <h2 className="text-xl font-bold tracking-tight text-foreground font-heading pb-2 border-b border-border/60">
-                {tEmpresa('myPublishedProjects')}
-                <span className="text-secondary">.</span>
-              </h2>
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold tracking-tight text-foreground font-heading pb-2 border-b border-border/60">
+              {tEmpresa('myPublishedProjects')}
+              <span className="text-secondary">.</span>
+            </h2>
 
-              <PublishedProjectsBoard projects={initialProjects} />
-            </div>
-
-            <div className="lg:col-span-6 space-y-6">
-              <h2 className="text-xl font-bold tracking-tight text-foreground font-heading pb-2 border-b border-border/60">
-                {tEmpresa('applicationsReceived')}
-                <span className="text-accent">.</span>
-              </h2>
-
-              {receivedApps.length === 0 ? (
-                <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
-                  <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-                  {tEmpresa('noApplicationsYet')}
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {receivedApps.map((app) => (
-                    <ApplicationCard
-                      key={app.id}
-                      application={app}
-                      viewMode="empresario"
-                      onAccept={() =>
-                        handleActionClick('accept', app.id, app.candidateName)
-                      }
-                      onReject={() =>
-                        handleActionClick('reject', app.id, app.candidateName)
-                      }
-                      onContact={() =>
-                        handleContactCandidate(app.candidateEmail)
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            <PublishedProjectsBoard projects={initialProjects} />
           </div>
-
-          <Dialog
-            open={confirmDialog.isOpen}
-            onOpenChange={(isOpen) =>
-              setConfirmDialog((p) => ({ ...p, isOpen }))
-            }
-          >
-            <DialogContent className="sm:max-w-md border border-border">
-              <DialogHeader className="flex flex-col items-center text-center">
-                <div
-                  className={`p-3 rounded-full mb-3 ${
-                    confirmDialog.type === 'accept'
-                      ? 'bg-accent/15 text-accent'
-                      : 'bg-destructive/15 text-destructive'
-                  }`}
-                >
-                  {confirmDialog.type === 'accept' ? (
-                    <CheckCircle className="w-6 h-6" />
-                  ) : (
-                    <AlertTriangle className="w-6 h-6" />
-                  )}
-                </div>
-                <DialogTitle className="text-xl font-bold font-heading">
-                  {confirmDialog.type === 'accept'
-                    ? tEmpresa('confirmAccept')
-                    : tEmpresa('confirmReject')}
-                </DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground mt-2">
-                  {tEmpresa('confirmActionOn')}{' '}
-                  <span className="font-semibold text-foreground">
-                    &ldquo;{confirmDialog.title}&rdquo;
-                  </span>
-                  . {tEmpresa('confirmCannotUndo')}
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter className="flex gap-2 sm:justify-center pt-4 border-t border-border/40 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setConfirmDialog((p) => ({ ...p, isOpen: false }))
-                  }
-                  className="border-border hover:bg-muted font-semibold flex-1 sm:flex-initial"
-                >
-                  {tCommon('cancel')}
-                </Button>
-                <Button
-                  onClick={handleConfirmAction}
-                  className={`font-semibold flex-1 sm:flex-initial text-primary-foreground ${
-                    confirmDialog.type === 'accept'
-                      ? 'bg-accent hover:bg-accent/90'
-                      : 'bg-destructive hover:bg-destructive/90'
-                  }`}
-                >
-                  {tCommon('confirm')}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </main>
       </div>
 

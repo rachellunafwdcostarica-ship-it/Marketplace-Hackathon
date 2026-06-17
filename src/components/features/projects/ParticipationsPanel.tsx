@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
+  Briefcase,
   CheckCircle2,
   ExternalLink,
   FileText,
@@ -22,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { useRouter } from '@/i18n/routing'
+import { Link, useRouter } from '@/i18n/routing'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { cn } from '@/lib/utils/cn'
 import { setParticipacionEstado } from '@/lib/projects/project-detail'
@@ -37,8 +38,17 @@ import {
   type ParticipacionFilter,
 } from '@/lib/projects/project-detail-logic'
 
+/**
+ * Item del panel. `proyecto` es opcional: la página de detalle no lo pasa (ya
+ * estás dentro del proyecto); la vista cross-project de `/postulaciones` sí, y
+ * la tarjeta muestra un chip que enlaza al proyecto.
+ */
+export type ParticipacionPanelItem = ParticipacionEmpresario & {
+  proyecto?: { id: string; titulo: string }
+}
+
 interface ParticipationsPanelProps {
-  result: Result<ParticipacionEmpresario[]>
+  result: Result<ParticipacionPanelItem[]>
 }
 
 const ESTADO_STYLE: Record<EstadoParticipacion, string> = {
@@ -53,7 +63,7 @@ const ESTADO_STYLE: Record<EstadoParticipacion, string> = {
 
 interface ConfirmState {
   accion: Extract<ParticipacionAction, 'contratar' | 'rechazar'>
-  participacion: ParticipacionEmpresario
+  participacion: ParticipacionPanelItem
 }
 
 export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
@@ -78,7 +88,7 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
   )
 
   const runAction = async (
-    participacion: ParticipacionEmpresario,
+    participacion: ParticipacionPanelItem,
     accion: ParticipacionAction,
   ) => {
     setMutatingId(participacion.idParticipacion)
@@ -203,7 +213,7 @@ export function ParticipationsPanel({ result }: ParticipationsPanelProps) {
 }
 
 interface ParticipationCardProps {
-  participacion: ParticipacionEmpresario
+  participacion: ParticipacionPanelItem
   isMutating: boolean
   isPending: boolean
   pendingTitle: string
@@ -229,6 +239,15 @@ function ParticipationCard({
   return (
     <Card className="border border-border/80 bg-card/40">
       <CardContent className="p-5 space-y-4">
+        {participacion.proyecto && (
+          <Link
+            href={`/empresario/proyecto/${participacion.proyecto.id}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            {participacion.proyecto.titulo}
+          </Link>
+        )}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <InitialsAvatar
