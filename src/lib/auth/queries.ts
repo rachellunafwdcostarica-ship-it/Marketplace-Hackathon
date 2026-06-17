@@ -5,8 +5,15 @@ import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import type { Database } from '@/types/database'
 import { env } from '@/lib/env'
+import { getCurrentUser } from '@/lib/auth/dal'
 
 export async function getMyAccountStatus(): Promise<Result<string | null>> {
+  // get_my_account_status() está revocada para anon (endurecimiento de
+  // seguridad). Sin sesión la RPC respondería permission denied; cortamos
+  // antes y devolvemos un estado esperado, no un error que loguear.
+  const user = await getCurrentUser()
+  if (!user) return err('unauthenticated')
+
   const cookieStore = await cookies()
 
   const supabase = createServerClient<Database>(
@@ -41,6 +48,12 @@ export async function getMyAccountStatus(): Promise<Result<string | null>> {
 }
 
 export async function getUserRole(): Promise<Result<string>> {
+  // get_my_role() está revocada para anon (endurecimiento de seguridad). Sin
+  // sesión la RPC respondería permission denied y se logueaba como error; el
+  // estado sin sesión es esperado, así que cortamos antes y no lo gritamos.
+  const user = await getCurrentUser()
+  if (!user) return err('unauthenticated')
+
   const cookieStore = await cookies()
 
   const supabase = createServerClient<Database>(
