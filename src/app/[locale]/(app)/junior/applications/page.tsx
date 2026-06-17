@@ -2,32 +2,30 @@
 
 import React, { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useDemoData } from '@/lib/DemoDataContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
-import { ApplicationCard } from '@/components/features/applications/ApplicationCard'
 import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Link } from '@/i18n/routing'
 import { Briefcase } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { retirarPostulacion } from '@/lib/applications/actions'
 import { toast } from 'sonner'
-import type { Application } from '@/types'
+import {
+  PostulacionCard,
+  type PostulacionPropia,
+} from '@/components/features/applications/PostulacionCard'
 
 export default function EgresadoApplicationsPage() {
   const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
-  const { applications } = useDemoData()
 
-  type MyApp = Application & { dbStatus: string }
-  const [myApps, setMyApps] = useState<MyApp[]>([])
+  const [myApps, setMyApps] = useState<PostulacionPropia[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchApplications = async () => {
     const supabase = createSupabaseBrowserClient()
 
-    // 1. Obtener usuario actual
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -36,7 +34,6 @@ export default function EgresadoApplicationsPage() {
       return
     }
 
-    // 2. Obtener id_estudiante
     const { data: estudiante } = await supabase
       .from('estudiantes')
       .select('id_estudiante')
@@ -48,7 +45,6 @@ export default function EgresadoApplicationsPage() {
       return
     }
 
-    // 3. Consultar participaciones
     const { data: participaciones, error } = await supabase
       .from('participaciones')
       .select(
@@ -75,36 +71,23 @@ export default function EgresadoApplicationsPage() {
       return
     }
 
-    // Mapear al tipo Application esperado por ApplicationCard
-    const mappedApps: MyApp[] = participaciones.map((p) => {
-      let statusMapped: Application['status'] = 'sent'
-      if (p.estado === 'en_revision') statusMapped = 'viewed'
-      if (p.estado === 'contratada') statusMapped = 'accepted'
-      if (
-        p.estado === 'no_seleccionada' ||
-        p.estado === 'retirada' ||
-        p.estado === 'cancelada'
-      )
-        statusMapped = 'rejected'
-
+    const mapped: PostulacionPropia[] = participaciones.map((p) => {
       const companyName = Array.isArray(p.proyectos?.empresarios)
-        ? p.proyectos?.empresarios[0]?.nombre_empresa
-        : p.proyectos?.empresarios?.nombre_empresa
+        ? (p.proyectos?.empresarios[0]?.nombre_empresa ?? 'Empresa Desconocida')
+        : (p.proyectos?.empresarios?.nombre_empresa ?? 'Empresa Desconocida')
 
       return {
-        id: p.id_participacion,
-        projectId: p.id_proyecto,
-        projectTitle: p.proyectos?.titulo || 'Proyecto Desconocido',
-        companyId: p.proyectos?.id_empresario || '',
-        companyName: companyName || 'Empresa Desconocida',
-        coverLetter: p.carta_postulacion || '',
-        status: statusMapped,
-        createdAt: p.fecha_postulacion,
-        dbStatus: p.estado, // Guardamos el estado original para lógica de retiro
-      } as Application & { dbStatus: string }
+        id_participacion: p.id_participacion,
+        id_proyecto: p.id_proyecto,
+        projectTitle: p.proyectos?.titulo ?? 'Proyecto Desconocido',
+        companyName,
+        carta_postulacion: p.carta_postulacion,
+        estado: p.estado,
+        fecha_postulacion: p.fecha_postulacion,
+      }
     })
 
-    setMyApps(mappedApps)
+    setMyApps(mapped)
     setLoading(false)
   }
 
@@ -113,17 +96,15 @@ export default function EgresadoApplicationsPage() {
   }, [])
 
   const handleWithdraw = async (id_participacion: string) => {
-    const confirm = window.confirm(
-      '¿Estás seguro de que deseas retirar tu postulación?',
-    )
-    if (!confirm) return
+    const confirmed = window.confirm(tEgresado('confirmWithdraw'))
+    if (!confirmed) return
 
     const result = await retirarPostulacion({ id_participacion })
     if (!result.ok) {
-      toast.error('Error al retirar la postulación: ' + result.error)
+      toast.error(tEgresado('withdrawError'))
     } else {
-      toast.success('Postulación retirada con éxito')
-      fetchApplications() // Recargar
+      toast.success(tEgresado('withdrawSuccess'))
+      fetchApplications()
     }
   }
 
@@ -153,16 +134,14 @@ export default function EgresadoApplicationsPage() {
             />
           ) : (
             <div className="space-y-6">
-              {myApps.map((application) => (
-                <ApplicationCard
-                  key={application.id}
-                  application={application}
-                  viewMode="egresado"
-                  {...(['enviada', 'en_revision'].includes(application.dbStatus)
+              {myApps.map((postulacion) => (
+                <PostulacionCard
+                  key={postulacion.id_participacion}
+                  postulacion={postulacion}
+                  {...(['enviada', 'en_revision'].includes(postulacion.estado)
                     ? {
-                        onWithdraw: () => {
-                          handleWithdraw(application.id)
-                        },
+                        onWithdraw: () =>
+                          handleWithdraw(postulacion.id_participacion),
                       }
                     : {})}
                 />

@@ -1,12 +1,25 @@
 import { getMarketplaceProjects } from '@/lib/projects/marketplace'
+import { getMisPostulacionesStats } from '@/lib/applications/queries'
 import { JuniorDashboardClient } from '@/components/features/dashboard/JuniorDashboardClient'
 
 export default async function EgresadoDashboard() {
-  // Obtenemos los proyectos activos de Supabase
-  const result = await getMarketplaceProjects()
+  const [projectsResult, statsResult] = await Promise.all([
+    getMarketplaceProjects(),
+    getMisPostulacionesStats(),
+  ])
 
-  // Si la petición fue exitosa, tomamos los primeros 2 proyectos como recomendados
-  const recommendedProjects = result.ok ? result.data.slice(0, 2) : []
+  const recommendedProjects = projectsResult.ok
+    ? projectsResult.data.slice(0, 2)
+    : []
 
-  return <JuniorDashboardClient recommendedProjects={recommendedProjects} />
+  const stats = statsResult.ok
+    ? statsResult.data
+    : { total: 0, activas: 0, contratadas: 0 }
+
+  return (
+    <JuniorDashboardClient
+      recommendedProjects={recommendedProjects}
+      stats={stats}
+    />
+  )
 }

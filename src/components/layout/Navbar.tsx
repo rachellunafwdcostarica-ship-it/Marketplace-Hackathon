@@ -103,7 +103,7 @@ export function Navbar({ heroMode = false }: NavbarProps) {
     egresado: [
       { href: '/junior', label: t('dashboard'), icon: 'dashboard' },
       { href: '/junior/projects', label: t('searchProjects'), icon: 'search' },
-      { href: '/applications', label: t('applications'), icon: 'send' },
+      { href: '/junior/applications', label: t('applications'), icon: 'send' },
       { href: '/junior/portfolio', label: t('portfolio'), icon: 'portfolio' },
     ],
     empresario: [

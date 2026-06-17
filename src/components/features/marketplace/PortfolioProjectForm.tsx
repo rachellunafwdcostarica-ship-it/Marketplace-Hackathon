@@ -115,7 +115,9 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
           placeholder={t('formTitlePlaceholder')}
         />
         {errors.title && (
-          <p className="text-sm text-red-500">{String(errors.title.message)}</p>
+          <p className="text-sm text-destructive">
+            {String(errors.title.message)}
+          </p>
         )}
       </div>
 
@@ -128,7 +130,7 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
           rows={4}
         />
         {errors.description && (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-destructive">
             {String(errors.description.message)}
           </p>
         )}
@@ -142,7 +144,7 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
           placeholder={t('formTechPlaceholder')}
         />
         {errors.technologies && (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-destructive">
             {String(errors.technologies.message)}
           </p>
         )}
@@ -156,7 +158,7 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
           {...register('completionDate')}
         />
         {errors.completionDate && (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-destructive">
             {String(errors.completionDate.message)}
           </p>
         )}
@@ -170,7 +172,7 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
           }
           value={watch('visibility')}
         >
-          <SelectTrigger>
+          <SelectTrigger id="visibility">
             <SelectValue placeholder={t('formVisibilityPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
@@ -188,7 +190,7 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
           placeholder={t('formRepoPlaceholder')}
         />
         {errors.repositoryUrl && (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-destructive">
             {String(errors.repositoryUrl.message)}
           </p>
         )}
@@ -202,7 +204,7 @@ export function PortfolioProjectForm({ initialData, onSave, onCancel }: Props) {
           placeholder={t('formDemoPlaceholder')}
         />
         {errors.demoUrl && (
-          <p className="text-sm text-red-500">
+          <p className="text-sm text-destructive">
             {String(errors.demoUrl.message)}
           </p>
         )}
