@@ -69,6 +69,20 @@ export function AdminProjectCharts({ stats }: AdminProjectChartsProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+      <style>{`
+        @keyframes barHoverRainbow {
+          0% { background-color: #008fd4; }
+          17% { background-color: #662d91; }
+          33% { background-color: #20bec6; }
+          50% { background-color: #ffcb05; }
+          67% { background-color: #f7901e; }
+          83% { background-color: #ec008c; }
+          100% { background-color: #008fd4; }
+        }
+        .animate-bar-hover {
+          animation: barHoverRainbow 2s linear infinite !important;
+        }
+      `}</style>
       {/* Gráfico de Barras */}
       <div className="rounded-xl border border-border/80 bg-card/40 p-6 backdrop-blur-sm">
         <h3 className="text-base font-semibold font-heading text-foreground mb-4">
@@ -96,7 +110,7 @@ export function AdminProjectCharts({ stats }: AdminProjectChartsProps) {
                 <div
                   className={`w-full rounded-t-sm transition-all duration-300 ${bar.color} ${
                     isHovered
-                      ? 'opacity-100 scale-x-105 filter brightness-110'
+                      ? 'opacity-100 scale-x-105 filter brightness-110 animate-bar-hover'
                       : 'opacity-80'
                   }`}
                   style={{ height: `${Math.max(barHeightPercent, 4)}%` }}

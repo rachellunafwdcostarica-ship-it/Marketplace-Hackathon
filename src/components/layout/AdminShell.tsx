@@ -179,13 +179,8 @@ export function AdminShell({ children }: AdminShellProps) {
           <div className="flex-1" style={{ background: '#ec008c' }} />
         </div>
 
-        {/* ── Page content with floral isotype and watermark backgrounds ── */}
+        {/* ── Page content with watermark background ── */}
         <main className="flex-1 overflow-x-hidden bg-[#f5f6fa] relative">
-          {/* Top-right isotype anchor */}
-          <div className="absolute top-6 right-6 z-10 w-20 h-20 opacity-90 pointer-events-none hidden md:block">
-            <FwdLogo className="w-full h-full" />
-          </div>
-
           {/* Bottom-left blurred watermark */}
           <div className="absolute -bottom-24 -left-24 z-0 w-96 h-96 opacity-[0.04] blur-[1px] pointer-events-none">
             <FwdLogo className="w-full h-full" />
