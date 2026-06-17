@@ -172,6 +172,18 @@ function leerReasoning(
   return typeof r === 'string' ? r.trim() : ''
 }
 
+/**
+ * Lee el canal `refusal` (estándar de la API de chat): cuando el modelo se niega
+ * a responder, el texto del rechazo viene acá y `content` queda vacío. Solo para
+ * DIAGNÓSTICO; no es el JSON que esperamos, así que no lo usamos como contenido.
+ */
+function leerRefusal(
+  message: OpenAI.Chat.Completions.ChatCompletionMessage | undefined,
+): string {
+  const r = (message as { refusal?: unknown } | undefined)?.refusal
+  return typeof r === 'string' ? r.trim() : ''
+}
+
 function resumenLogistica(logistica: LogisticaDraft | null): string {
   if (!logistica) return 'El empresario todavía no cargó la logística.'
   const partes: string[] = [
@@ -245,6 +257,8 @@ export function getAiProvider(): AiProvider {
           intento,
           finishReason,
           reasoningLen: reasoning.length,
+          refusal: leerRefusal(message).slice(0, 500) || null,
+          completionTokens: completion.usage?.completion_tokens ?? null,
           messageKeys: message ? Object.keys(message) : [],
         })
         continue
@@ -305,6 +319,14 @@ export function getAiProvider(): AiProvider {
         message?.content?.trim() || leerReasoning(message)
       ).trim()
       if (!content) {
+        logger.warn('ai_empty_content', {
+          origen: 'conversar',
+          finishReason: completion.choices[0]?.finish_reason ?? 'desconocido',
+          reasoningLen: leerReasoning(message).length,
+          refusal: leerRefusal(message).slice(0, 500) || null,
+          completionTokens: completion.usage?.completion_tokens ?? null,
+          messageKeys: message ? Object.keys(message) : [],
+        })
         throw new Error('AI_EMPTY_RESPONSE')
       }
       try {
