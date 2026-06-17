@@ -58,6 +58,10 @@ export default async function CompanyProfilePage() {
   }
 
   return (
-    <CompanyPerfilClient company={company} profile={p} projects={proyectos} />
+    <CompanyPerfilClient
+      company={company}
+      profile={p}
+      projectsCount={proyectos.length}
+    />
   )
 }
