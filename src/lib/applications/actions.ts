@@ -7,76 +7,27 @@ import { requireRole } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 
+const MIN_PLANTEAMIENTO_LEN = 30
+const MAX_CARTA_LEN = 2800
+const MIN_PROTOTIPO_ENLACES = 1
+const MAX_PROTOTIPO_ENLACES = 4
+const MAX_ENLACE_LEN = 500
+const MAX_DOC_URL_LEN = 300
+
 const PostularseSchema = z.object({
   id_proyecto: z.string().uuid(),
-  carta_postulacion: z.string().min(30),
-  planteamiento_solucion: z.string().min(30),
-  prototipo_enlaces: z.array(z.string().url()).optional(),
-  documentacion_tecnica: z.string().url().optional(),
+  planteamiento_solucion: z.string().min(MIN_PLANTEAMIENTO_LEN),
+  prototipo_enlaces: z
+    .array(z.string().url().max(MAX_ENLACE_LEN))
+    .min(MIN_PROTOTIPO_ENLACES)
+    .max(MAX_PROTOTIPO_ENLACES),
+  carta_postulacion: z.string().max(MAX_CARTA_LEN).optional(),
+  documentacion_tecnica: z.string().url().max(MAX_DOC_URL_LEN).optional(),
 })
 
 const RetirarSchema = z.object({
   id_participacion: z.string().uuid(),
 })
-
-const MAX_ARCHIVO_BYTES = 10 * 1024 * 1024
-
-const SubirArchivoSchema = z.object({
-  id_proyecto: z.string().uuid(),
-  tipo: z.enum(['prototipo', 'documentacion']),
-})
-
-/**
- * Sube un archivo de la postulación (prototipo o documentación) al bucket
- * `prototipos` desde el SERVIDOR. Antes vivía en el cliente con el browser client,
- * que se colgaba obteniendo la sesión (mismo síntoma que motivó mover las lecturas
- * al server en `applications/queries.ts`). Acá el server client ya trae la sesión
- * por cookie y la RLS de Storage aplica con el usuario correcto.
- */
-export async function subirArchivoPostulacion(
-  formData: FormData,
-): Promise<Result<{ url: string }>> {
-  const parsed = SubirArchivoSchema.safeParse({
-    id_proyecto: formData.get('id_proyecto'),
-    tipo: formData.get('tipo'),
-  })
-  if (!parsed.success) {
-    return err('invalid_input')
-  }
-
-  const archivo = formData.get('archivo')
-  if (!(archivo instanceof File) || archivo.size === 0) {
-    return err('archivo_invalido')
-  }
-  if (archivo.size > MAX_ARCHIVO_BYTES) {
-    return err('archivo_muy_grande')
-  }
-
-  const roleResult = await requireRole('egresado')
-  if (!roleResult.ok) {
-    return roleResult
-  }
-
-  const supabase = await createSupabaseServerClient()
-  const extension = archivo.name.split('.').pop() ?? 'bin'
-  const ruta = `${parsed.data.id_proyecto}-${Date.now()}-${parsed.data.tipo}.${extension}`
-
-  const { data, error } = await supabase.storage
-    .from('prototipos')
-    .upload(ruta, archivo)
-  if (error || !data) {
-    logger.error('subirArchivoPostulacion failed', {
-      error: error?.message ?? 'sin data de subida',
-    })
-    return err('upload_failed')
-  }
-
-  const { data: publicUrl } = supabase.storage
-    .from('prototipos')
-    .getPublicUrl(data.path)
-
-  return ok({ url: publicUrl.publicUrl })
-}
 
 /**
  * Permite a un Junior postularse a un proyecto abierto.
@@ -141,9 +92,9 @@ export async function postularse(
     id_proyecto: parsed.data.id_proyecto,
     id_estudiante: estudiante.id_estudiante,
     estado: 'enviada',
-    carta_postulacion: parsed.data.carta_postulacion,
+    carta_postulacion: parsed.data.carta_postulacion ?? null,
     planteamiento_solucion: parsed.data.planteamiento_solucion,
-    prototipo_enlaces: parsed.data.prototipo_enlaces ?? null,
+    prototipo_enlaces: parsed.data.prototipo_enlaces,
     documentacion_tecnica: parsed.data.documentacion_tecnica ?? null,
   })
 
