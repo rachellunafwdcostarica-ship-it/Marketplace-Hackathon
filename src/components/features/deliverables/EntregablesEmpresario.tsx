@@ -82,7 +82,9 @@ export function EntregablesEmpresario({
     })
     setSubmittingId(null)
     if (res.ok) {
-      toast.success(t('responderSuccess'))
+      toast.success(
+        res.data.finalizado ? t('finalizarSuccess') : t('responderSuccess'),
+      )
       setRespondingId(null)
       setRespondComment('')
       router.refresh()

@@ -236,9 +236,9 @@ export function EntregablesClient({
           </CardContent>
         </Card>
 
-        {/* Calificación de la Empresa */}
-        {(contratacion.estado_periodo === 'finalizado' ||
-          contratacion.estado_periodo === 'vigente') && (
+        {/* Calificación de la Empresa: solo con la contratación finalizada,
+            que es lo que exige la RLS evaluaciones_empresarios_insert_estudiante. */}
+        {contratacion.estado_periodo === 'finalizado' && (
           <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
             <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-warning to-highlight" />
             <CardContent className="p-6 pt-8 space-y-6">
