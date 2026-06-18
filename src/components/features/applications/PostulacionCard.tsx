@@ -14,7 +14,12 @@ export interface PostulacionPropia {
   projectTitle: string
   companyName: string
   carta_postulacion: string | null
+  /** Estado real almacenado en la BD. */
   estado: EstadoParticipacion
+  /** Estado EFECTIVO de cara al estudiante (RF-32): si el proyecto ya se cerró,
+   *  una oferta viva se ve `no_seleccionada`/`cancelada` aunque la columna siga
+   *  en `enviada`. Es lo que se PINTA; ver `computeEstadoParticipacionEfectivo`. */
+  estadoEfectivo: EstadoParticipacion
   fecha_postulacion: string
 }
 
@@ -42,7 +47,7 @@ export function PostulacionCard({
   const tEgresado = useTranslations('Egresado')
   const tDetail = useTranslations('ProjectDetail')
 
-  const canWithdraw = RETIRABLE.includes(postulacion.estado)
+  const canWithdraw = RETIRABLE.includes(postulacion.estadoEfectivo)
 
   return (
     <Card className="border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-sm transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)]">
@@ -55,10 +60,10 @@ export function PostulacionCard({
             <span
               className={cn(
                 'text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0',
-                ESTADO_STYLE[postulacion.estado],
+                ESTADO_STYLE[postulacion.estadoEfectivo],
               )}
             >
-              {tDetail(`pstatus_${postulacion.estado}`)}
+              {tDetail(`pstatus_${postulacion.estadoEfectivo}`)}
             </span>
           </div>
           <p className="text-sm font-semibold text-primary font-heading">
@@ -84,9 +89,9 @@ export function PostulacionCard({
         </CardContent>
       )}
 
-      {(canWithdraw || postulacion.estado === 'contratada') && (
+      {(canWithdraw || postulacion.estadoEfectivo === 'contratada') && (
         <CardFooter className="p-6 pt-4 border-t border-border/40 bg-muted/10 flex flex-wrap gap-2">
-          {postulacion.estado === 'contratada' && (
+          {postulacion.estadoEfectivo === 'contratada' && (
             <Button
               size="sm"
               variant="default"

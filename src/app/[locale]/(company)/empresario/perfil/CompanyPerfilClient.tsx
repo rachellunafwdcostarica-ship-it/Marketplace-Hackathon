@@ -1,8 +1,6 @@
 'use client'
 
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
+import { CompanyShell } from '@/components/layout/CompanyShell'
 import { CompanyProfileBanner } from '@/components/features/companies/CompanyProfileBanner'
 import { CompanyProfileDetails } from '@/components/features/companies/CompanyProfileDetails'
 import type { Company } from '@/types'
@@ -26,22 +24,14 @@ export function CompanyPerfilClient({
   projectsCount,
 }: CompanyPerfilClientProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Navbar />
-
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <SidebarEmpresaNuevo />
-
-        <main className="flex-1 space-y-8">
-          <CompanyProfileBanner company={company} />
-          <CompanyProfileDetails
-            profile={profile}
-            projectsCount={projectsCount}
-          />
-        </main>
+    <CompanyShell>
+      <div className="space-y-8">
+        <CompanyProfileBanner company={company} />
+        <CompanyProfileDetails
+          profile={profile}
+          projectsCount={projectsCount}
+        />
       </div>
-
-      <Footer />
-    </div>
+    </CompanyShell>
   )
 }

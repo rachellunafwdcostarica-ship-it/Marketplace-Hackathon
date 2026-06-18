@@ -7,8 +7,8 @@ import { Send, Sparkles, User, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils/cn'
-import { sendChatMessage } from '@/lib/projects/chat'
-import type { HistorialEntry } from '@/lib/ai/types'
+import { sendChatMessage } from '@/lib/proposal-ai/chat'
+import type { HistorialEntry } from '@/lib/proposal-ai/types'
 
 interface ProjectChatProps {
   conversationId: string

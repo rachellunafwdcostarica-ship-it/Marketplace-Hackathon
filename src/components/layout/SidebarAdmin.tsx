@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   AlertTriangle,
+  Star,
   type LucideIcon,
 } from 'lucide-react'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
@@ -23,6 +24,7 @@ type AdminNavLabel =
   | 'validations'
   | 'settings'
   | 'moderation'
+  | 'ratings'
 
 interface AdminNavItem {
   href: string
@@ -36,6 +38,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin/projects', labelKey: 'projects', icon: Briefcase },
   { href: '/admin/validations', labelKey: 'validations', icon: ShieldCheck },
   { href: '/admin/moderation', labelKey: 'moderation', icon: AlertTriangle },
+  { href: '/admin/calificaciones', labelKey: 'ratings', icon: Star },
   { href: '/admin/settings', labelKey: 'settings', icon: Settings },
 ]
 

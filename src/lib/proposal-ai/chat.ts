@@ -5,9 +5,9 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import type { Json } from '@/types/database'
-import { getAiProvider } from '@/lib/ai/provider'
-import type { HistorialEntry } from '@/lib/ai/types'
-import { parseHistorial, parseLogistica } from './persistence'
+import { getAiProvider } from './provider'
+import type { HistorialEntry } from './types'
+import { parseHistorial, parseLogistica } from '@/lib/projects/persistence'
 
 const MENSAJE_MAX = 2000
 

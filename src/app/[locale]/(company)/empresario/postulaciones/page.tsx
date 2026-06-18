@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
+import { CompanyShell } from '@/components/layout/CompanyShell'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ParticipationsPanel } from '@/components/features/projects/ParticipationsPanel'
 import { getEmpresarioParticipations } from '@/lib/projects/project-detail'
@@ -26,23 +24,15 @@ export default async function CompanyPostulationsPage() {
   const result = await getEmpresarioParticipations()
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Navbar />
-
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <SidebarEmpresaNuevo />
-
-        <main className="flex-1 space-y-8">
-          <PageTitle
-            title={t('title')}
-            description={t('subtitle')}
-            dotColor="text-primary"
-          />
-          <ParticipationsPanel result={result} />
-        </main>
+    <CompanyShell>
+      <div className="space-y-8">
+        <PageTitle
+          title={t('title')}
+          description={t('subtitle')}
+          dotColor="text-primary"
+        />
+        <ParticipationsPanel result={result} />
       </div>
-
-      <Footer />
-    </div>
+    </CompanyShell>
   )
 }

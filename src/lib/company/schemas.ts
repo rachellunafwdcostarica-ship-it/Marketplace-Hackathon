@@ -163,4 +163,5 @@ export type CompanyProfileInput = z.infer<
  */
 export interface CompanyProfileView extends CompanyProfileInput {
   verificationStatus: VerificationStatus | null
+  reputacion: number | null
 }

@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import type { Json } from '@/types/database'
-import type { HistorialEntry } from '@/lib/ai/types'
+import type { HistorialEntry } from '@/lib/proposal-ai/types'
 import {
   buildLogisticsSchema,
   toLogisticaDraft,

@@ -1,16 +1,19 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useDemoData as useAppState } from '@/lib/StateContext'
+import { useRouter } from 'next/navigation'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
 import { useTranslations } from 'next-intl'
-import { addOrUpdateSkill, deleteSkill } from '@/lib/portfolio/skills'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import {
   saveStudentProfile,
+  addStudentSkill,
+  deleteStudentSkill,
+  savePortfolioProject,
+  deletePortfolioProject,
   type StudentProfileView,
 } from '@/lib/portfolio/actions'
 import {
@@ -39,7 +42,7 @@ import {
   Lock,
   BookOpen,
 } from 'lucide-react'
-import type { PortfolioProject, StudentSkill, SkillLevel } from '@/types'
+import type { PortfolioProject, StudentSkill } from '@/types'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -131,7 +134,7 @@ export function PortfolioManager({
 }: {
   initialProfile?: StudentProfileView | null
 }) {
-  const { studentPortfolio, setStudentPortfolio } = useAppState()
+  const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false)
   const [isSavingVis, setIsSavingVis] = useState(false)
@@ -165,8 +168,8 @@ export function PortfolioManager({
   }, [t])
   type BioValues = z.infer<typeof bioSchema>
 
-  const projects = studentPortfolio?.projects || []
-  const skills = studentPortfolio?.skills || []
+  const projects = initialProfile?.projects || []
+  const skills = initialProfile?.skills || []
 
   const [portfolioBio, setPortfolioBio] = useState(
     initialProfile?.descripcion || '',
@@ -218,33 +221,34 @@ export function PortfolioManager({
     }
   }
 
-  const handleSave = (project: PortfolioProject) => {
-    if (!studentPortfolio) return
+  const handleSave = async (project: PortfolioProject) => {
+    setIsSavingBio(true) // Usando como indicador de carga
+    const res = await savePortfolioProject(project, editingProject?.id)
+    setIsSavingBio(false)
 
-    let updatedProjects = [...projects]
-    if (editingProject) {
-      updatedProjects = updatedProjects.map((p) =>
-        p.id === project.id ? project : p,
+    if (res.ok) {
+      toast.success(
+        t('toastBioSaved', { defaultValue: 'Proyecto guardado correctamente' }),
       )
+      router.refresh()
+      setIsDialogOpen(false)
+      setEditingProject(undefined)
     } else {
-      updatedProjects = [...updatedProjects, project]
+      toast.error('Error al guardar el proyecto')
     }
-
-    setStudentPortfolio({
-      ...studentPortfolio,
-      projects: updatedProjects,
-    })
-
-    setIsDialogOpen(false)
-    setEditingProject(undefined)
   }
 
-  const handleDelete = (id: string) => {
-    if (!studentPortfolio) return
-    setStudentPortfolio({
-      ...studentPortfolio,
-      projects: projects.filter((p) => p.id !== id),
-    })
+  const handleDelete = async (id: string) => {
+    setIsSavingBio(true)
+    const res = await deletePortfolioProject(id)
+    setIsSavingBio(false)
+
+    if (res.ok) {
+      toast.success('Proyecto eliminado correctamente')
+      router.refresh()
+    } else {
+      toast.error('Error al eliminar el proyecto')
+    }
   }
 
   const handleEdit = (project: PortfolioProject) => {
@@ -257,22 +261,32 @@ export function PortfolioManager({
     setIsDialogOpen(true)
   }
 
-  const handleSaveSkill = (skill: StudentSkill) => {
-    if (!studentPortfolio) return
-    setStudentPortfolio({
-      ...studentPortfolio,
-      skills: addOrUpdateSkill(skills, skill),
-    })
-    setIsSkillDialogOpen(false)
-    setEditingSkill(undefined)
+  const handleSaveSkill = async (skill: StudentSkill) => {
+    setIsSavingBio(true)
+    const res = await addStudentSkill(skill.name, skill.level)
+    setIsSavingBio(false)
+
+    if (res.ok) {
+      toast.success('Habilidad guardada correctamente')
+      router.refresh()
+      setIsSkillDialogOpen(false)
+      setEditingSkill(undefined)
+    } else {
+      toast.error('Error al guardar habilidad')
+    }
   }
 
-  const handleDeleteSkill = (id: string) => {
-    if (!studentPortfolio) return
-    setStudentPortfolio({
-      ...studentPortfolio,
-      skills: deleteSkill(skills, id),
-    })
+  const handleDeleteSkill = async (id: string) => {
+    setIsSavingBio(true)
+    const res = await deleteStudentSkill(id)
+    setIsSavingBio(false)
+
+    if (res.ok) {
+      toast.success('Habilidad eliminada correctamente')
+      router.refresh()
+    } else {
+      toast.error('Error al eliminar habilidad')
+    }
   }
 
   const handleEditSkill = (skill: StudentSkill) => {
@@ -373,6 +387,7 @@ export function PortfolioManager({
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
                   {initialProfile?.profilePhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={initialProfile.profilePhoto}
                       alt="Profile"
