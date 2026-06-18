@@ -141,8 +141,8 @@ export function ParticipationsPanel({
         return
       }
       toast.error(
-        res.error === 'adjudicacion_parcial'
-          ? t('errors.adjudicacion_parcial')
+        res.error === 'transicion_invalida'
+          ? t('errors.transicion_invalida')
           : t('errors.adjudicacion_fallida'),
       )
       return

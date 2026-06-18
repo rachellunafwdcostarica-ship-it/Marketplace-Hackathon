@@ -83,12 +83,16 @@ const ResponderEntregableSchema = z.object({
 
 /**
  * El empresario aprueba o solicita cambios sobre un entregable (RF-44).
- * Solo se puede responder cuando estado === 'enviado'.
+ * Solo se puede responder cuando estado === 'enviado'. Si se APRUEBA un
+ * entregable `final`, cierra el ciclo (RF-41) vía el RPC atómico
+ * `finalizar_proyecto_por_entregable`: aprueba el entregable y pasa
+ * proyecto/contratación/participación a finalizado, habilitando las
+ * calificaciones mutuas. Devuelve `finalizado` para que la UI muestre el aviso.
  * Revalida la vista del empresario y la del egresado.
  */
 export async function responderEntregable(
   input: z.infer<typeof ResponderEntregableSchema>,
-): Promise<Result<void>> {
+): Promise<Result<{ finalizado: boolean }>> {
   const parsed = ResponderEntregableSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
 
@@ -98,7 +102,7 @@ export async function responderEntregable(
 
   const { data: entregable, error: entErr } = await supabase
     .from('entregables')
-    .select('id_entregable, estado, id_contratacion')
+    .select('id_entregable, estado, id_contratacion, tipo_entregable')
     .eq('id_entregable', parsed.data.idEntregable)
     .maybeSingle()
   if (entErr) {
@@ -139,6 +143,31 @@ export async function responderEntregable(
     .maybeSingle()
   if (proyErr || !proyectoOwned) return err('unauthorized')
 
+  // Aprobar el entregable FINAL cierra el ciclo (RF-41): un RPC atómico aprueba
+  // el entregable y finaliza proyecto/contratación/participación en una sola
+  // transacción, habilitando las calificaciones mutuas.
+  if (
+    parsed.data.decision === 'aprobado' &&
+    entregable.tipo_entregable === 'final'
+  ) {
+    const { error: rpcErr } = await supabase.rpc(
+      'finalizar_proyecto_por_entregable',
+      {
+        p_id_entregable: parsed.data.idEntregable,
+        p_comentario: parsed.data.comentario ?? '',
+      },
+    )
+    if (rpcErr) {
+      logger.error('responderEntregable: finalizar RPC failed', {
+        error: rpcErr.message,
+      })
+      return err('finalizacion_fallida')
+    }
+    revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
+    revalidatePath(`/junior/projects/${participacion.id_proyecto}/entregables`)
+    return ok({ finalizado: true })
+  }
+
   const updateData: {
     estado: 'aprobado' | 'con_cambios'
     comentario_empresario?: string
@@ -162,5 +191,5 @@ export async function responderEntregable(
 
   revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
   revalidatePath(`/junior/projects/${participacion.id_proyecto}/entregables`)
-  return ok(undefined)
+  return ok({ finalizado: false })
 }

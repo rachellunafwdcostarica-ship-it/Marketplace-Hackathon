@@ -382,13 +382,11 @@ const AdjudicarParticipacionSchema = z.object({
 })
 
 /**
- * Adjudica el proyecto al postulante seleccionado (RF-37 + RF-39). Hace 3 updates
- * secuenciales (no atómicos — MVP aceptable, riesgo documentado):
- *   1. Ganador → `contratada` (dispara trigger crear_contratacion_al_adjudicar)
- *   2. Resto `en_revision` del proyecto → `no_seleccionada` (batch)
- *   3. Proyecto → `adjudicado`
- * Si el paso 1 falla devuelve `adjudicacion_fallida`. Si fallan 2 o 3 devuelve
- * `adjudicacion_parcial` (inconsistencia recuperable por admin).
+ * Adjudica el proyecto al postulante seleccionado (RF-37 + RF-39) de forma
+ * ATÓMICA vía el RPC `adjudicar_participacion`: en una sola transacción pone al
+ * ganador en `contratada` (dispara el trigger que crea la contratación), el resto
+ * en `no_seleccionada` y el proyecto en `adjudicado`. El RPC reimpone que el
+ * llamante sea el empresario dueño y que la participación esté en `en_revision`.
  */
 export async function adjudicarParticipacion(
   input: z.infer<typeof AdjudicarParticipacionSchema>,
@@ -401,89 +399,25 @@ export async function adjudicarParticipacion(
 
   const supabase = await createSupabaseServerClient()
 
-  const { data: empresario, error: empError } = await supabase
-    .from('empresarios')
-    .select('id_empresario')
-    .eq('id_usuario', user.id)
-    .maybeSingle()
-  if (empError) {
-    logger.error('adjudicarParticipacion: fallo al leer empresario', {
-      error: empError.message,
-    })
-    return err('unexpected')
-  }
-  if (!empresario) return err('empresario_no_encontrado')
+  const { error } = await supabase.rpc('adjudicar_participacion', {
+    p_id_participacion: parsed.data.idParticipacion,
+    p_id_proyecto: parsed.data.idProyecto,
+  })
 
-  const { data: proyecto, error: proyError } = await supabase
-    .from('proyectos')
-    .select('id_proyecto')
-    .eq('id_proyecto', parsed.data.idProyecto)
-    .eq('id_empresario', empresario.id_empresario)
-    .maybeSingle()
-  if (proyError) {
-    logger.error('adjudicarParticipacion: fallo al verificar proyecto', {
-      error: proyError.message,
+  if (error) {
+    logger.error('adjudicarParticipacion: fallo en RPC', {
+      error: error.message,
     })
-    return err('unexpected')
-  }
-  if (!proyecto) return err('proyecto_no_encontrado')
-
-  const { data: participacion, error: partError } = await supabase
-    .from('participaciones')
-    .select('id_participacion, estado')
-    .eq('id_participacion', parsed.data.idParticipacion)
-    .eq('id_proyecto', parsed.data.idProyecto)
-    .maybeSingle()
-  if (partError) {
-    logger.error('adjudicarParticipacion: fallo al leer participacion', {
-      error: partError.message,
-    })
-    return err('unexpected')
-  }
-  if (!participacion) return err('participacion_no_encontrada')
-  if (participacion.estado !== 'en_revision') return err('transicion_invalida')
-
-  const { error: contratarError } = await supabase
-    .from('participaciones')
-    .update({ estado: 'contratada' })
-    .eq('id_participacion', parsed.data.idParticipacion)
-  if (contratarError) {
-    logger.error('adjudicarParticipacion: fallo al contratar ganador', {
-      error: contratarError.message,
-    })
-    if (contratarError.code === CHECK_VIOLATION)
-      return err('transicion_invalida')
-    return err('adjudicacion_fallida')
-  }
-
-  const { error: batchError } = await supabase
-    .from('participaciones')
-    .update({ estado: 'no_seleccionada' })
-    .eq('id_proyecto', parsed.data.idProyecto)
-    .eq('estado', 'en_revision')
-    .neq('id_participacion', parsed.data.idParticipacion)
-  if (batchError) {
-    logger.error(
-      'adjudicarParticipacion: fallo al cerrar otras participaciones',
-      {
-        error: batchError.message,
-        idProyecto: parsed.data.idProyecto,
-      },
+    if (
+      error.code === CHECK_VIOLATION ||
+      error.message.includes('TRANSICION_INVALIDA')
     )
-    return err('adjudicacion_parcial')
-  }
-
-  const { error: adjError } = await supabase
-    .from('proyectos')
-    .update({ estado: 'adjudicado' })
-    .eq('id_proyecto', parsed.data.idProyecto)
-    .eq('id_empresario', empresario.id_empresario)
-  if (adjError) {
-    logger.error('adjudicarParticipacion: fallo al adjudicar proyecto', {
-      error: adjError.message,
-      idProyecto: parsed.data.idProyecto,
-    })
-    return err('adjudicacion_parcial')
+      return err('transicion_invalida')
+    if (error.message.includes('EMPRESARIO_NO_ENCONTRADO'))
+      return err('empresario_no_encontrado')
+    if (error.message.includes('PARTICIPACION_NO_ENCONTRADA'))
+      return err('participacion_no_encontrada')
+    return err('adjudicacion_fallida')
   }
 
   return ok(undefined)

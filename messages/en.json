@@ -693,6 +693,7 @@
     "saveRating": "Save rating",
     "ratingSuccess": "Rating saved.",
     "adjudicarSuccess": "Project awarded.",
+    "finalizarSuccess": "Final deliverable approved. Project finished.",
     "entregablesTitle": "Contractor Deliverables",
     "entregablesDesc": "Files uploaded by the awarded graduate.",
     "entregablesLoadError": "Could not load deliverables.",
@@ -719,8 +720,8 @@
       "transicion_invalida": "That status change isn't allowed.",
       "generic": "We couldn't complete the action. Please try again.",
       "adjudicacion_fallida": "Could not complete the award. Please try again.",
-      "adjudicacion_parcial": "Partial award. Please contact an administrator.",
-      "calificacion_fallida": "We couldn't save the rating. Please try again."
+      "calificacion_fallida": "We couldn't save the rating. Please try again.",
+      "finalizacion_fallida": "We couldn't finish the project. Please try again."
     }
   },
   "Admin": {
