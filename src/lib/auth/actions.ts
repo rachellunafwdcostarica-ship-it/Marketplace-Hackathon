@@ -10,6 +10,11 @@ import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { env } from '@/lib/env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
+import {
+  accountApprovedHtml,
+  accountApprovedSubject,
+} from '@/lib/email/templates/account-approved'
 import {
   AssignRoleSchema,
   SaveEmpresarioProfileSchema,
@@ -194,6 +199,20 @@ export async function approveUser(userId: string): Promise<Result<void>> {
 
   // Usar service_role para bypassear RLS (admin no pasa por políticas)
   const adminClient = createSupabaseAdminClient()
+
+  const { data: usuario, error: fetchError } = await adminClient
+    .from('usuarios')
+    .select('nombre, correo, roles(nombre_rol)')
+    .eq('id_usuario', parsed.data)
+    .maybeSingle()
+
+  if (fetchError) {
+    logger.error('approveUser: fallo al obtener datos del usuario', {
+      error: fetchError.message,
+      userId,
+    })
+  }
+
   const { error } = await adminClient
     .from('usuarios')
     .update({ estado_cuenta: 'activa', is_active: true })
@@ -202,6 +221,68 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   if (error) {
     logger.error('approveUser failed', { error: error.message, userId })
     return err(error.message)
+  }
+
+  // Enviar correo de aprobación. Si falla, no se revierte la aprobación.
+  if (usuario?.correo) {
+    const reqHeaders = await headers()
+    const host =
+      reqHeaders.get('x-forwarded-host') ??
+      reqHeaders.get('host') ??
+      'localhost:3000'
+    const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+    const baseUrl = `${proto}://${host}`
+
+    const rolRaw = Array.isArray(usuario.roles)
+      ? usuario.roles[0]?.nombre_rol
+      : (usuario.roles as { nombre_rol?: string } | null)?.nombre_rol
+
+    const rol: 'egresado' | 'empresario' =
+      rolRaw === 'empresario' ? 'empresario' : 'egresado'
+
+    // Generar magic link para acceso directo con un click.
+    // Si falla, se usa el link de login estático como fallback.
+    let accessUrl = `${baseUrl}/login`
+    const { data: linkData, error: linkError } =
+      await adminClient.auth.admin.generateLink({
+        type: 'magiclink',
+        email: usuario.correo,
+        options: { redirectTo: `${baseUrl}/auth/callback` },
+      })
+
+    if (linkError) {
+      logger.error('approveUser: fallo al generar magic link', {
+        error: linkError.message,
+        userId,
+      })
+    } else if (linkData.properties?.action_link) {
+      accessUrl = linkData.properties.action_link
+    }
+
+    let emailError: Error | null = null
+    try {
+      const transport = createGmailTransport()
+      await transport.sendMail({
+        from: getGmailFrom(),
+        to: usuario.correo,
+        subject: accountApprovedSubject(),
+        html: accountApprovedHtml({
+          nombre: usuario.nombre ?? 'Usuario',
+          rol,
+          accessUrl,
+          isMagicLink: !linkError && !!linkData?.properties?.action_link,
+        }),
+      })
+    } catch (e) {
+      emailError = e instanceof Error ? e : new Error(String(e))
+    }
+
+    if (emailError) {
+      logger.error('approveUser: fallo al enviar correo de aprobación', {
+        error: emailError.message,
+        userId,
+      })
+    }
   }
 
   revalidatePath('/admin/validations', 'page')

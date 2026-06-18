@@ -5,6 +5,9 @@ import { parseServerEnv } from './env.server'
 const VALID_URL = 'https://example.supabase.co'
 const VALID_ANON = 'anon-key-value'
 const VALID_SERVICE = 'service-role-key-value'
+const VALID_RESEND = 're_test_key_value'
+const VALID_GMAIL_USER = 'test@gmail.com'
+const VALID_GMAIL_PASS = 'abcdabcdabcdabcd'
 
 describe('parseClientEnv', () => {
   it('devuelve las vars cuando el input es válido', () => {
@@ -42,18 +45,51 @@ describe('parseClientEnv', () => {
 })
 
 describe('parseServerEnv', () => {
-  it('devuelve la var cuando el input es válido', () => {
+  it('devuelve las vars cuando el input es válido con Gmail', () => {
+    const result = parseServerEnv({
+      SUPABASE_SERVICE_ROLE_KEY: VALID_SERVICE,
+      GMAIL_USER: VALID_GMAIL_USER,
+      GMAIL_APP_PASSWORD: VALID_GMAIL_PASS,
+    })
+    expect(result.SUPABASE_SERVICE_ROLE_KEY).toBe(VALID_SERVICE)
+    expect(result.GMAIL_USER).toBe(VALID_GMAIL_USER)
+    expect(result.GMAIL_APP_PASSWORD).toBe(VALID_GMAIL_PASS)
+  })
+
+  it('devuelve las vars cuando el input es válido con Resend', () => {
+    const result = parseServerEnv({
+      SUPABASE_SERVICE_ROLE_KEY: VALID_SERVICE,
+      RESEND_API_KEY: VALID_RESEND,
+    })
+    expect(result.SUPABASE_SERVICE_ROLE_KEY).toBe(VALID_SERVICE)
+    expect(result.RESEND_API_KEY).toBe(VALID_RESEND)
+  })
+
+  it('pasa sin vars de email opcionales', () => {
     const result = parseServerEnv({ SUPABASE_SERVICE_ROLE_KEY: VALID_SERVICE })
     expect(result.SUPABASE_SERVICE_ROLE_KEY).toBe(VALID_SERVICE)
+    expect(result.GMAIL_USER).toBeUndefined()
+    expect(result.RESEND_API_KEY).toBeUndefined()
   })
 
   it('lanza ENV_INVALID cuando falta SUPABASE_SERVICE_ROLE_KEY', () => {
-    expect(() => parseServerEnv({})).toThrow('ENV_INVALID')
+    expect(() => parseServerEnv({ RESEND_API_KEY: VALID_RESEND })).toThrow(
+      'ENV_INVALID',
+    )
   })
 
   it('lanza ENV_INVALID cuando SUPABASE_SERVICE_ROLE_KEY está vacía', () => {
     expect(() => parseServerEnv({ SUPABASE_SERVICE_ROLE_KEY: '' })).toThrow(
       'ENV_INVALID',
     )
+  })
+
+  it('lanza ENV_INVALID cuando GMAIL_USER no es un email válido', () => {
+    expect(() =>
+      parseServerEnv({
+        SUPABASE_SERVICE_ROLE_KEY: VALID_SERVICE,
+        GMAIL_USER: 'no-es-un-email',
+      }),
+    ).toThrow('ENV_INVALID')
   })
 })
