@@ -1031,6 +1031,11 @@
   },
   "EmpresaPerfil": {
     "editProfile": "Edit Profile",
+    "sidebarHeader": "My Company",
+    "tabProfile": "Company Profile",
+    "tabProjects": "Active Projects",
+    "support": "Support",
+    "logout": "Log Out",
     "verifVerified": "Verified company",
     "verifPending": "Verification pending",
     "verifRejected": "Verification rejected",

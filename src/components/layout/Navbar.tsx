@@ -25,6 +25,8 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 
+import { cn } from '@/lib/utils/cn'
+
 interface NavLink {
   href: string
   label: string
@@ -34,9 +36,13 @@ interface NavLink {
 
 interface NavbarProps {
   heroMode?: boolean
+  hideLogoOnDesktop?: boolean
 }
 
-export function Navbar({ heroMode = false }: NavbarProps) {
+export function Navbar({
+  heroMode = false,
+  hideLogoOnDesktop = false,
+}: NavbarProps) {
   const t = useTranslations('Nav')
   const locale = useLocale()
   const pathname = usePathname()
@@ -172,7 +178,12 @@ export function Navbar({ heroMode = false }: NavbarProps) {
         {/* Main row: Logo + Inline links + Right actions */}
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
-          <div className="flex items-center gap-6 xl:gap-8">
+          <div
+            className={cn(
+              'flex items-center gap-6 xl:gap-8',
+              hideLogoOnDesktop && 'md:hidden',
+            )}
+          >
             <Link
               href="/"
               className="flex items-center space-x-2.5 shrink-0 group"
