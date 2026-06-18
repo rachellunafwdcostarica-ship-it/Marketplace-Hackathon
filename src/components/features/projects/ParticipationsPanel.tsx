@@ -9,6 +9,8 @@ import {
   ExternalLink,
   FileText,
   GitBranch,
+  Lock,
+  Mail,
   Star,
   Users,
   XCircle,
@@ -36,8 +38,11 @@ import type { ParticipacionEmpresario } from '@/lib/projects/project-detail'
 import type { Result } from '@/lib/result'
 import {
   PARTICIPACION_FILTERS,
+  canOpenParticipacion,
   getParticipacionActions,
+  isParticipacionSealed,
   matchesParticipacionFilter,
+  type EstadoEfectivoProyecto,
   type EstadoParticipacion,
   type ParticipacionAction,
   type ParticipacionFilter,
@@ -57,6 +62,9 @@ interface ParticipationsPanelProps {
   /** ID del proyecto en la vista de detalle. En la vista cross-project cada
    *  item trae `participacion.proyecto.id`. */
   projectId?: string
+  /** Estado efectivo del proyecto en la vista de detalle: decide si los sobres
+   *  sellados todavía se pueden abrir. Ausente en la vista cross-project. */
+  projectEstado?: EstadoEfectivoProyecto
 }
 
 const ESTADO_STYLE: Record<EstadoParticipacion, string> = {
@@ -77,6 +85,7 @@ interface ConfirmState {
 export function ParticipationsPanel({
   result,
   projectId,
+  projectEstado,
 }: ParticipationsPanelProps) {
   const t = useTranslations('ProjectDetail')
   const tCommon = useTranslations('Common')
@@ -86,8 +95,16 @@ export function ParticipationsPanel({
 
   const [filter, setFilter] = useState<ParticipacionFilter>('todos')
   const [confirm, setConfirm] = useState<ConfirmState | null>(null)
+  const [openTarget, setOpenTarget] = useState<ParticipacionPanelItem | null>(
+    null,
+  )
   const [mutatingId, setMutatingId] = useState<string | null>(null)
   const [ratingMutatingId, setRatingMutatingId] = useState<string | null>(null)
+
+  // Sin estado de proyecto (vista cross-project) dejamos abrir: ahí no hay
+  // ciclo de vida de proyecto a la mano.
+  const puedeAbrir =
+    projectEstado === undefined ? true : canOpenParticipacion(projectEstado)
 
   const participaciones = useMemo(
     () => (result.ok ? result.data : []),
@@ -148,6 +165,27 @@ export function ParticipationsPanel({
     )
   }
 
+  const runOpen = async (participacion: ParticipacionPanelItem) => {
+    setMutatingId(participacion.idParticipacion)
+    setOpenTarget(null)
+    const res = await setParticipacionEstado({
+      idParticipacion: participacion.idParticipacion,
+      accion: 'revisar',
+    })
+    setMutatingId(null)
+    if (res.ok) {
+      toast.success(t('openSuccess'))
+      router.refresh()
+      return
+    }
+    // Carrera: si ya quedó abierta por otra pestaña, sincronizamos sin error.
+    if (res.error === 'transicion_invalida') {
+      router.refresh()
+      return
+    }
+    toast.error(t('errors.generic'))
+  }
+
   const runRate = async (
     participacion: ParticipacionPanelItem,
     calificacion: number,
@@ -205,7 +243,8 @@ export function ParticipationsPanel({
               }
               isPending={isPending}
               pendingTitle={tAccount('actionDisabledPending')}
-              onRevisar={() => void runAction(participacion, 'revisar')}
+              canOpen={puedeAbrir}
+              onOpen={() => setOpenTarget(participacion)}
               onContratar={() =>
                 setConfirm({ accion: 'contratar', participacion })
               }
@@ -272,6 +311,48 @@ export function ParticipationsPanel({
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={openTarget !== null}
+        onOpenChange={(open) => !open && setOpenTarget(null)}
+      >
+        <DialogContent className="sm:max-w-md border border-border">
+          {openTarget && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold font-heading">
+                  {t('openConfirmTitle')}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
+                  {t('openConfirmDesc', {
+                    name: openTarget.estudianteNombre,
+                  })}
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex gap-2 sm:justify-end pt-4 border-t border-border/40">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setOpenTarget(null)}
+                  disabled={mutatingId !== null}
+                >
+                  {tCommon('cancel')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => void runOpen(openTarget)}
+                  disabled={mutatingId !== null}
+                  className="font-semibold"
+                >
+                  <Mail className="w-4 h-4" />
+                  {t('openConfirm')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -282,7 +363,8 @@ interface ParticipationCardProps {
   isRatingMutating: boolean
   isPending: boolean
   pendingTitle: string
-  onRevisar: () => void
+  canOpen: boolean
+  onOpen: () => void
   onContratar: () => void
   onRechazar: () => void
   onRate: (
@@ -297,12 +379,14 @@ function ParticipationCard({
   isRatingMutating,
   isPending,
   pendingTitle,
-  onRevisar,
+  canOpen,
+  onOpen,
   onContratar,
   onRechazar,
   onRate,
 }: ParticipationCardProps) {
   const t = useTranslations('ProjectDetail')
+  const sealed = isParticipacionSealed(participacion.estado)
   const acciones = getParticipacionActions(participacion.estado)
   const nombreCompleto =
     `${participacion.estudianteNombre} ${participacion.estudianteApellidos}`.trim()
@@ -354,106 +438,228 @@ function ParticipationCard({
           </span>
         </div>
 
-        <div className="space-y-3 text-sm">
-          {participacion.cartaPostulacion && (
-            <Field label={t('coverLetterLabel')}>
-              <p className="text-foreground whitespace-pre-wrap">
-                {participacion.cartaPostulacion}
-              </p>
-            </Field>
-          )}
-          {participacion.planteamientoSolucion && (
-            <Field label={t('solutionLabel')}>
-              <p className="text-foreground whitespace-pre-wrap">
-                {participacion.planteamientoSolucion}
-              </p>
-            </Field>
-          )}
-          <div className="flex flex-wrap gap-3">
-            {participacion.prototipoEnlaces.map((enlace) => (
-              <ExternalAnchor
-                key={enlace}
-                href={enlace}
-                label={t('prototypeLabel')}
-                icon={<ExternalLink className="w-3.5 h-3.5" />}
-              />
-            ))}
-            {participacion.documentacionTecnica && (
-              <ExternalAnchor
-                href={participacion.documentacionTecnica}
-                label={t('techDocLabel')}
-                icon={<FileText className="w-3.5 h-3.5" />}
-              />
-            )}
-            {participacion.urlRepositorioProyecto && (
-              <ExternalAnchor
-                href={participacion.urlRepositorioProyecto}
-                label={t('repoLabel')}
-                icon={<GitBranch className="w-3.5 h-3.5" />}
-              />
-            )}
-          </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-            <span>
-              {t('appliedOnLabel')}:{' '}
-              <span className="font-semibold text-foreground">
-                {participacion.fechaPostulacion.slice(0, 10)}
-              </span>
-            </span>
-            {participacion.fechaEntregaPrototipo && (
-              <span>
-                {t('deliveredOnLabel')}:{' '}
-                <span className="font-semibold text-foreground">
-                  {participacion.fechaEntregaPrototipo.slice(0, 10)}
-                </span>
-              </span>
-            )}
-            {participacion.calificacionPrototipo !== null &&
-              participacion.estado !== 'en_revision' && (
+        {sealed ? (
+          <SealedEnvelopeBody
+            participacion={participacion}
+            canOpen={canOpen}
+            isMutating={isMutating}
+            isPending={isPending}
+            pendingTitle={pendingTitle}
+            onOpen={onOpen}
+          />
+        ) : (
+          <>
+            <div className="space-y-3 text-sm">
+              {participacion.cartaPostulacion && (
+                <Field label={t('coverLetterLabel')}>
+                  <p className="text-foreground whitespace-pre-wrap">
+                    {participacion.cartaPostulacion}
+                  </p>
+                </Field>
+              )}
+              {participacion.planteamientoSolucion && (
+                <Field label={t('solutionLabel')}>
+                  <p className="text-foreground whitespace-pre-wrap">
+                    {participacion.planteamientoSolucion}
+                  </p>
+                </Field>
+              )}
+              <div className="flex flex-wrap gap-3">
+                {participacion.prototipoEnlaces.map((enlace) => (
+                  <ExternalAnchor
+                    key={enlace}
+                    href={enlace}
+                    label={t('prototypeLabel')}
+                    icon={<ExternalLink className="w-3.5 h-3.5" />}
+                  />
+                ))}
+                {participacion.documentacionTecnica && (
+                  <ExternalAnchor
+                    href={participacion.documentacionTecnica}
+                    label={t('techDocLabel')}
+                    icon={<FileText className="w-3.5 h-3.5" />}
+                  />
+                )}
+                {participacion.urlRepositorioProyecto && (
+                  <ExternalAnchor
+                    href={participacion.urlRepositorioProyecto}
+                    label={t('repoLabel')}
+                    icon={<GitBranch className="w-3.5 h-3.5" />}
+                  />
+                )}
+              </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
                 <span>
-                  {t('prototypeRatingLabel')}:{' '}
+                  {t('appliedOnLabel')}:{' '}
                   <span className="font-semibold text-foreground">
-                    {participacion.calificacionPrototipo}/5
+                    {participacion.fechaPostulacion.slice(0, 10)}
                   </span>
                 </span>
-              )}
-          </div>
-        </div>
+                {participacion.fechaEntregaPrototipo && (
+                  <span>
+                    {t('deliveredOnLabel')}:{' '}
+                    <span className="font-semibold text-foreground">
+                      {participacion.fechaEntregaPrototipo.slice(0, 10)}
+                    </span>
+                  </span>
+                )}
+                {participacion.calificacionPrototipo !== null &&
+                  participacion.estado !== 'en_revision' && (
+                    <span>
+                      {t('prototypeRatingLabel')}:{' '}
+                      <span className="font-semibold text-foreground">
+                        {participacion.calificacionPrototipo}/5
+                      </span>
+                    </span>
+                  )}
+              </div>
+            </div>
 
-        {participacion.estado === 'en_revision' && (
-          <StarRatingForm
-            participacion={participacion}
-            disabled={isMutating || isRatingMutating}
-            onRate={onRate}
-          />
-        )}
-
-        {acciones.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
-            {isPending ? (
-              <span
-                aria-disabled="true"
-                title={pendingTitle}
-                className="text-xs text-muted-foreground/70 italic"
-              >
-                {pendingTitle}
-              </span>
-            ) : (
-              acciones.map((accion) => (
-                <ActionButton
-                  key={accion}
-                  accion={accion}
-                  disabled={isMutating}
-                  onRevisar={onRevisar}
-                  onContratar={onContratar}
-                  onRechazar={onRechazar}
-                />
-              ))
+            {participacion.estado === 'en_revision' && (
+              <StarRatingForm
+                participacion={participacion}
+                disabled={isMutating || isRatingMutating}
+                onRate={onRate}
+              />
             )}
-          </div>
+
+            {acciones.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
+                {isPending ? (
+                  <span
+                    aria-disabled="true"
+                    title={pendingTitle}
+                    className="text-xs text-muted-foreground/70 italic"
+                  >
+                    {pendingTitle}
+                  </span>
+                ) : (
+                  acciones.map((accion) => (
+                    <ActionButton
+                      key={accion}
+                      accion={accion}
+                      disabled={isMutating}
+                      onContratar={onContratar}
+                      onRechazar={onRechazar}
+                    />
+                  ))
+                )}
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
+  )
+}
+
+interface SealedEnvelopeBodyProps {
+  participacion: ParticipacionPanelItem
+  canOpen: boolean
+  isMutating: boolean
+  isPending: boolean
+  pendingTitle: string
+  onOpen: () => void
+}
+
+/** Tapa del sobre cerrado: adjuntos por existencia (no contenido) + fecha + el
+ *  botón "Abrir". El contenido real ni siquiera llega del servidor mientras la
+ *  oferta esté `enviada`. */
+function SealedEnvelopeBody({
+  participacion,
+  canOpen,
+  isMutating,
+  isPending,
+  pendingTitle,
+  onOpen,
+}: SealedEnvelopeBodyProps) {
+  const t = useTranslations('ProjectDetail')
+
+  const adjuntos: { key: string; label: string; icon: ReactNode }[] = []
+  if (participacion.tienePrototipo) {
+    adjuntos.push({
+      key: 'prototipo',
+      label: t('envelopeHasPrototype'),
+      icon: <ExternalLink className="w-3.5 h-3.5" />,
+    })
+  }
+  if (participacion.tieneRepositorio) {
+    adjuntos.push({
+      key: 'repositorio',
+      label: t('envelopeHasRepo'),
+      icon: <GitBranch className="w-3.5 h-3.5" />,
+    })
+  }
+  if (participacion.tieneDocumentacion) {
+    adjuntos.push({
+      key: 'documentacion',
+      label: t('envelopeHasDoc'),
+      icon: <FileText className="w-3.5 h-3.5" />,
+    })
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        <Lock className="w-3.5 h-3.5 shrink-0" />
+        {t('envelopeSealedHint')}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        {adjuntos.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {adjuntos.map((adjunto) => (
+              <span
+                key={adjunto.key}
+                className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent"
+              >
+                {adjunto.icon}
+                {adjunto.label}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-xs text-muted-foreground italic">
+            {t('envelopeNoAttachments')}
+          </span>
+        )}
+        <span className="text-xs text-muted-foreground">
+          {t('appliedOnLabel')}:{' '}
+          <span className="font-semibold text-foreground">
+            {participacion.fechaPostulacion.slice(0, 10)}
+          </span>
+        </span>
+      </div>
+
+      <div className="pt-3 border-t border-border/40">
+        {isPending ? (
+          <span
+            aria-disabled="true"
+            title={pendingTitle}
+            className="text-xs text-muted-foreground/70 italic"
+          >
+            {pendingTitle}
+          </span>
+        ) : canOpen ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            disabled={isMutating}
+            onClick={onOpen}
+            className="font-semibold"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            {t('openEnvelope')}
+          </Button>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground italic">
+            <Lock className="w-3.5 h-3.5" />
+            {t('openUnavailable')}
+          </span>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -556,32 +762,20 @@ function StarRating({
 function ActionButton({
   accion,
   disabled,
-  onRevisar,
   onContratar,
   onRechazar,
 }: {
   accion: ParticipacionAction
   disabled: boolean
-  onRevisar: () => void
   onContratar: () => void
   onRechazar: () => void
 }) {
   const t = useTranslations('ProjectDetail')
 
+  // El sobre cerrado reemplazó al botón "revisar": abrir la oferta es lo que
+  // dispara `enviada -> en_revision`. Acá solo quedan contratar y rechazar.
   if (accion === 'revisar') {
-    return (
-      <Button
-        type="button"
-        size="sm"
-        variant="default"
-        disabled={disabled}
-        onClick={onRevisar}
-        className="font-semibold"
-      >
-        <CheckCircle2 className="w-3.5 h-3.5" />
-        {t('actionRevisar')}
-      </Button>
-    )
+    return null
   }
   if (accion === 'contratar') {
     return (

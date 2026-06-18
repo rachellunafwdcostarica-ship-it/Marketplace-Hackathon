@@ -99,6 +99,7 @@ const samplePostulacion: PostulacionPropia = {
   carta_postulacion:
     'Me entusiasma este proyecto porque ya trabajé en landings de alto rendimiento y me gusta cuidar el detalle visual.',
   estado: 'enviada',
+  estadoEfectivo: 'enviada',
   fecha_postulacion: '2026-06-02T00:00:00Z',
 }
 

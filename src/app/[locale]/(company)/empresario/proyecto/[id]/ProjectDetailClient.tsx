@@ -274,6 +274,7 @@ export function ProjectDetailClient({
           <ParticipationsPanel
             result={participationsResult}
             projectId={project.id}
+            projectEstado={project.estadoEfectivo}
           />
         </section>
 

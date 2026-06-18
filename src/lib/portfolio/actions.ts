@@ -116,8 +116,8 @@ export async function getStudentProfile(): Promise<
         description: p.descripcion ?? '',
         technologies: techNames as string[],
         completionDate: p.fecha ?? '',
-        repositoryUrl: p.url_repositorio ?? undefined,
-        demoUrl: p.url_demo ?? undefined,
+        ...(p.url_repositorio ? { repositoryUrl: p.url_repositorio } : {}),
+        ...(p.url_demo ? { demoUrl: p.url_demo } : {}),
       }
     })
 

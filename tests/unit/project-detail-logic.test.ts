@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
   canAdvanceProject,
+  canOpenParticipacion,
   computeEstadoEfectivoProyecto,
+  computeEstadoParticipacionEfectivo,
   getParticipacionActions,
   getProjectForwardStates,
   isParticipacionActionAllowed,
+  isParticipacionSealed,
   matchesParticipacionFilter,
   PARTICIPACION_ACTION_TARGET,
 } from '@/lib/projects/project-detail-logic'
@@ -83,6 +86,102 @@ describe('acciones de participación', () => {
     expect(PARTICIPACION_ACTION_TARGET.revisar).toBe('en_revision')
     expect(PARTICIPACION_ACTION_TARGET.contratar).toBe('contratada')
     expect(PARTICIPACION_ACTION_TARGET.rechazar).toBe('no_seleccionada')
+  })
+})
+
+describe('sobre sellado de participación', () => {
+  it('una enviada está sellada', () => {
+    expect(isParticipacionSealed('enviada')).toBe(true)
+  })
+
+  it('cualquier estado distinto de enviada está abierto', () => {
+    for (const estado of [
+      'en_revision',
+      'contratada',
+      'no_seleccionada',
+      'retirada',
+      'finalizada',
+      'cancelada',
+    ] as const) {
+      expect(isParticipacionSealed(estado)).toBe(false)
+    }
+  })
+})
+
+describe('puede abrir un sobre', () => {
+  it('permite abrir mientras el proyecto recibe o evalúa', () => {
+    for (const estado of [
+      'abierto',
+      'en_recepcion',
+      'en_evaluacion',
+    ] as const) {
+      expect(canOpenParticipacion(estado)).toBe(true)
+    }
+  })
+
+  it('no permite abrir tras adjudicar o cerrar', () => {
+    for (const estado of [
+      'borrador',
+      'adjudicado',
+      'en_desarrollo',
+      'finalizado',
+      'cancelado',
+    ] as const) {
+      expect(canOpenParticipacion(estado)).toBe(false)
+    }
+  })
+})
+
+describe('estado efectivo de participación (derivado)', () => {
+  it('deriva a no_seleccionada las vivas cuando el proyecto se adjudicó', () => {
+    for (const estadoProyecto of [
+      'adjudicado',
+      'en_desarrollo',
+      'finalizado',
+    ] as const) {
+      expect(
+        computeEstadoParticipacionEfectivo('enviada', estadoProyecto),
+      ).toBe('no_seleccionada')
+      expect(
+        computeEstadoParticipacionEfectivo('en_revision', estadoProyecto),
+      ).toBe('no_seleccionada')
+    }
+  })
+
+  it('deriva a cancelada las vivas cuando el proyecto se canceló', () => {
+    expect(computeEstadoParticipacionEfectivo('enviada', 'cancelado')).toBe(
+      'cancelada',
+    )
+    expect(computeEstadoParticipacionEfectivo('en_revision', 'cancelado')).toBe(
+      'cancelada',
+    )
+  })
+
+  it('no toca las vivas mientras el proyecto sigue abierto', () => {
+    for (const estadoProyecto of [
+      'borrador',
+      'abierto',
+      'en_recepcion',
+    ] as const) {
+      expect(
+        computeEstadoParticipacionEfectivo('enviada', estadoProyecto),
+      ).toBe('enviada')
+      expect(
+        computeEstadoParticipacionEfectivo('en_revision', estadoProyecto),
+      ).toBe('en_revision')
+    }
+  })
+
+  it('respeta los estados terminales aunque el proyecto esté cerrado', () => {
+    expect(computeEstadoParticipacionEfectivo('contratada', 'adjudicado')).toBe(
+      'contratada',
+    )
+    expect(
+      computeEstadoParticipacionEfectivo('no_seleccionada', 'cancelado'),
+    ).toBe('no_seleccionada')
+    expect(computeEstadoParticipacionEfectivo('retirada', 'finalizado')).toBe(
+      'retirada',
+    )
   })
 })
 
