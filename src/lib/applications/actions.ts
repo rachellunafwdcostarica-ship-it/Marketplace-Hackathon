@@ -19,6 +19,65 @@ const RetirarSchema = z.object({
   id_participacion: z.string().uuid(),
 })
 
+const MAX_ARCHIVO_BYTES = 10 * 1024 * 1024
+
+const SubirArchivoSchema = z.object({
+  id_proyecto: z.string().uuid(),
+  tipo: z.enum(['prototipo', 'documentacion']),
+})
+
+/**
+ * Sube un archivo de la postulación (prototipo o documentación) al bucket
+ * `prototipos` desde el SERVIDOR. Antes vivía en el cliente con el browser client,
+ * que se colgaba obteniendo la sesión (mismo síntoma que motivó mover las lecturas
+ * al server en `applications/queries.ts`). Acá el server client ya trae la sesión
+ * por cookie y la RLS de Storage aplica con el usuario correcto.
+ */
+export async function subirArchivoPostulacion(
+  formData: FormData,
+): Promise<Result<{ url: string }>> {
+  const parsed = SubirArchivoSchema.safeParse({
+    id_proyecto: formData.get('id_proyecto'),
+    tipo: formData.get('tipo'),
+  })
+  if (!parsed.success) {
+    return err('invalid_input')
+  }
+
+  const archivo = formData.get('archivo')
+  if (!(archivo instanceof File) || archivo.size === 0) {
+    return err('archivo_invalido')
+  }
+  if (archivo.size > MAX_ARCHIVO_BYTES) {
+    return err('archivo_muy_grande')
+  }
+
+  const roleResult = await requireRole('egresado')
+  if (!roleResult.ok) {
+    return roleResult
+  }
+
+  const supabase = await createSupabaseServerClient()
+  const extension = archivo.name.split('.').pop() ?? 'bin'
+  const ruta = `${parsed.data.id_proyecto}-${Date.now()}-${parsed.data.tipo}.${extension}`
+
+  const { data, error } = await supabase.storage
+    .from('prototipos')
+    .upload(ruta, archivo)
+  if (error || !data) {
+    logger.error('subirArchivoPostulacion failed', {
+      error: error?.message ?? 'sin data de subida',
+    })
+    return err('upload_failed')
+  }
+
+  const { data: publicUrl } = supabase.storage
+    .from('prototipos')
+    .getPublicUrl(data.path)
+
+  return ok({ url: publicUrl.publicUrl })
+}
+
 /**
  * Permite a un Junior postularse a un proyecto abierto.
  * RF-27: Enviar oferta a proyecto abierto dentro del plazo.

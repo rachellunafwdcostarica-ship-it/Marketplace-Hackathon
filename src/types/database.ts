@@ -1431,30 +1431,14 @@ export type Database = {
           tiene_repositorio: boolean
           titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
           url_repositorio_proyecto: string | null
+          fecha_postulacion: string
+          fecha_entrega_prototipo: string | null
+          calificacion_prototipo: number | null
+          comentario_prototipo: string | null
+          tiene_prototipo: boolean
+          tiene_repositorio: boolean
+          tiene_documentacion: boolean
         }[]
-      }
-      mis_proyectos_como_empresario: { Args: never; Returns: string[] }
-      mis_proyectos_como_estudiante: { Args: never; Returns: string[] }
-      publicar_proyecto: {
-        Args: {
-          p_categorias: string[]
-          p_ciudad: string
-          p_conversacion: string
-          p_descripcion: string
-          p_generado_por_ia: boolean
-          p_id_area: string
-          p_involucra_ia: boolean
-          p_modalidad: Database['public']['Enums']['modalidad_enum']
-          p_moneda: Database['public']['Enums']['moneda_enum']
-          p_pais: string
-          p_plazo_dias: number
-          p_presupuesto_max: number
-          p_presupuesto_min: number
-          p_propuesta: Json
-          p_tecnologias: string[]
-          p_titulo: string
-        }
-        Returns: string
       }
       register_failed_login: { Args: { p_email: string }; Returns: undefined }
     }

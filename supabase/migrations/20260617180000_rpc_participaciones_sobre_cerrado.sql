@@ -95,5 +95,4 @@ comment on function public.get_participaciones_de_proyecto(uuid) is
 
 -- Solo usuarios autenticados pueden ejecutarla; nunca anon ni el grant heredado de public.
 revoke execute on function public.get_participaciones_de_proyecto(uuid) from public, anon;
-
 grant  execute on function public.get_participaciones_de_proyecto(uuid) to authenticated;
