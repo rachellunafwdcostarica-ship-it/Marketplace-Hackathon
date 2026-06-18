@@ -45,6 +45,11 @@ export async function validateApplicationWithAI(
     return { isRelated: true, problematicFields: [], reason: 'API Key missing' }
   }
 
+  logger.info('validateApplicationWithAI: iniciando llamada a OpenRouter', {
+    model,
+    project: input.projectTitle,
+  })
+
   const prompt = `Eres un evaluador experto de talento tech. Tu tarea es analizar una postulación de un egresado junior a un proyecto freelance y determinar estrictamente si el contenido de su postulación (carta, solución y archivos) TIENE RELACIÓN DIRECTA con el proyecto.
 
 DATOS DEL PROYECTO:
@@ -55,20 +60,16 @@ POSTULACIÓN DEL EGRESADO:
 - Carta de presentación: ${input.coverLetter ?? 'No provista'}
 - Planteamiento de la solución: ${input.solutionApproach}
 - Enlace externo/prototipo: ${input.externalLink ?? 'No provisto'}
-- Archivo de prototipo subido: ${input.uploadedPrototypeUrl ? 'Sí' : 'No'}
-- Documentación técnica: ${input.technicalDocUrl ? 'Sí' : 'No'}
+- Archivo de prototipo subido: ${input.uploadedPrototypeUrl ? 'Si' : 'No'}
+- Documentación técnica: ${input.technicalDocUrl ? 'Si' : 'No'}
 
 INSTRUCCIONES:
-Determina si la postulación está respondiendo genuinamente a los requisitos del proyecto. Si el egresado habla de cosas completamente ajenas al proyecto, debes rechazarlo.
+Determina si la postulación responde genuinamente a los requisitos del proyecto. Si el egresado habla de cosas completamente ajenas al proyecto, debes rechazarlo.
 Si la postulación es un intento genuino y guarda relación temática con el proyecto, acéptalo.
-En caso de rechazo, indica en 'problematicFields' cuáles partes están mal (ej. "Carta de presentación", "Documentación técnica", "Planteamiento") y en 'reason' da una breve explicación en español del porqué.
+En caso de rechazo, indica en 'problematicFields' cuáles partes están mal y en 'reason' da una breve explicación en español.
 
-Devuelve EXCLUSIVAMENTE un JSON con el siguiente formato, sin texto adicional ni bloques markdown:
-{
-  "isRelated": boolean,
-  "problematicFields": ["..."],
-  "reason": "..."
-}`
+Devuelve EXCLUSIVAMENTE un objeto JSON con el siguiente formato, sin texto adicional ni bloques markdown:
+{"isRelated": true/false, "problematicFields": ["campo1", "campo2"], "reason": "explicación"}`
 
   try {
     const res = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
@@ -76,16 +77,20 @@ Devuelve EXCLUSIVAMENTE un JSON con el siguiente formato, sin texto adicional ni
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL ?? 'https://fwd.com',
+        'HTTP-Referer': 'https://fwd.com',
         'X-Title': 'FWD Marketplace - Filtro de Postulaciones',
       },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(20000),
       body: JSON.stringify({
         model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
-        response_format: { type: 'json_object' },
       }),
+    })
+
+    logger.info('validateApplicationWithAI: respuesta recibida de OpenRouter', {
+      status: res.status,
+      ok: res.ok,
     })
 
     if (!res.ok) {
@@ -112,6 +117,10 @@ Devuelve EXCLUSIVAMENTE un JSON con el siguiente formato, sin texto adicional ni
           ).choices?.[0]?.message?.content
         : undefined
 
+    logger.info('validateApplicationWithAI: texto de respuesta', {
+      responseText: responseText?.slice(0, 300),
+    })
+
     if (!responseText) {
       logger.warn('validateApplicationWithAI: respuesta vacía de OpenRouter')
       return {
@@ -121,18 +130,31 @@ Devuelve EXCLUSIVAMENTE un JSON con el siguiente formato, sin texto adicional ni
       }
     }
 
-    const parsed = aiResponseSchema.safeParse(JSON.parse(responseText))
+    // Limpia posibles bloques markdown que algunos modelos añaden
+    const cleanText = responseText
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/\s*```$/i, '')
+      .trim()
+
+    const parsed = aiResponseSchema.safeParse(JSON.parse(cleanText))
 
     if (!parsed.success) {
       logger.error('validateApplicationWithAI: formato de respuesta inválido', {
         error: parsed.error.message,
+        raw: cleanText.slice(0, 200),
       })
       return { isRelated: true, problematicFields: [], reason: 'Parse error' }
     }
 
+    logger.info('validateApplicationWithAI: resultado final', {
+      isRelated: parsed.data.isRelated,
+      reason: parsed.data.reason,
+    })
+
     return parsed.data
   } catch (error) {
-    logger.error('validateApplicationWithAI: excepción en la petición', {
+    logger.error('validateApplicationWithAI: excepcion en la peticion', {
       error: error instanceof Error ? error.message : String(error),
     })
     return {
