@@ -82,7 +82,7 @@ export async function rateCompany(
     return err('forbidden')
   }
 
-  if (contratacion.estado_periodo !== 'finalizado') {
+  if (!['vigente', 'finalizado'].includes(contratacion.estado_periodo)) {
     return err('contratacion_no_finalizada')
   }
 
