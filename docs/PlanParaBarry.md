@@ -1,7 +1,7 @@
 # Plan para Barry — tareas técnicas duras del Marketplace FWD
 
 > **Para:** Barry (Project Manager técnico). **De:** auditoría re-verificada contra el código vivo.
-> **Fecha:** 2026-06-17 · **Rama:** `samir` · **HEAD:** `5029e23` (ya mergeó `errol`, `ronny`, `rachell`, `samir`).
+> **Fecha:** 2026-06-18 (actualizado tras commit `5a1cac5`) · **Rama:** `samir` · **base:** `5029e23` + `5a1cac5`.
 > **Propósito:** que Barry tome **lo difícil de verdad** — deuda de infraestructura, bombas de runtime y
 > decisiones de arquitectura transversales — y deje el wiring de módulo a cada responsable.
 
@@ -28,6 +28,8 @@ publicación de proyecto por RPC atómico, entregables (subir/versionar/firmar/a
 egresados (productor `estado_verificacion`), `env.ts`/`env.server.ts` con Zod adoptados, bug `getPendingUsers`
 (`'admin'` vs `'administrador'`), cuelgue de `getUser()` en `junior/applications`, `comentario_empresario`
 (columna materializada), rename `cedula_juridica → cedula`. **Higiene TS limpia** (sin `any`, sin `@ts-ignore`).
+**+ (18-jun, commit `5a1cac5`):** migración fantasma `20260617180000` reconciliada y `database.ts` regenerado
+contra la BD viva — cierra los **P0.1 y P0.2 originales** (detalle en §7).
 
 ### Cómo leer las prioridades
 - **P0 — Infra que sangra ya.** Bloquea el flujo de trabajo del equipo o revienta en producción con datos reales.
@@ -43,47 +45,55 @@ Etiquetas: **[Seguro]** = verificado archivo:línea en HEAD · **[Probable]** = 
 
 ## P0 — Infraestructura que sangra ya
 
-### P0.1 · Drift INVERSO del historial de migraciones — bloquea `db push`/`reset` de todo el equipo
-**[Seguro]** El remoto registra una migración **`20260617180000_rpc_participaciones_sobre_cerrado`** que
-**no existe como archivo en ningún branch** (`git ls-tree` sobre `samir`, `dev`, `origin/dev`, `origin/samir`
-= vacío) y que **ni siquiera creó su objeto**: `pg_proc` para `public.get_participaciones_sobre_cerrado`
-devuelve `[]`. El local se detiene en `20260617165052` (34 archivos); el remoto tiene 35 entradas.
+> **Los P0.1 y P0.2 originales (drift inverso de migraciones + drift de tipos) ya están RESUELTOS** en el
+> commit `5a1cac5` (ver §7). Resultó que el SQL no estaba perdido (estaba en `schema_migrations`) y el objeto
+> era una v2 deliberada "sobre cerrado" aplicada al remoto sin commitear; se reconcilió el repo con la BD (sin
+> tocarla) y se regeneró `database.ts`. **Esos dos slots se reemplazan abajo por tareas que siguen abiertas.**
 
-- **Por qué es de Barry:** toca integridad del historial de migraciones. `supabase_migrations.schema_migrations`
-  reclama una versión cuyo SQL no está en git, así que **cualquier `db reset`/replay local nunca llega a
-  paridad y un `db push` fallará por gap de versión**. El equipo entero queda sin poder versionar BD.
-- **Acción de raíz (no parche):** **no** re-crear el archivo con otro hash. Localizar quién aplicó
-  `20260617180000` (probable `apply_migration` por MCP sin commitear el `.sql`, o push directo desde una
-  máquina). Recuperar el SQL real de esa máquina, commitearlo con el mismo nombre, y averiguar por qué el RPC
-  no quedó creado (la migración pudo fallar a medias dejando solo el marker). Si el RPC nunca se necesitó,
-  evaluar `supabase migration repair` para limpiar el marker huérfano.
-- **Coordinar con:** Samir (dueño de BD). Es la primera ficha: sin esto, nadie puede migrar con seguridad.
+### P0.1 · Blindar el flujo de migraciones — que la "migración fantasma" no se repita
+**[Seguro]** La causa raíz de la migración huérfana `20260617180000` fue **aplicar DDL al remoto sin
+commitear el `.sql`** (probable `apply_migration` por MCP o push directo). El síntoma se arregló
+(`5a1cac5`), pero **el hábito sigue vivo**: nada impide que mañana alguien vuelva a desincronizar git↔BD.
 
-### P0.2 · Drift tipos-vs-BD — dos bombas de runtime que `tsc` no detecta
-El patrón común: queries que esquivan el typecheck (nombres de columna equivocados o `as unknown`), así que
-**compilan en TS y revientan con datos reales**.
+- **Por qué es de Barry:** es disciplina de infraestructura del equipo, no un bug de módulo. Una sola
+  migración aplicada "a mano" al remoto vuelve a bloquear `db push`/`reset` de todos.
+- **Qué dejar montado:**
+  1. **Regla escrita** (en `CLAUDE.md`/`README`): ninguna migración se aplica al remoto sin su `.sql`
+     commiteado primero; `apply_migration` por MCP queda **prohibido** sobre el proyecto remoto compartido.
+  2. **Chequeo de paridad en CI** (se engancha con P0.3): un step que corra el equivalente a
+     `supabase migration list` y **falle si hay versiones remote-only** (aplicadas pero no en git, o al revés).
+  3. **Un solo dueño de BD** (Samir) y un flujo explícito PR → merge → apply.
+- **Acción `[Verificar]`:** diff completo `migration list` (remoto) vs `supabase/migrations/` (local) para
+  confirmar que **no quedan OTRAS** remote-only. Hoy local = remoto = 35 tras `5a1cac5`, pero nada lo vigila.
 
-| # | Bomba | Evidencia | Efecto |
-|---|---|---|---|
-| a | `ratings.ts` pide `primer_apellido`/`segundo_apellido` | `src/lib/company/ratings.ts:236-247` vs BD real `usuarios.apellido_1`/`apellido_2` (`src/types/database.ts:1301`, `company/actions.ts:64`) | **[Seguro]** Rompe el panel admin de calificaciones de empresas (RF-49) en cuanto haya datos |
-| b | `soporte_tickets` accedida por `as unknown` cast | `src/lib/company/actions.ts:347-358` y `:400-412` castean porque la tabla **no está** en `database.ts` | **[Seguro]** Cualquier cambio de columna pasa silencioso; sin red de tipos |
+### P0.2 · Barrido de casts `as unknown` que ocultan drift tipos↔BD
+**[Seguro]** Las dos bombas que se arreglaron en `5a1cac5` (`ratings.ts` apellidos, `soporte_tickets`) **no
+eran casos aislados**: el patrón `resultado_de_query as unknown as {...}` está repartido y **anula el
+typecheck de nombres de columna y de relaciones**. Grep confirma ~10 casts de resultado de query:
+`ratings.ts:75,268`, `publish.ts:131`, `portfolio/actions.ts:74,83,97`, `dashboard.ts:113`,
+`admin/queries.ts:471,685`. (Distinto de los ~6 `as unknown as Json` para columnas `jsonb`, que son el
+patrón **aceptado** de Supabase — **esos no se tocan**.)
 
-- **Por qué es de Barry:** el módulo `company` quedó con **dos convenciones de columna en conflicto**, y el
-  cast `as unknown` es una evasión de tipos sistémica, no un bug puntual.
-- **Acción de raíz:** **regenerar `src/types/database.ts` contra el esquema vivo** (incluyendo `soporte_tickets`),
-  arreglar el embed de `ratings.ts` a `apellido_1/apellido_2`, borrar los dos casts manuales, y **atar la
-  regeneración al CI** (un step que falle si los tipos no coinciden con las migraciones). Así el embed mal
-  escrito falla en `tsc`, no en runtime.
+- **Por qué es de Barry:** es una evasión de tipos sistémica; cada cast es una bomba latente como las dos que
+  ya explotaron. Distinguir el cast legítimo (jsonb) del peligroso (resultado de query con shape a mano)
+  requiere criterio.
+- **Qué dejar montado:** por cada cast de resultado de query, revalidar contra los tipos ya regenerados y
+  **quitar el cast usando el embed tipado**, hinteando el FK donde haya ambigüedad — el patrón
+  `empresarios!empresarios_id_usuario_fkey` documentado en `5a1cac5` se repite: **toda tabla con 2 FK a otra**
+  necesita el hint. `ratings.ts:268` quedó con su cast aunque se corrigieron los nombres → primer candidato.
+- **Acompaña:** una regla de PR/lint que marque `as unknown as` sobre el cliente Supabase como *smell* a
+  revisar (no prohibir: `jsonb` lo necesita).
 
 ### P0.3 · No existe CI/CD — el DoD no se puede garantizar
 **[Seguro]** `Glob '.github/**'` = sin archivos. `package.json` define `lint`/`typecheck`/`test` pero
 **ningún workflow los corre**. Husky pre-commit existe pero no sustituye un gate server-side.
 
-- **Por qué es de Barry:** sin CI, los drifts de P0.2, los `catch`-swallow (P2.1) y cualquier regresión
+- **Por qué es de Barry:** sin CI, los drifts de tipos, los `catch`-swallow (P2.1) y cualquier regresión
   **llegan a `dev` sin freno**. El DoD (`reglas.md §11`, brief §6.5) exige "TS compila + ESLint pasa + tests"
   por feature; hoy eso depende de revisión manual. **Esta es la pieza que vuelve verificable todo lo demás.**
 - **Acción de raíz:** workflow de GitHub Actions (`typecheck` + `lint` + `vitest run` + `next build`) como
-  **required check** sobre PRs a `dev`. Incluir el check de tipos-vs-BD de P0.2.
+  **required check** sobre PRs a `dev`. Incluir el chequeo de paridad de migraciones (P0.1) y un check de
+  drift de `gen types` (que `database.ts` no diverja del esquema vivo).
 - **Atar aquí:** quitar `--passWithNoTests` de `package.json:16` (ya hay 13 archivos de test / ~123 casos; el CI
   no debe pasar en verde si los tests desaparecen) y agregar `coverage` con thresholds en `lib/` (reglas piden
   50% deseado en `lib/`). `vitest.config.ts` hoy no tiene bloque `coverage` ni `thresholds`.
@@ -343,8 +353,8 @@ Se lista para que no se pierda. Cada item es trabajo de un dev de módulo, no se
 
 Estas no son código — son acuerdos que destraban al equipo. En orden de impacto:
 
-1. **Migración fantasma `20260617180000`** (P0.1): recuperar/repair. Bloquea versionado de BD. **La más urgente.**
-2. **Regenerar `database.ts` + atar a CI** (P0.2 + P0.3): convierte drifts en errores de compilación.
+1. **Disciplina de migraciones** (P0.1): quién aplica y cómo, + chequeo de paridad en CI. *(La migración fantasma `20260617180000` que disparó esto ya se resolvió en `5a1cac5`.)*
+2. **Barrido de casts `as unknown`** (P0.2) + **atar `gen types` al CI** (P0.3): convierte el drift tipos↔BD en error de compilación. *(El regen inicial de `database.ts` ya se hizo en `5a1cac5`.)*
 3. **Mecanismo de `notificaciones`** (P1.1): una decisión destraba RF-33/35/39/ADM-4/2.8.
 4. **Scheduler `pg_cron`** (P1.2): cierre/vencimiento automático; atado al estado destino del enum.
 5. **RPC transaccional de adjudicación** (P1.3): atomicidad de la costura central.
@@ -361,7 +371,7 @@ Estas no son código — son acuerdos que destraban al equipo. En orden de impac
 
 Para cualquier item que Barry cierre: `npm run typecheck` exit 0 · `npm run lint` sin errores · `vitest run`
 verde · textos en `es.json` + `en.json` · si tocó BD, migración versionada en `supabase/migrations/` con RLS +
-policies y aprobación de Samir (protocolo `CLAUDE.md`). Para P0.1, P1.1, P1.2, P2.2 hace falta **confirmar en la
+policies y aprobación de Samir (protocolo `CLAUDE.md`). Para P0.1 (paridad de migraciones), P1.1, P1.2, P2.2 hace falta **confirmar en la
 BD remota** (solo lectura primero). Para P2.1 hace falta **`next start` + abrir las 3 páginas del marketplace**.
 
 ---
@@ -370,6 +380,8 @@ BD remota** (solo lectura primero). Para P2.1 hace falta **`next start` + abrir 
 
 | Área | Estado en HEAD `5029e23` |
 |---|---|
+| **P0.1 orig — migración fantasma `20260617180000`** | **Resuelto (`5a1cac5`).** Recreada verbatim desde `schema_migrations` (era la v2 "sobre cerrado"); repo en paridad con la BD sin tocarla. Follow-up no bloqueante: cablear la UI del "sobre cerrado" en `ParticipationsPanel` (Errol). |
+| **P0.2 orig — drift de tipos** (`ratings.ts`, `soporte_tickets`, RPC v2) | **Resuelto (`5a1cac5`).** `database.ts` regenerado contra la BD; embed `empresarios` ambiguo hinteado; +2 errores `tsc` pre-existentes; `tsc` exit 0. |
 | Postulación egresado (RF-27/29/31/32) | **Real.** `lib/applications/{actions,queries}.ts`: INSERT en `participaciones`, `retirarPostulacion`, `getMisPostulaciones` por `id_estudiante`, 7 estados mapeados e i18n. |
 | Cuelgue `getUser()` cliente | **Resuelto.** `junior/applications` es Server Component; `getMisPostulaciones` server-side. |
 | Perfil + verificación de empresa (RF-16/17, ADM-1 empresas) | **Real.** `saveCompanyProfile` upsert, upload de logo a bucket, `verificarEmpresa`/`rechazarEmpresa` con `service_role`, `admin/companies` redirige a flujo real. |
