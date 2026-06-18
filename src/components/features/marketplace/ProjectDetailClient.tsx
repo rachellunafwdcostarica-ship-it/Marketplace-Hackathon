@@ -117,7 +117,7 @@ export function ProjectDetailClient({
               </CardContent>
             </Card>
 
-            {true && (
+            {contratacion !== null && (
               <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-warning to-highlight" />
                 <CardContent className="p-6 pt-8 space-y-6">
@@ -217,8 +217,7 @@ export function ProjectDetailClient({
                           setSubmittingRating(true)
                           const res = await rateCompany({
                             idEmpresario: project.companyId,
-                            idContratacion:
-                              contratacion?.id_contratacion || undefined,
+                            idContratacion: contratacion.id_contratacion,
                             puntuacion: ratingScore,
                             comentario: ratingComment.trim() || undefined,
                           })
