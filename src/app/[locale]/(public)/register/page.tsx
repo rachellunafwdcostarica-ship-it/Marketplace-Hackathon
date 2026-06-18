@@ -91,21 +91,34 @@ export default function RegisterPage() {
     }
     setLoading(true)
     setUserRole(selectedRole)
+
     const result = await signUpWithPassword({
       email: data.email,
       password: data.password,
       fullName: data.fullName,
       role: selectedRole as 'egresado' | 'empresario',
     })
-    setLoading(false)
+
+    const onboardingPath =
+      selectedRole === 'empresario' ? '/onboarding/empresario' : '/onboarding'
+
     if (!result.ok) {
       if (result.error === 'email_already_exists') {
-        // Anti-enumeración: no revelar que el correo ya está registrado.
-        // Mostrar el mismo flujo que un registro exitoso.
+        // Anti-enumeración: mostrar éxito e intentar auto-login.
+        // Si las credenciales coinciden, el usuario entra con su cuenta real.
+        // Redirigir a /onboarding (no al path del rol elegido): el middleware
+        // usa el rol real de la BD para mandarlo al destino correcto.
         toast.success(tAuth('registerSuccess'))
-        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
+        const supabase = createSupabaseBrowserClient()
+        await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        })
+        router.push('/onboarding')
+        setLoading(false)
         return
       }
+      setLoading(false)
       const message =
         result.error === 'password_breached'
           ? tAuth('passwordBreached')
@@ -115,19 +128,38 @@ export default function RegisterPage() {
       toast.error(message)
       return
     }
+
+    // Usuario creado y confirmado: hacer auto-login inmediato sin verificación
+    // de correo. La ruta destino viene del rol elegido — no del metadata.
+    const supabase = createSupabaseBrowserClient()
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
+
+    setLoading(false)
+
+    if (signInError) {
+      toast.error(tAuth('errorUnexpected'))
+      return
+    }
+
     toast.success(tAuth('registerSuccess'))
-    router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
+    router.push(onboardingPath)
   }
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true)
-    // El rol NO se decide aquí en el flujo OAuth: tras autenticar, el callback
-    // envía al usuario nuevo a /onboarding, que es donde elige junior/empresa.
+    // Guardamos el rol en una cookie antes del redirect OAuth porque Supabase
+    // no garantiza preservar query params personalizados en el redirectTo.
+    // La cookie dura 5 min (tiempo suficiente para completar el flujo OAuth)
+    // y el callback la lee como fuente primaria del rol.
+    document.cookie = `pending-oauth-role=${selectedRole}; path=/; max-age=300; SameSite=Lax`
     const supabase = createSupabaseBrowserClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?role=${selectedRole}`,
       },
     })
     if (error) {
