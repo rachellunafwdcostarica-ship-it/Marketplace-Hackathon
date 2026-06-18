@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache'
 
 const RateCompanySchema = z.object({
   idEmpresario: z.string().uuid(),
-  idContratacion: z.string().uuid().optional(),
+  idContratacion: z.string().uuid(),
   puntuacion: z.number().int().min(1).max(5),
   comentario: z.string().max(1000).optional(),
 })
@@ -17,9 +17,9 @@ const RateCompanySchema = z.object({
 export type RateCompanyInput = z.infer<typeof RateCompanySchema>
 
 /**
- * Inserta una calificación para el empresario por parte del egresado (RF-49).
- * Permite calificar de forma general (sin contrato/postulación previa) o vinculada a un contrato.
- * Garantiza que un egresado califique como máximo una única vez a un empresario.
+ * Inserta una calificación para el empresario por parte del egresado.
+ * Requiere un contrato en estado 'finalizado' que vincule al egresado con la empresa (RF-49).
+ * Garantiza una única calificación por contrato por egresado.
  */
 export async function rateCompany(
   input: RateCompanyInput,
@@ -44,64 +44,59 @@ export async function rateCompany(
 
   if (estError || !estudiante) return err('unauthorized')
 
-  // Si se proporciona un contrato, verificar validez e id_empresario coincidente
-  if (parsed.data.idContratacion) {
-    const { data: contratacion, error: contError } = await supabase
-      .from('contrataciones')
-      .select(
-        `
-        id_contratacion,
-        estado_periodo,
-        participaciones!inner(
-          id_estudiante,
-          id_proyecto,
-          proyectos!inner(
-            id_empresario,
-            id_proyecto
-          )
+  // Verificar validez del contrato e id_empresario coincidente
+  const { data: contratacion, error: contError } = await supabase
+    .from('contrataciones')
+    .select(
+      `
+      id_contratacion,
+      estado_periodo,
+      participaciones!inner(
+        id_estudiante,
+        id_proyecto,
+        proyectos!inner(
+          id_empresario,
+          id_proyecto
         )
-      `,
       )
-      .eq('id_contratacion', parsed.data.idContratacion)
-      .maybeSingle()
+    `,
+    )
+    .eq('id_contratacion', parsed.data.idContratacion)
+    .maybeSingle()
 
-    if (contError || !contratacion) {
-      logger.error('rateCompany: fallo al buscar contratación', {
-        error: contError?.message,
-      })
-      return err('contratacion_not_found')
-    }
-
-    const part = contratacion.participaciones as unknown as {
-      id_estudiante: string
-      proyectos: {
-        id_empresario: string
-        id_proyecto: string
-      }
-    }
-    if (part.id_estudiante !== estudiante.id_estudiante) {
-      return err('forbidden')
-    }
-
-    if (
-      contratacion.estado_periodo !== 'finalizado' &&
-      contratacion.estado_periodo !== 'vigente'
-    ) {
-      return err('contratacion_no_finalizada')
-    }
-
-    // El empresario en el contrato debe coincidir con el proporcionado
-    if (part.proyectos.id_empresario !== parsed.data.idEmpresario) {
-      return err('invalid_input')
-    }
+  if (contError || !contratacion) {
+    logger.error('rateCompany: fallo al buscar contratación', {
+      error: contError?.message,
+    })
+    return err('contratacion_not_found')
   }
 
-  // Verificar si ya existe calificación del estudiante para esta empresa (uniqueness guard)
+  const part = contratacion.participaciones as unknown as {
+    id_estudiante: string
+    proyectos: {
+      id_empresario: string
+      id_proyecto: string
+    }
+  }
+  if (part.id_estudiante !== estudiante.id_estudiante) {
+    return err('forbidden')
+  }
+
+  if (contratacion.estado_periodo !== 'finalizado') {
+    return err('contratacion_no_finalizada')
+  }
+
+  // El empresario en el contrato debe coincidir con el proporcionado
+  if (part.proyectos.id_empresario !== parsed.data.idEmpresario) {
+    return err('invalid_input')
+  }
+
+  // Verificar si ya existe calificación del estudiante para este contrato (uniqueness guard)
   const { data: existing, error: existError } = await supabase
     .from('evaluaciones_empresarios')
     .select('id_evaluacion')
+    .eq('id_contratacion', parsed.data.idContratacion)
     .eq('id_estudiante', estudiante.id_estudiante)
-    .eq('id_empresario', parsed.data.idEmpresario)
     .maybeSingle()
 
   if (existError) {
@@ -119,7 +114,7 @@ export async function rateCompany(
   const { error: insertError } = await supabase
     .from('evaluaciones_empresarios')
     .insert({
-      id_contratacion: parsed.data.idContratacion || null,
+      id_contratacion: parsed.data.idContratacion,
       id_estudiante: estudiante.id_estudiante,
       id_empresario: parsed.data.idEmpresario,
       puntuacion: parsed.data.puntuacion,
@@ -202,7 +197,7 @@ export async function getCompanyRatingForStudent(
 
 export interface AdminRatingItem {
   idEvaluacion: string
-  idContratacion: string | null
+  idContratacion: string
   proyectoTitulo: string
   nombreEgresado: string
   nombreEmpresa: string
@@ -267,7 +262,7 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
   const items: AdminRatingItem[] = (data || []).map((row) => {
     const r = row as unknown as {
       id_evaluacion: string
-      id_contratacion: string | null
+      id_contratacion: string
       puntuacion: number
       comentario: string | null
       evaluado_at: string

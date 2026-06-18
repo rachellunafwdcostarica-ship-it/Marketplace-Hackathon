@@ -213,6 +213,32 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     })
   }
 
+  // Extraer rol para verificar estado antes de aprobar
+  const rolRaw = Array.isArray(usuario?.roles)
+    ? usuario?.roles[0]?.nombre_rol
+    : (usuario?.roles as { nombre_rol?: string } | null)?.nombre_rol
+
+  // Bloquear aprobación si el usuario no fue verificado primero
+  if (rolRaw === 'egresado') {
+    const { data: estudiante } = await adminClient
+      .from('estudiantes')
+      .select('estado_verificacion')
+      .eq('id_usuario', parsed.data)
+      .maybeSingle()
+    if (estudiante?.estado_verificacion !== 'verificado') {
+      return err('user_not_verified')
+    }
+  } else if (rolRaw === 'empresario') {
+    const { data: empresario } = await adminClient
+      .from('empresarios')
+      .select('estado_verificacion')
+      .eq('id_usuario', parsed.data)
+      .maybeSingle()
+    if (empresario?.estado_verificacion !== 'verificado') {
+      return err('user_not_verified')
+    }
+  }
+
   const { error } = await adminClient
     .from('usuarios')
     .update({ estado_cuenta: 'activa', is_active: true })
@@ -232,10 +258,6 @@ export async function approveUser(userId: string): Promise<Result<void>> {
       'localhost:3000'
     const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
     const baseUrl = `${proto}://${host}`
-
-    const rolRaw = Array.isArray(usuario.roles)
-      ? usuario.roles[0]?.nombre_rol
-      : (usuario.roles as { nombre_rol?: string } | null)?.nombre_rol
 
     const rol: 'egresado' | 'empresario' =
       rolRaw === 'empresario' ? 'empresario' : 'egresado'

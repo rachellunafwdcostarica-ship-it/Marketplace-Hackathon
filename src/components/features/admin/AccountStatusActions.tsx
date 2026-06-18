@@ -44,6 +44,8 @@ export function AccountStatusActions({
     if (result.ok) {
       toast.success(t('userApproved', { name: userName }))
       router.refresh()
+    } else if (result.error === 'user_not_verified') {
+      toast.error(t('userApproveNotVerified'))
     } else {
       toast.error(t('userApproveError'))
     }
