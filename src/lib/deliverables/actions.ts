@@ -15,6 +15,8 @@ const SubirEntregableSchema = z.object({
 
 type SubirInput = z.infer<typeof SubirEntregableSchema>
 
+const MAX_VERSION_ATTEMPTS = 2
+
 async function registrarEntregable(
   input: SubirInput,
   tipo: 'parcial' | 'final',
@@ -24,33 +26,46 @@ async function registrarEntregable(
 
   const supabase = await createSupabaseServerClient()
 
-  const { data: maxVerData } = await supabase
-    .from('entregables')
-    .select('version')
-    .eq('id_contratacion', input.idContratacion)
-    .order('version', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  // La versión se calcula como max(version)+1 por contratación. El constraint
+  // UNIQUE(id_contratacion, version) garantiza la secuencia; si dos subidas casi
+  // simultáneas chocan (23505), recalculamos y reintentamos una vez.
+  for (let attempt = 1; attempt <= MAX_VERSION_ATTEMPTS; attempt++) {
+    const { data: maxVerData } = await supabase
+      .from('entregables')
+      .select('version')
+      .eq('id_contratacion', input.idContratacion)
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-  const version = (maxVerData?.version ?? 0) + 1
+    const version = (maxVerData?.version ?? 0) + 1
 
-  const { error: insertError } = await supabase.from('entregables').insert({
-    id_contratacion: input.idContratacion,
-    tipo_entregable: tipo,
-    archivo_url: input.archivoPath,
-    version,
-    estado: 'enviado',
-  })
+    const { error: insertError } = await supabase.from('entregables').insert({
+      id_contratacion: input.idContratacion,
+      tipo_entregable: tipo,
+      archivo_url: input.archivoPath,
+      version,
+      estado: 'enviado',
+    })
 
-  if (insertError) {
+    if (!insertError) {
+      revalidatePath(`/junior/projects/${input.idProyecto}/entregables`)
+      return ok(undefined)
+    }
+
+    if (insertError.code === '23505' && attempt < MAX_VERSION_ATTEMPTS) {
+      continue
+    }
+
     logger.error(`registrarEntregable (${tipo}) failed`, {
       error: insertError.message,
     })
-    return err('database_error')
+    return err(
+      insertError.code === '23505' ? 'version_conflict' : 'database_error',
+    )
   }
 
-  revalidatePath(`/junior/projects/${input.idProyecto}/entregables`)
-  return ok(undefined)
+  return err('version_conflict')
 }
 
 /**
@@ -75,11 +90,18 @@ export async function subirEntregableFinal(
   return registrarEntregable(parsed.data, 'final')
 }
 
-const ResponderEntregableSchema = z.object({
-  idEntregable: z.string().uuid(),
-  decision: z.enum(['aprobado', 'con_cambios']),
-  comentario: z.string().max(1000).optional(),
-})
+const ResponderEntregableSchema = z
+  .object({
+    idEntregable: z.string().uuid(),
+    decision: z.enum(['aprobado', 'con_cambios']),
+    comentario: z.string().max(1000).optional(),
+  })
+  .refine(
+    (data) =>
+      data.decision !== 'con_cambios' ||
+      (data.comentario?.trim().length ?? 0) > 0,
+    { message: 'comentario_requerido', path: ['comentario'] },
+  )
 
 /**
  * El empresario aprueba o solicita cambios sobre un entregable (RF-44).
