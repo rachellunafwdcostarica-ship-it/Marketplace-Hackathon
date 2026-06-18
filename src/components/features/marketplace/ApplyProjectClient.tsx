@@ -87,34 +87,48 @@ export function ApplyProjectClient({
     let uploadedPrototypeUrl = ''
     let uploadedTechDocUrl = ''
 
+    const uploadWithTimeout = <T,>(
+      promise: Promise<T>,
+      ms = 10000,
+    ): Promise<T> => {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('upload_timeout')), ms),
+      )
+      return Promise.race([promise, timeout])
+    }
+
     try {
       if (prototypeFile) {
         const fileExt = prototypeFile.name.split('.').pop()
         const fileName = `${projectId}-${Date.now()}-proto.${fileExt}`
-        const { data: uploadData, error } = await supabase.storage
-          .from('prototipos')
-          .upload(fileName, prototypeFile)
-        if (error) throw new Error(tEgresado('prototypeUploadError'))
-        if (uploadData) {
+        const uploadResult = await uploadWithTimeout(
+          supabase.storage.from('prototipos').upload(fileName, prototypeFile),
+        ).catch((e: unknown) => ({ data: null, error: e }))
+        if (!uploadResult.error && uploadResult.data) {
           const { data: publicUrlData } = supabase.storage
             .from('prototipos')
-            .getPublicUrl(uploadData.path)
+            .getPublicUrl(uploadResult.data.path)
           uploadedPrototypeUrl = publicUrlData.publicUrl
+        } else if (uploadResult.error) {
+          toast.warning(tEgresado('prototypeUploadWarning'))
         }
       }
 
       if (technicalDocFile) {
         const fileExt = technicalDocFile.name.split('.').pop()
         const fileName = `${projectId}-${Date.now()}-doc.${fileExt}`
-        const { data: uploadData, error } = await supabase.storage
-          .from('prototipos')
-          .upload(fileName, technicalDocFile)
-        if (error) throw new Error(tEgresado('docUploadError'))
-        if (uploadData) {
+        const uploadResult = await uploadWithTimeout(
+          supabase.storage
+            .from('prototipos')
+            .upload(fileName, technicalDocFile),
+        ).catch((e: unknown) => ({ data: null, error: e }))
+        if (!uploadResult.error && uploadResult.data) {
           const { data: publicUrlData } = supabase.storage
             .from('prototipos')
-            .getPublicUrl(uploadData.path)
+            .getPublicUrl(uploadResult.data.path)
           uploadedTechDocUrl = publicUrlData.publicUrl
+        } else if (uploadResult.error) {
+          toast.warning(tEgresado('techDocUploadWarning'))
         }
       }
 
@@ -131,24 +145,30 @@ export function ApplyProjectClient({
       })
 
       if (!result.ok) {
-        const errorMessages: Partial<Record<string, string>> = {
-          cuenta_no_verificada: tEgresado('applyErrorCuentaNoVerificada'),
-          cupo_excedido: tEgresado('applyErrorCupoExcedido'),
-          proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
-          plazo_vencido: tEgresado('applyErrorPlazoVencido'),
-          proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
+        if (
+          typeof result.error === 'string' &&
+          result.error.startsWith('AI_REJECTED::')
+        ) {
+          const reason = result.error.replace('AI_REJECTED::', '')
+          toast.error(tEgresado('applyErrorAiRejected', { reason }))
+        } else {
+          const errorMessages: Partial<Record<string, string>> = {
+            cuenta_no_verificada: tEgresado('applyErrorCuentaNoVerificada'),
+            cupo_excedido: tEgresado('applyErrorCupoExcedido'),
+            proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
+            plazo_vencido: tEgresado('applyErrorPlazoVencido'),
+            proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
+          }
+          toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
         }
-        toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
       } else {
         toast.success(tEgresado('applySuccess'))
         router.push('/junior/applications')
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      } else {
-        toast.error(tEgresado('unexpectedError'))
-      }
+      toast.error(
+        err instanceof Error ? err.message : tEgresado('unexpectedError'),
+      )
     } finally {
       setIsSubmitting(false)
     }
