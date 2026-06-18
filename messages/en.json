@@ -833,6 +833,7 @@
     "approving": "Approving...",
     "userApproved": "{name}'s account approved successfully.",
     "userApproveError": "Error approving account. Please try again.",
+    "userApproveNotVerified": "The user must be verified first before approving their account.",
     "verifyGraduate": "Verify graduate",
     "verifying": "Verifying...",
     "graduateVerified": "{name} verified as graduate successfully.",

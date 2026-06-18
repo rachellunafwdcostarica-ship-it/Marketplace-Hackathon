@@ -833,6 +833,7 @@
     "approving": "Aprobando...",
     "userApproved": "Cuenta de {name} aprobada exitosamente.",
     "userApproveError": "Error al aprobar la cuenta. Intentá de nuevo.",
+    "userApproveNotVerified": "El usuario debe ser verificado primero antes de aprobar su cuenta.",
     "verifyGraduate": "Verificar egresado",
     "verifying": "Verificando...",
     "graduateVerified": "Egresado {name} verificado exitosamente.",
