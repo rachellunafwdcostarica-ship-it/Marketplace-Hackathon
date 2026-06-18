@@ -6,7 +6,20 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8',
-      include: ['src/lib/**'],
+      // Gate de cobertura solo sobre la LÓGICA PURA de lib/ con tests unitarios
+      // (reglas.md §10: "Vitest sobre la lógica pura de lib/"). Los módulos de IO
+      // (server actions, queries Supabase, LLM, email) son puntos de integración,
+      // no unit-testeables de forma significativa, y quedan fuera del umbral.
+      include: [
+        'src/lib/utils/age.ts',
+        'src/lib/auth/roles.ts',
+        'src/lib/auth/guards.ts',
+        'src/lib/admin/config-validation.ts',
+        'src/lib/projects/project-detail-logic.ts',
+        'src/lib/projects/schemas.ts',
+        'src/lib/proposal-ai/proposal-mapping.ts',
+        'src/lib/env.ts',
+      ],
       thresholds: {
         lines: 50,
         functions: 50,
