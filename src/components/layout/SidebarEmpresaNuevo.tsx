@@ -24,6 +24,8 @@ import {
   Building2,
   HelpCircle,
 } from 'lucide-react'
+import { FwdLogo } from '@/components/features/brand/FwdLogo'
+import { cn } from '@/lib/utils/cn'
 
 interface NavItem {
   id: string
@@ -33,7 +35,15 @@ interface NavItem {
   isActive: (pathname: string) => boolean
 }
 
-export function SidebarEmpresaNuevo() {
+interface SidebarEmpresaNuevoProps {
+  className?: string
+  onNavigate?: () => void
+}
+
+export function SidebarEmpresaNuevo({
+  className,
+  onNavigate,
+}: SidebarEmpresaNuevoProps) {
   const t = useTranslations('EmpresaPerfil')
   const pathname = usePathname()
   const [isSupportOpen, setIsSupportOpen] = useState(false)
@@ -48,6 +58,7 @@ export function SidebarEmpresaNuevo() {
     }
     setIsSubmittingSupport(true)
     const res = await createSupportTicket(supportDescription)
+    setIsSubmittingSupport(true) // will be set to false below
     setIsSubmittingSupport(false)
     if (res.ok) {
       toast.success(t('supportSuccess'))
@@ -58,8 +69,6 @@ export function SidebarEmpresaNuevo() {
     }
   }
 
-  // El highlight sigue la SECCIÓN, no solo la URL exacta: las subrutas de
-  // proyecto/new-project cuentan como Panel; formulario-empresa como Perfil.
   const navItems: NavItem[] = [
     {
       id: 'panel',
@@ -97,8 +106,31 @@ export function SidebarEmpresaNuevo() {
   ]
 
   return (
-    <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6">
-      <nav className="flex flex-col gap-1 px-1">
+    <aside
+      className={cn(
+        'flex w-56 shrink-0 flex-col bg-[#3d1a6e] text-white',
+        className,
+      )}
+    >
+      {/* Brand logo header */}
+      <Link
+        href="/empresario"
+        onClick={onNavigate}
+        className="flex items-center gap-3 px-5 py-5 hover:opacity-90 transition-opacity"
+      >
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
+          <FwdLogo className="h-6 w-6" />
+        </div>
+        <span className="font-heading text-base font-bold tracking-tight leading-tight text-white">
+          Marketplace<span className="text-[#ec008c]"> FWD</span>
+        </span>
+      </Link>
+
+      {/* Divider */}
+      <div className="mx-4 mb-3 h-px bg-white/10" />
+
+      {/* Nav list */}
+      <nav className="flex flex-col gap-0.5 px-3 flex-1">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = item.isActive(pathname)
@@ -106,27 +138,37 @@ export function SidebarEmpresaNuevo() {
             <Link
               key={item.id}
               href={item.href}
+              onClick={onNavigate}
               aria-current={active ? 'page' : undefined}
-              className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
+              className={cn(
+                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
                 active
-                  ? 'bg-primary text-primary-foreground shadow-sm font-bold'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-              }`}
+                  ? 'bg-gradient-to-r from-[#ec008c] to-[#ec008c]/80 text-white shadow-sm font-bold'
+                  : 'text-white/65 hover:bg-white/8 hover:text-white/90',
+              )}
             >
-              <Icon className="w-4 h-4 shrink-0" />
+              <Icon
+                className={cn(
+                  'h-4 w-4 shrink-0 transition-colors',
+                  active ? 'text-white' : 'text-white/55',
+                )}
+              />
               <span>{item.label}</span>
             </Link>
           )
         })}
 
-        {/* Ayuda / Soporte Técnico abre el Dialog */}
+        {/* Dialog for help/support */}
         <Dialog open={isSupportOpen} onOpenChange={setIsSupportOpen}>
           <DialogTrigger asChild>
             <button
               type="button"
-              className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all cursor-pointer"
+              onClick={() => {
+                if (onNavigate) onNavigate()
+              }}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white/90 transition-all cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
-              <HelpCircle className="w-4 h-4 shrink-0" />
+              <HelpCircle className="h-4 w-4 shrink-0 text-white/55" />
               <span>{t('menuAyuda')}</span>
             </button>
           </DialogTrigger>

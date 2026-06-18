@@ -11,9 +11,7 @@ import {
   Sparkles,
   XCircle,
 } from 'lucide-react'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
+import { CompanyShell } from '@/components/layout/CompanyShell'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -141,170 +139,160 @@ export function ProjectDetailClient({
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <Navbar />
+    <CompanyShell>
+      <div className="space-y-8">
+        <Link
+          href="/empresario"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {t('backToDashboard')}
+        </Link>
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <SidebarEmpresaNuevo />
+        <PageTitle
+          title={project.titulo}
+          description={
+            budget ? `${tCommon(project.modalidad)} · ${budget}` : undefined
+          }
+          dotColor="text-secondary"
+          action={
+            <StatusPill
+              estado={project.estadoEfectivo}
+              label={tBoard(`status_${project.estadoEfectivo}`)}
+            />
+          }
+        />
 
-        <main className="flex-1 space-y-8">
-          <Link
-            href="/empresario"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {t('backToDashboard')}
-          </Link>
-
-          <PageTitle
-            title={project.titulo}
-            description={
-              budget ? `${tCommon(project.modalidad)} · ${budget}` : undefined
-            }
-            dotColor="text-secondary"
-            action={
-              <StatusPill
-                estado={project.estadoEfectivo}
-                label={tBoard(`status_${project.estadoEfectivo}`)}
-              />
-            }
-          />
-
-          <Card className="border border-border/80 bg-card/40">
-            <CardContent className="p-6 space-y-5">
-              <SectionHeading>{t('projectInfoTitle')}</SectionHeading>
-              <DetailField label={tBoard('descriptionLabel')}>
-                <p className="text-foreground whitespace-pre-wrap text-sm">
-                  {project.descripcion}
-                </p>
-              </DetailField>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {project.areaNombre && (
-                  <DetailField label={tBoard('areaLabel')}>
-                    {project.areaNombre}
-                  </DetailField>
-                )}
-                <DetailField label={tBoard('modalityLabel')}>
-                  {tCommon(project.modalidad)}
+        <Card className="border border-border/80 bg-card/40">
+          <CardContent className="p-6 space-y-5">
+            <SectionHeading>{t('projectInfoTitle')}</SectionHeading>
+            <DetailField label={tBoard('descriptionLabel')}>
+              <p className="text-foreground whitespace-pre-wrap text-sm">
+                {project.descripcion}
+              </p>
+            </DetailField>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {project.areaNombre && (
+                <DetailField label={tBoard('areaLabel')}>
+                  {project.areaNombre}
                 </DetailField>
-                {budget && (
-                  <DetailField label={tBoard('budgetLabel')}>
-                    {budget}
+              )}
+              <DetailField label={tBoard('modalityLabel')}>
+                {tCommon(project.modalidad)}
+              </DetailField>
+              {budget && (
+                <DetailField label={tBoard('budgetLabel')}>
+                  {budget}
+                </DetailField>
+              )}
+              {project.modalidad !== 'remoto' &&
+                (project.paisProyecto || project.ciudadProyecto) && (
+                  <DetailField label={tBoard('locationLabel')}>
+                    {[project.ciudadProyecto, project.paisProyecto]
+                      .filter(Boolean)
+                      .join(', ')}
                   </DetailField>
                 )}
-                {project.modalidad !== 'remoto' &&
-                  (project.paisProyecto || project.ciudadProyecto) && (
-                    <DetailField label={tBoard('locationLabel')}>
-                      {[project.ciudadProyecto, project.paisProyecto]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </DetailField>
-                  )}
-                {project.fechaPublicacion && (
-                  <DetailField label={tBoard('publishDateLabel')}>
-                    {project.fechaPublicacion.slice(0, 10)}
-                  </DetailField>
+              {project.fechaPublicacion && (
+                <DetailField label={tBoard('publishDateLabel')}>
+                  {project.fechaPublicacion.slice(0, 10)}
+                </DetailField>
+              )}
+              {project.fechaCierre && (
+                <DetailField label={tBoard('closeDateLabel')}>
+                  {project.fechaCierre.slice(0, 10)}
+                </DetailField>
+              )}
+            </div>
+            {project.categorias.length > 0 && (
+              <DetailField label={tBoard('categoriesLabel')}>
+                <ChipRow items={project.categorias} />
+              </DetailField>
+            )}
+            {project.tecnologias.length > 0 && (
+              <DetailField label={tBoard('technologiesLabel')}>
+                <ChipRow items={project.tecnologias} />
+              </DetailField>
+            )}
+            {project.involucraIa && <ChipRow items={[tBoard('involvesAi')]} />}
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border/80 bg-card/40">
+          <CardContent className="p-6 space-y-4">
+            <SectionHeading>{t('manageTitle')}</SectionHeading>
+            {isPending ? (
+              <p className="text-sm text-muted-foreground italic">
+                {tAccount('actionDisabledPending')}
+              </p>
+            ) : (
+              <div className="flex flex-wrap items-center gap-3">
+                {forwardStates.map((destino) => (
+                  <Button
+                    key={destino}
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setAdvanceTarget(destino)}
+                    className="font-semibold"
+                  >
+                    {t('advanceTo', { state: tBoard(`status_${destino}`) })}
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                ))}
+                {cancelable && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setCancelOpen(true)}
+                    className="font-semibold text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    {tBoard('cancelAction')}
+                  </Button>
                 )}
-                {project.fechaCierre && (
-                  <DetailField label={tBoard('closeDateLabel')}>
-                    {project.fechaCierre.slice(0, 10)}
-                  </DetailField>
+                {forwardStates.length === 0 && !cancelable && (
+                  <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground italic">
+                    <Lock className="w-3.5 h-3.5" />
+                    {t('noActionsAvailable')}
+                  </p>
                 )}
               </div>
-              {project.categorias.length > 0 && (
-                <DetailField label={tBoard('categoriesLabel')}>
-                  <ChipRow items={project.categorias} />
-                </DetailField>
-              )}
-              {project.tecnologias.length > 0 && (
-                <DetailField label={tBoard('technologiesLabel')}>
-                  <ChipRow items={project.tecnologias} />
-                </DetailField>
-              )}
-              {project.involucraIa && (
-                <ChipRow items={[tBoard('involvesAi')]} />
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          <Card className="border border-border/80 bg-card/40">
-            <CardContent className="p-6 space-y-4">
-              <SectionHeading>{t('manageTitle')}</SectionHeading>
-              {isPending ? (
-                <p className="text-sm text-muted-foreground italic">
-                  {tAccount('actionDisabledPending')}
-                </p>
-              ) : (
-                <div className="flex flex-wrap items-center gap-3">
-                  {forwardStates.map((destino) => (
-                    <Button
-                      key={destino}
-                      type="button"
-                      variant="secondary"
-                      onClick={() => setAdvanceTarget(destino)}
-                      className="font-semibold"
-                    >
-                      {t('advanceTo', { state: tBoard(`status_${destino}`) })}
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  ))}
-                  {cancelable && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setCancelOpen(true)}
-                      className="font-semibold text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <XCircle className="w-4 h-4" />
-                      {tBoard('cancelAction')}
-                    </Button>
-                  )}
-                  {forwardStates.length === 0 && !cancelable && (
-                    <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground italic">
-                      <Lock className="w-3.5 h-3.5" />
-                      {t('noActionsAvailable')}
-                    </p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <section className="space-y-5">
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold tracking-tight text-foreground font-heading flex items-center gap-2">
+              {t('participationsTitle')}
+              <span className="text-accent">.</span>
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t('participationsDesc')}
+            </p>
+          </div>
+          <ParticipationsPanel
+            result={participationsResult}
+            projectId={project.id}
+          />
+        </section>
 
+        {ENTREGABLES_VISIBLE_STATES.has(project.estado) && (
           <section className="space-y-5">
             <div className="space-y-1.5">
               <h2 className="text-xl font-bold tracking-tight text-foreground font-heading flex items-center gap-2">
-                {t('participationsTitle')}
+                <Package className="w-5 h-5 text-accent" />
+                {t('entregablesTitle')}
                 <span className="text-accent">.</span>
               </h2>
               <p className="text-sm text-muted-foreground">
-                {t('participationsDesc')}
+                {t('entregablesDesc')}
               </p>
             </div>
-            <ParticipationsPanel
-              result={participationsResult}
-              projectId={project.id}
-            />
+            <EntregablesEmpresario entregablesResult={entregablesResult} />
           </section>
-
-          {ENTREGABLES_VISIBLE_STATES.has(project.estado) && (
-            <section className="space-y-5">
-              <div className="space-y-1.5">
-                <h2 className="text-xl font-bold tracking-tight text-foreground font-heading flex items-center gap-2">
-                  <Package className="w-5 h-5 text-accent" />
-                  {t('entregablesTitle')}
-                  <span className="text-accent">.</span>
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {t('entregablesDesc')}
-                </p>
-              </div>
-              <EntregablesEmpresario entregablesResult={entregablesResult} />
-            </section>
-          )}
-        </main>
+        )}
       </div>
-
-      <Footer />
 
       <Dialog
         open={advanceTarget !== null}
@@ -415,7 +403,7 @@ export function ProjectDetailClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </CompanyShell>
   )
 }
 

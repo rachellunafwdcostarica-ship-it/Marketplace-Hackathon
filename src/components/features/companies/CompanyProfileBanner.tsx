@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
+import { Star } from 'lucide-react'
 import type { Company, CompanyStatus } from '@/types'
 
 const VERIF_BADGE: Record<
@@ -72,6 +73,22 @@ export function CompanyProfileBanner({ company }: CompanyProfileBannerProps) {
           <p className="text-xs text-primary-foreground/95 max-w-md drop-shadow-sm leading-relaxed">
             {company?.sector}
           </p>
+          {company?.reputacion !== undefined &&
+            company?.reputacion !== null && (
+              <div className="flex items-center gap-1.5 mt-1 text-primary-foreground/95 drop-shadow-sm">
+                <Star className="w-3.5 h-3.5 fill-highlight text-highlight shrink-0" />
+                <span className="text-xs font-bold font-heading">
+                  {company.reputacion > 0
+                    ? `${Number(company.reputacion).toFixed(1)} / 5.0`
+                    : t('noRatings')}
+                </span>
+                {company.reputacion > 0 && (
+                  <span className="text-[10px] opacity-85 font-medium font-sans">
+                    ({t('reputation')})
+                  </span>
+                )}
+              </div>
+            )}
         </div>
       </div>
 

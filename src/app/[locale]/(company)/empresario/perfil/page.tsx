@@ -53,6 +53,7 @@ export default async function CompanyProfilePage() {
     projectsCount: proyectos.length,
     contactEmail: p.contactEmail,
     website: p.website,
+    reputacion: p.reputacion ?? 0,
     createdAt: '',
     isProfileFilled: true,
   }
