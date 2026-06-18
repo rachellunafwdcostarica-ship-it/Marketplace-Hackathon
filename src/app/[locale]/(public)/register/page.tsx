@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
-import { Mail, User, Lock, ArrowRight } from 'lucide-react'
+import { Mail, User, Lock, ArrowRight, AlertTriangle } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { signUpWithPassword } from '@/lib/auth/actions'
 import { AuthCard } from '@/components/features/auth/AuthCard'
@@ -76,8 +76,19 @@ export default function RegisterPage() {
   })
 
   const passwordValue = watch('password')
+  const emailValue = watch('email')
+
+  const isEgresadoEmailInvalid =
+    selectedRole === 'egresado' &&
+    emailValue.trim().length > 0 &&
+    emailValue !== 'fwd@gmail.com'
 
   const onSubmit = async (data: RegisterFormValues) => {
+    // Bloqueo de seguridad: la UI ya muestra el aviso, pero esto evita que
+    // un correo no-FWD llegue al servidor si el usuario fuerza el submit.
+    if (selectedRole === 'egresado' && data.email !== 'fwd@gmail.com') {
+      return
+    }
     setLoading(true)
     setUserRole(selectedRole)
     const result = await signUpWithPassword({
@@ -209,7 +220,45 @@ export default function RegisterPage() {
                 {errors.email.message}
               </p>
             )}
+            {selectedRole === 'egresado' && !isEgresadoEmailInvalid && (
+              <p className="text-[11px] text-ink-subtle font-medium mt-1">
+                {tAuth('egresadoEmailHint')}
+              </p>
+            )}
           </div>
+
+          {/* Bloque de contacto: correo no-FWD para egresado */}
+          {isEgresadoEmailInvalid && (
+            <div className="rounded-xl border border-warning/40 bg-warning/5 p-4 space-y-2 text-left">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                <p className="text-xs font-bold text-warning">
+                  {tAuth('egresadoEmailInvalidTitle')}
+                </p>
+              </div>
+              <p className="text-xs text-ink-muted leading-relaxed">
+                {tAuth('egresadoEmailInvalidMsg')}
+              </p>
+              <div className="text-xs font-semibold text-ink space-y-0.5 pl-1">
+                <p>Forward Costa Rica</p>
+                <p>
+                  e.{' '}
+                  <span className="text-primary">
+                    {tAuth('egresadoContactEmail')}
+                  </span>
+                </p>
+                <p>
+                  t:{' '}
+                  <span className="text-primary">
+                    {tAuth('egresadoContactPhone')}
+                  </span>
+                </p>
+              </div>
+              <p className="text-xs text-ink-subtle">
+                {tAuth('egresadoContactSite')}
+              </p>
+            </div>
+          )}
 
           {/* Password */}
           <div className="space-y-1.5">
@@ -264,7 +313,7 @@ export default function RegisterPage() {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || isEgresadoEmailInvalid}
             className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
           >
             {loading ? tAuth('registering') : tAuth('createAccount')}
