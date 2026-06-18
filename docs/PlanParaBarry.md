@@ -301,6 +301,30 @@ halla la definición y el shim deprecado `StateContext.tsx`. **Ningún component
   (`DemoDataContext`/`StateContext`/`mockData`) + el layout `(app)`. No toca BD. Solo **confirmar 0 consumidores**
   en `(company)`/`(admin)` antes de borrar (aviso al equipo, no bloqueo).
 
+### P2.7 · Auditoría de duplicación y code-health — el copy-paste como bomba de tiempo
+El audit de este doc fue por **RF/feature**; **falta un barrido dedicado de duplicación / código muerto /
+implementaciones divergentes del mismo concepto**. Es criterio senior y transversal: un dev de módulo no ve
+el patrón que cruza módulos. (Ojo: "limpiar todo el código" sin criterio se vuelve un pozo sin fondo — esta
+tarea se acota a **duplicación + bombas de tiempo**, con herramienta y atada a CI.)
+
+- **Evidencia (punto de partida, no re-descubrir):**
+  - `catch`-swallow **copiado 25×** (P2.1); bug del trigger de reputación **literalmente duplicado** (P2.3,
+    `DELETE` incluido); casts `as unknown` repetidos que ocultan drift (P0.2).
+  - **[Seguro]** `src/lib/supabase/projects.ts` (CRUD de portafolio: `getProjects`/`createProject`/`updateProject`)
+    **no tiene importadores** → duplicado **muerto** de `lib/portfolio/actions.ts`.
+  - `StateContext.tsx` = re-export deprecado de `DemoDataContext` + `_orphans/*` (P2.6/P4); magic numbers
+    500/800 duplicados; "Marketplace FWD" ≥3 veces (un solo `BRAND_NAME`); toasts/strings hardcoded (P4).
+- **Qué dejar montado (Barry hace el audit + los fixes):**
+  1. Barrido con herramienta: `knip`/`ts-prune` (exports/archivos sin uso) + `jscpd` (copy-paste). **Son deps
+     fuera del brief §8.2** → justificar, o correrlas one-shot vía `npx` sin agregarlas a `package.json`.
+  2. Por cada duplicación: **extraer a una única fuente** (constante/util/módulo) y borrar las copias. Por
+     cada bomba latente, neutralizarla (CHECK, `unstable_rethrow`, atomicidad).
+  3. **Atar a CI lo automatizable** (P0.3): `knip`, un threshold de `jscpd`, `no-console`, smell de
+     `as unknown` — para que la duplicación no vuelva a crecer.
+- **Dependencias / coordinación:** **transversal — toca casi todos los módulos** → acordar el método con el
+  equipo y hacer PRs por módulo revisados por su dueño; la dedup cross-módulo y de triggers puede tocar BD →
+  **Samir**. Las herramientas (`knip`/`jscpd`) requieren visto bueno de dependencia (brief §8.2). No independiente.
+
 ---
 
 ## P3 — Features que requieren criterio senior antes de codear
