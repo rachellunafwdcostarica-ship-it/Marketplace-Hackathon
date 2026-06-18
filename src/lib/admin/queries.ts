@@ -421,22 +421,6 @@ export interface AdminProjectListItem {
   tecnologias: string[]
 }
 
-interface RawAdminProyecto {
-  id_proyecto: string
-  id_empresario: string
-  titulo: string
-  descripcion: string
-  estado: Database['public']['Enums']['estado_proyecto_enum']
-  modalidad: Database['public']['Enums']['modalidad_enum']
-  moneda: Database['public']['Enums']['moneda_enum']
-  presupuesto_min: number | null
-  presupuesto_max: number | null
-  fecha_publicacion: string | null
-  fecha_cierre: string | null
-  empresarios: { nombre_empresa: string | null } | null
-  proyecto_tecnologias: { tecnologias: { nombre: string } | null }[]
-}
-
 const ADMIN_PROYECTO_SELECT =
   'id_proyecto, id_empresario, titulo, descripcion, estado, modalidad, moneda, presupuesto_min, presupuesto_max, fecha_publicacion, fecha_cierre, empresarios(nombre_empresa), proyecto_tecnologias(tecnologias(nombre))'
 
@@ -467,8 +451,7 @@ export async function listAllProjectsForAdmin(): Promise<
     return err(error.message)
   }
 
-  // Cast: el typado de selects anidados de Supabase es poco confiable; mapeamos a mano.
-  const filas = (data ?? []) as unknown as RawAdminProyecto[]
+  const filas = data ?? []
   const proyectos: AdminProjectListItem[] = filas.map((p) => ({
     id_proyecto: p.id_proyecto,
     id_empresario: p.id_empresario,
@@ -682,7 +665,7 @@ export async function listProjectsForAdmin(
     return err(error.message)
   }
 
-  const filas = (data ?? []) as unknown as RawAdminProyecto[]
+  const filas = data ?? []
   const proyectos: AdminProjectListItem[] = filas.map((p) => ({
     id_proyecto: p.id_proyecto,
     id_empresario: p.id_empresario,

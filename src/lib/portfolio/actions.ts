@@ -70,21 +70,9 @@ export async function getStudentProfile(): Promise<
       return ok(null)
     }
 
-    // El join devuelve un objeto o arreglo según la relación; en 1:1 es un objeto.
-    const userInfo = estudiante.usuarios as unknown as {
-      nombre: string | null
-      apellido_1: string | null
-      apellido_2: string | null
-      foto_perfil: string | null
-    } | null
+    const userInfo = estudiante.usuarios
 
-    // Mapeo de habilidades
-    const rawSkills =
-      (estudiante.habilidades_tecnicas as unknown as Array<{
-        id_tecnologia: string
-        nivel: 'basico' | 'intermedio' | 'avanzado'
-        tecnologias: { nombre: string } | null
-      }>) || []
+    const rawSkills = estudiante.habilidades_tecnicas ?? []
 
     const skillsList = rawSkills.map((h) => ({
       id: h.id_tecnologia,
@@ -92,19 +80,7 @@ export async function getStudentProfile(): Promise<
       level: h.nivel,
     }))
 
-    // Mapeo de proyectos
-    const rawProjects =
-      (estudiante.proyectos_portafolio as unknown as Array<{
-        id_portafolio: string
-        titulo: string
-        descripcion: string | null
-        fecha: string | null
-        url_repositorio: string | null
-        url_demo: string | null
-        portafolio_tecnologias: Array<{
-          tecnologias: { nombre: string } | null
-        }> | null
-      }>) || []
+    const rawProjects = estudiante.proyectos_portafolio ?? []
 
     const projectsList = rawProjects.map((p) => {
       const techNames = (p.portafolio_tecnologias || [])

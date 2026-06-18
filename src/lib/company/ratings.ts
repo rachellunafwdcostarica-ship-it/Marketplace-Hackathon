@@ -71,13 +71,7 @@ export async function rateCompany(
     return err('contratacion_not_found')
   }
 
-  const part = contratacion.participaciones as unknown as {
-    id_estudiante: string
-    proyectos: {
-      id_empresario: string
-      id_proyecto: string
-    }
-  }
+  const part = contratacion.participaciones
   if (part.id_estudiante !== estudiante.id_estudiante) {
     return err('forbidden')
   }
@@ -227,7 +221,7 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
       comentario,
       evaluado_at,
       estudiantes!inner(
-        usuarios!inner(
+        usuarios!estudiantes_id_usuario_fkey(
           nombre,
           apellido_1,
           apellido_2
@@ -235,7 +229,7 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
       ),
       empresarios!inner(
         nombre_empresa,
-        usuarios!inner(
+        usuarios!empresarios_id_usuario_fkey(
           nombre,
           apellido_1,
           apellido_2
@@ -260,36 +254,7 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
   }
 
   const items: AdminRatingItem[] = (data || []).map((row) => {
-    const r = row as unknown as {
-      id_evaluacion: string
-      id_contratacion: string
-      puntuacion: number
-      comentario: string | null
-      evaluado_at: string
-      estudiantes: {
-        usuarios: {
-          nombre: string
-          apellido_1: string | null
-          apellido_2: string | null
-        }
-      }
-      empresarios: {
-        nombre_empresa: string | null
-        usuarios: {
-          nombre: string
-          apellido_1: string | null
-          apellido_2: string | null
-        }
-      }
-      contrataciones: {
-        participaciones: {
-          proyectos: {
-            titulo: string
-          } | null
-        } | null
-      } | null
-    }
-    const estUser = r.estudiantes.usuarios
+    const estUser = row.estudiantes.usuarios
     const nombreEgresado = [
       estUser.nombre,
       estUser.apellido_1,
@@ -298,25 +263,25 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
       .filter(Boolean)
       .join(' ')
 
-    const emp = r.empresarios
+    const emp = row.empresarios
     const empUser = emp.usuarios
     const repName = [empUser.nombre, empUser.apellido_1, empUser.apellido_2]
       .filter(Boolean)
       .join(' ')
     const nombreEmpresa = emp.nombre_empresa || repName
 
-    const proy = r.contrataciones?.participaciones?.proyectos
+    const proy = row.contrataciones?.participaciones?.proyectos
     const proyectoTitulo = proy?.titulo || 'Calificación General'
 
     return {
-      idEvaluacion: r.id_evaluacion,
-      idContratacion: r.id_contratacion,
+      idEvaluacion: row.id_evaluacion,
+      idContratacion: row.id_contratacion,
       proyectoTitulo,
       nombreEgresado,
       nombreEmpresa,
-      puntuacion: r.puntuacion,
-      comentario: r.comentario,
-      evaluadoAt: r.evaluado_at,
+      puntuacion: row.puntuacion,
+      comentario: row.comentario,
+      evaluadoAt: row.evaluado_at,
     }
   })
 
