@@ -21,7 +21,6 @@ import {
   LayoutDashboard,
   Send,
   MessageSquare,
-  Building2,
   HelpCircle,
 } from 'lucide-react'
 
@@ -84,15 +83,6 @@ export function SidebarEmpresaNuevo() {
       label: t('menuMensajes'),
       icon: MessageSquare,
       isActive: (path) => path.startsWith('/empresario/mensajes'),
-    },
-    {
-      id: 'perfil',
-      href: '/empresario/perfil',
-      label: t('menuPerfil'),
-      icon: Building2,
-      isActive: (path) =>
-        path.startsWith('/empresario/perfil') ||
-        path.startsWith('/empresario/formulario-empresa'),
     },
   ]
 
