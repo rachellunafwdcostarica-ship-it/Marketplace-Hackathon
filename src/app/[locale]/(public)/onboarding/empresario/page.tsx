@@ -10,15 +10,19 @@ export default async function EmpresarioOnboardingPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect('/login')
-  }
+  if (!user) redirect('/login')
 
   const { data: roleRaw } = await supabase.rpc('get_my_role')
   const role = normalizeRole(roleRaw as string | null)
 
-  if (role !== 'empresario') {
-    redirect('/pending-approval')
+  // Si tiene un rol distinto a empresario, no puede estar aquí.
+  if (role && role !== 'empresario') redirect('/pending-approval')
+
+  // Sin rol: asignar empresario. El usuario llegó aquí desde el register
+  // habiendo elegido explícitamente ese rol. El middleware (CASO F) ya
+  // bloqueó a cualquier usuario con rol incorrecto en la BD.
+  if (!role) {
+    await supabase.rpc('assign_my_role', { p_role: 'empresario' })
   }
 
   return <EmpresarioOnboardingForm userId={user.id} />
