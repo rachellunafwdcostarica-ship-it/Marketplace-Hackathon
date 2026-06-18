@@ -96,6 +96,66 @@ export function isParticipacionActionAllowed(
 }
 
 /**
+ * Una participación está "sellada" (sobre cerrado) mientras nadie la abrió:
+ * estado `enviada`. Abrirla la lleva a `en_revision` (acción `revisar`) y revela
+ * su contenido. Es la pieza de UI del flujo de sobres; el sello REAL lo impone el
+ * RPC `get_participaciones_de_proyecto`, que no devuelve el contenido de una
+ * `enviada` — acá solo decidimos cómo se PINTA la tarjeta.
+ */
+export function isParticipacionSealed(estado: EstadoParticipacion): boolean {
+  return estado === 'enviada'
+}
+
+/**
+ * El empresario solo puede ABRIR sobres mientras el proyecto sigue recibiendo o
+ * evaluando ofertas. Tras adjudicar o cerrar ya no tiene sentido revisar, así que
+ * los sobres que quedaron sellados se muestran pero su botón "Abrir" desaparece.
+ */
+export function canOpenParticipacion(
+  estadoProyecto: EstadoEfectivoProyecto,
+): boolean {
+  return (
+    estadoProyecto === 'abierto' ||
+    estadoProyecto === 'en_recepcion' ||
+    estadoProyecto === 'en_evaluacion'
+  )
+}
+
+/**
+ * Estado EFECTIVO de una participación de cara al estudiante (RF-32), DERIVADO al
+ * leer — la columna `estado` no se toca. Mismo patrón que
+ * `computeEstadoEfectivoProyecto`: cuando un proyecto ya se decidió o se cerró,
+ * las ofertas que quedaron "vivas" (`enviada`/`en_revision`) no tienen futuro,
+ * pero la máquina de estados PROHÍBE el salto directo `enviada -> no_seleccionada`
+ * (migración `flujo_b_maquina_estados`, decisión de Santiago). En vez de mutarlas
+ * con una transición ilegal, derivamos lo que el estudiante VE:
+ *   - proyecto adjudicado / en_desarrollo / finalizado -> `no_seleccionada`
+ *   - proyecto cancelado                               -> `cancelada`
+ * Las participaciones ya terminales y los proyectos aún vivos se devuelven igual.
+ */
+export function computeEstadoParticipacionEfectivo(
+  estadoParticipacion: EstadoParticipacion,
+  estadoProyecto: EstadoProyecto,
+): EstadoParticipacion {
+  if (
+    estadoParticipacion !== 'enviada' &&
+    estadoParticipacion !== 'en_revision'
+  ) {
+    return estadoParticipacion
+  }
+  switch (estadoProyecto) {
+    case 'adjudicado':
+    case 'en_desarrollo':
+    case 'finalizado':
+      return 'no_seleccionada'
+    case 'cancelado':
+      return 'cancelada'
+    default:
+      return estadoParticipacion
+  }
+}
+
+/**
  * Filtros del panel de participaciones. Son LENTES, no particiones: se solapan
  * a propósito (`rechazados` y `contratados` también caen en `revisadas`).
  */

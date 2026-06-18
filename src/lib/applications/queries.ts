@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/dal'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
+import { computeEstadoParticipacionEfectivo } from '@/lib/projects/project-detail-logic'
 import type { PostulacionPropia } from '@/components/features/applications/PostulacionCard'
 
 export interface MisPostulacionesStats {
@@ -37,7 +38,7 @@ export async function getMisPostulacionesStats(): Promise<
 
   const { data, error } = await supabase
     .from('participaciones')
-    .select('estado')
+    .select('estado, proyectos(estado)')
     .eq('id_estudiante', estudiante.id_estudiante)
 
   if (error) {
@@ -47,13 +48,20 @@ export async function getMisPostulacionesStats(): Promise<
     return err('unexpected')
   }
 
-  const filas = data ?? []
-  const total = filas.length
-  const activas = filas.filter(
-    (f) => f.estado === 'enviada' || f.estado === 'en_revision',
+  // Estado EFECTIVO (RF-32): una oferta viva sobre un proyecto ya cerrado se
+  // cuenta como cerrada, no como activa. Misma derivación que la lista.
+  const estados = (data ?? []).map((f) => {
+    const proyectoEstado = f.proyectos?.estado ?? null
+    return proyectoEstado
+      ? computeEstadoParticipacionEfectivo(f.estado, proyectoEstado)
+      : f.estado
+  })
+  const total = estados.length
+  const activas = estados.filter(
+    (e) => e === 'enviada' || e === 'en_revision',
   ).length
-  const contratadas = filas.filter(
-    (f) => f.estado === 'contratada' || f.estado === 'finalizada',
+  const contratadas = estados.filter(
+    (e) => e === 'contratada' || e === 'finalizada',
   ).length
 
   return ok({ total, activas, contratadas })
@@ -99,6 +107,7 @@ export async function getMisPostulaciones(): Promise<
       fecha_postulacion,
       proyectos (
         titulo,
+        estado,
         id_empresario,
         empresarios (
           nombre_empresa
@@ -121,6 +130,8 @@ export async function getMisPostulaciones(): Promise<
       ? (p.proyectos?.empresarios[0]?.nombre_empresa ?? 'Empresa Desconocida')
       : (p.proyectos?.empresarios?.nombre_empresa ?? 'Empresa Desconocida')
 
+    const proyectoEstado = p.proyectos?.estado ?? null
+
     return {
       id_participacion: p.id_participacion,
       id_proyecto: p.id_proyecto,
@@ -128,6 +139,9 @@ export async function getMisPostulaciones(): Promise<
       companyName,
       carta_postulacion: p.carta_postulacion,
       estado: p.estado,
+      estadoEfectivo: proyectoEstado
+        ? computeEstadoParticipacionEfectivo(p.estado, proyectoEstado)
+        : p.estado,
       fecha_postulacion: p.fecha_postulacion,
     }
   })

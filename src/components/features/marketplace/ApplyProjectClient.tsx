@@ -18,8 +18,7 @@ import * as zod from 'zod'
 import { toast } from 'sonner'
 import { ArrowLeft, Send, FileText, UploadCloud } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { postularse } from '@/lib/applications/actions'
+import { postularse, subirArchivoPostulacion } from '@/lib/applications/actions'
 
 type ApplyFormValues = zod.infer<ReturnType<typeof createApplySchema>>
 
@@ -80,42 +79,41 @@ export function ApplyProjectClient({
     },
   })
 
+  const subirArchivo = async (
+    archivo: File,
+    tipo: 'prototipo' | 'documentacion',
+  ): Promise<string | null> => {
+    const formData = new FormData()
+    formData.append('archivo', archivo)
+    formData.append('id_proyecto', projectId)
+    formData.append('tipo', tipo)
+    const res = await subirArchivoPostulacion(formData)
+    return res.ok ? res.data.url : null
+  }
+
   const onSubmit = async (data: ApplyFormValues) => {
     setIsSubmitting(true)
-    const supabase = createSupabaseBrowserClient()
 
     let uploadedPrototypeUrl = ''
     let uploadedTechDocUrl = ''
 
     try {
       if (prototypeFile) {
-        const fileExt = prototypeFile.name.split('.').pop()
-        const fileName = `${projectId}-${Date.now()}-proto.${fileExt}`
-        const { data: uploadData, error } = await supabase.storage
-          .from('prototipos')
-          .upload(fileName, prototypeFile)
-        if (error) throw new Error(tEgresado('prototypeUploadError'))
-        if (uploadData) {
-          const { data: publicUrlData } = supabase.storage
-            .from('prototipos')
-            .getPublicUrl(uploadData.path)
-          uploadedPrototypeUrl = publicUrlData.publicUrl
+        const url = await subirArchivo(prototypeFile, 'prototipo')
+        if (!url) {
+          toast.error(tEgresado('prototypeUploadError'))
+          return
         }
+        uploadedPrototypeUrl = url
       }
 
       if (technicalDocFile) {
-        const fileExt = technicalDocFile.name.split('.').pop()
-        const fileName = `${projectId}-${Date.now()}-doc.${fileExt}`
-        const { data: uploadData, error } = await supabase.storage
-          .from('prototipos')
-          .upload(fileName, technicalDocFile)
-        if (error) throw new Error(tEgresado('docUploadError'))
-        if (uploadData) {
-          const { data: publicUrlData } = supabase.storage
-            .from('prototipos')
-            .getPublicUrl(uploadData.path)
-          uploadedTechDocUrl = publicUrlData.publicUrl
+        const url = await subirArchivo(technicalDocFile, 'documentacion')
+        if (!url) {
+          toast.error(tEgresado('docUploadError'))
+          return
         }
+        uploadedTechDocUrl = url
       }
 
       const enlaces = []
@@ -137,6 +135,9 @@ export function ApplyProjectClient({
           proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
           plazo_vencido: tEgresado('applyErrorPlazoVencido'),
           proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
+          estudiante_not_found: tEgresado('applyErrorPerfil'),
+          unauthenticated: tEgresado('applyErrorSesion'),
+          database_error: tEgresado('applyErrorDatabase'),
         }
         toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
       } else {

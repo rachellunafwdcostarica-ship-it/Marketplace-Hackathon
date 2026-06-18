@@ -37,6 +37,9 @@
   --duration-fast: 160ms;
   --duration-base: 220ms;
   --duration-slow: 320ms;
+  /* Extensión propia: ritmo más pausado para el cross-fade del carrusel.
+     Deriva de la escala de motion FWD (§5.4), no reemplaza ningún token base. */
+  --duration-slower: 550ms;
 
   --shadow-soft: 0 1px 2px oklch(0.55 0.16 245 / 0.04), 0 4px 12px oklch(0.55 0.16 245 / 0.06);
   --shadow-elevated: 0 4px 8px oklch(0.55 0.16 245 / 0.06), 0 16px 32px oklch(0.55 0.16 245 / 0.1);
@@ -154,7 +157,7 @@ body {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 0.55s ease-in-out;
+  transition: opacity var(--duration-slower) var(--ease-in-out);
   pointer-events: none;
 }
 
@@ -191,17 +194,19 @@ body {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 50%;
-  background: oklch(1 0 0 / 0.82);
+  background: oklch(1 0.003 245 / 0.82);
   border: none;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 12px oklch(0.3 0.05 245 / 0.18);
-  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition: background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
   color: var(--primary);
 }
 
 .fwd-carousel__btn:hover {
-  background: oklch(1 0 0 / 0.97);
+  background: oklch(1 0.003 245 / 0.97);
   transform: translateY(-50%) scale(1.08);
   box-shadow: 0 4px 20px oklch(0.3 0.05 245 / 0.22);
 }
@@ -237,9 +242,11 @@ body {
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  background: oklch(1 0 0 / 0.45);
+  background: oklch(1 0.003 245 / 0.45);
   padding: 0;
-  transition: background 0.3s, transform 0.3s, width 0.3s;
+  transition: background var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out),
+    width var(--duration-slow) var(--ease-out);
 }
 
 .fwd-carousel__dot--active {
@@ -248,4 +255,3 @@ body {
   border-radius: 4px;
   transform: none;
 }
-
