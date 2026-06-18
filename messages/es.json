@@ -167,7 +167,13 @@
     "registering": "Registrando...",
     "sending": "Enviando...",
     "backToLogin": "Volver al inicio de sesión",
-    "errorUnexpected": "Ocurrió un error inesperado. Intentá de nuevo."
+    "errorUnexpected": "Ocurrió un error inesperado. Intentá de nuevo.",
+    "egresadoEmailHint": "Usá tu correo institucional de FWD: fwd@gmail.com",
+    "egresadoEmailInvalidTitle": "Correo no registrado en FWD Costa Rica",
+    "egresadoEmailInvalidMsg": "Si ya no tenés acceso a tu correo institucional de FWD, comunicáte directamente con Forward Costa Rica:",
+    "egresadoContactEmail": "contacto@fwdcostarica.com",
+    "egresadoContactPhone": "+506 7202 5228",
+    "egresadoContactSite": "o visitá el site FWD más cercano."
   },
   "Common": {
     "loading": "Cargando...",
@@ -933,8 +939,11 @@
   "Account": {
     "pendingBanner": "Tu cuenta está pendiente de aprobación por el equipo FWD. Las acciones se habilitarán una vez aprobada.",
     "actionDisabledPending": "Tu cuenta debe ser aprobada por un administrador para realizar esta acción.",
+    "pendingEyebrow": "EN REVISIÓN",
     "pendingTitle": "Cuenta pendiente de aprobación",
-    "pendingDesc": "El equipo FWD revisará tu solicitud. Te notificaremos cuando tu cuenta esté activa."
+    "pendingDesc": "El equipo FWD revisará tu solicitud. Te notificaremos por correo cuando tu cuenta esté activa.",
+    "pendingEgresadoMsg": "Tu correo está siendo cotejado con la base de datos de egresados de FWD Costa Rica. Una vez validada tu condición, recibirás un correo de confirmación.",
+    "pendingEmpresarioMsg": "Tu perfil empresarial está siendo revisado por el equipo FWD. Una vez aprobado, recibirás un correo de confirmación y podrás publicar proyectos."
   },
   "Notifications": {
     "title": "Notificaciones",
