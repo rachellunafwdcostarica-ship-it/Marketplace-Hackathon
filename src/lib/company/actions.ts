@@ -344,15 +344,7 @@ export async function createSupportTicket(
       return err('unauthorized')
     }
 
-    const client = supabase as unknown as {
-      from: (table: 'soporte_tickets') => {
-        insert: (data: {
-          id_usuario: string
-          descripcion: string
-        }) => Promise<{ error: { message: string } | null }>
-      }
-    }
-    const { error } = await client.from('soporte_tickets').insert({
+    const { error } = await supabase.from('soporte_tickets').insert({
       id_usuario: user.id,
       descripcion: parsed.data,
     })
@@ -382,38 +374,12 @@ export async function getSupportTickets(): Promise<Result<SupportTicket[]>> {
       return err('forbidden')
     }
 
-    interface DatabaseTicketRow {
-      id_ticket: string
-      id_usuario: string
-      descripcion: string
-      created_at: string
-      usuarios: {
-        nombre: string | null
-        correo: string | null
-        empresarios: {
-          nombre_empresa: string | null
-        } | null
-      } | null
-    }
-
     const supabase = await createSupabaseServerClient()
-    const client = supabase as unknown as {
-      from: (table: 'soporte_tickets') => {
-        select: (query: string) => {
-          order: (
-            col: string,
-            options: { ascending: boolean },
-          ) => Promise<{
-            data: DatabaseTicketRow[] | null
-            error: { message: string } | null
-          }>
-        }
-      }
-    }
-
-    const { data, error } = await client
+    const { data, error } = await supabase
       .from('soporte_tickets')
-      .select('*, usuarios(nombre, correo, empresarios(nombre_empresa))')
+      .select(
+        '*, usuarios(nombre, correo, empresarios!empresarios_id_usuario_fkey(nombre_empresa))',
+      )
       .order('created_at', { ascending: false })
 
     if (error) {
