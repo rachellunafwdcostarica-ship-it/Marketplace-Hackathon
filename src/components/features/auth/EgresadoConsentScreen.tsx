@@ -10,7 +10,7 @@ import { AuthCard } from '@/components/features/auth/AuthCard'
 import { assignRole } from '@/lib/auth/actions'
 import { registrarConsentimientoCotejo } from '@/lib/auth/actions'
 
-export function EgresadoOnboardingForm() {
+export function EgresadoConsentScreen() {
   const tO = useTranslations('Onboarding')
   const router = useRouter()
 

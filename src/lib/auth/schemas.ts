@@ -26,7 +26,7 @@ export type SignInInput = z.infer<typeof SignInSchema>
 export const SaveEmpresarioProfileSchema = z.object({
   nombre: z.string().min(2).max(80),
   primer_apellido: z.string().min(2).max(80),
-  segundo_apellido: z.string().max(80),
+  segundo_apellido: z.string().max(80).optional(),
   fecha_nacimiento: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)

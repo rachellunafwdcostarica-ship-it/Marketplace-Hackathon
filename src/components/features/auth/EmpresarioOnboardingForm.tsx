@@ -9,6 +9,10 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { User, Upload, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { AuthCard } from '@/components/features/auth/AuthCard'
+import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { saveEmpresarioProfile } from '@/lib/auth/actions'
 
@@ -37,13 +41,22 @@ export function EmpresarioOnboardingForm({
   const schema = useMemo(
     () =>
       z.object({
-        nombre: z.string().min(2, tO('fieldMin2')).max(80),
-        primer_apellido: z.string().min(2, tO('fieldMin2')).max(80),
-        segundo_apellido: z.string().min(1, tO('fieldRequired')).max(80),
+        nombre: z
+          .string()
+          .min(2, tO('errorNombre'))
+          .max(80, tO('errorNombreMax')),
+        primer_apellido: z
+          .string()
+          .min(2, tO('errorPrimerApellido'))
+          .max(80, tO('errorPrimerApellidoMax')),
+        segundo_apellido: z
+          .string()
+          .max(80, tO('errorSegundoApellidoMax'))
+          .optional(),
         fecha_nacimiento: z
           .string()
-          .min(1, tO('fieldRequired'))
-          .regex(/^\d{4}-\d{2}-\d{2}$/, tO('invalidDate'))
+          .min(1, tO('errorFechaNacimiento'))
+          .regex(/^\d{4}-\d{2}-\d{2}$/, tO('errorFechaFormato'))
           .refine((val) => {
             const birth = new Date(val + 'T00:00:00')
             const now = new Date()
@@ -54,18 +67,24 @@ export function EmpresarioOnboardingForm({
               (age === 18 &&
                 (m > 0 || (m === 0 && now.getDate() >= birth.getDate())))
             )
-          }, tO('mustBe18')),
-        nombre_empresa: z.string().min(2, tO('fieldMin2')).max(150),
+          }, tO('errorMustBe18')),
+        nombre_empresa: z
+          .string()
+          .min(2, tO('errorNombreEmpresa'))
+          .max(150, tO('errorNombreEmpresaMax')),
         tipo_empresario: z.enum(['empresa_formal', 'emprendedor'], {
-          errorMap: () => ({ message: tO('fieldRequired') }),
+          errorMap: () => ({ message: tO('errorTipoEmpresario') }),
         }),
-        pais: z.string().min(2, tO('fieldMin2')).max(80),
-        ciudad: z.string().min(2, tO('fieldMin2')).max(80),
+        pais: z.string().min(2, tO('errorPais')).max(80, tO('errorPaisMax')),
+        ciudad: z
+          .string()
+          .min(2, tO('errorCiudad'))
+          .max(80, tO('errorCiudadMax')),
         alcance_operativo: z.enum(['nacional', 'internacional', 'ambos'], {
-          errorMap: () => ({ message: tO('fieldRequired') }),
+          errorMap: () => ({ message: tO('errorAlcance') }),
         }),
         acepta_terminos: z.boolean().refine((v) => v === true, {
-          message: tO('terminosRequired'),
+          message: tO('errorTerminos'),
         }),
       }),
     [tO],
@@ -144,225 +163,303 @@ export function EmpresarioOnboardingForm({
     toast.error(tO('profileSaveError'))
   }
 
+  const onInvalid = (formErrors: typeof errors) => {
+    // Buscar el primer campo con error y mostrar un toast específico.
+    const fieldOrder: (keyof typeof formErrors)[] = [
+      'nombre',
+      'primer_apellido',
+      'segundo_apellido',
+      'fecha_nacimiento',
+      'nombre_empresa',
+      'tipo_empresario',
+      'pais',
+      'ciudad',
+      'alcance_operativo',
+      'acepta_terminos',
+    ]
+    for (const field of fieldOrder) {
+      const msg = formErrors[field]?.message
+      if (msg) {
+        toast.error(msg)
+        return
+      }
+    }
+    toast.error(tO('errorSubmitFields'))
+  }
+
   const inputClass =
-    'w-full h-10 rounded-lg border border-input bg-background px-3 text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow duration-[var(--duration-fast)] ease-[var(--ease-out)]'
+    'pl-0 h-12 rounded-xl bg-surface-sunken/50 border-border focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all'
+  const inputErrorClass =
+    'pl-0 h-12 rounded-xl bg-surface-sunken/50 border-destructive focus-visible:ring-1 focus-visible:ring-destructive focus-visible:border-destructive transition-all'
   const selectClass =
-    'w-full h-10 rounded-lg border border-input bg-background px-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow duration-[var(--duration-fast)] ease-[var(--ease-out)] cursor-pointer'
-  const labelClass = 'block text-xs font-semibold text-ink-muted mb-1.5'
+    'w-full h-12 rounded-xl border border-border bg-surface-sunken/50 px-3 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] cursor-pointer'
+  const selectErrorClass =
+    'w-full h-12 rounded-xl border border-destructive bg-surface-sunken/50 px-3 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-destructive focus:border-destructive transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] cursor-pointer'
+  const labelClass = 'text-xs font-bold text-ink uppercase tracking-wider'
   const errorClass = 'text-xs font-semibold text-destructive mt-1'
+  const sectionHeadingClass =
+    'text-[10px] font-bold uppercase tracking-widest text-ink-subtle border-b border-border pb-2 mb-4'
 
   return (
-    <div className="w-full max-w-xl mx-auto py-8 px-4">
-      <div className="space-y-2 text-center mb-8">
-        <p className="text-xs font-bold uppercase tracking-widest text-ink-subtle">
-          {tO('sectionPersonal')}
-        </p>
-        <h1 className="text-2xl font-bold font-heading text-ink-strong">
-          {tO('empresarioTitle')}
-          <span className="text-primary">.</span>
-        </h1>
-        <p className="text-sm text-ink-muted">{tO('empresarioSubtitle')}</p>
-      </div>
+    <AuthCard wide>
+      <div className="space-y-6">
+        <AuthHeader
+          welcomeText={tO('sectionPersonal')}
+          title={tO('empresarioTitle')}
+          subtitle={tO('empresarioSubtitle')}
+        />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8" noValidate>
-        {/* ── Datos personales ── */}
-        <section className="space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-ink-subtle border-b border-border pb-2">
-            {tO('sectionPersonal')}
-          </h2>
+        <form
+          onSubmit={handleSubmit(onSubmit, onInvalid)}
+          className="space-y-8"
+          noValidate
+        >
+          {/* ── Datos personales ── */}
+          <section className="space-y-4">
+            <p className={sectionHeadingClass}>{tO('sectionPersonal')}</p>
 
-          {/* Foto de perfil */}
-          <div>
-            <span className={labelClass}>{tO('labelFotoPerfil')}</span>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0">
-                {fotoPreview ? (
-                  <img
-                    src={fotoPreview}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-7 h-7 text-ink-subtle" />
+            {/* Foto de perfil — opcional */}
+            <div className="space-y-1.5">
+              <Label className={labelClass}>
+                {tO('labelFotoPerfil')}
+                <span className="ml-1 text-ink-subtle font-normal normal-case tracking-normal">
+                  (opcional)
+                </span>
+              </Label>
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-surface-sunken border border-border flex items-center justify-center overflow-hidden shrink-0">
+                  {fotoPreview ? (
+                    <img
+                      src={fotoPreview}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-7 h-7 text-ink-subtle" />
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={photoUploading}
+                    className="rounded-xl h-9 text-xs font-bold border-border hover:bg-surface-sunken"
+                  >
+                    <Upload className="w-3.5 h-3.5 mr-1.5" />
+                    {photoUploading ? tO('fotoUploading') : tO('fotoUpload')}
+                  </Button>
+                  <p className="text-[11px] text-ink-subtle">
+                    {tO('fotoHint')}
+                  </p>
+                </div>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className={labelClass}>{tO('labelNombre')}</Label>
+                <Input
+                  {...register('nombre')}
+                  type="text"
+                  autoComplete="given-name"
+                  placeholder={tO('labelNombre')}
+                  className={errors.nombre ? inputErrorClass : inputClass}
+                />
+                {errors.nombre && (
+                  <p className={errorClass}>{errors.nombre.message}</p>
                 )}
               </div>
-              <div className="space-y-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={photoUploading}
-                  className="rounded-lg h-8 text-xs font-semibold"
-                >
-                  <Upload className="w-3.5 h-3.5 mr-1.5" />
-                  {photoUploading ? tO('fotoUploading') : tO('fotoUpload')}
-                </Button>
-                <p className="text-[11px] text-ink-subtle">{tO('fotoHint')}</p>
+
+              <div className="space-y-1.5">
+                <Label className={labelClass}>
+                  {tO('labelPrimerApellido')}
+                </Label>
+                <Input
+                  {...register('primer_apellido')}
+                  type="text"
+                  autoComplete="family-name"
+                  placeholder={tO('labelPrimerApellido')}
+                  className={
+                    errors.primer_apellido ? inputErrorClass : inputClass
+                  }
+                />
+                {errors.primer_apellido && (
+                  <p className={errorClass}>{errors.primer_apellido.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className={labelClass}>
+                  {tO('labelSegundoApellido')}
+                  <span className="ml-1 text-ink-subtle font-normal normal-case tracking-normal">
+                    (opcional)
+                  </span>
+                </Label>
+                <Input
+                  {...register('segundo_apellido')}
+                  type="text"
+                  placeholder={tO('labelSegundoApellido')}
+                  className={
+                    errors.segundo_apellido ? inputErrorClass : inputClass
+                  }
+                />
+                {errors.segundo_apellido && (
+                  <p className={errorClass}>
+                    {errors.segundo_apellido.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className={labelClass}>
+                  {tO('labelFechaNacimiento')}
+                </Label>
+                <Input
+                  {...register('fecha_nacimiento')}
+                  type="date"
+                  max={maxBirthDate}
+                  className={
+                    errors.fecha_nacimiento ? inputErrorClass : inputClass
+                  }
+                />
+                {errors.fecha_nacimiento && (
+                  <p className={errorClass}>
+                    {errors.fecha_nacimiento.message}
+                  </p>
+                )}
               </div>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </div>
+          </section>
 
-          {/* Nombre y apellidos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>{tO('labelNombre')}</label>
-              <input
-                {...register('nombre')}
+          {/* ── Datos de la empresa ── */}
+          <section className="space-y-4">
+            <p className={sectionHeadingClass}>{tO('sectionEmpresa')}</p>
+
+            <div className="space-y-1.5">
+              <Label className={labelClass}>{tO('labelNombreEmpresa')}</Label>
+              <Input
+                {...register('nombre_empresa')}
                 type="text"
-                autoComplete="given-name"
-                className={inputClass}
+                placeholder={tO('labelNombreEmpresa')}
+                className={errors.nombre_empresa ? inputErrorClass : inputClass}
               />
-              {errors.nombre && (
-                <p className={errorClass}>{errors.nombre.message}</p>
+              {errors.nombre_empresa && (
+                <p className={errorClass}>{errors.nombre_empresa.message}</p>
               )}
             </div>
 
-            <div>
-              <label className={labelClass}>{tO('labelPrimerApellido')}</label>
+            <div className="space-y-1.5">
+              <Label className={labelClass}>{tO('labelTipoEmpresario')}</Label>
+              <select
+                {...register('tipo_empresario')}
+                className={
+                  errors.tipo_empresario ? selectErrorClass : selectClass
+                }
+              >
+                <option value="">{tO('tipoSelectPlaceholder')}</option>
+                <option value="emprendedor">{tO('tipoEmprendedor')}</option>
+                <option value="empresa_formal">
+                  {tO('tipoEmpresaFormal')}
+                </option>
+              </select>
+              {errors.tipo_empresario && (
+                <p className={errorClass}>{errors.tipo_empresario.message}</p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className={labelClass}>{tO('labelPais')}</Label>
+                <Input
+                  {...register('pais')}
+                  type="text"
+                  autoComplete="country-name"
+                  placeholder={tO('labelPais')}
+                  className={errors.pais ? inputErrorClass : inputClass}
+                />
+                {errors.pais && (
+                  <p className={errorClass}>{errors.pais.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className={labelClass}>{tO('labelCiudad')}</Label>
+                <Input
+                  {...register('ciudad')}
+                  type="text"
+                  autoComplete="address-level2"
+                  placeholder={tO('labelCiudad')}
+                  className={errors.ciudad ? inputErrorClass : inputClass}
+                />
+                {errors.ciudad && (
+                  <p className={errorClass}>{errors.ciudad.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className={labelClass}>{tO('labelAlcance')}</Label>
+              <select
+                {...register('alcance_operativo')}
+                className={
+                  errors.alcance_operativo ? selectErrorClass : selectClass
+                }
+              >
+                <option value="">{tO('tipoSelectPlaceholder')}</option>
+                <option value="nacional">{tO('alcanceNacional')}</option>
+                <option value="internacional">
+                  {tO('alcanceInternacional')}
+                </option>
+                <option value="ambos">{tO('alcanceAmbos')}</option>
+              </select>
+              {errors.alcance_operativo && (
+                <p className={errorClass}>{errors.alcance_operativo.message}</p>
+              )}
+            </div>
+          </section>
+
+          {/* ── Términos y condiciones ── */}
+          <div className="space-y-1.5">
+            <label
+              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors ${
+                errors.acepta_terminos
+                  ? 'border-destructive bg-destructive/5'
+                  : 'border-border/80 bg-surface-sunken/40'
+              }`}
+            >
               <input
-                {...register('primer_apellido')}
-                type="text"
-                autoComplete="family-name"
-                className={inputClass}
+                type="checkbox"
+                {...register('acepta_terminos')}
+                className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
               />
-              {errors.primer_apellido && (
-                <p className={errorClass}>{errors.primer_apellido.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClass}>{tO('labelSegundoApellido')}</label>
-              <input
-                {...register('segundo_apellido')}
-                type="text"
-                className={inputClass}
-              />
-              {errors.segundo_apellido && (
-                <p className={errorClass}>{errors.segundo_apellido.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClass}>{tO('labelFechaNacimiento')}</label>
-              <input
-                {...register('fecha_nacimiento')}
-                type="date"
-                max={maxBirthDate}
-                className={inputClass}
-              />
-              {errors.fecha_nacimiento && (
-                <p className={errorClass}>{errors.fecha_nacimiento.message}</p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Datos de la empresa ── */}
-        <section className="space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-ink-subtle border-b border-border pb-2">
-            {tO('sectionEmpresa')}
-          </h2>
-
-          <div>
-            <label className={labelClass}>{tO('labelNombreEmpresa')}</label>
-            <input
-              {...register('nombre_empresa')}
-              type="text"
-              className={inputClass}
-            />
-            {errors.nombre_empresa && (
-              <p className={errorClass}>{errors.nombre_empresa.message}</p>
+              <span className="text-xs text-ink-muted leading-relaxed">
+                {tO('terminosLabel')}
+              </span>
+            </label>
+            {errors.acepta_terminos && (
+              <p className={errorClass}>{errors.acepta_terminos.message}</p>
             )}
           </div>
 
-          <div>
-            <label className={labelClass}>{tO('labelTipoEmpresario')}</label>
-            <select {...register('tipo_empresario')} className={selectClass}>
-              <option value="">{tO('tipoSelectPlaceholder')}</option>
-              <option value="emprendedor">{tO('tipoEmprendedor')}</option>
-              <option value="empresa_formal">{tO('tipoEmpresaFormal')}</option>
-            </select>
-            {errors.tipo_empresario && (
-              <p className={errorClass}>{errors.tipo_empresario.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>{tO('labelPais')}</label>
-              <input
-                {...register('pais')}
-                type="text"
-                autoComplete="country-name"
-                className={inputClass}
-              />
-              {errors.pais && (
-                <p className={errorClass}>{errors.pais.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className={labelClass}>{tO('labelCiudad')}</label>
-              <input
-                {...register('ciudad')}
-                type="text"
-                autoComplete="address-level2"
-                className={inputClass}
-              />
-              {errors.ciudad && (
-                <p className={errorClass}>{errors.ciudad.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>{tO('labelAlcance')}</label>
-            <select {...register('alcance_operativo')} className={selectClass}>
-              <option value="">{tO('tipoSelectPlaceholder')}</option>
-              <option value="nacional">{tO('alcanceNacional')}</option>
-              <option value="internacional">
-                {tO('alcanceInternacional')}
-              </option>
-              <option value="ambos">{tO('alcanceAmbos')}</option>
-            </select>
-            {errors.alcance_operativo && (
-              <p className={errorClass}>{errors.alcance_operativo.message}</p>
-            )}
-          </div>
-        </section>
-
-        {/* ── Términos y condiciones ── */}
-        <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border/80 bg-muted/20 p-3">
-          <input
-            type="checkbox"
-            {...register('acepta_terminos')}
-            className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
-          />
-          <span className="text-xs text-muted-foreground">
-            {tO('terminosLabel')}
-          </span>
-        </label>
-        {errors.acepta_terminos && (
-          <p className={errorClass}>{errors.acepta_terminos.message}</p>
-        )}
-
-        <Button
-          type="submit"
-          disabled={loading || photoUploading}
-          className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] cursor-pointer"
-        >
-          {loading ? tO('saving') : tO('saveProfile')}
-          {!loading && <ArrowRight className="w-4 h-4" />}
-        </Button>
-      </form>
-    </div>
+          <Button
+            type="submit"
+            disabled={loading || photoUploading}
+            className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-[var(--duration-base)] ease-[var(--ease-out)] cursor-pointer"
+          >
+            {loading ? tO('saving') : tO('saveProfile')}
+            {!loading && <ArrowRight className="w-4 h-4" />}
+          </Button>
+        </form>
+      </div>
+    </AuthCard>
   )
 }

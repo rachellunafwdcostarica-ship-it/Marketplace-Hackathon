@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { EgresadoOnboardingForm } from '@/components/features/auth/EgresadoOnboardingForm'
+import { EgresadoConsentScreen } from '@/components/features/auth/EgresadoConsentScreen'
 
 /**
  * Onboarding genérico: egresados y usuarios OAuth sin rol en BD todavía.
@@ -27,5 +27,5 @@ export default async function OnboardingPage() {
     redirect('/onboarding/empresario')
   }
 
-  return <EgresadoOnboardingForm />
+  return <EgresadoConsentScreen />
 }
