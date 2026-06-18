@@ -65,6 +65,10 @@ commitear el `.sql`** (probable `apply_migration` por MCP o push directo). El s�
   3. **Un solo dueño de BD** (Samir) y un flujo explícito PR → merge → apply.
 - **Acción `[Verificar]`:** diff completo `migration list` (remoto) vs `supabase/migrations/` (local) para
   confirmar que **no quedan OTRAS** remote-only. Hoy local = remoto = 35 tras `5a1cac5`, pero nada lo vigila.
+- **Dependencias / coordinación:** **NO independiente.** Es una convención que obliga a todos → hay que
+  **acordarla con el equipo**, en especial **Samir** (dueño de BD; la regla redefine quién aplica migraciones).
+  Toca archivos **compartidos** (`CLAUDE.md`/`README`); el step de CI vive en `.github/` (nuevo, sin dueño); el
+  `[Verificar]` necesita lectura de la BD remota (Samir).
 
 ### P0.2 · Barrido de casts `as unknown` que ocultan drift tipos↔BD
 **[Seguro]** Las dos bombas que se arreglaron en `5a1cac5` (`ratings.ts` apellidos, `soporte_tickets`) **no
@@ -83,6 +87,10 @@ patrón **aceptado** de Supabase — **esos no se tocan**.)
   necesita el hint. `ratings.ts:268` quedó con su cast aunque se corrigieron los nombres → primer candidato.
 - **Acompaña:** una regla de PR/lint que marque `as unknown as` sobre el cliente Supabase como *smell* a
   revisar (no prohibir: `jsonb` lo necesita).
+- **Dependencias / coordinación:** **toca archivos de ≥4 dueños [Probable]** — `publish.ts`/`dashboard.ts`
+  (Errol), `portfolio/actions.ts` (Rachel), `admin/queries.ts` (María del Sol), `ratings.ts`/`company` (Rony).
+  No toca BD. Por la regla del equipo ("no merge sin revisión colectiva"), hacerlo como **PRs chicos por módulo,
+  revisados por su dueño**, no un PR monolítico.
 
 ### P0.3 · No existe CI/CD — el DoD no se puede garantizar
 **[Seguro]** `Glob '.github/**'` = sin archivos. `package.json` define `lint`/`typecheck`/`test` pero
@@ -97,6 +105,10 @@ patrón **aceptado** de Supabase — **esos no se tocan**.)
 - **Atar aquí:** quitar `--passWithNoTests` de `package.json:16` (ya hay 13 archivos de test / ~123 casos; el CI
   no debe pasar en verde si los tests desaparecen) y agregar `coverage` con thresholds en `lib/` (reglas piden
   50% deseado en `lib/`). `vitest.config.ts` hoy no tiene bloque `coverage` ni `thresholds`.
+- **Dependencias / coordinación:** la **más independiente** — el workflow son archivos nuevos en
+  `.github/workflows/` (sin dueño). Compartidos de baja fricción: `package.json` y `vitest.config.ts`. Pero un
+  *required check* **bloquea los PRs de todos** → **acordarlo con el equipo**; puede arrancar como check
+  **no-bloqueante** y endurecerse luego. El step de paridad/`gen types` necesita que Samir confirme el comando.
 
 ---
 
@@ -118,6 +130,9 @@ notificaciones` en `supabase/` = 0; `.from('notificaciones').insert`/`.rpc(...no
   entregable), y `pg_cron`/Edge **solo** para avisos por tiempo (P1.2). **No** abrir una policy INSERT.
 - **Congelar el contrato de la fila `notificaciones` antes** de que cada módulo improvise. `DEPENDENCIAS-SAMIR.md`
   ya lo marca como decisión §13.4 pendiente de todo el equipo.
+- **Dependencias / coordinación:** **decisión de TODO el equipo** (es el contrato que cada módulo consume) +
+  **Samir** (BD: trigger/`service_role`). El *core* (un `lib/notifications/` productor) es greenfield que Barry
+  escribe; los consumidores (adjudicación, RF-33/39, ADM-4) lo cablean después.
 
 ### P1.2 · Scheduler temporal (cierre/vencimiento automático) — RF-33 y RF-35
 **[Seguro]** No hay productor temporal: `supabase/functions/` vacío, `grep pg_cron|cron.schedule` = 0, no existe
@@ -132,6 +147,8 @@ rechaza `plazo_vencido`). El cierre de estado al vencer (RF-35) hoy es **derivac
 - **Acción:** habilitar `pg_cron` en Supabase y agendar una función que transicione proyectos vencidos e inserte
   la notificación de vencimiento (vía P1.1). Para RF-33: job diario que avise a egresados con postulación
   `enviada`/`en_revision` en proyectos con `fecha_cierre` dentro de 24h.
+- **Dependencias / coordinación:** **Samir** (habilitar `pg_cron`/función en BD) + la decisión de estado-destino
+  del enum (atada a **P1.4**, con Fressia). Archivos **nuevos** (migración/función) — no toca módulos de otros.
 
 ### P1.3 · Atomicidad de la adjudicación — el nodo que sostiene media plataforma
 **[Seguro]** `adjudicarParticipacion` (`project-detail.ts:376-482`) hace **3 UPDATEs secuenciales sin
@@ -145,6 +162,8 @@ reconciliación** (el "admin recupera" del JSDoc no existe).
   máquina de estados (pasa por `en_revision`), pero la no-atomicidad es una bomba de consistencia.
 - **Acción de raíz:** mover los 3 UPDATEs a un **RPC `SECURITY DEFINER` transaccional** (una función Postgres,
   todo-o-nada). Elimina el estado `'adjudicacion_parcial'`. Requiere migración → coordinar con Samir.
+- **Dependencias / coordinación:** **Samir** (la migración del RPC) + **Errol** (el refactor cae en su
+  `project-detail.ts`). No independiente: toca BD y un archivo con dueño.
 
 ### P1.4 · Máquina de estados del proyecto sin red dura en BD — RF-24 y RF-25
 **[Seguro]** El guard de transiciones del proyecto vive **solo en TS** (`project-detail-logic.ts:37-63`
@@ -167,6 +186,8 @@ transiciones de proyecto").
   docs), así que **no hay bomba de runtime hoy** — es un gap enum-vs-SRS, no un crash. Decidir si el flujo
   entregable→revisión necesita el estado intermedio (entonces `ALTER TYPE ... ADD VALUE` en su propia migración)
   o si `en_desarrollo→finalizado` ya cubre. No agregar "por si acaso".
+- **Dependencias / coordinación:** **Samir** (trigger en BD) + **Errol** (módulo de proyectos:
+  `project-detail*.ts` y la ruta de edición de RF-24) + **Fressia** (decisión del estado-destino del enum, RF-35/41).
 
 ### P1.5 · Trazabilidad: `auditoria` sin escritor + motivo de suspensión/cancelación — ADM-3 y ADM-4
 **[Seguro]** La tabla `auditoria` **no tiene un solo escritor** (`from('auditoria')` en `src` = 0; en
@@ -182,6 +203,8 @@ migraciones solo índices y un comentario "se escribe del lado servidor" que nun
   historial con motivo (`strike-actions.ts:108` + `listStrikeAudit` en `queries.ts:801`) — no duplicar; dejar
   strikes como está y usar `auditoria` para el resto. Cerrar ADM-4 requiere además persistir
   `motivo_cancelacion` (la columna existe, `database.ts:229`) + notificar (depende de P1.1).
+- **Dependencias / coordinación:** **Samir** (trigger/migración de `auditoria`) + **María del Sol** (cablear en
+  sus acciones admin: `deactivateUser`, `cancelProjectAsAdmin`). Atado a **P1.1** para la notificación de ADM-4.
 
 ---
 
@@ -202,6 +225,9 @@ que **se traga las señales de framework** vive en 25 sitios: `marketplace.ts:95
   línea → mapear error real → log → `return err`) y aplicarla de una vez a los 25, no archivo por archivo cuando
   explote. `unstable_rethrow` es nativo de Next (`next/navigation`), no roza el stack §1. No usar
   `force-dynamic` en solitario (deja el `catch` frágil).
+- **Dependencias / coordinación:** los 25 catches viven en módulos de **varios dueños** (Errol en `projects/*` y
+  `proposal-ai/*`, Rachel en `portfolio`, `company`/Rony) → acordar el **patrón común** con el equipo y luego PRs
+  por módulo. No toca BD. El `[Verificar]` del marketplace vacío necesita `next start` (runtime).
 
 ### P2.2 · Seguridad de BD (advisors) — auditar `SECURITY DEFINER` y activar protección de contraseñas
 **[Seguro, vía MCP]** `get_advisors(security)`: 0 ERROR; **6 WARN** (5 funciones `SECURITY DEFINER` ejecutables
@@ -216,6 +242,8 @@ por `authenticated`: `assign_my_role`, `get_my_account_status`, `get_my_role`, `
 - **Performance (menor):** la policy `evaluaciones_empresarios_insert_estudiante` (tabla del 17-jun) quedó con
   `auth.uid()` **crudo**, no `(select auth.uid())` → re-evaluación por-fila. El patrón correcto ya está aplicado
   en el resto (`20260610212418`); a esta se le pasó. Fix de una línea en su WITH CHECK.
+- **Dependencias / coordinación:** **Samir** casi todo (auditar funciones `SECURITY DEFINER`, toggle de
+  `leaked-password` en el dashboard de Auth, migración del `initplan`). No toca módulos de app.
 
 ### P2.3 · Reputación: trigger `avg()` que no reacciona a DELETE (en AMBOS triggers)
 **[Seguro]** `recalcular_reputacion` (`20260608000005:147-153`, estudiante) y `recalcular_reputacion_empresario`
@@ -229,6 +257,8 @@ directo. **Borrar una evaluación nunca recalcula el promedio.** El trigger nuev
   `COALESCE(NEW.id_estudiante, OLD.id_estudiante)` / `COALESCE(NEW.id_empresario, OLD.id_empresario)`. Decidir la
   regla "¿se califica sobre vigente o solo finalizado?" y alinear `ratings.ts`. Cierra la cadena
   evaluación→reputación que ve el egresado al postular (RF-14, RF-51).
+- **Dependencias / coordinación:** **Samir** (migración de ambos triggers) + dueño de `ratings.ts` (la regla
+  "vigente vs finalizado" es decisión de negocio). Toca BD.
 
 ### P2.4 · Resiliencia y gobernanza del proveedor IA
 - **Punto único de fallo [Seguro]:** el generador de propuestas (RF-54, **entrada de TODO el marketplace**)
@@ -245,6 +275,8 @@ directo. **Borrar una evaluación nunca recalcula el promedio.** El trigger nuev
   `README.md:38-39` y `.env.local.example:31` citan el path viejo `src/lib/ai/` y vars `OPENAI_*`, cuando el
   código real vive en `src/lib/proposal-ai/` con vars `PROPOSAL_AI_*`. Decidir (mantener documentado vs `fetch`
   directo) y alinear las docs.
+- **Dependencias / coordinación:** **Errol** (dueño del agente IA: `proposal-ai/*`, provider) + **equipo**
+  (justificar/aceptar la dep `openai` fuera del brief §8.2). Toca docs compartidos (`README`, `.env.local.example`).
 
 ### P2.5 · RLS de visibilidad del portafolio (RF-10) — "Solo Empresas" es hoy una promesa falsa
 **[Seguro]** La policy `portafolio_select_own_or_public` (`20260610212418:536-547`) gatea por `is_active` y
@@ -255,6 +287,8 @@ controla.
 - **Acción (decisión senior):** (a) migración que agregue `AND portafolio_visible_publicamente` (vía join a
   `estudiantes`) al brazo público de la policy, **o** (b) enforcement explícito en la query de lectura de
   empresa. Elegir y documentar. **No** dejar solo el toggle de UI.
+- **Dependencias / coordinación:** **Samir** si se hace por migración de policy, **o** **Rachel** (portafolio) /
+  dueño de la lectura de empresa si es enforcement en la query. Decidir la vía primero.
 
 ### P2.6 · `DemoDataProvider` montado sin consumidores — wiring muerto sobre el motor mock
 **[Seguro]** `(app)/layout.tsx:46-51` aún envuelve en `<DemoDataProvider>`, pero `grep useDemoData` en `src` solo
@@ -263,6 +297,9 @@ halla la definición y el shim deprecado `StateContext.tsx`. **Ningún component
 - **Por qué Barry:** es transversal (toca el motor mock que las auditorías marcaban como raíz del problema) y
   desbloquea **borrar `DemoDataContext.tsx` + `StateContext.tsx` + `mockData.ts`** del repo. Confirmar 0
   consumidores en `(company)`/`(admin)` (el grep ya sugiere 0) y quitar el provider.
+- **Dependencias / coordinación:** de las más independientes — infra mock **compartida sin dueño claro**
+  (`DemoDataContext`/`StateContext`/`mockData`) + el layout `(app)`. No toca BD. Solo **confirmar 0 consumidores**
+  en `(company)`/`(admin)` antes de borrar (aviso al equipo, no bloqueo).
 
 ---
 
@@ -282,6 +319,8 @@ no existe en remoto; grep solo en `docs/pedido-RNF30-cotejo-egresados.md`). El p
   índice por correo/cédula, y cotejo determinista server-side (match correo+título). **O** documentar
   explícitamente que el MVP usa verificación manual asistida como **riesgo aceptado firmado**. No dejarlo
   implícito. `docs/pedido-RNF30-cotejo-egresados.md` ya especifica la tabla y el padrón para Errol/FWD.
+- **Dependencias / coordinación:** **externa a desarrollo** — el padrón lo tiene **FWD** (dato real) y la
+  tabla/datos los monta **Errol/Samir** (ver `pedido-RNF30`). Es decisión de **producto + datos**, no solo código.
 
 ### P3.2 · RF-61/RF-62 — recomendación y score de matching
 **[Seguro]** Sin implementar (grep de `recomendar|matching|afinidad|score` = 0 algoritmo; `lib/marketplace/`
@@ -293,6 +332,9 @@ por nº de coincidencias. RF-62 (**score explicable**) es lo de criterio:
   habilidad / reputación / `proyectos_completados`? ¿cómo se le explica al empresario? El SRS pide
   "EXPLICABLE". Implementar como **función pura en `lib/` con tests Vitest** (reglas §10). RF-62 depende de
   RF-61 para el conjunto candidato.
+- **Dependencias / coordinación:** de las más independientes — función pura **nueva en `lib/`** (greenfield +
+  Vitest) sobre tablas existentes (sin migración). Solo coordina al **mostrar** el resultado en la UI del
+  empresario (Errol). El algoritmo es criterio propio de Barry.
 
 ### P3.3 · RNF-35/37 — datos personales y derecho de supresión sin dueño
 **[Seguro]** No hay self-service de borrado/exportación para el titular del dato; solo `deleteUser`
@@ -301,6 +343,8 @@ administrativo. RNF de cumplimiento (protección de datos CR / Ley 8968) **sin r
 - **Decisión senior (toca retención legal vs integridad referencial):** no se puede borrar a secas una
   contratación cerrada. Definir alcance MVP: server action de auto-supresión que **anonimice** `usuarios` con
   cascada controlada respetando FKs (`contrataciones`/`evaluaciones`), + exportación del propio perfil.
+- **Dependencias / coordinación:** **Samir** (la anonimización en cascada toca FKs de todo el modelo) +
+  decisión **legal/producto** (retención vs supresión). La action es greenfield, pero su alcance no es independiente.
 
 ### P3.4 · RF-14 — historial del egresado con calificación
 **[Seguro]** `getStudentProfile` no lee `evaluaciones`/`reputacion` (grep en `lib/portfolio` = 0). **Trampa
@@ -311,6 +355,8 @@ egresado califica al empresario); **no** satisface RF-14 (empresa califica al eg
 - **Acción:** definir el contrato de lectura del portafolio (promedio `estudiantes.reputacion` + proyectos
   contratados con su nota de `evaluaciones.puntuacion`) y **stubbear con seed** para no bloquearse esperando el
   flujo de calificación de Fressia/Santiago. Depende de P2.3.
+- **Dependencias / coordinación:** **Rachel** (es su `getStudentProfile`/portafolio) + depende del flujo que
+  puebla `evaluaciones` (**Fressia/Santiago**). Stub con seed para no bloquearse.
 
 ### P3.5 · Decisiones menores con criterio (delegables con guía)
 - **RF-15 CV/portafolio a PDF (prioridad C):** **no** meter `jspdf`/`react-pdf` a la ligera (brief §8.2). Camino
@@ -322,6 +368,9 @@ egresado califica al empresario); **no** satisface RF-14 (empresa califica al eg
   server-side (params a `getMarketplaceProjects` con joins + índices ya creados). Es retrabajo, no ajuste.
 - **Mensajería (`mensajes`):** RLS habilitado **sin policies** = deny-all (estado seguro). Confirmar si es V2 o
   entra al MVP antes de tocar.
+- **Dependencias / coordinación:** cada sub-ítem es de su dueño — RF-15 PDF → **Rachel** (portafolio), RF-26
+  filtros → **Errol** (`MarketplaceClient`/`marketplace.ts`); **Mensajería** es decisión de alcance del **equipo**
+  (V2 vs MVP). De Barry, sobre todo el criterio de la dependencia PDF.
 
 ---
 
