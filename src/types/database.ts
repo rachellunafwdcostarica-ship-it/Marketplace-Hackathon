@@ -1401,7 +1401,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjudicar_participacion: {
+        Args: { p_id_participacion: string; p_id_proyecto: string }
+        Returns: undefined
+      }
       assign_my_role: { Args: { p_role: string }; Returns: boolean }
+      finalizar_proyecto_por_entregable: {
+        Args: { p_comentario: string; p_id_entregable: string }
+        Returns: undefined
+      }
       get_my_account_status: { Args: never; Returns: string }
       get_my_role: { Args: never; Returns: string }
       get_participaciones_de_proyecto: {
