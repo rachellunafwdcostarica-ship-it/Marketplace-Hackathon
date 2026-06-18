@@ -75,7 +75,12 @@ export async function GET(request: NextRequest) {
   const role = normalizeRole(roleRaw as string | null)
 
   if (role) {
-    // Usuario recurrente → ir a su home
+    // Verificar estado de cuenta antes de redirigir al home.
+    // Una cuenta 'pendiente' va a la pantalla de espera aunque tenga rol.
+    const { data: accountStatus } = await supabase.rpc('get_my_account_status')
+    if (accountStatus !== 'activa') {
+      return NextResponse.redirect(`${origin}/${locale}/pending-approval`)
+    }
     return NextResponse.redirect(`${origin}/${locale}${ROLE_HOME[role]}`)
   }
 

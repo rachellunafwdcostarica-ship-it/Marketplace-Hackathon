@@ -10,8 +10,6 @@ import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { RoleCard } from '@/components/features/auth/RoleCard'
 import { assignRole, registrarConsentimientoCotejo } from '@/lib/auth/actions'
-import { ROLE_HOME } from '@/lib/auth/roles'
-import type { UserRole } from '@/types'
 
 type OnboardingRole = 'egresado' | 'empresario'
 
@@ -53,9 +51,10 @@ export function OnboardingRoleForm({ initialRole }: OnboardingRoleFormProps) {
     setLoading(false)
 
     if (result.ok || result.error === 'role_already_assigned') {
-      // Idempotente: si ya tenía rol, ir a su home igualmente. El egresado
-      // usa '' (raíz localizada), así que se normaliza a '/' para el router.
-      router.push(ROLE_HOME[selected as UserRole] || '/')
+      // Independientemente del rol, el usuario queda en estado 'pendiente'
+      // hasta que un admin lo apruebe. El middleware garantiza que no pueda
+      // entrar al sistema desde esta página.
+      router.push('/pending-approval')
       return
     }
 
