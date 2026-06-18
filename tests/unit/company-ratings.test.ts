@@ -32,6 +32,7 @@ describe('Company Ratings Server Actions', () => {
   it('debería retornar error de validación (invalid_input) si los parámetros son inválidos', async () => {
     const res = await rateCompany({
       idEmpresario: 'no-es-uuid',
+      idContratacion: 'no-es-uuid',
       puntuacion: 99,
       comentario: 'x',
     })
@@ -46,6 +47,7 @@ describe('Company Ratings Server Actions', () => {
 
     const res = await rateCompany({
       idEmpresario: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      idContratacion: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       puntuacion: 4,
     })
     expect(res.ok).toBe(false)
@@ -71,6 +73,7 @@ describe('Company Ratings Server Actions', () => {
 
     const res = await rateCompany({
       idEmpresario: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      idContratacion: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       puntuacion: 5,
     })
     expect(res.ok).toBe(false)
@@ -187,7 +190,7 @@ describe('Company Ratings Server Actions', () => {
     }
   })
 
-  it('debería retornar error si el contrato no se encuentra en estado finalizado o vigente', async () => {
+  it('debería retornar error si el contrato no se encuentra en estado finalizado', async () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockSupabase = {
       auth: {
