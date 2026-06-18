@@ -4,11 +4,11 @@ import { logger } from '@/lib/logger'
 export interface ValidationInput {
   projectTitle: string
   projectDescription: string
-  coverLetter?: string
+  coverLetter?: string | undefined
   solutionApproach: string
-  externalLink?: string | null
-  uploadedPrototypeUrl?: string | null
-  technicalDocUrl?: string | null
+  externalLink?: string | null | undefined
+  uploadedPrototypeUrl?: string | null | undefined
+  technicalDocUrl?: string | null | undefined
 }
 
 export interface ValidationResult {
@@ -77,7 +77,7 @@ Devuelve EXCLUSIVAMENTE un JSON con el siguiente formato, sin texto adicional ni
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
         'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL ?? 'https://fwd.com',
-        'X-Title': 'FWD Marketplace – Filtro de Postulaciones',
+        'X-Title': 'FWD Marketplace - Filtro de Postulaciones',
       },
       signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
@@ -104,9 +104,7 @@ Devuelve EXCLUSIVAMENTE un JSON con el siguiente formato, sin texto adicional ni
     const data: unknown = await res.json()
 
     const responseText =
-      data !== null &&
-      typeof data === 'object' &&
-      'choices' in data
+      data !== null && typeof data === 'object' && 'choices' in data
         ? (
             data as {
               choices?: { message?: { content?: string } }[]
@@ -126,10 +124,9 @@ Devuelve EXCLUSIVAMENTE un JSON con el siguiente formato, sin texto adicional ni
     const parsed = aiResponseSchema.safeParse(JSON.parse(responseText))
 
     if (!parsed.success) {
-      logger.error(
-        'validateApplicationWithAI: formato de respuesta inválido',
-        { error: parsed.error.message },
-      )
+      logger.error('validateApplicationWithAI: formato de respuesta inválido', {
+        error: parsed.error.message,
+      })
       return { isRelated: true, problematicFields: [], reason: 'Parse error' }
     }
 
