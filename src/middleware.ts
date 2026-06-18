@@ -26,8 +26,15 @@ function isPublicAuthPage(pathname: string): boolean {
   )
 }
 
+function isEmpresarioSetupPath(pathname: string): boolean {
+  return /^\/(es|en)\/onboarding\/empresario(\/|$)/.test(pathname)
+}
+
 function isOnboardingPath(pathname: string): boolean {
-  return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
+  return (
+    /^\/(es|en)\/onboarding(\/|$)/.test(pathname) &&
+    !isEmpresarioSetupPath(pathname)
+  )
 }
 
 function isPendingApprovalPath(pathname: string): boolean {
@@ -108,7 +115,8 @@ export async function middleware(request: NextRequest) {
     isProtected(pathname) ||
     isPublicAuthPage(pathname) ||
     isOnboardingPath(pathname) ||
-    isPendingApprovalPath(pathname)
+    isPendingApprovalPath(pathname) ||
+    isEmpresarioSetupPath(pathname)
   ) {
     const [{ data: accountStatus }, { data: usuarioRow }] = await Promise.all([
       supabase.rpc('get_my_account_status'),
@@ -243,6 +251,28 @@ export async function middleware(request: NextRequest) {
         )
       }
     }
+    return intlResponse
+  }
+
+  // CASO F: /onboarding/empresario — formulario de perfil antes de pending-approval.
+  // Accesible aunque la cuenta esté pendiente: es el paso previo a la aprobación.
+  // Las verificaciones de suspensión/desactivación ya se evaluaron en el gate de arriba.
+  if (isEmpresarioSetupPath(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    const role = normalizeRole(roleRaw)
+    if (!role) {
+      // Sin rol aún → volver a elegir rol primero
+      return NextResponse.redirect(
+        new URL(`/${locale}/onboarding`, request.url),
+      )
+    }
+    if (role !== 'empresario') {
+      // Egresado/admin que llegó aquí por error → su pantalla de espera
+      return NextResponse.redirect(
+        new URL(`/${locale}/pending-approval`, request.url),
+      )
+    }
+    // Empresario → deja pasar para completar el perfil
     return intlResponse
   }
 

@@ -12,12 +12,15 @@ import { env } from '@/lib/env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import {
   AssignRoleSchema,
+  SaveEmpresarioProfileSchema,
   SignInSchema,
   type AssignRoleInput,
+  type SaveEmpresarioProfileInput,
   type SignInInput,
 } from './schemas'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
+import { normalizeRole } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
@@ -344,6 +347,95 @@ export async function signInWithPassword(
         error: resetError.message,
       })
     }
+  }
+
+  revalidatePath('/', 'layout')
+  return ok(undefined)
+}
+
+/**
+ * Guarda el perfil del empresario al completar el onboarding (RF-06 / RF-16).
+ *
+ * - Verifica que el usuario esté autenticado y tenga rol 'empresario'.
+ * - UPDATE en usuarios (nombre, apellidos, fecha de nacimiento, foto de perfil).
+ * - UPSERT en empresarios (idempotente si el usuario re-envía el formulario).
+ * - INSERT en consentimientos con tipo 'terminos_servicio'.
+ */
+export async function saveEmpresarioProfile(
+  input: SaveEmpresarioProfileInput,
+): Promise<Result<void>> {
+  const parsed = SaveEmpresarioProfileSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const supabase = await createSupabaseServerClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return err('unauthorized')
+
+  const { data: roleRaw } = await supabase.rpc('get_my_role')
+  if (normalizeRole(roleRaw as string | null) !== 'empresario') {
+    return err('forbidden')
+  }
+
+  const { error: usuariosError } = await supabase
+    .from('usuarios')
+    .update({
+      nombre: parsed.data.nombre,
+      apellido_1: parsed.data.primer_apellido,
+      apellido_2: parsed.data.segundo_apellido || null,
+      fecha_nacimiento: parsed.data.fecha_nacimiento,
+      foto_perfil: parsed.data.foto_perfil_url ?? null,
+    })
+    .eq('id_usuario', user.id)
+
+  if (usuariosError) {
+    logger.error('saveEmpresarioProfile: fallo al actualizar usuarios', {
+      error: usuariosError.message,
+    })
+    return err(usuariosError.message)
+  }
+
+  const { error: empresarioError } = await supabase.from('empresarios').upsert(
+    {
+      id_usuario: user.id,
+      tipo_empresario: parsed.data.tipo_empresario,
+      nombre_empresa: parsed.data.nombre_empresa,
+      pais_sede: parsed.data.pais,
+      ciudad_sede: parsed.data.ciudad,
+      alcance_operativo: parsed.data.alcance_operativo,
+    },
+    { onConflict: 'id_usuario' },
+  )
+
+  if (empresarioError) {
+    logger.error('saveEmpresarioProfile: fallo al upsert empresarios', {
+      error: empresarioError.message,
+    })
+    return err(empresarioError.message)
+  }
+
+  const reqHeaders = await headers()
+  const ipOrigen =
+    reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 60) ??
+    null
+  const userAgent = reqHeaders.get('user-agent')?.slice(0, 255) ?? null
+
+  const { error: consentError } = await supabase
+    .from('consentimientos')
+    .insert({
+      id_usuario: user.id,
+      tipo_consentimiento: 'terminos_servicio',
+      otorgado: true,
+      ip_origen: ipOrigen,
+      user_agent: userAgent,
+    })
+
+  if (consentError) {
+    logger.error('saveEmpresarioProfile: fallo al registrar consentimiento', {
+      error: consentError.message,
+    })
   }
 
   revalidatePath('/', 'layout')

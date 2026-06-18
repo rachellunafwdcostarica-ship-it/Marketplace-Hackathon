@@ -51,10 +51,13 @@ export function OnboardingRoleForm({ initialRole }: OnboardingRoleFormProps) {
     setLoading(false)
 
     if (result.ok || result.error === 'role_already_assigned') {
-      // Independientemente del rol, el usuario queda en estado 'pendiente'
-      // hasta que un admin lo apruebe. El middleware garantiza que no pueda
-      // entrar al sistema desde esta página.
-      router.push('/pending-approval')
+      if (selected === 'empresario') {
+        // El empresario completa su perfil antes de ir a la pantalla de espera.
+        router.push('/onboarding/empresario')
+      } else {
+        // El egresado queda en espera de verificación de su correo FWD.
+        router.push('/pending-approval')
+      }
       return
     }
 
