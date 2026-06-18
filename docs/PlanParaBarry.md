@@ -1,7 +1,9 @@
 # Plan para Barry — tareas técnicas duras del Marketplace FWD
 
 > **Para:** Barry (Project Manager técnico). **De:** auditoría re-verificada contra el código vivo.
-> **Fecha:** 2026-06-18 (actualizado tras commit `5a1cac5`) · **Rama:** `samir` · **base:** `5029e23` + `5a1cac5`.
+> **Fecha:** 2026-06-18 (re-sincronizado contra HEAD `a6646d2`) · **Rama:** `samir`. Base original `5029e23`;
+> desde entonces entraron `5a1cac5` (fix P0), el feature de Errol `3f97a28` (sobre cerrado + estado efectivo)
+> y un merge de `dev`. Las citas `archivo:línea` están re-ancladas a `a6646d2`.
 > **Propósito:** que Barry tome **lo difícil de verdad** — deuda de infraestructura, bombas de runtime y
 > decisiones de arquitectura transversales — y deje el wiring de módulo a cada responsable.
 
@@ -15,7 +17,7 @@ todo el trabajo de producto. Si alguien le entrega a Barry esas auditorías tal 
 tareas ya hechas**.
 
 Por eso este documento **no copia** las auditorías: re-verifica hallazgo por hallazgo contra el código actual
-(`HEAD 5029e23`) con verificación adversarial — cada item marcado "abierto" se intentó refutar buscando si ya
+(originalmente `5029e23`, re-anclado a `a6646d2`) con verificación adversarial — cada item marcado "abierto" se intentó refutar buscando si ya
 se había resuelto en alguna rama. Método: 28 agentes (14 de verificación por área + contraverificación
 adversarial + crítico de completitud + un agente que consultó la **BD remota por MCP, solo lectura**).
 
@@ -30,6 +32,8 @@ egresados (productor `estado_verificacion`), `env.ts`/`env.server.ts` con Zod ad
 (columna materializada), rename `cedula_juridica → cedula`. **Higiene TS limpia** (sin `any`, sin `@ts-ignore`).
 **+ (18-jun, commit `5a1cac5`):** migración fantasma `20260617180000` reconciliada y `database.ts` regenerado
 contra la BD viva — cierra los **P0.1 y P0.2 originales** (detalle en §7).
+**+ (merge `3f97a28`, Errol):** ofertas en **sobre cerrado** (UI del sello cableada en `ParticipationsPanel`)
++ **estado efectivo** de participación derivado en lectura (RF-34/RF-32).
 
 ### Cómo leer las prioridades
 - **P0 — Infra que sangra ya.** Bloquea el flujo de trabajo del equipo o revienta en producción con datos reales.
@@ -122,7 +126,7 @@ patrón **aceptado** de Supabase — **esos no se tocan**.)
 UPDATE — no INSERT** (`20260610212418:458-465`). **Cero productores en todo el repo:** grep de `insert into
 notificaciones` en `supabase/` = 0; `.from('notificaciones').insert`/`.rpc(...notif)` en `src/` = 0; no existe
 `supabase/functions/`. Hoy `adjudicarParticipacion` marca `no_seleccionada` **sin notificar**
-(`project-detail.ts:451-466`); el Bell del Navbar es un punto estático hardcodeado (`Navbar.tsx:253`).
+(`project-detail.ts:459-474`); el Bell del Navbar es un punto estático hardcodeado (`Navbar.tsx:253`).
 
 - **La decisión (una sola):** trigger `SECURITY DEFINER` que inserta en cada transición de estado **vs.**
   inserts vía `service_role` desde server actions (más controlable y testeable) **vs.** `pg_cron`/Edge.
@@ -136,7 +140,7 @@ notificaciones` en `supabase/` = 0; `.from('notificaciones').insert`/`.rpc(...no
 
 ### P1.2 · Scheduler temporal (cierre/vencimiento automático) — RF-33 y RF-35
 **[Seguro]** No hay productor temporal: `supabase/functions/` vacío, `grep pg_cron|cron.schedule` = 0, no existe
-`vercel.json`. El vencimiento **solo se chequea de forma reactiva** al postular (`applications/actions.ts:77`,
+`vercel.json`. El vencimiento **solo se chequea de forma reactiva** al postular (`applications/actions.ts:137`,
 rechaza `plazo_vencido`). El cierre de estado al vencer (RF-35) hoy es **derivación perezosa en lectura**
 (`project-detail-logic.ts:14-21` deriva `en_evaluacion`; la columna sigue `'abierto'`).
 
@@ -151,7 +155,7 @@ rechaza `plazo_vencido`). El cierre de estado al vencer (RF-35) hoy es **derivac
   del enum (atada a **P1.4**, con Fressia). Archivos **nuevos** (migración/función) — no toca módulos de otros.
 
 ### P1.3 · Atomicidad de la adjudicación — el nodo que sostiene media plataforma
-**[Seguro]** `adjudicarParticipacion` (`project-detail.ts:376-482`) hace **3 UPDATEs secuenciales sin
+**[Seguro]** `adjudicarParticipacion` (`project-detail.ts:393-490`) hace **3 UPDATEs secuenciales sin
 transacción**: ganador→`contratada` (dispara `trg_crear_contratacion`), batch resto→`no_seleccionada`,
 proyecto→`adjudicado`. Si falla un paso intermedio, devuelve `'adjudicacion_parcial'` **sin mecanismo de
 reconciliación** (el "admin recupera" del JSDoc no existe).
@@ -167,7 +171,7 @@ reconciliación** (el "admin recupera" del JSDoc no existe).
 
 ### P1.4 · Máquina de estados del proyecto sin red dura en BD — RF-24 y RF-25
 **[Seguro]** El guard de transiciones del proyecto vive **solo en TS** (`project-detail-logic.ts:37-63`
-`canAdvanceProject` + `setProjectEstado` en `project-detail.ts:116-178`). La BD **no valida**: el único trigger
+`canAdvanceProject` + `setProjectEstado` en `project-detail.ts:124-186`). La BD **no valida**: el único trigger
 de transiciones es `validar_transicion_participacion` (sobre `participaciones`, `20260611161414:33-65`);
 **ninguno sobre `proyectos`**. El propio código lo admite (`project-detail-logic.ts:25-26`: "La BD NO valida
 transiciones de proyecto").
@@ -186,6 +190,11 @@ transiciones de proyecto").
   docs), así que **no hay bomba de runtime hoy** — es un gap enum-vs-SRS, no un crash. Decidir si el flujo
   entregable→revisión necesita el estado intermedio (entonces `ALTER TYPE ... ADD VALUE` en su propia migración)
   o si `en_desarrollo→finalizado` ya cubre. No agregar "por si acaso".
+- **Nota (post-`3f97a28`):** la derivación-en-lectura ya no es solo del proyecto — Errol agregó
+  `computeEstadoParticipacionEfectivo` (`project-detail-logic.ts:124-156`) que deriva el estado de la
+  **participación** (oferta viva sobre proyecto terminal → `no_seleccionada`/`cancelada`) sin mutar la columna.
+  Refuerza el mismo riesgo: el estado real en BD diverge de lo mostrado. Si entra el scheduler de P1.2,
+  materializar **proyecto Y participación** de forma consistente.
 - **Dependencias / coordinación:** **Samir** (trigger en BD) + **Errol** (módulo de proyectos:
   `project-detail*.ts` y la ruta de edición de RF-24) + **Fressia** (decisión del estado-destino del enum, RF-35/41).
 
@@ -429,8 +438,8 @@ Se lista para que no se pierda. Cada item es trabajo de un dev de módulo, no se
 
 | Item | Evidencia | Regla |
 |---|---|---|
-| **RF-28/30 upload de prototipo roto** | `ApplyProjectClient.tsx:91-104`: sube **antes** del INSERT, path plano sin carpeta `{id_participacion}`, `getPublicUrl` en bucket privado → la RLS `prototipos_insert_estudiante` rechaza. **Bloquea RF-30, degrada RF-34** | (funcional, media) |
-| RF-27 manejo de errcode roto | `applications/actions.ts:93` filtra por `'P0001'`/`includes('cupo')`; el trigger lanza `23514` + `'Cupo'` (mayúscula). No captura `23505`/`42501`. Patrón correcto en `project-detail.ts:24` | (funcional) |
+| **RF-28/30 upload de prototipo (sigue roto tras `3f97a28`)** | Errol movió el upload a la action `subirArchivoPostulacion` (`applications/actions.ts:36-79`) — arregla el cuelgue de sesión pero **no** los 3 defectos: (1) `ApplyProjectClient.tsx:101-129` sube **antes** del INSERT (`postularse()` inserta en `actions.ts:140`); (2) `actions.ts:62` arma path plano `${id_proyecto}-${ts}-${tipo}.${ext}` sin carpeta `{id_participacion}`; (3) `actions.ts:74-76` usa `getPublicUrl` en bucket privado (`20260611084638:35`) en vez de `createSignedUrl`. La RLS `prototipos_insert_estudiante` (`20260611084638:145-156`) exige `id_participacion` en el path → rechaza. **Bloquea RF-30, degrada RF-34** | (funcional, media) |
+| RF-27 manejo de errcode roto | `applications/actions.ts:152` filtra por `'P0001'`/`includes('cupo')`; el trigger lanza `23514` + `'Cupo'` (mayúscula). No captura `23505`/`23514`/`42501`. (Ojo: `project-detail.ts:24` solo maneja `23514`, tampoco es patrón completo.) | (funcional) |
 | `CreateStrikeButton.tsx` | `:61` `t` sin usar **+ destapa ~10 strings hardcoded en español** (`'Aplicar Strike'`, etc.) | §4 i18n |
 | Landing stats inventadas | `page.tsx:108,116,124` pinta `+500`/`+1,200`/`+150` desde i18n como reales | §13 / portada pública |
 | `/showcase` sin gatear | `showcase/page.tsx` con datos sample, alcanzable por URL en producción | datos falsos a revisor |
@@ -476,11 +485,11 @@ BD remota** (solo lectura primero). Para P2.1 hace falta **`next start` + abrir 
 
 ## 7. Apéndice — lo verificado como YA RESUELTO (no rehacer)
 
-| Área | Estado en HEAD `5029e23` |
+| Área | Estado en HEAD `a6646d2` |
 |---|---|
-| **P0.1 orig — migración fantasma `20260617180000`** | **Resuelto (`5a1cac5`).** Recreada verbatim desde `schema_migrations` (era la v2 "sobre cerrado"); repo en paridad con la BD sin tocarla. Follow-up no bloqueante: cablear la UI del "sobre cerrado" en `ParticipationsPanel` (Errol). |
+| **P0.1 orig — migración fantasma `20260617180000`** | **Resuelto (`5a1cac5`).** Recreada verbatim desde `schema_migrations` (era la v2 "sobre cerrado"); repo en paridad con la BD sin tocarla. **La UI del sobre ya quedó cableada** (`3f97a28`): `ParticipationsPanel` pinta la tapa con los 3 booleanos para `enviada` y revela el contenido al abrir (`revisar`→`en_revision`); el sello es real a nivel de RPC. **Ojo:** el merge `3f97a28`+`5a1cac5` duplicó el tipo del RPC (14 `TS2300`) — corregido en `a6646d2` (`a6646d2`). |
 | **P0.2 orig — drift de tipos** (`ratings.ts`, `soporte_tickets`, RPC v2) | **Resuelto (`5a1cac5`).** `database.ts` regenerado contra la BD; embed `empresarios` ambiguo hinteado; +2 errores `tsc` pre-existentes; `tsc` exit 0. |
-| Postulación egresado (RF-27/29/31/32) | **Real.** `lib/applications/{actions,queries}.ts`: INSERT en `participaciones`, `retirarPostulacion`, `getMisPostulaciones` por `id_estudiante`, 7 estados mapeados e i18n. |
+| Postulación egresado (RF-27/29/31/32) | **Real.** `lib/applications/{actions,queries}.ts`: INSERT en `participaciones`, `retirarPostulacion`, `getMisPostulaciones` por `id_estudiante`, 7 estados mapeados e i18n. **+ estado efectivo** derivado en lectura (`computeEstadoParticipacionEfectivo`, `project-detail-logic.ts:136-156`) consumido por `getMisPostulaciones/Stats` y `PostulacionCard`; la columna real no se muta (`3f97a28`, RF-32). |
 | Cuelgue `getUser()` cliente | **Resuelto.** `junior/applications` es Server Component; `getMisPostulaciones` server-side. |
 | Perfil + verificación de empresa (RF-16/17, ADM-1 empresas) | **Real.** `saveCompanyProfile` upsert, upload de logo a bucket, `verificarEmpresa`/`rechazarEmpresa` con `service_role`, `admin/companies` redirige a flujo real. |
 | Publicar proyecto (RF-19/20/21/22/23) | **Real.** RPC `publicar_proyecto` atómico (INSERT proyecto + 2 puentes N:M); plazo derivado de fechas; catálogos reales. |
@@ -499,12 +508,14 @@ BD remota** (solo lectura primero). Para P2.1 hace falta **`next start` + abrir 
 
 ## 8. Límites de esta auditoría (honestidad)
 
-- Todo lo `[Seguro]` tiene evidencia `archivo:línea` en HEAD `5029e23`, contraverificada adversarialmente.
+- Todo lo `[Seguro]` tiene evidencia `archivo:línea`, **re-anclada a HEAD `a6646d2`** (18-jun) tras el merge de
+  `3f97a28`; la auditoría original fue contra `5029e23`, contraverificada adversarialmente.
 - La BD remota se consultó **solo lectura** vía MCP el 2026-06-17 (autorizado por el dueño). No se ejecutó
   ninguna escritura ni migración.
 - **No se levantó la app:** las afirmaciones de runtime (marketplace vacío en prod P2.1, funnel tardío sin datos)
   están marcadas `[Verificar]` / `[Probable]`. El cierre de cada una exige `next start` o un E2E manual.
-- `tsc --noEmit` no se corrió en esta pasada (solo herramientas de lectura); la higiene TS limpia es por
-  ausencia de `any`/`@ts-ignore`, conviene correr `npm run typecheck` antes de cerrar ese eje.
+- `tsc --noEmit` **se corrió y pasa (exit 0)** en `a6646d2`: el merge `3f97a28`+`5a1cac5` había duplicado el
+  tipo del RPC (14 errores `TS2300`), ya corregido. Higiene TS confirmada por `tsc`, no solo por ausencia de
+  `any`/`@ts-ignore`. Pendiente runtime: P2.1 (`next start`) y el funnel tardío.
 - La priorización P0–P4 es criterio de esta auditoría; ajústenla según qué penaliza el jurado y qué bloquea la
   demo.

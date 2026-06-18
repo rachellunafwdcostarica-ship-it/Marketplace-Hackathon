@@ -1431,13 +1431,6 @@ export type Database = {
           tiene_repositorio: boolean
           titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
           url_repositorio_proyecto: string | null
-          fecha_postulacion: string
-          fecha_entrega_prototipo: string | null
-          calificacion_prototipo: number | null
-          comentario_prototipo: string | null
-          tiene_prototipo: boolean
-          tiene_repositorio: boolean
-          tiene_documentacion: boolean
         }[]
       }
       register_failed_login: { Args: { p_email: string }; Returns: undefined }
