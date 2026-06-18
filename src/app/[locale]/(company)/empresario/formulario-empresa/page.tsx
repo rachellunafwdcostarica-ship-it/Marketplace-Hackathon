@@ -18,7 +18,6 @@ export default async function CompanyProfileFormPage() {
   const tEmpresa = await getTranslations('Empresa')
   const user = await getCurrentUser()
   const profileRes = await getCompanyProfileForEdit()
-  const user = await getCurrentUser()
 
   return (
     <div className="flex flex-col min-h-screen">

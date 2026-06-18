@@ -930,9 +930,11 @@ export type Database = {
           estado: Database['public']['Enums']['estado_proyecto_enum']
           fecha_cierre: string | null
           fecha_publicacion: string | null
+          generado_por_ia: boolean
           id_area_negocio: string | null
           id_empresario: string
           id_proyecto: string
+          involucra_ia: boolean
           is_active: boolean
           modalidad: Database['public']['Enums']['modalidad_enum']
           moneda: Database['public']['Enums']['moneda_enum']
@@ -943,8 +945,6 @@ export type Database = {
           presupuesto_min: number | null
           titulo: string
           updated_at: string
-          generado_por_ia: boolean
-          involucra_ia: boolean
         }
         Insert: {
           ciudad_proyecto?: string | null
@@ -953,9 +953,11 @@ export type Database = {
           estado?: Database['public']['Enums']['estado_proyecto_enum']
           fecha_cierre?: string | null
           fecha_publicacion?: string | null
+          generado_por_ia?: boolean
           id_area_negocio?: string | null
           id_empresario: string
           id_proyecto?: string
+          involucra_ia?: boolean
           is_active?: boolean
           modalidad: Database['public']['Enums']['modalidad_enum']
           moneda?: Database['public']['Enums']['moneda_enum']
@@ -966,8 +968,6 @@ export type Database = {
           presupuesto_min?: number | null
           titulo: string
           updated_at?: string
-          generado_por_ia?: boolean
-          involucra_ia?: boolean
         }
         Update: {
           ciudad_proyecto?: string | null
@@ -976,9 +976,11 @@ export type Database = {
           estado?: Database['public']['Enums']['estado_proyecto_enum']
           fecha_cierre?: string | null
           fecha_publicacion?: string | null
+          generado_por_ia?: boolean
           id_area_negocio?: string | null
           id_empresario?: string
           id_proyecto?: string
+          involucra_ia?: boolean
           is_active?: boolean
           modalidad?: Database['public']['Enums']['modalidad_enum']
           moneda?: Database['public']['Enums']['moneda_enum']
@@ -989,8 +991,6 @@ export type Database = {
           presupuesto_min?: number | null
           titulo?: string
           updated_at?: string
-          generado_por_ia?: boolean
-          involucra_ia?: boolean
         }
         Relationships: [
           {
@@ -1197,6 +1197,35 @@ export type Database = {
         }
         Relationships: []
       }
+      soporte_tickets: {
+        Row: {
+          created_at: string
+          descripcion: string
+          id_ticket: string
+          id_usuario: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion: string
+          id_ticket?: string
+          id_usuario: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          id_ticket?: string
+          id_usuario?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'soporte_tickets_id_usuario_fkey'
+            columns: ['id_usuario']
+            isOneToOne: false
+            referencedRelation: 'usuarios'
+            referencedColumns: ['id_usuario']
+          },
+        ]
+      }
       strikes: {
         Row: {
           aplicado_at: string
@@ -1377,25 +1406,55 @@ export type Database = {
       get_my_role: { Args: never; Returns: string }
       get_participaciones_de_proyecto: {
         Args: { p_id_proyecto: string }
+        // Nullabilidad corregida a mano: `supabase gen` marca todo el retorno de
+        // funciones SETOF/TABLE como no-nulo, pero la v2 "sobre cerrado" devuelve
+        // null en los campos sellados de las ofertas `enviada`, y varios campos de
+        // datos son opcionales. Mantener al regenerar (ver migración 20260617180000).
         Returns: {
-          id_participacion: string
+          calificacion_prototipo: number | null
+          carta_postulacion: string | null
+          comentario_prototipo: string | null
+          documentacion_tecnica: string | null
           estado: Database['public']['Enums']['estado_participacion_enum']
-          estudiante_nombre: string
           estudiante_apellido_1: string
           estudiante_apellido_2: string | null
+          estudiante_nombre: string
+          fecha_entrega_prototipo: string | null
+          fecha_postulacion: string
           foto_perfil: string | null
-          reputacion: number | null
-          titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
-          carta_postulacion: string | null
+          id_participacion: string
           planteamiento_solucion: string | null
           prototipo_enlaces: string[] | null
-          documentacion_tecnica: string | null
+          reputacion: number | null
+          tiene_documentacion: boolean
+          tiene_prototipo: boolean
+          tiene_repositorio: boolean
+          titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
           url_repositorio_proyecto: string | null
-          fecha_postulacion: string
-          fecha_entrega_prototipo: string | null
-          calificacion_prototipo: number | null
-          comentario_prototipo: string | null
         }[]
+      }
+      mis_proyectos_como_empresario: { Args: never; Returns: string[] }
+      mis_proyectos_como_estudiante: { Args: never; Returns: string[] }
+      publicar_proyecto: {
+        Args: {
+          p_categorias: string[]
+          p_ciudad: string
+          p_conversacion: string
+          p_descripcion: string
+          p_generado_por_ia: boolean
+          p_id_area: string
+          p_involucra_ia: boolean
+          p_modalidad: Database['public']['Enums']['modalidad_enum']
+          p_moneda: Database['public']['Enums']['moneda_enum']
+          p_pais: string
+          p_plazo_dias: number
+          p_presupuesto_max: number
+          p_presupuesto_min: number
+          p_propuesta: Json
+          p_tecnologias: string[]
+          p_titulo: string
+        }
+        Returns: string
       }
       register_failed_login: { Args: { p_email: string }; Returns: undefined }
     }
