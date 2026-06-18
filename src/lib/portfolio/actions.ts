@@ -106,19 +106,20 @@ export async function getStudentProfile(): Promise<
         }> | null
       }>) || []
 
-    const projectsList = rawProjects.map((p) => {
+    const projectsList: PortfolioProject[] = rawProjects.map((p) => {
       const techNames = (p.portafolio_tecnologias || [])
         .map((pt) => pt.tecnologias?.nombre)
         .filter(Boolean)
-      return {
+      const proj: PortfolioProject = {
         id: p.id_portafolio,
         title: p.titulo,
         description: p.descripcion ?? '',
         technologies: techNames as string[],
         completionDate: p.fecha ?? '',
-        repositoryUrl: p.url_repositorio ?? undefined,
-        demoUrl: p.url_demo ?? undefined,
       }
+      if (p.url_repositorio) proj.repositoryUrl = p.url_repositorio
+      if (p.url_demo) proj.demoUrl = p.url_demo
+      return proj
     })
 
     const profile: StudentProfileView = {
