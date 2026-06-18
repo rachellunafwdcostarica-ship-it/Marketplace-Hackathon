@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
-import { Mail, User, Lock, ArrowRight } from 'lucide-react'
+import { Mail, User, Lock, ArrowRight, AlertTriangle } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { signUpWithPassword } from '@/lib/auth/actions'
 import { AuthCard } from '@/components/features/auth/AuthCard'
@@ -76,25 +76,49 @@ export default function RegisterPage() {
   })
 
   const passwordValue = watch('password')
+  const emailValue = watch('email')
+
+  const isEgresadoEmailInvalid =
+    selectedRole === 'egresado' &&
+    emailValue.trim().length > 0 &&
+    emailValue !== 'fwd@gmail.com'
 
   const onSubmit = async (data: RegisterFormValues) => {
+    // Bloqueo de seguridad: la UI ya muestra el aviso, pero esto evita que
+    // un correo no-FWD llegue al servidor si el usuario fuerza el submit.
+    if (selectedRole === 'egresado' && data.email !== 'fwd@gmail.com') {
+      return
+    }
     setLoading(true)
     setUserRole(selectedRole)
+
     const result = await signUpWithPassword({
       email: data.email,
       password: data.password,
       fullName: data.fullName,
       role: selectedRole as 'egresado' | 'empresario',
     })
-    setLoading(false)
+
+    const onboardingPath =
+      selectedRole === 'empresario' ? '/onboarding/empresario' : '/onboarding'
+
     if (!result.ok) {
       if (result.error === 'email_already_exists') {
-        // Anti-enumeración: no revelar que el correo ya está registrado.
-        // Mostrar el mismo flujo que un registro exitoso.
+        // Anti-enumeración: mostrar éxito e intentar auto-login.
+        // Si las credenciales coinciden, el usuario entra con su cuenta real.
+        // Redirigir a /onboarding (no al path del rol elegido): el middleware
+        // usa el rol real de la BD para mandarlo al destino correcto.
         toast.success(tAuth('registerSuccess'))
-        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
+        const supabase = createSupabaseBrowserClient()
+        await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        })
+        router.push('/onboarding')
+        setLoading(false)
         return
       }
+      setLoading(false)
       const message =
         result.error === 'password_breached'
           ? tAuth('passwordBreached')
@@ -104,19 +128,38 @@ export default function RegisterPage() {
       toast.error(message)
       return
     }
+
+    // Usuario creado y confirmado: hacer auto-login inmediato sin verificación
+    // de correo. La ruta destino viene del rol elegido — no del metadata.
+    const supabase = createSupabaseBrowserClient()
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
+
+    setLoading(false)
+
+    if (signInError) {
+      toast.error(tAuth('errorUnexpected'))
+      return
+    }
+
     toast.success(tAuth('registerSuccess'))
-    router.push(`/verify-email?email=${encodeURIComponent(data.email)}`)
+    router.push(onboardingPath)
   }
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true)
-    // El rol NO se decide aquí en el flujo OAuth: tras autenticar, el callback
-    // envía al usuario nuevo a /onboarding, que es donde elige junior/empresa.
+    // Guardamos el rol en una cookie antes del redirect OAuth porque Supabase
+    // no garantiza preservar query params personalizados en el redirectTo.
+    // La cookie dura 5 min (tiempo suficiente para completar el flujo OAuth)
+    // y el callback la lee como fuente primaria del rol.
+    document.cookie = `pending-oauth-role=${selectedRole}; path=/; max-age=300; SameSite=Lax`
     const supabase = createSupabaseBrowserClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?role=${selectedRole}`,
       },
     })
     if (error) {
@@ -209,7 +252,45 @@ export default function RegisterPage() {
                 {errors.email.message}
               </p>
             )}
+            {selectedRole === 'egresado' && !isEgresadoEmailInvalid && (
+              <p className="text-[11px] text-ink-subtle font-medium mt-1">
+                {tAuth('egresadoEmailHint')}
+              </p>
+            )}
           </div>
+
+          {/* Bloque de contacto: correo no-FWD para egresado */}
+          {isEgresadoEmailInvalid && (
+            <div className="rounded-xl border border-warning/40 bg-warning/5 p-4 space-y-2 text-left">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                <p className="text-xs font-bold text-warning">
+                  {tAuth('egresadoEmailInvalidTitle')}
+                </p>
+              </div>
+              <p className="text-xs text-ink-muted leading-relaxed">
+                {tAuth('egresadoEmailInvalidMsg')}
+              </p>
+              <div className="text-xs font-semibold text-ink space-y-0.5 pl-1">
+                <p>Forward Costa Rica</p>
+                <p>
+                  e.{' '}
+                  <span className="text-primary">
+                    {tAuth('egresadoContactEmail')}
+                  </span>
+                </p>
+                <p>
+                  t:{' '}
+                  <span className="text-primary">
+                    {tAuth('egresadoContactPhone')}
+                  </span>
+                </p>
+              </div>
+              <p className="text-xs text-ink-subtle">
+                {tAuth('egresadoContactSite')}
+              </p>
+            </div>
+          )}
 
           {/* Password */}
           <div className="space-y-1.5">
@@ -264,7 +345,7 @@ export default function RegisterPage() {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || isEgresadoEmailInvalid}
             className="w-full h-12 rounded-xl bg-primary hover:bg-primary/95 text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200"
           >
             {loading ? tAuth('registering') : tAuth('createAccount')}

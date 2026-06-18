@@ -28,6 +28,11 @@ const MAX_TOKENS_CONVERSAR = 1000
 const MAX_TOKENS_GENERAR = 4000
 const MAX_TOKENS_VALIDAR = 800
 const TEMPERATURE = 0.4
+// Reintentos ante respuestas vacías/inválidas del modelo de razonamiento
+// (gpt-oss a veces "termina" sin emitir content ni reasoning). Aplica a las tres
+// llamadas; NO cambia el nivel de razonamiento, solo da más oportunidades de
+// obtener una respuesta usable antes de fallar.
+const MAX_LLM_RETRIES = 5
 
 /** Mapea el locale de next-intl ('es' | 'en') al nombre del idioma para el prompt. */
 function idiomaLabel(locale: string): string {
@@ -229,10 +234,10 @@ export function getAiProvider(): AiProvider {
     schema: ZodType<T>,
     maxTokens: number,
   ): Promise<T> {
-    // Hasta 3 intentos: gpt-oss a veces devuelve JSON malformado o (como modelo
-    // de razonamiento) deja el `content` vacío con el texto en el canal `reasoning`.
+    // gpt-oss a veces devuelve JSON malformado o (como modelo de razonamiento)
+    // deja el `content` vacío con el texto en el canal `reasoning`; reintentamos.
     let ultimoMotivo = 'sin_respuesta'
-    for (let intento = 0; intento < 3; intento++) {
+    for (let intento = 0; intento < MAX_LLM_RETRIES; intento++) {
       const completion = await client.chat.completions.create({
         model: config.model,
         messages,
@@ -307,36 +312,43 @@ export function getAiProvider(): AiProvider {
         ...turnosHistorial(historial),
       ]
 
-      const completion = await client.chat.completions.create({
-        model: config.model,
-        messages,
-        temperature: TEMPERATURE,
-        max_tokens: MAX_TOKENS_CONVERSAR,
-      })
-      const message = completion.choices[0]?.message
-      // Como en callJson: si el content viene vacío, caemos al canal `reasoning`.
-      const content = (
-        message?.content?.trim() || leerReasoning(message)
-      ).trim()
-      if (!content) {
-        logger.warn('ai_empty_content', {
-          origen: 'conversar',
-          finishReason: completion.choices[0]?.finish_reason ?? 'desconocido',
-          reasoningLen: leerReasoning(message).length,
-          refusal: leerRefusal(message).slice(0, 500) || null,
-          completionTokens: completion.usage?.completion_tokens ?? null,
-          messageKeys: message ? Object.keys(message) : [],
+      // Reintentamos SOLO ante content vacío (mismo achaque que callJson). Si hay
+      // content pero el JSON no parsea, NO reintentamos: ese texto ya es un mensaje
+      // usable y el chat no debe romperse (fallback graceful).
+      for (let intento = 0; intento < MAX_LLM_RETRIES; intento++) {
+        const completion = await client.chat.completions.create({
+          model: config.model,
+          messages,
+          temperature: TEMPERATURE,
+          max_tokens: MAX_TOKENS_CONVERSAR,
         })
-        throw new Error('AI_EMPTY_RESPONSE')
+        const message = completion.choices[0]?.message
+        // Como en callJson: si el content viene vacío, caemos al canal `reasoning`.
+        const content = (
+          message?.content?.trim() || leerReasoning(message)
+        ).trim()
+        if (!content) {
+          logger.warn('ai_empty_content', {
+            origen: 'conversar',
+            intento,
+            finishReason: completion.choices[0]?.finish_reason ?? 'desconocido',
+            reasoningLen: leerReasoning(message).length,
+            refusal: leerRefusal(message).slice(0, 500) || null,
+            completionTokens: completion.usage?.completion_tokens ?? null,
+            messageKeys: message ? Object.keys(message) : [],
+          })
+          continue
+        }
+        try {
+          const result = conversarResponseSchema.safeParse(extractJson(content))
+          if (result.success) return result.data
+        } catch (error) {
+          logger.warn('ai_conversar_invalid_json', { intento, error })
+          // Sin JSON válido caemos a un fallback: el chat no debe romperse.
+        }
+        return { mensaje: content, completo: false, faltan: [] }
       }
-      try {
-        const result = conversarResponseSchema.safeParse(extractJson(content))
-        if (result.success) return result.data
-      } catch (error) {
-        logger.warn('ai_conversar_invalid_json', { error })
-        // Sin JSON válido caemos a un fallback: el chat no debe romperse.
-      }
-      return { mensaje: content, completo: false, faltan: [] }
+      throw new Error('AI_EMPTY_RESPONSE')
     },
 
     async generarPropuesta({

@@ -49,7 +49,7 @@ export async function getMiContratacion(
     .select('id_participacion')
     .eq('id_proyecto', idProyecto)
     .eq('id_estudiante', estudiante.id_estudiante)
-    .eq('estado', 'contratada')
+    .in('estado', ['contratada', 'finalizada'])
     .maybeSingle()
 
   if (partError) {

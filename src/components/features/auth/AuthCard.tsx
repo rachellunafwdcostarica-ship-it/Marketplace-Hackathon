@@ -4,9 +4,10 @@ import { Trophy } from 'lucide-react'
 
 interface AuthCardProps {
   children: React.ReactNode
+  wide?: boolean
 }
 
-export function AuthCard({ children }: AuthCardProps) {
+export function AuthCard({ children, wide = false }: AuthCardProps) {
   const t = useTranslations('Auth')
 
   return (
@@ -16,7 +17,9 @@ export function AuthCard({ children }: AuthCardProps) {
       <div className="absolute right-0 top-0 h-full w-[10%] bg-ink-strong/25 transform skew-x-6 origin-top-right hidden md:block opacity-60 pointer-events-none" />
 
       {/* Main card */}
-      <div className="w-full max-w-[500px] bg-surface rounded-[2.5rem] shadow-2xl p-8 md:p-12 relative z-10 animate-fade-in">
+      <div
+        className={`w-full ${wide ? 'max-w-2xl' : 'max-w-[500px]'} bg-surface rounded-[2.5rem] shadow-2xl p-8 md:p-12 relative z-10 animate-fade-in`}
+      >
         {children}
       </div>
 

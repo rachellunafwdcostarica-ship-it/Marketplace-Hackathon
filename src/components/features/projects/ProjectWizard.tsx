@@ -32,10 +32,10 @@ import {
   type PropuestaProyecto,
 } from '@/lib/projects/schemas'
 import { saveLogisticsDraft, discardDraft } from '@/lib/projects/actions'
-import { sendChatMessage } from '@/lib/projects/chat'
-import { generateProposal } from '@/lib/projects/proposal'
+import { sendChatMessage } from '@/lib/proposal-ai/chat'
+import { generateProposal } from '@/lib/proposal-ai/proposal'
 import { publishProject } from '@/lib/projects/publish'
-import type { HistorialEntry } from '@/lib/ai/types'
+import type { HistorialEntry } from '@/lib/proposal-ai/types'
 
 interface ProjectWizardProps {
   conversationId: string

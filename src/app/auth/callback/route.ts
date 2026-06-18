@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { env } from '@/lib/env'
 
 function resolveLocale(value: string | undefined): 'es' | 'en' {
@@ -19,12 +20,18 @@ function safeNext(next: string | null): string | null {
   return next
 }
 
+function safeRole(
+  raw: string | null | undefined,
+): 'egresado' | 'empresario' | null {
+  if (raw === 'egresado' || raw === 'empresario') return raw
+  return null
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
 
   const cookieStore = await cookies()
-  // next-intl guarda el locale activo en la cookie NEXT_LOCALE
   const locale = resolveLocale(cookieStore.get('NEXT_LOCALE')?.value)
 
   if (!code) {
@@ -59,26 +66,58 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // Un correo ya registrado con otro proveedor no produce duplicado: Supabase
-  // enlaza automáticamente la nueva identidad al usuario existente cuando el
-  // correo está verificado (default). No hay nada que rechazar aquí.
-
-  // Flujos con destino explícito (p.ej. recuperación de contraseña →
-  // /reset-password). Tiene prioridad sobre el enrutado por rol.
+  // Flujos con destino explícito (p.ej. recuperación de contraseña).
+  // Tiene prioridad sobre el enrutado por rol.
   const next = safeNext(searchParams.get('next'))
   if (next) {
     return NextResponse.redirect(`${origin}/${locale}${next}`)
   }
 
-  // Detectar si el usuario tiene rol asignado (usuario nuevo vs. recurrente)
+  // Cookie como fuente primaria (garantizada a través del redirect OAuth),
+  // URL param como respaldo por si el navegador bloqueó la cookie.
+  const cookieRole = safeRole(cookieStore.get('pending-oauth-role')?.value)
+  const oauthRole = cookieRole ?? safeRole(searchParams.get('role'))
+
+  if (oauthRole) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      const existingMetaRole = user.user_metadata?.role as string | undefined
+      if (!existingMetaRole) {
+        const admin = createSupabaseAdminClient()
+        await admin.auth.admin.updateUserById(user.id, {
+          user_metadata: {
+            ...user.user_metadata,
+            role: oauthRole,
+          },
+        })
+      }
+    }
+  }
+
+  // Detectar si el usuario tiene rol asignado en BD (usuario recurrente).
   const { data: roleRaw } = await supabase.rpc('get_my_role')
   const role = normalizeRole(roleRaw as string | null)
 
+  let redirectTarget: string
   if (role) {
-    // Usuario recurrente → ir a su home
-    return NextResponse.redirect(`${origin}/${locale}${ROLE_HOME[role]}`)
+    const { data: accountStatus } = await supabase.rpc('get_my_account_status')
+    redirectTarget =
+      accountStatus !== 'activa'
+        ? `${origin}/${locale}/pending-approval`
+        : `${origin}/${locale}${ROLE_HOME[role]}`
+  } else {
+    // Usuario nuevo: onboarding según rol elegido en register.
+    redirectTarget =
+      oauthRole === 'empresario'
+        ? `${origin}/${locale}/onboarding/empresario`
+        : `${origin}/${locale}/onboarding`
   }
 
-  // Usuario nuevo (sin rol) → onboarding obligatorio
-  return NextResponse.redirect(`${origin}/${locale}/onboarding`)
+  const response = NextResponse.redirect(redirectTarget)
+  // Limpiar la cookie de rol una vez consumida.
+  response.cookies.set('pending-oauth-role', '', { path: '/', maxAge: 0 })
+  return response
 }

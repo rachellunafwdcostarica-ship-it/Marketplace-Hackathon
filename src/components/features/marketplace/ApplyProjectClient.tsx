@@ -12,14 +12,19 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
 import { toast } from 'sonner'
-import { ArrowLeft, Send, FileText, UploadCloud } from 'lucide-react'
+import { ArrowLeft, Send, FileText, Link2, Plus, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { postularse } from '@/lib/applications/actions'
+
+const MAX_CARTA_LEN = 2800
+const MIN_PLANTEAMIENTO_LEN = 30
+const MAX_ENLACE_LEN = 500
+const MAX_DOC_URL_LEN = 300
+const MAX_ENLACES_EXTRA = 3
 
 type ApplyFormValues = zod.infer<ReturnType<typeof createApplySchema>>
 
@@ -27,13 +32,32 @@ function createApplySchema(
   t: ReturnType<typeof useTranslations<'Validation'>>,
 ) {
   return zod.object({
-    coverLetter: zod.string().min(30, { message: t('coverLetterMin') }),
+    coverLetter: zod
+      .string()
+      .max(MAX_CARTA_LEN, { message: t('coverLetterMax') }),
     planteamientoSolucion: zod
       .string()
-      .min(30, { message: t('coverLetterMin') }),
-    enlaceAdicional: zod
+      .min(MIN_PLANTEAMIENTO_LEN, { message: t('solutionApproachMin') }),
+    prototipoUrl: zod
       .string()
-      .url({ message: t('urlPortfolio') })
+      .min(1, { message: t('prototypeRequired') })
+      .url({ message: t('linkInvalid') })
+      .max(MAX_ENLACE_LEN, { message: t('linkMax') }),
+    enlacesExtra: zod
+      .array(
+        zod.object({
+          value: zod
+            .string()
+            .url({ message: t('linkInvalid') })
+            .max(MAX_ENLACE_LEN, { message: t('linkMax') })
+            .or(zod.literal('')),
+        }),
+      )
+      .max(MAX_ENLACES_EXTRA),
+    documentacionTecnica: zod
+      .string()
+      .url({ message: t('linkInvalid') })
+      .max(MAX_DOC_URL_LEN, { message: t('technicalDocMax') })
       .optional()
       .or(zod.literal('')),
   })
@@ -59,8 +83,6 @@ export function ApplyProjectClient({
   const { isPending } = useAccountStatus()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [prototypeFile, setPrototypeFile] = useState<File | null>(null)
-  const [technicalDocFile, setTechnicalDocFile] = useState<File | null>(null)
 
   const applySchema = useMemo(
     () => createApplySchema(tValidation),
@@ -69,6 +91,7 @@ export function ApplyProjectClient({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<ApplyFormValues>({
@@ -76,58 +99,32 @@ export function ApplyProjectClient({
     defaultValues: {
       coverLetter: '',
       planteamientoSolucion: '',
-      enlaceAdicional: '',
+      prototipoUrl: '',
+      enlacesExtra: [],
+      documentacionTecnica: '',
     },
+  })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'enlacesExtra',
   })
 
   const onSubmit = async (data: ApplyFormValues) => {
     setIsSubmitting(true)
-    const supabase = createSupabaseBrowserClient()
-
-    let uploadedPrototypeUrl = ''
-    let uploadedTechDocUrl = ''
 
     try {
-      if (prototypeFile) {
-        const fileExt = prototypeFile.name.split('.').pop()
-        const fileName = `${projectId}-${Date.now()}-proto.${fileExt}`
-        const { data: uploadData, error } = await supabase.storage
-          .from('prototipos')
-          .upload(fileName, prototypeFile)
-        if (error) throw new Error(tEgresado('prototypeUploadError'))
-        if (uploadData) {
-          const { data: publicUrlData } = supabase.storage
-            .from('prototipos')
-            .getPublicUrl(uploadData.path)
-          uploadedPrototypeUrl = publicUrlData.publicUrl
-        }
-      }
-
-      if (technicalDocFile) {
-        const fileExt = technicalDocFile.name.split('.').pop()
-        const fileName = `${projectId}-${Date.now()}-doc.${fileExt}`
-        const { data: uploadData, error } = await supabase.storage
-          .from('prototipos')
-          .upload(fileName, technicalDocFile)
-        if (error) throw new Error(tEgresado('docUploadError'))
-        if (uploadData) {
-          const { data: publicUrlData } = supabase.storage
-            .from('prototipos')
-            .getPublicUrl(uploadData.path)
-          uploadedTechDocUrl = publicUrlData.publicUrl
-        }
-      }
-
-      const enlaces = []
-      if (uploadedPrototypeUrl) enlaces.push(uploadedPrototypeUrl)
-      if (data.enlaceAdicional) enlaces.push(data.enlaceAdicional)
+      const extras = data.enlacesExtra
+        .map((enlace) => enlace.value.trim())
+        .filter((value) => value.length > 0)
+      const prototipoEnlaces = [data.prototipoUrl.trim(), ...extras]
 
       const result = await postularse({
         id_proyecto: projectId,
-        carta_postulacion: data.coverLetter,
         planteamiento_solucion: data.planteamientoSolucion,
-        prototipo_enlaces: enlaces.length > 0 ? enlaces : undefined,
-        documentacion_tecnica: uploadedTechDocUrl || undefined,
+        prototipo_enlaces: prototipoEnlaces,
+        carta_postulacion: data.coverLetter.trim() || undefined,
+        documentacion_tecnica: data.documentacionTecnica?.trim() || undefined,
       })
 
       if (!result.ok) {
@@ -137,6 +134,9 @@ export function ApplyProjectClient({
           proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
           plazo_vencido: tEgresado('applyErrorPlazoVencido'),
           proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
+          estudiante_not_found: tEgresado('applyErrorPerfil'),
+          unauthenticated: tEgresado('applyErrorSesion'),
+          database_error: tEgresado('applyErrorDatabase'),
         }
         toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
       } else {
@@ -184,36 +184,15 @@ export function ApplyProjectClient({
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
                 <Label
-                  htmlFor="coverLetter"
-                  className="text-sm font-bold flex justify-between"
-                >
-                  <span>{tEgresado('coverLetter')}</span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {tCommon('minCharsLabel', { n: 30 })}
-                  </span>
-                </Label>
-                <Textarea
-                  id="coverLetter"
-                  rows={6}
-                  placeholder={tEgresado('coverLetterPlaceholder')}
-                  className={`bg-card/50 border-border ${errors.coverLetter ? 'border-destructive' : 'focus-visible:ring-primary'}`}
-                  {...register('coverLetter')}
-                />
-                {errors.coverLetter && (
-                  <p className="text-xs font-semibold text-destructive">
-                    {errors.coverLetter.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label
                   htmlFor="planteamientoSolucion"
                   className="text-sm font-bold flex justify-between"
                 >
-                  <span>{tEgresado('solutionApproach')}</span>
+                  <span>
+                    {tEgresado('solutionApproach')}{' '}
+                    <span className="text-magenta">{tCommon('required')}</span>
+                  </span>
                   <span className="text-xs font-normal text-muted-foreground">
-                    {tCommon('minCharsLabel', { n: 30 })}
+                    {tCommon('minCharsLabel', { n: MIN_PLANTEAMIENTO_LEN })}
                   </span>
                 </Label>
                 <Textarea
@@ -232,55 +211,140 @@ export function ApplyProjectClient({
 
               <div className="space-y-2">
                 <Label
-                  htmlFor="enlaceAdicional"
+                  htmlFor="prototipoUrl"
                   className="text-sm font-bold flex items-center gap-1.5"
                 >
-                  <FileText className="w-4 h-4 text-primary" />
-                  {tEgresado('prototypeLink')}
+                  <Link2 className="w-4 h-4 text-primary" />
+                  {tEgresado('prototypeUrlLabel')}{' '}
+                  <span className="text-magenta">{tCommon('required')}</span>
                 </Label>
                 <Input
-                  id="enlaceAdicional"
+                  id="prototipoUrl"
                   type="url"
                   placeholder="https://..."
-                  className={`bg-card/50 border-border ${errors.enlaceAdicional ? 'border-destructive' : 'focus-visible:ring-primary'}`}
-                  {...register('enlaceAdicional')}
+                  className={`bg-card/50 border-border ${errors.prototipoUrl ? 'border-destructive' : 'focus-visible:ring-primary'}`}
+                  {...register('prototipoUrl')}
                 />
-                {errors.enlaceAdicional && (
+                <p className="text-xs text-muted-foreground">
+                  {tEgresado('prototypeUrlHelp')}
+                </p>
+                {errors.prototipoUrl && (
                   <p className="text-xs font-semibold text-destructive">
-                    {errors.enlaceAdicional.message}
+                    {errors.prototipoUrl.message}
                   </p>
                 )}
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-2">
+                <Label className="text-sm font-bold flex items-center gap-1.5">
+                  <Link2 className="w-4 h-4 text-secondary" />
+                  {tEgresado('prototypeExtraLabel')}{' '}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {tCommon('optional')}
+                  </span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {tEgresado('prototypeExtraHelp')}
+                </p>
                 <div className="space-y-2">
-                  <Label className="text-sm font-bold flex items-center gap-1.5">
-                    <UploadCloud className="w-4 h-4 text-secondary" />
-                    {tEgresado('uploadPrototype')}
-                  </Label>
-                  <Input
-                    type="file"
-                    className="cursor-pointer bg-card/50"
-                    onChange={(e) =>
-                      setPrototypeFile(e.target.files?.[0] || null)
-                    }
-                  />
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <Input
+                          type="url"
+                          placeholder="https://..."
+                          aria-label={tEgresado('prototypeExtraLabel')}
+                          className={`bg-card/50 border-border ${errors.enlacesExtra?.[index]?.value ? 'border-destructive' : 'focus-visible:ring-primary'}`}
+                          {...register(`enlacesExtra.${index}.value`)}
+                        />
+                        {errors.enlacesExtra?.[index]?.value && (
+                          <p className="mt-1 text-xs font-semibold text-destructive">
+                            {errors.enlacesExtra[index]?.value?.message}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        aria-label={tEgresado('removeLinkAria')}
+                        className="text-muted-foreground hover:text-destructive shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
+                {fields.length < MAX_ENLACES_EXTRA && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ value: '' })}
+                    className="flex items-center gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {tEgresado('addLink')}
+                  </Button>
+                )}
+              </div>
 
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-accent" />
-                    {tEgresado('uploadTechnicalDoc')}
-                  </Label>
-                  <Input
-                    type="file"
-                    accept=".pdf"
-                    className="cursor-pointer bg-card/50"
-                    onChange={(e) =>
-                      setTechnicalDocFile(e.target.files?.[0] || null)
-                    }
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="coverLetter"
+                  className="text-sm font-bold flex justify-between"
+                >
+                  <span>
+                    {tEgresado('coverLetter')}{' '}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {tCommon('optional')}
+                    </span>
+                  </span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {tCommon('maxCharsLabel', { n: MAX_CARTA_LEN })}
+                  </span>
+                </Label>
+                <Textarea
+                  id="coverLetter"
+                  rows={6}
+                  placeholder={tEgresado('coverLetterPlaceholder')}
+                  className={`bg-card/50 border-border ${errors.coverLetter ? 'border-destructive' : 'focus-visible:ring-primary'}`}
+                  {...register('coverLetter')}
+                />
+                {errors.coverLetter && (
+                  <p className="text-xs font-semibold text-destructive">
+                    {errors.coverLetter.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="documentacionTecnica"
+                  className="text-sm font-bold flex items-center gap-1.5"
+                >
+                  <FileText className="w-4 h-4 text-accent" />
+                  {tEgresado('technicalDocUrlLabel')}{' '}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {tCommon('optional')}
+                  </span>
+                </Label>
+                <Input
+                  id="documentacionTecnica"
+                  type="url"
+                  placeholder="https://..."
+                  className={`bg-card/50 border-border ${errors.documentacionTecnica ? 'border-destructive' : 'focus-visible:ring-primary'}`}
+                  {...register('documentacionTecnica')}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {tEgresado('technicalDocUrlHelp')}
+                </p>
+                {errors.documentacionTecnica && (
+                  <p className="text-xs font-semibold text-destructive">
+                    {errors.documentacionTecnica.message}
+                  </p>
+                )}
               </div>
 
               {isPending && (

@@ -57,6 +57,7 @@ export interface Company {
   projectsCount: number
   contactEmail: string
   website: string
+  reputacion?: number | null
   createdAt: string
   isProfileFilled?: boolean | undefined
   userId?: string | undefined

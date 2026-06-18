@@ -40,6 +40,11 @@ export interface ParticipacionEmpresario {
   fechaEntregaPrototipo: string | null
   calificacionPrototipo: number | null
   comentarioPrototipo: string | null
+  /** Booleanos de la tapa del sobre: existencia de adjuntos, NO su contenido.
+   *  Vienen calculados del RPC y se muestran aun con la oferta sellada. */
+  tienePrototipo: boolean
+  tieneRepositorio: boolean
+  tieneDocumentacion: boolean
 }
 
 /** Participación cross-project: lleva el proyecto al que pertenece la oferta. */
@@ -70,6 +75,9 @@ function mapParticipacionRow(
     fechaEntregaPrototipo: fila.fecha_entrega_prototipo,
     calificacionPrototipo: fila.calificacion_prototipo,
     comentarioPrototipo: fila.comentario_prototipo,
+    tienePrototipo: fila.tiene_prototipo,
+    tieneRepositorio: fila.tiene_repositorio,
+    tieneDocumentacion: fila.tiene_documentacion,
   }
 }
 
