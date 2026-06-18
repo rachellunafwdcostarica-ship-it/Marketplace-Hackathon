@@ -167,7 +167,13 @@
     "registering": "Creating account...",
     "sending": "Sending...",
     "backToLogin": "Back to sign in",
-    "errorUnexpected": "An unexpected error occurred. Please try again."
+    "errorUnexpected": "An unexpected error occurred. Please try again.",
+    "egresadoEmailHint": "Use your FWD institutional email: fwd@gmail.com",
+    "egresadoEmailInvalidTitle": "Email not registered with FWD Costa Rica",
+    "egresadoEmailInvalidMsg": "If you no longer have access to your FWD institutional email, contact Forward Costa Rica directly:",
+    "egresadoContactEmail": "contacto@fwdcostarica.com",
+    "egresadoContactPhone": "+506 7202 5228",
+    "egresadoContactSite": "or visit the nearest FWD site."
   },
   "Common": {
     "loading": "Loading...",
@@ -958,8 +964,11 @@
   "Account": {
     "pendingBanner": "Your account is pending activation. Please verify your email.",
     "actionDisabledPending": "Your account must be approved by an administrator to perform this action.",
+    "pendingEyebrow": "UNDER REVIEW",
     "pendingTitle": "Account pending approval",
-    "pendingDesc": "The FWD team will review your request. We will notify you when your account is active."
+    "pendingDesc": "The FWD team will review your request. We will notify you by email when your account is active.",
+    "pendingEgresadoMsg": "Your email is being checked against the FWD Costa Rica graduate database. Once your status is validated, you will receive a confirmation email.",
+    "pendingEmpresarioMsg": "Your business profile is being reviewed by the FWD team. Once approved, you will receive a confirmation email and will be able to publish projects."
   },
   "Notifications": {
     "title": "Notifications",

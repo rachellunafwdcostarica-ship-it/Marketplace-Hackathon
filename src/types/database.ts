@@ -1406,27 +1406,31 @@ export type Database = {
       get_my_role: { Args: never; Returns: string }
       get_participaciones_de_proyecto: {
         Args: { p_id_proyecto: string }
+        // Nullabilidad corregida a mano: `supabase gen` marca todo el retorno de
+        // funciones SETOF/TABLE como no-nulo, pero la v2 "sobre cerrado" devuelve
+        // null en los campos sellados de las ofertas `enviada`, y varios campos de
+        // datos son opcionales. Mantener al regenerar (ver migración 20260617180000).
         Returns: {
-          calificacion_prototipo: number
-          carta_postulacion: string
-          comentario_prototipo: string
-          documentacion_tecnica: string
+          calificacion_prototipo: number | null
+          carta_postulacion: string | null
+          comentario_prototipo: string | null
+          documentacion_tecnica: string | null
           estado: Database['public']['Enums']['estado_participacion_enum']
           estudiante_apellido_1: string
-          estudiante_apellido_2: string
+          estudiante_apellido_2: string | null
           estudiante_nombre: string
-          fecha_entrega_prototipo: string
+          fecha_entrega_prototipo: string | null
           fecha_postulacion: string
-          foto_perfil: string
+          foto_perfil: string | null
           id_participacion: string
-          planteamiento_solucion: string
-          prototipo_enlaces: string[]
-          reputacion: number
+          planteamiento_solucion: string | null
+          prototipo_enlaces: string[] | null
+          reputacion: number | null
           tiene_documentacion: boolean
           tiene_prototipo: boolean
           tiene_repositorio: boolean
-          titulo_fwd: Database['public']['Enums']['titulo_fwd_enum']
-          url_repositorio_proyecto: string
+          titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
+          url_repositorio_proyecto: string | null
         }[]
       }
       mis_proyectos_como_empresario: { Args: never; Returns: string[] }

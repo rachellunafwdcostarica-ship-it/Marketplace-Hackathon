@@ -234,16 +234,16 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
       estudiantes!inner(
         usuarios!inner(
           nombre,
-          primer_apellido,
-          segundo_apellido
+          apellido_1,
+          apellido_2
         )
       ),
       empresarios!inner(
         nombre_empresa,
         usuarios!inner(
           nombre,
-          primer_apellido,
-          segundo_apellido
+          apellido_1,
+          apellido_2
         )
       ),
       contrataciones(
@@ -274,16 +274,16 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
       estudiantes: {
         usuarios: {
           nombre: string
-          primer_apellido: string | null
-          segundo_apellido: string | null
+          apellido_1: string | null
+          apellido_2: string | null
         }
       }
       empresarios: {
         nombre_empresa: string | null
         usuarios: {
           nombre: string
-          primer_apellido: string | null
-          segundo_apellido: string | null
+          apellido_1: string | null
+          apellido_2: string | null
         }
       }
       contrataciones: {
@@ -297,19 +297,15 @@ export async function getAllCompanyRatingsForAdmin(): Promise<
     const estUser = r.estudiantes.usuarios
     const nombreEgresado = [
       estUser.nombre,
-      estUser.primer_apellido,
-      estUser.segundo_apellido,
+      estUser.apellido_1,
+      estUser.apellido_2,
     ]
       .filter(Boolean)
       .join(' ')
 
     const emp = r.empresarios
     const empUser = emp.usuarios
-    const repName = [
-      empUser.nombre,
-      empUser.primer_apellido,
-      empUser.segundo_apellido,
-    ]
+    const repName = [empUser.nombre, empUser.apellido_1, empUser.apellido_2]
       .filter(Boolean)
       .join(' ')
     const nombreEmpresa = emp.nombre_empresa || repName

@@ -30,6 +30,10 @@ function isOnboardingPath(pathname: string): boolean {
   return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
 }
 
+function isPendingApprovalPath(pathname: string): boolean {
+  return /^\/(es|en)\/pending-approval(\/|$)/.test(pathname)
+}
+
 function getRouteRole(
   pathname: string,
 ): 'egresado' | 'empresario' | 'administrador' | null {
@@ -92,15 +96,19 @@ export async function middleware(request: NextRequest) {
     return intlResponse
   }
 
-  // A partir de aquí: usuario autenticado
+  // A partir de aquí: usuario autenticado.
+  // Se cachea el estado de cuenta para reutilizarlo en los casos B-E
+  // sin duplicar la llamada a Supabase.
+  let cachedAccountStatus: string | null = null
 
-  // GATE DE SUSPENSIÓN (RF-65 / #83): una cuenta suspendida no puede usar la
-  // plataforma. Se evalúa en rutas protegidas, de auth y onboarding. Si está
-  // suspendida se cierra la sesión y se rebota a /login?reason=suspended.
+  // GATE DE ESTADO DE CUENTA: suspensión, desactivación y cuenta pendiente.
+  // Se evalúa para rutas protegidas, páginas públicas de auth, onboarding
+  // y la propia página de espera.
   if (
     isProtected(pathname) ||
     isPublicAuthPage(pathname) ||
-    isOnboardingPath(pathname)
+    isOnboardingPath(pathname) ||
+    isPendingApprovalPath(pathname)
   ) {
     const [{ data: accountStatus }, { data: usuarioRow }] = await Promise.all([
       supabase.rpc('get_my_account_status'),
@@ -110,6 +118,8 @@ export async function middleware(request: NextRequest) {
         .eq('id_usuario', user.id)
         .maybeSingle(),
     ])
+
+    cachedAccountStatus = accountStatus ?? null
 
     // Bloqueo duro: cuenta suspendida (RF-65) o desactivada por un admin
     // (is_active = false). Ambos cierran sesión y rebotan a /login.
@@ -141,6 +151,16 @@ export async function middleware(request: NextRequest) {
       })
       return redirect
     }
+
+    // Bloqueo blando: cuenta pendiente de aprobación por el admin.
+    // No cierra la sesión — el usuario solo no puede acceder al sistema.
+    // /pending-approval y /onboarding siguen siendo accesibles para que el
+    // usuario pueda ver su estado y completar el onboarding si todavía no lo hizo.
+    if (accountStatus === 'pendiente' && isProtected(pathname)) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/pending-approval`, request.url),
+      )
+    }
   }
 
   // CASO B: Ruta protegida
@@ -157,7 +177,7 @@ export async function middleware(request: NextRequest) {
 
     const routeRole = getRouteRole(pathname)
     if (routeRole && routeRole !== role) {
-      // Rol incorrecto → redirect silencioso al home propio (Q5)
+      // Rol incorrecto → redirect silencioso al home propio
       return NextResponse.redirect(
         new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
       )
@@ -166,12 +186,20 @@ export async function middleware(request: NextRequest) {
     return intlResponse
   }
 
-  // CASO C: Página pública de auth (login, register, etc.)
+  // CASO C: Página pública de auth (login, register, etc.) con usuario autenticado.
+  // Si ya tiene rol y la cuenta está activa → home del rol.
+  // Si ya tiene rol pero la cuenta está pendiente → pending-approval (no al home).
+  // Si no tiene rol → onboarding (todavía no eligió).
   if (isPublicAuthPage(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
     const role = normalizeRole(roleRaw)
 
     if (role) {
+      if (cachedAccountStatus !== 'activa') {
+        return NextResponse.redirect(
+          new URL(`/${locale}/pending-approval`, request.url),
+        )
+      }
       return NextResponse.redirect(
         new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
       )
@@ -180,18 +208,41 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url))
   }
 
-  // CASO D: /onboarding con usuario autenticado
+  // CASO D: /onboarding con usuario autenticado.
+  // Si ya tiene rol: cuenta activa → home; cuenta pendiente → pending-approval.
+  // Sin rol → onboarding normal (deja pasar).
   if (isOnboardingPath(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
     const role = normalizeRole(roleRaw)
 
     if (role) {
-      // Ya tiene rol → rebotar a home (refuerza permanencia Q6)
+      if (cachedAccountStatus === 'activa') {
+        return NextResponse.redirect(
+          new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+        )
+      }
+      // Tiene rol pero cuenta pendiente → pending-approval
       return NextResponse.redirect(
-        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+        new URL(`/${locale}/pending-approval`, request.url),
       )
     }
     // Sin rol → onboarding normal
+    return intlResponse
+  }
+
+  // CASO E: /pending-approval con usuario autenticado.
+  // Si la cuenta ya está activa y tiene rol → rebotar al home (ya fue aprobado).
+  // Cualquier otro estado → dejar pasar (es la pantalla de espera).
+  if (isPendingApprovalPath(pathname)) {
+    if (cachedAccountStatus === 'activa') {
+      const { data: roleRaw } = await supabase.rpc('get_my_role')
+      const role = normalizeRole(roleRaw)
+      if (role) {
+        return NextResponse.redirect(
+          new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
+        )
+      }
+    }
     return intlResponse
   }
 
