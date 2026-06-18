@@ -1,5 +1,6 @@
 'use server'
 
+import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/guards'
@@ -29,6 +30,9 @@ export interface EntregablePropio {
 export async function getMiContratacion(
   idProyecto: string,
 ): Promise<Result<MiContratacion | null>> {
+  if (!z.string().uuid().safeParse(idProyecto).success)
+    return err('invalid_input')
+
   const roleResult = await requireRole('egresado')
   if (!roleResult.ok) return roleResult
 
@@ -101,6 +105,9 @@ export interface EntregableEmpresario {
 export async function getEntregablesDeProyecto(
   idProyecto: string,
 ): Promise<Result<EntregableEmpresario[]>> {
+  if (!z.string().uuid().safeParse(idProyecto).success)
+    return err('invalid_input')
+
   const supabase = await createSupabaseServerClient()
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) return err('unauthenticated')
@@ -183,6 +190,9 @@ export async function getEntregablesDeProyecto(
 export async function getSignedUrlEntregable(
   idEntregable: string,
 ): Promise<Result<{ url: string }>> {
+  if (!z.string().uuid().safeParse(idEntregable).success)
+    return err('invalid_input')
+
   const supabase = await createSupabaseServerClient()
   const { data: userData, error: userError } = await supabase.auth.getUser()
   if (userError || !userData.user) return err('unauthenticated')
@@ -249,10 +259,56 @@ export async function getSignedUrlEntregable(
 export async function getMisEntregables(
   idContratacion: string,
 ): Promise<Result<EntregablePropio[]>> {
+  if (!z.string().uuid().safeParse(idContratacion).success)
+    return err('invalid_input')
+
   const roleResult = await requireRole('egresado')
   if (!roleResult.ok) return roleResult
 
   const supabase = await createSupabaseServerClient()
+
+  // Verificación de propiedad: la contratación debe ser del egresado actual.
+  // La RLS de entregables ya lo cubre; esto es defensa en profundidad (reglas.md §5).
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData.user) return err('unauthenticated')
+
+  const { data: estudiante, error: estError } = await supabase
+    .from('estudiantes')
+    .select('id_estudiante')
+    .eq('id_usuario', userData.user.id)
+    .single()
+  if (estError || !estudiante) return err('estudiante_not_found')
+
+  const { data: contratacion, error: contError } = await supabase
+    .from('contrataciones')
+    .select('id_participacion')
+    .eq('id_contratacion', idContratacion)
+    .maybeSingle()
+  if (contError) {
+    logger.error('getMisEntregables: contratacion query failed', {
+      error: contError.message,
+    })
+    return err('database_error')
+  }
+  if (!contratacion) return err('unauthorized')
+
+  const { data: participacion, error: partError } = await supabase
+    .from('participaciones')
+    .select('id_estudiante')
+    .eq('id_participacion', contratacion.id_participacion)
+    .maybeSingle()
+  if (partError) {
+    logger.error('getMisEntregables: participacion query failed', {
+      error: partError.message,
+    })
+    return err('database_error')
+  }
+  if (
+    !participacion ||
+    participacion.id_estudiante !== estudiante.id_estudiante
+  ) {
+    return err('unauthorized')
+  }
 
   const { data, error } = await supabase
     .from('entregables')

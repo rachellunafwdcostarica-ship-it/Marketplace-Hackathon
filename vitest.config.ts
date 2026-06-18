@@ -4,6 +4,29 @@ import { fileURLToPath } from 'node:url'
 export default defineConfig({
   test: {
     environment: 'node',
+    coverage: {
+      provider: 'v8',
+      // Gate de cobertura solo sobre la LÓGICA PURA de lib/ con tests unitarios
+      // (reglas.md §10: "Vitest sobre la lógica pura de lib/"). Los módulos de IO
+      // (server actions, queries Supabase, LLM, email) son puntos de integración,
+      // no unit-testeables de forma significativa, y quedan fuera del umbral.
+      include: [
+        'src/lib/utils/age.ts',
+        'src/lib/auth/roles.ts',
+        'src/lib/auth/guards.ts',
+        'src/lib/admin/config-validation.ts',
+        'src/lib/projects/project-detail-logic.ts',
+        'src/lib/projects/schemas.ts',
+        'src/lib/proposal-ai/proposal-mapping.ts',
+        'src/lib/env.ts',
+      ],
+      thresholds: {
+        lines: 50,
+        functions: 50,
+        branches: 50,
+        statements: 50,
+      },
+    },
     env: {
       NEXT_PUBLIC_SUPABASE_URL: 'https://test.supabase.co',
       NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',

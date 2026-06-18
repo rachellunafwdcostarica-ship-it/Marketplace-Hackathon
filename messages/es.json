@@ -693,6 +693,7 @@
     "saveRating": "Guardar calificación",
     "ratingSuccess": "Calificación guardada.",
     "adjudicarSuccess": "Proyecto adjudicado.",
+    "finalizarSuccess": "Entregable final aprobado. Proyecto finalizado.",
     "entregablesTitle": "Entregables del contratado",
     "entregablesDesc": "Archivos subidos por el egresado adjudicado.",
     "entregablesLoadError": "No pudimos cargar los entregables.",
@@ -719,8 +720,8 @@
       "transicion_invalida": "Ese cambio de estado no está permitido.",
       "generic": "No pudimos completar la acción. Intentá de nuevo.",
       "adjudicacion_fallida": "No se pudo adjudicar. Intentá de nuevo.",
-      "adjudicacion_parcial": "Adjudicación incompleta. Contactá al administrador.",
-      "calificacion_fallida": "No pudimos guardar la calificación."
+      "calificacion_fallida": "No pudimos guardar la calificación.",
+      "finalizacion_fallida": "No pudimos finalizar el proyecto. Intentá de nuevo."
     }
   },
   "Admin": {
