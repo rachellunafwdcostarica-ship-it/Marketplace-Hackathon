@@ -325,6 +325,31 @@ tarea se acota a **duplicación + bombas de tiempo**, con herramienta y atada a 
   equipo y hacer PRs por módulo revisados por su dueño; la dedup cross-módulo y de triggers puede tocar BD →
   **Samir**. Las herramientas (`knip`/`jscpd`) requieren visto bueno de dependencia (brief §8.2). No independiente.
 
+### P2.8 · Rename de ruta `/junior` → `/egresado` (coordinado, no unilateral)
+**[Seguro]** El rol ya es `egresado` en BD desde el 09-jun (`20260609000005:16`); lo único "junior" que
+sobrevive es la **ruta** — la URL no espeja el rol. Verificado el 18-jun: la carpeta `(app)/junior/` existe y
+hay **28 referencias `/junior`** en `src`. **No requiere migración ni gate de BD** — es puro routing.
+
+- **Por qué es de Barry:** routing trivial pero con **alto costo de coordinación**. Todas las ramas
+  referencian `/junior` (al 16-jun: errol/rachell/fressia=27, sol/ronny=26, santiago=15, dev=16), así que un
+  rename unilateral en `samir` **traslada el conflicto a todos al rebasar**. El **timing / punto de sync** es
+  decisión de PM, no de módulo. Y **escala**: cuanto más se posterga, más código lo referencia.
+- **Alcance (codemod determinista):**
+  - `git mv` `src/app/[locale]/(app)/junior/` → `(app)/egresado/`.
+  - `middleware.ts`: `PROTECTED_PREFIXES` (`:11`) + el regex de `getRouteRole` (`:36`).
+  - hrefs restantes: Navbar, Footer, LandingHeroCtas, ProjectCard, `applications/page.tsx`.
+  - `MOCK_JUNIOR_NAME` → `MOCK_EGRESADO_NAME` (def + usos) + comentario `roles.ts:8`.
+  - **NO tocar** el "junior" de **nivel de experiencia** (`es/en.json` companyDesc/missionText, mocks, prompt
+    IA `provider.ts:107`) ni los comentarios históricos de migraciones / `roles.test.ts:30`. El codemod es
+    seguro porque esos **no** llevan `/` adelante.
+- **DoD específico:** `grep /junior` = **0**, las 4 rutas resuelven, el middleware guarda `/egresado`; +
+  typecheck/lint/build verdes.
+- **Ya hecho (continuidad):** el fix de 2 links rotos a `/applications` está commiteado (`7210ff1` en samir);
+  la carpeta duplicada `Portafolio/` ya **no existe** (limpiada en un merge).
+- **Dependencias / coordinación:** **NO independiente — el bloqueo es de TIMING, no técnico.** Hacerlo en un
+  punto donde **fressia/santiago/sol** puedan rebasar sin pelea (ellas todavía referencian `/junior`). Toca el
+  layout `(app)`, `middleware.ts` y hrefs de varios módulos. No toca BD.
+
 ---
 
 ## P3 — Features que requieren criterio senior antes de codear
