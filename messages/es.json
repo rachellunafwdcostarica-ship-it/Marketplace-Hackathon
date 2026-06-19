@@ -1150,7 +1150,10 @@
     "levelBasic": "Básico",
     "levelIntermediate": "Intermedio",
     "levelAdvanced": "Avanzado",
-    "saveSkill": "Guardar Habilidad"
+    "saveSkill": "Guardar Habilidad",
+    "cropImageTitle": "Recortar imagen",
+    "cropImageDesc": "Ajustá tu imagen para que se vea perfecta.",
+    "cropAndUpload": "Recortar y Subir"
   },
   "CompanyMensajes": {
     "title": "Centro de Mensajes",

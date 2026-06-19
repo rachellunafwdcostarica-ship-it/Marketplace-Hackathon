@@ -3,7 +3,14 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
+import { v2 as cloudinary } from 'cloudinary'
 import type { Database } from '@/types/database'
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+  api_key: process.env.CLOUDINARY_API_KEY || '',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '',
+})
 import type { StudentSkill, PortfolioProject } from '@/types'
 
 export interface StudentProfileView {
@@ -373,5 +380,67 @@ export async function deletePortfolioProject(
     return ok(undefined)
   } catch (e) {
     return err(e instanceof Error ? e.message : 'unexpected_error')
+  }
+}
+
+export async function uploadAndSaveProfilePhoto(
+  formData: FormData,
+): Promise<Result<string>> {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return err('unauthorized')
+    }
+
+    const file = formData.get('file') as File
+    if (!file) {
+      return err('No file provided')
+    }
+
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`
+
+    const uploadResult = await new Promise<cloudinary.UploadApiResponse>(
+      (resolve, reject) => {
+        cloudinary.uploader.upload(
+          base64Image,
+          {
+            folder: 'imagenes',
+            public_id: `profile_${user.id}_${Date.now()}`,
+            overwrite: true,
+          },
+          (error, result) => {
+            if (error) reject(error)
+            else resolve(result)
+          },
+        )
+      },
+    )
+
+    const secureUrl = uploadResult.secure_url
+
+    const { error: dbError } = await supabase
+      .from('usuarios')
+      .update({ foto_perfil: secureUrl })
+      .eq('id_usuario', user.id)
+
+    if (dbError) {
+      logger.error('Error updating foto_perfil in usuarios', { error: dbError })
+      return err('Error updating profile photo in database')
+    }
+
+    return ok(secureUrl)
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'unexpected_error'
+    logger.error('uploadAndSaveProfilePhoto: unexpected error', {
+      error: errorMsg,
+    })
+    return err(errorMsg)
   }
 }

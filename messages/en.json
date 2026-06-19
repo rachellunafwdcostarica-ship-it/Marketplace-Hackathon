@@ -1150,7 +1150,10 @@
     "levelBasic": "Basic",
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
-    "saveSkill": "Save Skill"
+    "saveSkill": "Save Skill",
+    "cropImageTitle": "Crop image",
+    "cropImageDesc": "Adjust your image to look perfect.",
+    "cropAndUpload": "Crop and Upload"
   },
   "CompanyMensajes": {
     "title": "Messages Hub",
