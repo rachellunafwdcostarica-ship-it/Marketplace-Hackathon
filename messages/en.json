@@ -722,12 +722,29 @@
     "responderCommentPlaceholder": "Describe the required changes...",
     "responderSuccess": "Response sent.",
     "responderError": "Could not send the response.",
+    "editDescriptionAction": "Edit description",
+    "editDescriptionTitle": "Edit the project description",
+    "editDescriptionDesc": "The AI will review your change before publishing it. If accepted, applicants will be notified by email and in-app.",
+    "editDescriptionLabel": "Description",
+    "editDescriptionPlaceholder": "Describe the project: problem and context, goal and scope...",
+    "editDescriptionSubmit": "Save (the AI will review it)",
+    "editDescriptionReviewing": "Reviewing with the AI...",
+    "editDescriptionSuccess": "Description updated.",
+    "editDescriptionSuccessNotified": "Description updated. {count, plural, one {# applicant} other {# applicants}} notified.",
+    "editDescriptionNoChanges": "You didn't change the description.",
+    "editDescriptionRejectedTitle": "The AI didn't approve the change",
+    "editDescriptionRejectedReasons": "Why it didn't pass:",
+    "editDescriptionRejectedAdjustments": "What to adjust:",
     "errors": {
       "transicion_invalida": "That status change isn't allowed.",
       "generic": "We couldn't complete the action. Please try again.",
       "adjudicacion_fallida": "Could not complete the award. Please try again.",
       "calificacion_fallida": "We couldn't save the rating. Please try again.",
-      "finalizacion_fallida": "We couldn't finish the project. Please try again."
+      "finalizacion_fallida": "We couldn't finish the project. Please try again.",
+      "no_editable": "You can only edit the description while the project is open and within its deadline.",
+      "ai_failed": "The AI couldn't review the change. Please try again.",
+      "ai_not_configured": "AI review isn't available right now.",
+      "invalid_input": "Please check the description and try again."
     }
   },
   "Admin": {

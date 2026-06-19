@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Lock,
   Package,
+  Pencil,
   Sparkles,
   XCircle,
 } from 'lucide-react'
@@ -29,6 +30,8 @@ import { Link, useRouter } from '@/i18n/routing'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { cancelProject } from '@/lib/projects/dashboard'
 import { setProjectEstado } from '@/lib/projects/project-detail'
+import { editProjectDescription } from '@/lib/projects/edit-description'
+import { canEditProjectDescription } from '@/lib/projects/edit-description-logic'
 import type { PublishedProject } from '@/lib/projects/dashboard'
 import type { ParticipacionEmpresario } from '@/lib/projects/project-detail'
 import type { EntregableEmpresario } from '@/lib/deliverables/queries'
@@ -63,6 +66,14 @@ const KNOWN_CANCEL_ERRORS = new Set([
   'unexpected',
 ])
 
+// Códigos de error de editProjectDescription con copy propio; el resto cae a 'generic'.
+const KNOWN_EDIT_ERRORS = new Set([
+  'no_editable',
+  'ai_failed',
+  'ai_not_configured',
+  'invalid_input',
+])
+
 function isCancelable(estado: PublishedProject['estado']): boolean {
   return estado !== 'finalizado' && estado !== 'cancelado'
 }
@@ -86,9 +97,18 @@ export function ProjectDetailClient({
   const [cancelChecked, setCancelChecked] = useState(false)
   const [cancelMotivo, setCancelMotivo] = useState('')
   const [cancelling, setCancelling] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editValue, setEditValue] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [editRejection, setEditRejection] = useState<{
+    razones: string[]
+    ajustes: string[]
+  } | null>(null)
 
   const forwardStates = getProjectForwardStates(project.estadoEfectivo)
   const cancelable = isCancelable(project.estado)
+  const descriptionEditable =
+    !isPending && canEditProjectDescription(project.estadoEfectivo)
   const budget = formatBudget(
     project.moneda,
     project.presupuestoMin,
@@ -138,6 +158,54 @@ export function ProjectDetailClient({
     toast.error(tBoard(`errors.${code}`))
   }
 
+  const abrirEdit = () => {
+    setEditValue(project.descripcion)
+    setEditRejection(null)
+    setEditOpen(true)
+  }
+
+  const cerrarEdit = () => {
+    setEditOpen(false)
+    setEditRejection(null)
+  }
+
+  const confirmEdit = async () => {
+    if (editing) return
+    const value = editValue.trim()
+    if (value.length === 0) return
+    setEditing(true)
+    setEditRejection(null)
+    const res = await editProjectDescription({
+      idProyecto: project.id,
+      descripcion: value,
+    })
+    setEditing(false)
+    if (!res.ok) {
+      const code = KNOWN_EDIT_ERRORS.has(res.error) ? res.error : 'generic'
+      toast.error(t(`errors.${code}`))
+      return
+    }
+    if (res.data.estado === 'rechazada') {
+      setEditRejection({
+        razones: res.data.razones,
+        ajustes: res.data.ajustes,
+      })
+      return
+    }
+    if (res.data.estado === 'sin_cambios') {
+      toast(t('editDescriptionNoChanges'))
+      cerrarEdit()
+      return
+    }
+    toast.success(
+      res.data.notificados > 0
+        ? t('editDescriptionSuccessNotified', { count: res.data.notificados })
+        : t('editDescriptionSuccess'),
+    )
+    cerrarEdit()
+    router.refresh()
+  }
+
   return (
     <CompanyShell>
       <div className="space-y-8">
@@ -165,7 +233,23 @@ export function ProjectDetailClient({
 
         <Card className="border border-border/80 bg-card/40">
           <CardContent className="p-6 space-y-5">
-            <SectionHeading>{t('projectInfoTitle')}</SectionHeading>
+            <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-2">
+              <h2 className="text-lg font-bold font-heading text-foreground">
+                {t('projectInfoTitle')}
+              </h2>
+              {descriptionEditable && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={abrirEdit}
+                  className="font-semibold text-primary hover:text-primary hover:bg-primary/10"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  {t('editDescriptionAction')}
+                </Button>
+              )}
+            </div>
             <DetailField label={tBoard('descriptionLabel')}>
               <p className="text-foreground whitespace-pre-wrap text-sm">
                 {project.descripcion}
@@ -400,6 +484,91 @@ export function ProjectDetailClient({
               className="bg-destructive hover:bg-destructive/90 text-primary-foreground font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {cancelling ? tBoard('cancelling') : tBoard('cancelConfirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editOpen} onOpenChange={(open) => !open && cerrarEdit()}>
+        <DialogContent className="sm:max-w-lg border border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold font-heading">
+              {t('editDescriptionTitle')}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {t('editDescriptionDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="editDescription"
+                className="text-sm font-semibold"
+              >
+                {t('editDescriptionLabel')}
+              </Label>
+              <Textarea
+                id="editDescription"
+                rows={10}
+                value={editValue}
+                onChange={(event) => setEditValue(event.target.value)}
+                disabled={editing}
+                placeholder={t('editDescriptionPlaceholder')}
+                className="bg-card/50 border-border resize-none"
+              />
+            </div>
+            {editRejection && (
+              <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2.5 space-y-2">
+                <p className="text-sm font-bold text-warning flex items-center gap-1.5">
+                  <XCircle className="w-4 h-4" />
+                  {t('editDescriptionRejectedTitle')}
+                </p>
+                {editRejection.razones.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t('editDescriptionRejectedReasons')}
+                    </p>
+                    <ul className="list-disc pl-5 text-sm text-foreground space-y-0.5">
+                      {editRejection.razones.map((razon) => (
+                        <li key={razon}>{razon}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {editRejection.ajustes.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {t('editDescriptionRejectedAdjustments')}
+                    </p>
+                    <ul className="list-disc pl-5 text-sm text-foreground space-y-0.5">
+                      {editRejection.ajustes.map((ajuste) => (
+                        <li key={ajuste}>{ajuste}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-end pt-4 border-t border-border/40">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={cerrarEdit}
+              disabled={editing}
+            >
+              {tCommon('cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void confirmEdit()}
+              disabled={editing || editValue.trim().length === 0}
+              className="font-semibold"
+            >
+              {editing
+                ? t('editDescriptionReviewing')
+                : t('editDescriptionSubmit')}
             </Button>
           </DialogFooter>
         </DialogContent>
