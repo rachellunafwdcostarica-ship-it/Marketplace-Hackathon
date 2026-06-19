@@ -80,12 +80,10 @@ describe('addStrike', () => {
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            single: vi
-              .fn()
-              .mockResolvedValue({
-                data: null,
-                error: { message: 'not found' },
-              }),
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: 'not found' },
+            }),
           })),
         })),
       })),
@@ -250,12 +248,10 @@ describe('removeStrike', () => {
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            single: vi
-              .fn()
-              .mockResolvedValue({
-                data: null,
-                error: { message: 'not found' },
-              }),
+            single: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: 'not found' },
+            }),
           })),
         })),
       })),

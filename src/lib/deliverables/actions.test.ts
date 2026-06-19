@@ -43,12 +43,10 @@ function withAuth(fromImpl: (table: string) => unknown) {
 function withNoAuth() {
   return {
     auth: {
-      getUser: vi
-        .fn()
-        .mockResolvedValue({
-          data: { user: null },
-          error: { message: 'no auth' },
-        }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: null },
+        error: { message: 'no auth' },
+      }),
     },
     from: vi.fn(),
   }
