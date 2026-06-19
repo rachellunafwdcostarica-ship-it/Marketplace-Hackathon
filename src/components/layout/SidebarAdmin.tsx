@@ -64,8 +64,8 @@ export function SidebarAdmin({
         className,
       )}
       style={{
-        backgroundColor: '#662D91',
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
+        backgroundColor: 'var(--surface-admin)',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23f7f9fa' fill-opacity='0.03'/%3E%3C/svg%3E")`,
       }}
     >
       {/* Logo + Brand */}
