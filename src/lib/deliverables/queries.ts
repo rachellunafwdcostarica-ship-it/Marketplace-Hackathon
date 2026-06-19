@@ -143,7 +143,7 @@ export async function getEntregablesDeProyecto(
     .from('participaciones')
     .select('id_participacion')
     .eq('id_proyecto', idProyecto)
-    .eq('estado', 'contratada')
+    .in('estado', ['contratada', 'finalizada'])
     .maybeSingle()
   if (partError) {
     logger.error('getEntregablesDeProyecto: participacion query failed', {

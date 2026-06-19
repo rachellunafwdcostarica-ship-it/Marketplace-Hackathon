@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
+import { validateApplicationWithAI } from '@/lib/ai-filtro-ofertas/openrouter-validation'
 
 const MIN_PLANTEAMIENTO_LEN = 30
 const MAX_CARTA_LEN = 2800
@@ -69,7 +70,7 @@ export async function postularse(
 
   const { data: proyecto, error: proyectoError } = await supabase
     .from('proyectos')
-    .select('estado, fecha_cierre, is_active')
+    .select('titulo, descripcion, estado, fecha_cierre, is_active')
     .eq('id_proyecto', parsed.data.id_proyecto)
     .single()
 
@@ -88,6 +89,24 @@ export async function postularse(
     return err('plazo_vencido')
   }
 
+  // Validación de IA antes de insertar
+  const aiValidation = await validateApplicationWithAI({
+    projectTitle: proyecto.titulo || 'Proyecto FWD',
+    projectDescription: proyecto.descripcion || '',
+    coverLetter: parsed.data.carta_postulacion,
+    solutionApproach: parsed.data.planteamiento_solucion,
+    externalLink:
+      parsed.data.prototipo_enlaces?.[1] ||
+      parsed.data.prototipo_enlaces?.[0] ||
+      null, // Dependiendo de cuántos hay
+    uploadedPrototypeUrl: parsed.data.prototipo_enlaces?.[0] || null,
+    technicalDocUrl: parsed.data.documentacion_tecnica || null,
+  })
+
+  if (!aiValidation.isRelated) {
+    return err(`AI_REJECTED::${aiValidation.reason}`)
+  }
+
   const { error: insertError } = await supabase.from('participaciones').insert({
     id_proyecto: parsed.data.id_proyecto,
     id_estudiante: estudiante.id_estudiante,
@@ -100,7 +119,10 @@ export async function postularse(
 
   if (insertError) {
     logger.error('postularse failed', { error: insertError.message })
-    if (insertError.code === 'P0001' || insertError.message.includes('cupo')) {
+    if (
+      insertError.code === 'P0001' ||
+      insertError.message.toLowerCase().includes('cupo')
+    ) {
       return err('cupo_excedido')
     }
     return err('database_error')

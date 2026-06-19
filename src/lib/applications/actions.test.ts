@@ -36,12 +36,10 @@ function withAuth(fromImpl: (table: string) => unknown) {
 function withNoAuth() {
   return {
     auth: {
-      getUser: vi
-        .fn()
-        .mockResolvedValue({
-          data: { user: null },
-          error: { message: 'no auth' },
-        }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: null },
+        error: { message: 'no auth' },
+      }),
     },
     from: vi.fn(),
   }
@@ -96,12 +94,10 @@ describe('postularse', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: null,
-                    error: { message: 'not found' },
-                  }),
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'not found' },
+                }),
               })),
             })),
           }
@@ -164,12 +160,10 @@ describe('postularse', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: null,
-                    error: { message: 'not found' },
-                  }),
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'not found' },
+                }),
               })),
             })),
           }
@@ -305,12 +299,10 @@ describe('retirarPostulacion', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: null,
-                    error: { message: 'not found' },
-                  }),
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'not found' },
+                }),
               })),
             })),
           }
@@ -343,12 +335,10 @@ describe('retirarPostulacion', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn().mockReturnThis(),
-              single: vi
-                .fn()
-                .mockResolvedValue({
-                  data: null,
-                  error: { message: 'not found' },
-                }),
+              single: vi.fn().mockResolvedValue({
+                data: null,
+                error: { message: 'not found' },
+              }),
             })),
           }
         }

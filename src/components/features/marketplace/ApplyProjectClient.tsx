@@ -128,27 +128,33 @@ export function ApplyProjectClient({
       })
 
       if (!result.ok) {
-        const errorMessages: Partial<Record<string, string>> = {
-          cuenta_no_verificada: tEgresado('applyErrorCuentaNoVerificada'),
-          cupo_excedido: tEgresado('applyErrorCupoExcedido'),
-          proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
-          plazo_vencido: tEgresado('applyErrorPlazoVencido'),
-          proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
-          estudiante_not_found: tEgresado('applyErrorPerfil'),
-          unauthenticated: tEgresado('applyErrorSesion'),
-          database_error: tEgresado('applyErrorDatabase'),
+        if (
+          typeof result.error === 'string' &&
+          result.error.startsWith('AI_REJECTED::')
+        ) {
+          const reason = result.error.replace('AI_REJECTED::', '')
+          toast.error(tEgresado('applyErrorAiRejected', { reason }))
+        } else {
+          const errorMessages: Partial<Record<string, string>> = {
+            cuenta_no_verificada: tEgresado('applyErrorCuentaNoVerificada'),
+            cupo_excedido: tEgresado('applyErrorCupoExcedido'),
+            proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
+            plazo_vencido: tEgresado('applyErrorPlazoVencido'),
+            proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
+            estudiante_not_found: tEgresado('applyErrorPerfil'),
+            unauthenticated: tEgresado('applyErrorSesion'),
+            database_error: tEgresado('applyErrorDatabase'),
+          }
+          toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
         }
-        toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
       } else {
         toast.success(tEgresado('applySuccess'))
         router.push('/junior/applications')
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      } else {
-        toast.error(tEgresado('unexpectedError'))
-      }
+      toast.error(
+        err instanceof Error ? err.message : tEgresado('unexpectedError'),
+      )
     } finally {
       setIsSubmitting(false)
     }
