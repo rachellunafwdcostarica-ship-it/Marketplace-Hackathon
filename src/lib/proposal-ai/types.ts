@@ -4,8 +4,16 @@
  * `HistorialEntry` es cada entrada append-only del rastro de auditoría que se
  * guarda en `conversaciones_ia.historial` (jsonb).
  */
-export type HistorialRol = 'empresario' | 'ia' | 'sistema'
-export type HistorialTipo = 'mensaje' | 'pdf' | 'propuesta' | 'validacion'
+export const HISTORIAL_ROLES = ['empresario', 'ia', 'sistema'] as const
+export type HistorialRol = (typeof HISTORIAL_ROLES)[number]
+
+export const HISTORIAL_TIPOS = [
+  'mensaje',
+  'pdf',
+  'propuesta',
+  'validacion',
+] as const
+export type HistorialTipo = (typeof HISTORIAL_TIPOS)[number]
 
 export interface HistorialEntry {
   rol: HistorialRol

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
+    "@playwright/test": "^1.61.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
@@ -60,7 +61,7 @@
     "eslint-config-next": "15.5.19",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",
-    "playwright": "^1.60.0",
+    "playwright": "^1.61.0",
     "prettier": "^3.8.3",
     "supabase": "^2.106.0",
     "tailwindcss": "^4",

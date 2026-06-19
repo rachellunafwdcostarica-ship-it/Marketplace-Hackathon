@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from '@/components/ui/dialog'
 import {
   PlusCircle,
@@ -536,14 +537,45 @@ export function PortfolioManager({
                             </a>
                           )}
                           {proj.demoUrl && (
-                            <a
-                              href={proj.demoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline flex items-center gap-0.5"
-                            >
-                              <ExternalLink className="h-3 w-3" /> {t('demo')}
-                            </a>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <button className="text-primary hover:underline flex items-center gap-0.5 cursor-pointer">
+                                  <ExternalLink className="h-3 w-3" />{' '}
+                                  {t('demo')}
+                                </button>
+                              </DialogTrigger>
+                              <DialogContent
+                                showCloseButton={false}
+                                className="max-w-4xl h-[80vh] flex flex-col gap-0 p-0 overflow-hidden bg-background rounded-xl"
+                              >
+                                <DialogHeader className="p-3 border-b bg-muted/30 flex flex-row items-center">
+                                  <div className="flex items-center gap-2 pl-1">
+                                    <DialogClose asChild>
+                                      <button
+                                        className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                        aria-label="Cerrar modal"
+                                      />
+                                    </DialogClose>
+                                    <a
+                                      href={proj.demoUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                      aria-label="Abrir en otra ventana"
+                                    />
+                                  </div>
+                                  <DialogTitle className="flex-1 text-center text-xs font-medium text-muted-foreground pr-10">
+                                    {proj.title} Demo
+                                  </DialogTitle>
+                                </DialogHeader>
+                                <div className="flex-1 w-full bg-muted/10 relative">
+                                  <iframe
+                                    src={proj.demoUrl}
+                                    className="w-full h-full border-0"
+                                  />
+                                </div>
+                              </DialogContent>
+                            </Dialog>
                           )}
                         </div>
                       </div>
@@ -626,14 +658,45 @@ export function PortfolioManager({
                       </a>
                     )}
                     {project.demoUrl && (
-                      <a
-                        href={project.demoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-primary hover:underline"
-                      >
-                        <ExternalLink className="mr-1 h-4 w-4" /> {t('demo')}
-                      </a>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center text-primary hover:underline cursor-pointer">
+                            <ExternalLink className="mr-1 h-4 w-4" />{' '}
+                            {t('demo')}
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent
+                          showCloseButton={false}
+                          className="max-w-4xl h-[80vh] flex flex-col gap-0 p-0 overflow-hidden bg-background rounded-xl"
+                        >
+                          <DialogHeader className="p-3 border-b bg-muted/30 flex flex-row items-center">
+                            <div className="flex items-center gap-2 pl-1">
+                              <DialogClose asChild>
+                                <button
+                                  className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                  aria-label="Cerrar modal"
+                                />
+                              </DialogClose>
+                              <a
+                                href={project.demoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                aria-label="Abrir en otra ventana"
+                              />
+                            </div>
+                            <DialogTitle className="flex-1 text-center text-xs font-medium text-muted-foreground pr-10">
+                              {project.title} Demo
+                            </DialogTitle>
+                          </DialogHeader>
+                          <div className="flex-1 w-full bg-muted/10 relative">
+                            <iframe
+                              src={project.demoUrl}
+                              className="w-full h-full border-0"
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </div>
                 </CardContent>

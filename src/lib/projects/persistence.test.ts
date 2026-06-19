@@ -19,14 +19,29 @@ describe('parseHistorial', () => {
     expect(parseHistorial({ tipo: 'mensaje' } as Json)).toEqual([])
   })
 
-  it('devuelve el array cuando raw es un array', () => {
+  it('devuelve las entradas cuando el array valida contra el schema', () => {
     const data = [
-      { role: 'user', content: 'Hola' },
-      { role: 'assistant', content: 'Hola!' },
+      {
+        rol: 'empresario',
+        tipo: 'mensaje',
+        contenido: 'Hola',
+        fecha: '2026-01-01T00:00:00Z',
+      },
+      {
+        rol: 'ia',
+        tipo: 'mensaje',
+        contenido: 'Hola!',
+        fecha: '2026-01-01T00:01:00Z',
+      },
     ]
     const result = parseHistorial(data as Json)
-    expect(Array.isArray(result)).toBe(true)
     expect(result).toHaveLength(2)
+    expect(result[0]?.rol).toBe('empresario')
+  })
+
+  it('descarta el array cuyas entradas no tienen la forma esperada', () => {
+    const data = [{ role: 'user', content: 'Hola' }]
+    expect(parseHistorial(data as Json)).toEqual([])
   })
 
   it('devuelve array vacío cuando raw es array vacío', () => {
@@ -51,16 +66,27 @@ describe('parseLogistica', () => {
     expect(parseLogistica([1, 2, 3])).toBeNull()
   })
 
-  it('devuelve el objeto cuando raw es un objeto plano', () => {
-    const data = { plazo: 30, presupuesto: 500 }
+  it('devuelve el draft cuando el objeto valida contra el schema', () => {
+    const data = {
+      titulo: 'Landing de café',
+      modalidad: 'remoto',
+      moneda: 'USD',
+      presupuestoMin: 1000,
+      presupuestoMax: 5000,
+      plazoDias: 7,
+      paisProyecto: null,
+      ciudadProyecto: null,
+    }
     const result = parseLogistica(data as Json)
-    expect(result).not.toBeNull()
     expect(result).toEqual(data)
   })
 
-  it('devuelve objeto vacío cuando raw es un objeto vacío', () => {
-    const result = parseLogistica({})
-    expect(result).toEqual({})
+  it('devuelve null cuando el objeto no tiene la forma del draft', () => {
+    expect(parseLogistica({ plazo: 30, presupuesto: 500 } as Json)).toBeNull()
+  })
+
+  it('devuelve null cuando el objeto está vacío (no valida)', () => {
+    expect(parseLogistica({})).toBeNull()
   })
 })
 
@@ -81,15 +107,24 @@ describe('parseProposal', () => {
     expect(parseProposal(['item'])).toBeNull()
   })
 
-  it('devuelve el objeto cuando raw es un objeto plano', () => {
+  it('devuelve la propuesta cuando el objeto valida contra el schema', () => {
     const data = {
       titulo: 'App de gestión',
       descripcion: 'Descripción completa',
-      area: 'Tecnología',
+      idArea: null,
+      areaNombre: null,
+      categorias: [],
+      tecnologias: [],
+      stackSugerido: [],
+      involucraIa: false,
     }
     const result = parseProposal(data as Json)
-    expect(result).not.toBeNull()
     expect(result).toEqual(data)
+  })
+
+  it('devuelve null cuando el objeto no tiene la forma de la propuesta', () => {
+    const data = { titulo: 'App', descripcion: 'X', area: 'Tecnología' }
+    expect(parseProposal(data as Json)).toBeNull()
   })
 
   it('devuelve null para booleano', () => {

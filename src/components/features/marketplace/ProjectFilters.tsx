@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FilterX } from 'lucide-react'
+import { DURATION_BUCKET_BOUNDS } from '@/lib/projects/duration'
 
 interface ProjectFiltersProps {
   selectedStack: string
@@ -38,6 +39,8 @@ export function ProjectFilters({
 }: ProjectFiltersProps) {
   const tCommon = useTranslations('Common')
   const tEgresado = useTranslations('Egresado')
+
+  const { shortMax, mediumMax } = DURATION_BUCKET_BOUNDS
 
   const showClearBtn =
     selectedStack || selectedMode || selectedDuration || selectedBudget
@@ -108,9 +111,15 @@ export function ProjectFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{tCommon('clearFilters')}</SelectItem>
-              <SelectItem value="short">1 - 2 {tCommon('weeks')}</SelectItem>
-              <SelectItem value="medium">3 - 4 {tCommon('weeks')}</SelectItem>
-              <SelectItem value="long">1+ {tCommon('months')}</SelectItem>
+              <SelectItem value="short">
+                {`1 - ${shortMax} ${tCommon('days')}`}
+              </SelectItem>
+              <SelectItem value="medium">
+                {`${shortMax + 1} - ${mediumMax} ${tCommon('days')}`}
+              </SelectItem>
+              <SelectItem value="long">
+                {`${mediumMax + 1}+ ${tCommon('days')}`}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

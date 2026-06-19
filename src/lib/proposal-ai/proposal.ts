@@ -4,7 +4,7 @@ import { getLocale, getTranslations } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
-import type { Json } from '@/types/database'
+import { toJsonb } from '@/lib/supabase/json'
 import { getAiProvider } from './provider'
 import type { HistorialEntry } from './types'
 import type { PropuestaGeneradaRaw } from './schemas'
@@ -180,11 +180,10 @@ export async function generateProposal(
       const { data: updated, error: updateError } = await supabase
         .from('conversaciones_ia')
         .update({
-          // Cast a Json: ya tipamos estos objetos; Supabase espera `Json`.
-          propuesta_generada: propuesta as unknown as Json,
-          stack_sugerido: raw.stackSugerido as unknown as Json,
+          propuesta_generada: toJsonb(propuesta),
+          stack_sugerido: toJsonb(raw.stackSugerido),
           nivel_tecnico_empresario: raw.nivelTecnico,
-          historial: historialFinal as unknown as Json,
+          historial: toJsonb(historialFinal),
           modelo_ia: provider.modelId,
         })
         .eq('id_conversacion', conversationId)
@@ -234,7 +233,7 @@ export async function generateProposal(
     const { data: updatedRechazo, error: updateRechazoError } = await supabase
       .from('conversaciones_ia')
       .update({
-        historial: historialRechazo as unknown as Json,
+        historial: toJsonb(historialRechazo),
         modelo_ia: provider.modelId,
       })
       .eq('id_conversacion', conversationId)

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Project } from '@/types'
+import { matchesDurationBucket } from '@/lib/projects/duration'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -62,20 +63,9 @@ export function MarketplaceClient({ initialProjects }: MarketplaceClientProps) {
         !selectedStack || project.stack.includes(selectedStack)
       const matchesMode = !selectedMode || project.mode === selectedMode
 
-      let matchesDuration = true
-      if (selectedDuration === 'short') {
-        matchesDuration =
-          (project.duration.toLowerCase().includes('semana') &&
-            (project.duration.includes('1') ||
-              project.duration.includes('2'))) ||
-          project.duration.toLowerCase().includes('día')
-      } else if (selectedDuration === 'medium') {
-        matchesDuration =
-          project.duration.toLowerCase().includes('semana') &&
-          (project.duration.includes('3') || project.duration.includes('4'))
-      } else if (selectedDuration === 'long') {
-        matchesDuration = project.duration.toLowerCase().includes('mes')
-      }
+      const matchesDuration =
+        !selectedDuration ||
+        matchesDurationBucket(project.durationDays, selectedDuration)
 
       let matchesBudget = true
       if (selectedBudget === 'low') matchesBudget = project.budget < 500
