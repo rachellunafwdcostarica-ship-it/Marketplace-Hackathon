@@ -61,7 +61,7 @@ export function ProjectCard({
           {project.title}
         </CardTitle>
         <p className="text-sm font-semibold text-primary/95 mt-1 font-heading">
-          {project.companyName}
+          {project.companyName || tCommon('unknownCompany')}
         </p>
       </CardHeader>
 
@@ -92,7 +92,9 @@ export function ProjectCard({
                 {tCommon('duration')}
               </p>
               <p className="font-semibold text-foreground truncate mt-0.5">
-                {project.duration}
+                {project.durationDays === null
+                  ? tCommon('durationNotSet')
+                  : tCommon('durationInDays', { days: project.durationDays })}
               </p>
             </div>
           </div>

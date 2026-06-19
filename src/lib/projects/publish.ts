@@ -1,6 +1,8 @@
 'use server'
 
+import { unstable_rethrow } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { toJsonb } from '@/lib/supabase/json'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { PLAZO_MIN_DIAS, PLAZO_MAX_DIAS } from './schemas'
@@ -128,13 +130,7 @@ export async function publishProject(
       return err('plazo')
     }
 
-    const client = supabase as unknown as {
-      rpc: (
-        fn: 'publicar_proyecto',
-        args: Record<string, unknown>,
-      ) => Promise<{ data: string | null; error: { message: string } | null }>
-    }
-    const { data: projectId, error: rpcError } = await client.rpc(
+    const { data: projectId, error: rpcError } = await supabase.rpc(
       'publicar_proyecto',
       {
         p_conversacion: conversationId,
@@ -150,7 +146,7 @@ export async function publishProject(
         p_plazo_dias: logistica.plazoDias,
         p_categorias: propuesta.categorias.map((categoria) => categoria.id),
         p_tecnologias: propuesta.tecnologias.map((tecnologia) => tecnologia.id),
-        p_propuesta: propuesta,
+        p_propuesta: toJsonb(propuesta),
         p_involucra_ia: propuesta.involucraIa,
         p_generado_por_ia: true,
       },
@@ -167,6 +163,7 @@ export async function publishProject(
 
     return ok({ projectId })
   } catch (e) {
+    unstable_rethrow(e)
     const msg = e instanceof Error ? e.message : 'unexpected_error'
     logger.error('publishProject: error inesperado', { error: msg })
     return err('unexpected')

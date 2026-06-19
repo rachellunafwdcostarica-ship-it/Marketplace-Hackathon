@@ -13,11 +13,11 @@ import {
   type AdminProjectListItem,
 } from '@/lib/admin/queries'
 import type { Database } from '@/types/database'
-import type { Project, ProjectStatus } from '@/types'
+import type { Project } from '@/types'
+import { estadoToStatus } from '@/lib/projects/status'
+import { durationInDays } from '@/lib/projects/duration'
 
 type EstadoProyecto = Database['public']['Enums']['estado_proyecto_enum']
-
-const DAY_MS = 86_400_000
 
 const ESTADO_BADGE_CLASS: Record<EstadoProyecto, string> = {
   borrador: 'bg-muted text-muted-foreground border-border',
@@ -27,18 +27,6 @@ const ESTADO_BADGE_CLASS: Record<EstadoProyecto, string> = {
   en_desarrollo: 'bg-secondary/10 text-secondary border-secondary/20',
   finalizado: 'bg-highlight/10 text-highlight-foreground border-highlight/30',
   cancelado: 'bg-destructive/10 text-destructive border-destructive/20',
-}
-
-function estadoToStatus(estado: EstadoProyecto): ProjectStatus {
-  switch (estado) {
-    case 'borrador':
-      return 'draft'
-    case 'finalizado':
-    case 'cancelado':
-      return 'closed'
-    default:
-      return 'active'
-  }
 }
 
 interface AdminProjectsPageProps {
@@ -91,19 +79,6 @@ export default async function AdminProjectsPage({
     return t('budgetNone')
   }
 
-  const durationOf = (pub: string | null, cierre: string | null): string => {
-    if (pub === null || cierre === null) {
-      return t('notSet')
-    }
-    const days = Math.max(
-      0,
-      Math.round(
-        (new Date(cierre).getTime() - new Date(pub).getTime()) / DAY_MS,
-      ),
-    )
-    return t('openWindowDays', { days })
-  }
-
   const startDateOf = (pub: string | null): string =>
     pub === null
       ? t('notPublished')
@@ -120,7 +95,7 @@ export default async function AdminProjectsPage({
     companyName: p.nombre_empresa ?? t('companyUnknown'),
     description: p.descripcion,
     stack: p.tecnologias,
-    duration: durationOf(p.fecha_publicacion, p.fecha_cierre),
+    durationDays: durationInDays(p.fecha_publicacion, p.fecha_cierre),
     budget: p.presupuesto_max ?? p.presupuesto_min ?? 0,
     mode: p.modalidad,
     startDate: startDateOf(p.fecha_publicacion),

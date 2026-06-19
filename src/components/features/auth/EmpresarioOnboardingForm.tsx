@@ -229,6 +229,9 @@ export function EmpresarioOnboardingForm({
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-surface-sunken border border-border flex items-center justify-center overflow-hidden shrink-0">
                   {fotoPreview ? (
+                    // Preview local (blob de URL.createObjectURL): next/image no
+                    // optimiza object URLs; `<img>` es lo correcto para previsualizar.
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={fotoPreview}
                       alt=""
