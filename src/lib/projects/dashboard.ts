@@ -6,16 +6,20 @@ import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import type { Database } from '@/types/database'
 import type { Modalidad, Moneda } from './schemas'
+import {
+  computeEstadoEfectivoProyecto,
+  type EstadoEfectivoProyecto,
+} from './project-detail-logic'
 
 type EstadoProyecto = Database['public']['Enums']['estado_proyecto_enum']
 
 /**
  * `estado_efectivo` (errolpendiente §4.1): el estado guardado, salvo que un
- * `abierto` con `fecha_cierre` vencida se muestra como `en_evaluacion`. Es
- * DERIVADO (se calcula al leer); la columna sigue diciendo `abierto`. Sin
- * migración, sin cron — por eso lo computamos acá en vez de con la vista.
+ * `abierto` con `fecha_cierre` vencida se muestra como `en_evaluacion`. Alias
+ * del tipo canónico de `project-detail-logic`, conservado con este nombre por
+ * compatibilidad con sus consumidores.
  */
-export type EstadoEfectivo = EstadoProyecto | 'en_evaluacion'
+export type EstadoEfectivo = EstadoEfectivoProyecto
 
 export interface PublishedProject {
   id: string
@@ -58,15 +62,6 @@ interface RawProyecto {
 
 const PROYECTO_SELECT =
   'id_proyecto, titulo, descripcion, estado, modalidad, moneda, presupuesto_min, presupuesto_max, pais_proyecto, ciudad_proyecto, fecha_publicacion, fecha_cierre, involucra_ia, areas_negocio(nombre), proyecto_categorias(categorias(nombre)), proyecto_tecnologias(tecnologias(nombre))'
-
-function estadoEfectivoDe(
-  estado: EstadoProyecto,
-  fechaCierre: string | null,
-): EstadoEfectivo {
-  const vencio =
-    fechaCierre !== null && new Date(fechaCierre).getTime() < Date.now()
-  return estado === 'abierto' && vencio ? 'en_evaluacion' : estado
-}
 
 /**
  * Proyectos del empresario logueado, con nombres de área/categorías/tecnologías
@@ -116,7 +111,7 @@ export async function getMyPublishedProjects(): Promise<
       titulo: p.titulo,
       descripcion: p.descripcion,
       estado: p.estado,
-      estadoEfectivo: estadoEfectivoDe(p.estado, p.fecha_cierre),
+      estadoEfectivo: computeEstadoEfectivoProyecto(p.estado, p.fecha_cierre),
       modalidad: p.modalidad,
       moneda: p.moneda,
       presupuestoMin: p.presupuesto_min,
