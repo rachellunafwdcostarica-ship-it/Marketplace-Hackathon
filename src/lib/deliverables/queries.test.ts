@@ -17,7 +17,7 @@ const mockedRequireRole = vi.mocked(requireRole)
 
 const USER_ID = 'usr-egresado-1'
 const EST_ID = 'est-1'
-const PROJ_ID = 'proj-1'
+const PROJ_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 
 function withAuth(fromImpl: (table: string) => unknown) {
   return {
@@ -34,12 +34,10 @@ function withAuth(fromImpl: (table: string) => unknown) {
 function withNoAuth() {
   return {
     auth: {
-      getUser: vi
-        .fn()
-        .mockResolvedValue({
-          data: { user: null },
-          error: { message: 'no auth' },
-        }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: null },
+        error: { message: 'no auth' },
+      }),
     },
     from: vi.fn(),
   }
@@ -76,12 +74,10 @@ describe('getMiContratacion', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: null,
-                    error: { message: 'not found' },
-                  }),
+                single: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'not found' },
+                }),
               })),
             })),
           }
@@ -102,12 +98,10 @@ describe('getMiContratacion', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_estudiante: EST_ID },
-                    error: null,
-                  }),
+                single: vi.fn().mockResolvedValue({
+                  data: { id_estudiante: EST_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -140,12 +134,10 @@ describe('getMiContratacion', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_estudiante: EST_ID },
-                    error: null,
-                  }),
+                single: vi.fn().mockResolvedValue({
+                  data: { id_estudiante: EST_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -199,12 +191,10 @@ describe('getMiContratacion', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                single: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_estudiante: EST_ID },
-                    error: null,
-                  }),
+                single: vi.fn().mockResolvedValue({
+                  data: { id_estudiante: EST_ID },
+                  error: null,
+                }),
               })),
             })),
           }
