@@ -332,9 +332,11 @@ describe('getEntregablesDeProyecto', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn().mockReturnThis(),
-              maybeSingle: vi
-                .fn()
-                .mockResolvedValue({ data: null, error: null }),
+              in: vi.fn(() => ({
+                maybeSingle: vi
+                  .fn()
+                  .mockResolvedValue({ data: null, error: null }),
+              })),
             })),
           }
         }
@@ -387,10 +389,12 @@ describe('getEntregablesDeProyecto', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn().mockReturnThis(),
-              maybeSingle: vi.fn().mockResolvedValue({
-                data: { id_participacion: 'part-1' },
-                error: null,
-              }),
+              in: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_participacion: 'part-1' },
+                  error: null,
+                }),
+              })),
             })),
           }
         }
