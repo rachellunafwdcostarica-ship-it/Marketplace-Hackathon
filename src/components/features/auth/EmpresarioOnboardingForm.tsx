@@ -73,7 +73,7 @@ export function EmpresarioOnboardingForm({
           .min(2, tO('errorNombreEmpresa'))
           .max(150, tO('errorNombreEmpresaMax')),
         tipo_empresario: z.enum(['empresa_formal', 'emprendedor'], {
-          error: tO('errorTipoEmpresario'),
+          message: tO('errorTipoEmpresario'),
         }),
         pais: z.string().min(2, tO('errorPais')).max(80, tO('errorPaisMax')),
         ciudad: z
@@ -81,7 +81,7 @@ export function EmpresarioOnboardingForm({
           .min(2, tO('errorCiudad'))
           .max(80, tO('errorCiudadMax')),
         alcance_operativo: z.enum(['nacional', 'internacional', 'ambos'], {
-          error: tO('errorAlcance'),
+          message: tO('errorAlcance'),
         }),
         acepta_terminos: z.boolean().refine((v) => v === true, {
           message: tO('errorTerminos'),

@@ -1,4 +1,5 @@
-'use client'
+// prettier-ignore
+'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import type { User } from '@supabase/supabase-js'
