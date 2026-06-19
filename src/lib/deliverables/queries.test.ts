@@ -17,7 +17,7 @@ const mockedRequireRole = vi.mocked(requireRole)
 
 const USER_ID = 'usr-egresado-1'
 const EST_ID = 'est-1'
-const PROJ_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+const PROJ_ID = '123e4567-e89b-12d3-a456-426614174000'
 
 function withAuth(fromImpl: (table: string) => unknown) {
   return {

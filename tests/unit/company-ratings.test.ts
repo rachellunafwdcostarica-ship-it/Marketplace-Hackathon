@@ -190,7 +190,7 @@ describe('Company Ratings Server Actions', () => {
     }
   })
 
-  it('debería retornar error si el contrato no se encuentra en estado finalizado', async () => {
+  it('debería retornar error si el contrato no se encuentra en estado activo (vigente o finalizado)', async () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockSupabase = {
       auth: {
@@ -251,7 +251,7 @@ describe('Company Ratings Server Actions', () => {
     }
   })
 
-  it('debería registrar exitosamente la calificación de la empresa', async () => {
+  it('debería registrar exitosamente la calificación de la empresa en estado finalizado', async () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     const mockSupabase = {
@@ -324,6 +324,82 @@ describe('Company Ratings Server Actions', () => {
       id_empresario: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       puntuacion: 5,
       comentario: 'Excelente mentoría',
+    })
+  })
+
+  it('debería registrar exitosamente la calificación de la empresa en estado vigente', async () => {
+    vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
+    const mockSupabase = {
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: { user: { id: 'usr-123' } },
+          error: null,
+        }),
+      },
+      from: vi.fn().mockImplementation((table) => {
+        if (table === 'estudiantes') {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id_estudiante: 'est-456' },
+              error: null,
+            }),
+          }
+        }
+        if (table === 'contrataciones') {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: {
+                id_contratacion: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+                estado_periodo: 'vigente',
+                participaciones: {
+                  id_estudiante: 'est-456',
+                  id_proyecto: 'pro-1',
+                  proyectos: {
+                    id_empresario: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+                    id_proyecto: 'pro-1',
+                  },
+                },
+              },
+              error: null,
+            }),
+          }
+        }
+        if (table === 'evaluaciones_empresarios') {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            insert: mockInsert,
+          }
+        }
+        return {}
+      }),
+    }
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(
+      mockSupabase as unknown as Awaited<
+        ReturnType<typeof createSupabaseServerClient>
+      >,
+    )
+
+    const res = await rateCompany({
+      idEmpresario: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      idContratacion: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      puntuacion: 4,
+      comentario: 'Buena comunicación inicial',
+    })
+
+    expect(res.ok).toBe(true)
+    expect(mockInsert).toHaveBeenCalledWith({
+      id_contratacion: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      id_estudiante: 'est-456',
+      id_empresario: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      puntuacion: 4,
+      comentario: 'Buena comunicación inicial',
     })
   })
 })
