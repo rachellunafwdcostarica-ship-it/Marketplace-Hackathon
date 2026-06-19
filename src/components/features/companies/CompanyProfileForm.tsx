@@ -666,8 +666,17 @@ function ImageUploadField({
           )}
         >
           {preview ? (
+            // referrerPolicy="no-referrer": los avatares de Google
+            // (lh3.googleusercontent.com) bloquean el hotlink cuando la request
+            // manda `Referer`; sin referrer cargan igual que abiertos directo.
+            // Inofensivo para blobs de preview y URLs propias de Supabase.
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="" className="w-full h-full object-cover" />
+            <img
+              src={preview}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+            />
           ) : (
             <ImageIcon className="w-8 h-8 text-muted-foreground" />
           )}

@@ -32,6 +32,7 @@ const mockProjectRow = {
   presupuesto_min: 500,
   presupuesto_max: 1500,
   fecha_publicacion: '2024-06-01T00:00:00Z',
+  fecha_cierre: '2024-06-08T00:00:00Z',
   created_at: '2024-06-01T00:00:00Z',
   is_active: true,
   empresarios: { nombre_empresa: 'Tech Corp' },
@@ -78,21 +79,15 @@ describe('getMarketplaceProjects', () => {
     }
   })
 
-  it('mapea empresarios como array si viene en ese formato', async () => {
-    const projectWithArrayEmpresario = {
-      ...mockProjectRow,
-      empresarios: [{ nombre_empresa: 'Array Corp' }],
-    }
-
+  it('mapea los campos derivados: estado a status, modalidad y duración', async () => {
     mockedServer.mockResolvedValue({
       from: vi.fn(() => ({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
             in: vi.fn(() => ({
-              order: vi.fn().mockResolvedValue({
-                data: [projectWithArrayEmpresario],
-                error: null,
-              }),
+              order: vi
+                .fn()
+                .mockResolvedValue({ data: [mockProjectRow], error: null }),
             })),
           })),
         })),
@@ -102,11 +97,13 @@ describe('getMarketplaceProjects', () => {
     const result = await getMarketplaceProjects()
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.data[0]?.companyName).toBe('Array Corp')
+      expect(result.data[0]?.status).toBe('active')
+      expect(result.data[0]?.mode).toBe('remoto')
+      expect(result.data[0]?.durationDays).toBe(7)
     }
   })
 
-  it('usa fallback "Empresa Desconocida" si empresarios es null', async () => {
+  it('deja companyName vacío si no viene la empresa (i18n lo rotula)', async () => {
     const projectNoEmpresario = { ...mockProjectRow, empresarios: null }
 
     mockedServer.mockResolvedValue({
@@ -127,7 +124,7 @@ describe('getMarketplaceProjects', () => {
     const result = await getMarketplaceProjects()
     expect(result.ok).toBe(true)
     if (result.ok) {
-      expect(result.data[0]?.companyName).toBe('Empresa Desconocida')
+      expect(result.data[0]?.companyName).toBe('')
     }
   })
 

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from '@/i18n/routing'
-import { useTranslations } from 'next-intl'
 import { Plus, Search, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -58,7 +57,6 @@ export function CreateStrikeButton({
   users,
   currentUserId,
 }: CreateStrikeButtonProps) {
-  const t = useTranslations('Admin')
   const router = useRouter()
 
   const [isOpen, setIsOpen] = useState(false)

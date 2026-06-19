@@ -3,7 +3,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
-import type { Json } from '@/types/database'
+import { toJsonb } from '@/lib/supabase/json'
 import type { HistorialEntry } from '@/lib/proposal-ai/types'
 import {
   buildLogisticsSchema,
@@ -282,9 +282,7 @@ export async function saveLogisticsDraft(
     const { data: updated, error: updateError } = await supabase
       .from('conversaciones_ia')
       .update({
-        // El draft ya está validado por Zod; Supabase tipa el jsonb como `Json`
-        // (sin index signature compatible con interfaces nombradas), de ahí el cast.
-        logistica: draft as unknown as Json,
+        logistica: toJsonb(draft),
         contexto_inicial: parsed.data.contextoInicial,
       })
       .eq('id_conversacion', conversationId)

@@ -65,7 +65,6 @@ export function AdminProjectCharts({ stats }: AdminProjectChartsProps) {
   const radius = 50
   const circumference = 2 * Math.PI * radius
   const activeOffset = circumference - (activePercent / 100) * circumference
-  const inactiveOffset = circumference - (inactivePercent / 100) * circumference
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

@@ -1444,17 +1444,21 @@ export type Database = {
       mis_proyectos_como_empresario: { Args: never; Returns: string[] }
       mis_proyectos_como_estudiante: { Args: never; Returns: string[] }
       publicar_proyecto: {
+        // Nullabilidad corregida a mano: `supabase gen` emite todos los args de
+        // función como no-nulos (el catálogo de PG no guarda nulabilidad de
+        // parámetros), pero la firma SQL acepta null en ubicación y área —los
+        // proyectos `remoto` se publican sin país/ciudad y sin área asignada.
         Args: {
           p_categorias: string[]
-          p_ciudad: string
+          p_ciudad: string | null
           p_conversacion: string
           p_descripcion: string
           p_generado_por_ia: boolean
-          p_id_area: string
+          p_id_area: string | null
           p_involucra_ia: boolean
           p_modalidad: Database['public']['Enums']['modalidad_enum']
           p_moneda: Database['public']['Enums']['moneda_enum']
-          p_pais: string
+          p_pais: string | null
           p_plazo_dias: number
           p_presupuesto_max: number
           p_presupuesto_min: number

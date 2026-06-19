@@ -4,7 +4,7 @@ import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
-import type { Json } from '@/types/database'
+import { toJsonb } from '@/lib/supabase/json'
 import { getAiProvider } from './provider'
 import type { HistorialEntry } from './types'
 import { parseHistorial, parseLogistica } from '@/lib/projects/persistence'
@@ -122,9 +122,7 @@ export async function sendChatMessage(
     const { data: updated, error: updateError } = await supabase
       .from('conversaciones_ia')
       .update({
-        // historial ya tipado por nosotros; Supabase espera `Json` (sin index
-        // signature compatible con interfaces nombradas), de ahí el cast.
-        historial: historialFinal as unknown as Json,
+        historial: toJsonb(historialFinal),
         modelo_ia: provider.modelId,
       })
       .eq('id_conversacion', conversationId)

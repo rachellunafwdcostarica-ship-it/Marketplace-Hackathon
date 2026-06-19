@@ -149,7 +149,7 @@ describe('getStudentProfile', () => {
         level: 'intermedio',
       })
       expect(result.data.projects).toHaveLength(1)
-      expect(result.data.projects[0].title).toBe('Mi proyecto')
+      expect(result.data.projects[0]?.title).toBe('Mi proyecto')
     }
   })
 
@@ -453,7 +453,6 @@ describe('savePortfolioProject', () => {
     technologies: ['TypeScript', 'React'],
     completionDate: '2024-06-01',
     repositoryUrl: 'https://github.com/test/repo',
-    demoUrl: undefined,
   }
 
   it('retorna error unauthorized si no hay usuario', async () => {
