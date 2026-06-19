@@ -1,21 +1,26 @@
 'use server'
 
+import { unstable_rethrow } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/dal'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import type { Database } from '@/types/database'
 import type { Modalidad, Moneda } from './schemas'
+import {
+  computeEstadoEfectivoProyecto,
+  type EstadoEfectivoProyecto,
+} from './project-detail-logic'
 
 type EstadoProyecto = Database['public']['Enums']['estado_proyecto_enum']
 
 /**
- * `estado_efectivo` (errolpendiente §4.1): el estado guardado, salvo que un
- * `abierto` con `fecha_cierre` vencida se muestra como `en_evaluacion`. Es
- * DERIVADO (se calcula al leer); la columna sigue diciendo `abierto`. Sin
- * migración, sin cron — por eso lo computamos acá en vez de con la vista.
+ * Estado efectivo (errolpendiente §4.1): el estado guardado, salvo que un
+ * `abierto` con `fecha_cierre` vencida se muestra como `en_evaluacion`. Alias
+ * del tipo canónico de `project-detail-logic`, conservado con el nombre del
+ * dashboard por compatibilidad con sus consumidores.
  */
-export type EstadoEfectivo = EstadoProyecto | 'en_evaluacion'
+export type EstadoEfectivo = EstadoEfectivoProyecto
 
 export interface PublishedProject {
   id: string
@@ -37,7 +42,15 @@ export interface PublishedProject {
   involucraIa: boolean
 }
 
-interface RawProyecto {
+const PROYECTO_SELECT =
+  'id_proyecto, titulo, descripcion, estado, modalidad, moneda, presupuesto_min, presupuesto_max, pais_proyecto, ciudad_proyecto, fecha_publicacion, fecha_cierre, involucra_ia, areas_negocio(nombre), proyecto_categorias(categorias(nombre)), proyecto_tecnologias(tecnologias(nombre))'
+
+/**
+ * Forma de una fila del `PROYECTO_SELECT` que consume el mapeo. Los joins van
+ * como to-one anulables (área) o como arrays de to-one anulables (categorías,
+ * tecnologías), igual que infiere PostgREST para este select.
+ */
+export interface ProyectoDashboardRow {
   id_proyecto: string
   titulo: string
   descripcion: string
@@ -56,16 +69,43 @@ interface RawProyecto {
   proyecto_tecnologias: { tecnologias: { nombre: string } | null }[]
 }
 
-const PROYECTO_SELECT =
-  'id_proyecto, titulo, descripcion, estado, modalidad, moneda, presupuesto_min, presupuesto_max, pais_proyecto, ciudad_proyecto, fecha_publicacion, fecha_cierre, involucra_ia, areas_negocio(nombre), proyecto_categorias(categorias(nombre)), proyecto_tecnologias(tecnologias(nombre))'
-
-function estadoEfectivoDe(
-  estado: EstadoProyecto,
-  fechaCierre: string | null,
-): EstadoEfectivo {
-  const vencio =
-    fechaCierre !== null && new Date(fechaCierre).getTime() < Date.now()
-  return estado === 'abierto' && vencio ? 'en_evaluacion' : estado
+/**
+ * Proyección pura de una fila de BD al modelo de UI `PublishedProject`: calcula
+ * el estado efectivo y aplana los nombres de área/categorías/tecnologías,
+ * descartando los nulos. `now` se inyecta para que el resultado sea determinista
+ * en pruebas.
+ */
+export function mapRowToPublishedProject(
+  row: ProyectoDashboardRow,
+  now: number = Date.now(),
+): PublishedProject {
+  return {
+    id: row.id_proyecto,
+    titulo: row.titulo,
+    descripcion: row.descripcion,
+    estado: row.estado,
+    estadoEfectivo: computeEstadoEfectivoProyecto(
+      row.estado,
+      row.fecha_cierre,
+      now,
+    ),
+    modalidad: row.modalidad,
+    moneda: row.moneda,
+    presupuestoMin: row.presupuesto_min,
+    presupuestoMax: row.presupuesto_max,
+    paisProyecto: row.pais_proyecto,
+    ciudadProyecto: row.ciudad_proyecto,
+    fechaPublicacion: row.fecha_publicacion,
+    fechaCierre: row.fecha_cierre,
+    areaNombre: row.areas_negocio?.nombre ?? null,
+    categorias: row.proyecto_categorias
+      .map((pc) => pc.categorias?.nombre)
+      .filter((nombre): nombre is string => Boolean(nombre)),
+    tecnologias: row.proyecto_tecnologias
+      .map((pt) => pt.tecnologias?.nombre)
+      .filter((nombre): nombre is string => Boolean(nombre)),
+    involucraIa: row.involucra_ia,
+  }
 }
 
 /**
@@ -109,34 +149,14 @@ export async function getMyPublishedProjects(): Promise<
       return err('unexpected')
     }
 
-    // Cast: el typado de selects anidados de Supabase es poco confiable; mapeamos a mano.
-    const filas = (filasRaw ?? []) as unknown as RawProyecto[]
-    const proyectos: PublishedProject[] = filas.map((p) => ({
-      id: p.id_proyecto,
-      titulo: p.titulo,
-      descripcion: p.descripcion,
-      estado: p.estado,
-      estadoEfectivo: estadoEfectivoDe(p.estado, p.fecha_cierre),
-      modalidad: p.modalidad,
-      moneda: p.moneda,
-      presupuestoMin: p.presupuesto_min,
-      presupuestoMax: p.presupuesto_max,
-      paisProyecto: p.pais_proyecto,
-      ciudadProyecto: p.ciudad_proyecto,
-      fechaPublicacion: p.fecha_publicacion,
-      fechaCierre: p.fecha_cierre,
-      areaNombre: p.areas_negocio?.nombre ?? null,
-      categorias: p.proyecto_categorias
-        .map((pc) => pc.categorias?.nombre)
-        .filter((nombre): nombre is string => Boolean(nombre)),
-      tecnologias: p.proyecto_tecnologias
-        .map((pt) => pt.tecnologias?.nombre)
-        .filter((nombre): nombre is string => Boolean(nombre)),
-      involucraIa: p.involucra_ia,
-    }))
+    const filas = filasRaw ?? []
+    const proyectos: PublishedProject[] = filas.map((p) =>
+      mapRowToPublishedProject(p),
+    )
 
     return ok(proyectos)
   } catch (e) {
+    unstable_rethrow(e)
     const msg = e instanceof Error ? e.message : 'unexpected_error'
     logger.error('getMyPublishedProjects: error inesperado', { error: msg })
     return err('unexpected')
@@ -202,6 +222,7 @@ export async function cancelProject(
 
     return ok({ cancelled: true })
   } catch (e) {
+    unstable_rethrow(e)
     const msg = e instanceof Error ? e.message : 'unexpected_error'
     logger.error('cancelProject: error inesperado', { error: msg })
     return err('unexpected')

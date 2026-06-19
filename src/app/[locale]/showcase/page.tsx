@@ -83,7 +83,7 @@ const sampleProject: Project = {
   description:
     'Construir una landing en Next.js con animaciones suaves, formulario de captura y buen rendimiento en mobile.',
   stack: ['Next.js', 'TypeScript', 'Tailwind'],
-  duration: '3 semanas',
+  durationDays: 21,
   budget: 650,
   mode: 'remoto',
   startDate: '2026-07-01',

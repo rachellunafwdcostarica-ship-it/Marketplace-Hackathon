@@ -20,7 +20,7 @@ export interface Project {
   companyName: string
   description: string
   stack: string[]
-  duration: string // e.g. "3 semanas", "2 meses"
+  durationDays: number | null // duración real en días (cierre - publicación); null si falta fecha
   budget: number // USD
   mode: WorkMode
   startDate: string // ISO date string

@@ -1,66 +1,57 @@
 import 'server-only'
 
+import { unstable_rethrow } from 'next/navigation'
+import type { QueryData } from '@supabase/supabase-js'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
-import { Project, WorkMode, ProjectStatus } from '@/types'
-import { Database } from '@/types/database'
+import type { Project } from '@/types'
 import { logger } from '@/lib/logger'
+import { estadoToStatus } from './status'
+import { durationInDays } from './duration'
 
-type SupabaseProjectRow = Database['public']['Tables']['proyectos']['Row']
-type SupabaseEmpresarioRow = Database['public']['Tables']['empresarios']['Row']
+type ServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
 
-interface ProjectWithRelations extends SupabaseProjectRow {
-  empresarios: { nombre_empresa: string } | { nombre_empresa: string }[] | null
-  proyecto_tecnologias?: { tecnologias: { nombre: string } | null }[]
+const PROYECTO_SELECT = `
+  *,
+  empresarios (nombre_empresa),
+  proyecto_tecnologias (
+    tecnologias (nombre)
+  )
+` as const
+
+function selectProyectos(supabase: ServerClient) {
+  return supabase.from('proyectos').select(PROYECTO_SELECT)
 }
 
-/**
- * Mapea una fila de Supabase a la interfaz Project de la aplicación
- */
-function mapProject(row: ProjectWithRelations): Project {
-  // Asegurarnos de sacar el nombre de la empresa, considerando que empresarios puede ser array u objeto
-  let companyName = 'Empresa Desconocida'
-  if (row.empresarios) {
-    if (Array.isArray(row.empresarios) && row.empresarios.length > 0) {
-      companyName = row.empresarios[0]?.nombre_empresa ?? 'Empresa Desconocida'
-    } else if ('nombre_empresa' in row.empresarios) {
-      companyName = row.empresarios.nombre_empresa
-    }
-  }
+type ProyectoRow = QueryData<ReturnType<typeof selectProyectos>>[number]
 
-  // Mapear tecnologías si vienen anidadas
+/** Mapea una fila de Supabase (tipo inferido del `.select`) a la interfaz `Project`. */
+function mapProject(row: ProyectoRow): Project {
   const stack: string[] = []
-  if (row.proyecto_tecnologias) {
-    row.proyecto_tecnologias.forEach((pt) => {
-      if (pt.tecnologias?.nombre) {
-        stack.push(pt.tecnologias.nombre)
-      }
-    })
+  for (const pt of row.proyecto_tecnologias) {
+    if (pt.tecnologias?.nombre) stack.push(pt.tecnologias.nombre)
   }
-
-  // Fallbacks para datos no presentes en BD
-  const mode = (row.modalidad || 'remoto') as WorkMode
-  const status = (row.estado || 'draft') as ProjectStatus
-  const budget = row.presupuesto_max || row.presupuesto_min || 0
 
   return {
     id: row.id_proyecto,
     title: row.titulo,
     companyId: row.id_empresario,
-    companyName,
+    // El nombre de empresa siempre viene (FK NOT NULL); si faltara, la UI rotula
+    // el vacío vía i18n (sin string hardcodeado acá, reglas.md §4).
+    companyName: row.empresarios?.nombre_empresa ?? '',
     description: row.descripcion,
     stack,
-    duration: '1 mes', // TODO: Ajustar si se agrega duración exacta en BD
-    budget,
-    mode,
-    startDate: row.fecha_publicacion || row.created_at,
-    status,
+    durationDays: durationInDays(row.fecha_publicacion, row.fecha_cierre),
+    budget: row.presupuesto_max ?? row.presupuesto_min ?? 0,
+    mode: row.modalidad,
+    startDate: row.fecha_publicacion ?? row.created_at,
+    status: estadoToStatus(row.estado),
     createdAt: row.created_at,
   }
 }
 
 /**
- * Obtiene los proyectos activos del marketplace (solo los en estado 'abierto' o 'en_recepcion')
+ * Proyectos activos del marketplace (estados `abierto` o `en_recepcion`).
  */
 export async function getMarketplaceProjects(): Promise<
   Result<Project[], string>
@@ -68,17 +59,7 @@ export async function getMarketplaceProjects(): Promise<
   try {
     const supabase = await createSupabaseServerClient()
 
-    const { data, error } = await supabase
-      .from('proyectos')
-      .select(
-        `
-        *,
-        empresarios (nombre_empresa),
-        proyecto_tecnologias (
-          tecnologias (nombre)
-        )
-      `,
-      )
+    const { data, error } = await selectProyectos(supabase)
       .eq('is_active', true)
       .in('estado', ['abierto', 'en_recepcion'])
       .order('created_at', { ascending: false })
@@ -90,16 +71,16 @@ export async function getMarketplaceProjects(): Promise<
       return err('database_error')
     }
 
-    const projects: Project[] = (data as ProjectWithRelations[]).map(mapProject)
-    return ok(projects)
+    return ok(data.map(mapProject))
   } catch (error) {
+    unstable_rethrow(error)
     logger.error('Unexpected error fetching marketplace projects', { error })
     return err('unexpected_error')
   }
 }
 
 /**
- * Obtiene los detalles de un proyecto específico
+ * Detalle de un proyecto específico.
  */
 export async function getMarketplaceProjectById(
   id: string,
@@ -107,17 +88,7 @@ export async function getMarketplaceProjectById(
   try {
     const supabase = await createSupabaseServerClient()
 
-    const { data, error } = await supabase
-      .from('proyectos')
-      .select(
-        `
-        *,
-        empresarios (nombre_empresa),
-        proyecto_tecnologias (
-          tecnologias (nombre)
-        )
-      `,
-      )
+    const { data, error } = await selectProyectos(supabase)
       .eq('id_proyecto', id)
       .single()
 
@@ -126,15 +97,16 @@ export async function getMarketplaceProjectById(
       return err(error.code === 'PGRST116' ? 'not_found' : 'database_error')
     }
 
-    return ok(mapProject(data as ProjectWithRelations))
+    return ok(mapProject(data))
   } catch (error) {
+    unstable_rethrow(error)
     logger.error('Unexpected error fetching project by id', { error })
     return err('unexpected_error')
   }
 }
 
 /**
- * Verifica si el egresado actual ya aplicó a este proyecto
+ * Verifica si el egresado actual ya aplicó a este proyecto.
  */
 export async function checkIfApplied(
   projectId: string,
@@ -142,11 +114,9 @@ export async function checkIfApplied(
   try {
     const supabase = await createSupabaseServerClient()
 
-    // Obtener ID del usuario autenticado
     const { data: userData, error: userError } = await supabase.auth.getUser()
     if (userError || !userData.user) return err('unauthenticated')
 
-    // Obtener el ID del estudiante (egresado)
     const { data: estudiante, error: estError } = await supabase
       .from('estudiantes')
       .select('id_estudiante')
@@ -155,7 +125,6 @@ export async function checkIfApplied(
 
     if (estError || !estudiante) return err('estudiante_not_found')
 
-    // Revisar si existe participacion
     const { data: participacion, error: partError } = await supabase
       .from('participaciones')
       .select('id_participacion')
@@ -172,6 +141,7 @@ export async function checkIfApplied(
 
     return ok(!!participacion)
   } catch (error) {
+    unstable_rethrow(error)
     logger.error('Unexpected error checking application status', { error })
     return err('unexpected_error')
   }

@@ -275,7 +275,11 @@ export function ProjectDetailClient({
                         {tCommon('duration')}
                       </p>
                       <p className="text-sm font-bold text-foreground mt-0.5">
-                        {project.duration}
+                        {project.durationDays === null
+                          ? tCommon('durationNotSet')
+                          : tCommon('durationInDays', {
+                              days: project.durationDays,
+                            })}
                       </p>
                     </div>
                   </div>
