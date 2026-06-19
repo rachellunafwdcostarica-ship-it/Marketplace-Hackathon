@@ -1069,6 +1069,7 @@
     "fullName": "Full name",
     "noDescription": "You haven't added a company description yet.",
     "noProjectsYet": "You haven't published any projects yet.",
+    "viewAllProjects": "View all projects",
     "supportModalTitle": "Technical Support & Needs",
     "supportModalDesc": "Describe your technical issue or business need. The admin team will review your ticket for follow-up.",
     "supportFieldDesc": "Detailed description",
