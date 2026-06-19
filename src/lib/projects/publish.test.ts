@@ -20,8 +20,10 @@ const validPropuesta = {
   descripcion: 'Sistema de gestión de inventario para pymes',
   involucraIa: false,
   idArea: 'area-tecnologia',
+  areaNombre: 'Tecnología',
   categorias: [{ id: 'cat-1', nombre: 'Web' }],
   tecnologias: [{ id: 'tech-1', nombre: 'React' }],
+  stackSugerido: ['React', 'Node'],
 }
 
 const validLogistica = {
@@ -57,12 +59,10 @@ function withAuth(
 function withNoAuth() {
   return {
     auth: {
-      getUser: vi
-        .fn()
-        .mockResolvedValue({
-          data: { user: null },
-          error: { message: 'no auth' },
-        }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: null },
+        error: { message: 'no auth' },
+      }),
     },
     from: vi.fn(),
   }
