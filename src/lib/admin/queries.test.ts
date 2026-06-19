@@ -576,7 +576,7 @@ describe('listProjectsForAdmin', () => {
     expect(result.ok).toBe(true)
     if (result.ok) {
       expect(result.data).toHaveLength(1)
-      expect(result.data[0].nombre_empresa).toBeNull()
+      expect(result.data[0]?.nombre_empresa).toBeNull()
     }
   })
 
