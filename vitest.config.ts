@@ -1,8 +1,9 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, defaultExclude } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   test: {
+    exclude: [...defaultExclude, 'tests/demoPortafolio/**'],
     environment: 'node',
     coverage: {
       provider: 'v8',
