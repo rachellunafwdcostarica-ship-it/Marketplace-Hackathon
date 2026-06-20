@@ -2,9 +2,10 @@
 
 import React from 'react'
 import { ParticipacionConProyecto } from '@/lib/projects/project-detail'
-import { Star, Briefcase, Award, Calendar, Eye } from 'lucide-react'
+import { Star, Briefcase, Award, Calendar, Eye, FileText } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -71,6 +72,8 @@ export function ContratacionesList({
   contrataciones,
 }: ContratacionesListProps) {
   const [selectedTitle, setSelectedTitle] = React.useState<string | null>(null)
+  const [selectedMotivacion, setSelectedMotivacion] =
+    React.useState<ParticipacionConProyecto | null>(null)
 
   if (contrataciones.length === 0) {
     return (
@@ -96,6 +99,7 @@ export function ContratacionesList({
           <CardContent className="p-5 flex flex-col gap-5">
             <div className="flex items-center gap-4">
               {item.fotoPerfil ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={item.fotoPerfil}
                   alt={item.estudianteNombre}
@@ -167,6 +171,15 @@ export function ContratacionesList({
                   </div>
                 </div>
               </div>
+
+              <Button
+                variant="outline"
+                className="w-full mt-2 gap-2 text-xs font-semibold h-8 border-border hover:bg-secondary/20"
+                onClick={() => setSelectedMotivacion(item)}
+              >
+                <FileText className="w-4 h-4" />
+                Ver Motivación
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -184,6 +197,61 @@ export function ContratacionesList({
           </DialogHeader>
           <div className="pt-2 text-sm font-medium text-foreground leading-relaxed break-words">
             {selectedTitle}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={selectedMotivacion !== null}
+        onOpenChange={(open) => !open && setSelectedMotivacion(null)}
+      >
+        <DialogContent className="sm:max-w-[600px] border-border max-h-[85vh] flex flex-col">
+          <DialogHeader className="shrink-0 pb-4 border-b border-border/50">
+            <DialogTitle className="font-heading text-xl">
+              Motivación y Solución
+            </DialogTitle>
+            {selectedMotivacion && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Postulación de{' '}
+                <span className="font-semibold text-foreground">
+                  {selectedMotivacion.estudianteNombre}
+                </span>
+              </p>
+            )}
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto pr-2 py-4 space-y-6">
+            {selectedMotivacion?.cartaPostulacion ? (
+              <div className="space-y-2">
+                <h4 className="font-bold text-sm uppercase tracking-wider text-primary">
+                  Carta de Presentación
+                </h4>
+                <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-muted/20 p-4 rounded-xl border border-border/40">
+                  {selectedMotivacion.cartaPostulacion}
+                </div>
+              </div>
+            ) : null}
+
+            {selectedMotivacion?.planteamientoSolucion ? (
+              <div className="space-y-2">
+                <h4 className="font-bold text-sm uppercase tracking-wider text-accent">
+                  Planteamiento de Solución
+                </h4>
+                <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap bg-accent/5 p-4 rounded-xl border border-accent/10">
+                  {selectedMotivacion.planteamientoSolucion}
+                </div>
+              </div>
+            ) : null}
+
+            {!selectedMotivacion?.cartaPostulacion &&
+              !selectedMotivacion?.planteamientoSolucion && (
+                <div className="text-center p-8 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                  <p>
+                    El estudiante no adjuntó una carta de motivación o
+                    planteamiento de solución.
+                  </p>
+                </div>
+              )}
           </div>
         </DialogContent>
       </Dialog>
