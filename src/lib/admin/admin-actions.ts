@@ -135,14 +135,12 @@ export async function inviteAdmin(
     'localhost:3000'
   const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
   const baseUrl = `${proto}://${host}`
-  const redirectTo = `${baseUrl}/auth/callback?next=/reset-password`
 
   let inviteLink: string | null = null
   const { data: linkData, error: linkError } =
     await adminClient.auth.admin.generateLink({
       type: 'recovery',
       email: correo,
-      options: { redirectTo },
     })
   if (linkError) {
     logger.error('inviteAdmin: fallo al generar el enlace de invitación', {
@@ -150,7 +148,23 @@ export async function inviteAdmin(
       nuevoId,
     })
   } else {
-    inviteLink = linkData.properties?.action_link ?? null
+    // El enlace apunta a /auth/confirm (verifyOtp con token_hash), no al
+    // action_link de Supabase: ese devuelve la sesión en el hash de la URL,
+    // que un route handler del servidor no puede leer.
+    const tokenHash = linkData.properties?.hashed_token
+    const otpType = linkData.properties?.verification_type
+    if (tokenHash && otpType) {
+      const params = new URLSearchParams({
+        token_hash: tokenHash,
+        type: otpType,
+        next: '/reset-password',
+      })
+      inviteLink = `${baseUrl}/auth/confirm?${params.toString()}`
+    } else {
+      logger.error('inviteAdmin: el enlace generado no incluye token_hash', {
+        nuevoId,
+      })
+    }
   }
 
   let emailSent = false

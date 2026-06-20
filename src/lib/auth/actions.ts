@@ -26,7 +26,7 @@ import {
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
 import { getCurrentUser } from './dal'
-import { normalizeRole } from './roles'
+import { normalizeRole, ROLE_HOME } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
 import { evaluateAdminManagement } from '@/lib/admin/admin-management'
 import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
@@ -293,14 +293,14 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     const rol: 'egresado' | 'empresario' =
       rolRaw === 'empresario' ? 'empresario' : 'egresado'
 
-    // Generar magic link para acceso directo con un click.
-    // Si falla, se usa el link de login estático como fallback.
+    // Generar magic link de acceso directo hacia /auth/confirm (verifyOtp con
+    // token_hash). Si falla, se usa el login estático como fallback.
     let accessUrl = `${baseUrl}/login`
+    let isMagicLink = false
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: 'magiclink',
         email: usuario.correo,
-        options: { redirectTo: `${baseUrl}/auth/callback` },
       })
 
     if (linkError) {
@@ -308,8 +308,22 @@ export async function approveUser(userId: string): Promise<Result<void>> {
         error: linkError.message,
         userId,
       })
-    } else if (linkData.properties?.action_link) {
-      accessUrl = linkData.properties.action_link
+    } else {
+      const tokenHash = linkData.properties?.hashed_token
+      const otpType = linkData.properties?.verification_type
+      if (tokenHash && otpType) {
+        const params = new URLSearchParams({
+          token_hash: tokenHash,
+          type: otpType,
+          next: ROLE_HOME[rol],
+        })
+        accessUrl = `${baseUrl}/auth/confirm?${params.toString()}`
+        isMagicLink = true
+      } else {
+        logger.error('approveUser: el magic link no incluye token_hash', {
+          userId,
+        })
+      }
     }
 
     let emailError: Error | null = null
@@ -323,7 +337,7 @@ export async function approveUser(userId: string): Promise<Result<void>> {
           nombre: usuario.nombre ?? 'Usuario',
           rol,
           accessUrl,
-          isMagicLink: !linkError && !!linkData?.properties?.action_link,
+          isMagicLink,
         }),
       })
     } catch (e) {
