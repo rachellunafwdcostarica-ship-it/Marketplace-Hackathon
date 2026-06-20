@@ -621,8 +621,28 @@ export async function updatePassword(password: string): Promise<Result<void>> {
   const { error } = await supabase.auth.updateUser({ password: parsed.data })
 
   if (error) {
-    logger.error('updatePassword failed', { error: error.message })
-    return err(error.message)
+    const code = (error as { code?: string }).code ?? ''
+    const detail = error.message?.toLowerCase() ?? ''
+    logger.error('updatePassword failed', { error: error.message, code })
+    if (code === 'same_password' || detail.includes('different from the old')) {
+      return err('password_same_as_old')
+    }
+    if (
+      code === 'weak_password' ||
+      detail.includes('password should be') ||
+      detail.includes('weak')
+    ) {
+      return err('password_weak')
+    }
+    if (
+      code === 'session_not_found' ||
+      detail.includes('session') ||
+      detail.includes('jwt') ||
+      detail.includes('not authenticated')
+    ) {
+      return err('session_expired')
+    }
+    return err('update_failed')
   }
 
   // Activación del admin invitado (Opción 1): un administrador nace 'pendiente'
@@ -654,6 +674,18 @@ export async function updatePassword(password: string): Promise<Result<void>> {
         })
       }
     }
+  }
+
+  // Endurecimiento: el enlace de recuperación/invitación crea una sesión
+  // completa, no solo "permiso para cambiar la clave". Dejarla viva equivale a
+  // un login persistente obtenido sin conocer la contraseña. Cerramos la sesión
+  // (scope global: revoca también otras sesiones del usuario tras el cambio) y
+  // así forzamos un login fresco con la contraseña nueva.
+  const { error: signOutError } = await supabase.auth.signOut()
+  if (signOutError) {
+    logger.error('updatePassword: fallo al cerrar la sesión de recuperación', {
+      error: signOutError.message,
+    })
   }
 
   return ok(undefined)

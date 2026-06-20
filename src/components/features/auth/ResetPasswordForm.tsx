@@ -79,7 +79,13 @@ export function ResetPasswordForm({ hasSession }: { hasSession: boolean }) {
           ? tAuth('passwordBreached')
           : result.error === 'pwned_check_failed'
             ? tAuth('pwnedCheckFailed')
-            : tAuth('errorUnexpected')
+            : result.error === 'password_same_as_old'
+              ? tAuth('passwordSameAsOld')
+              : result.error === 'password_weak'
+                ? tAuth('passwordWeak')
+                : result.error === 'session_expired'
+                  ? tAuth('resetSessionExpired')
+                  : tAuth('errorUnexpected')
       toast.error(message)
       return
     }

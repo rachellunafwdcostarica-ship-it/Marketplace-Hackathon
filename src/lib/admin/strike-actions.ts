@@ -177,26 +177,19 @@ export async function addStrike(
   }
 
   // ── Notificación in-app para el usuario sancionado (RF-47) ─────────────────
-  // Best-effort: igual que el correo, un fallo aquí no debe abortar el strike.
-  try {
-    const strikeNotif = buildStrikeNotificacion(nuevaCantidad, maxStrikesLimit)
-    const notifResult = await crearNotificacion({
-      idUsuario: parsedId.data,
-      tipoEvento: strikeNotif.tipoEvento,
-      mensaje: strikeNotif.mensaje,
-      params: strikeNotif.params,
-      urlDestino: null,
-    })
-    if (!notifResult.ok) {
-      logger.error('addStrike: fallo al notificar al usuario sancionado', {
-        userId,
-        error: notifResult.error,
-      })
-    }
-  } catch (notifErr) {
-    logger.error('addStrike: excepción al notificar al usuario sancionado', {
+  // Best-effort: el núcleo nunca lanza; si falla, se loguea sin abortar el strike.
+  const strikeNotif = buildStrikeNotificacion(nuevaCantidad, maxStrikesLimit)
+  const notifResult = await crearNotificacion({
+    idUsuario: parsedId.data,
+    tipoEvento: strikeNotif.tipoEvento,
+    mensaje: strikeNotif.mensaje,
+    params: strikeNotif.params,
+    urlDestino: null,
+  })
+  if (!notifResult.ok) {
+    logger.error('addStrike: fallo al notificar al usuario sancionado', {
       userId,
-      error: String(notifErr),
+      error: notifResult.error,
     })
   }
 
