@@ -22,7 +22,7 @@ export default async function EntregablesPage({ params }: PageProps) {
   if (!projectResult.ok) notFound()
 
   if (!contratacionResult.ok || !contratacionResult.data) {
-    redirect('/junior/applications')
+    redirect('/egresado/applications')
   }
 
   const contratacion = contratacionResult.data

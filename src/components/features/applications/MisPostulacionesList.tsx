@@ -53,7 +53,7 @@ export function MisPostulacionesList({
         icon={Briefcase}
         actionText={tEgresado('exploreMarketplace')}
         onAction={() => {
-          window.location.href = '/junior/projects'
+          window.location.href = '/egresado/projects'
         }}
       />
     )
@@ -73,7 +73,7 @@ export function MisPostulacionesList({
 
       <div className="mt-8 text-center">
         <Link
-          href="/junior/projects"
+          href="/egresado/projects"
           className="text-sm font-semibold text-primary hover:underline"
         >
           {tEgresado('exploreMoreProjects')}

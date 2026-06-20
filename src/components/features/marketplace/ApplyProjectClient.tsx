@@ -149,7 +149,7 @@ export function ApplyProjectClient({
         }
       } else {
         toast.success(tEgresado('applySuccess'))
-        router.push('/junior/applications')
+        router.push('/egresado/applications')
       }
     } catch (err: unknown) {
       toast.error(
@@ -167,7 +167,7 @@ export function ApplyProjectClient({
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
-            href={`/junior/projects/${projectId}`}
+            href={`/egresado/projects/${projectId}`}
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -361,7 +361,7 @@ export function ApplyProjectClient({
 
               <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
                 <Link
-                  href={`/junior/projects/${projectId}`}
+                  href={`/egresado/projects/${projectId}`}
                   className="border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center rounded-lg text-sm font-semibold h-8 px-3"
                 >
                   {tCommon('cancel')}

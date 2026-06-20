@@ -128,8 +128,8 @@ export async function postularse(
     return err('database_error')
   }
 
-  revalidatePath('/junior/applications')
-  revalidatePath(`/junior/projects/${parsed.data.id_proyecto}`)
+  revalidatePath('/egresado/applications')
+  revalidatePath(`/egresado/projects/${parsed.data.id_proyecto}`)
 
   return ok(undefined)
 }
@@ -196,6 +196,6 @@ export async function retirarPostulacion(
     return err('database_error')
   }
 
-  revalidatePath('/junior/applications')
+  revalidatePath('/egresado/applications')
   return ok(undefined)
 }

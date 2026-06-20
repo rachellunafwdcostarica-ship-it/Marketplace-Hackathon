@@ -31,7 +31,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-secondary-foreground/70">
               <li>
                 <Link
-                  href="/junior/projects"
+                  href="/egresado/projects"
                   className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
                   {t('searchProjects')}
@@ -39,7 +39,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/junior/applications"
+                  href="/egresado/applications"
                   className="hover:text-secondary-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
                 >
                   {t('myApplications')}

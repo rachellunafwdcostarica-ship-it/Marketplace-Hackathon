@@ -99,7 +99,7 @@ export function PostulacionCard({
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold flex items-center gap-1.5 px-4"
             >
               <Link
-                href={`/junior/projects/${postulacion.id_proyecto}/entregables`}
+                href={`/egresado/projects/${postulacion.id_proyecto}/entregables`}
               >
                 <FolderOpen className="w-4 h-4" />
                 {tEgresado('viewDeliverables')}

@@ -107,10 +107,18 @@ export function Navbar({
 
   const navLinksByRole: Record<UserRole, NavLink[]> = {
     egresado: [
-      { href: '/junior', label: t('dashboard'), icon: 'dashboard' },
-      { href: '/junior/projects', label: t('searchProjects'), icon: 'search' },
-      { href: '/junior/applications', label: t('applications'), icon: 'send' },
-      { href: '/junior/portfolio', label: t('portfolio'), icon: 'portfolio' },
+      { href: '/egresado', label: t('dashboard'), icon: 'dashboard' },
+      {
+        href: '/egresado/projects',
+        label: t('searchProjects'),
+        icon: 'search',
+      },
+      {
+        href: '/egresado/applications',
+        label: t('applications'),
+        icon: 'send',
+      },
+      { href: '/egresado/portfolio', label: t('portfolio'), icon: 'portfolio' },
     ],
     empresario: [
       { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },

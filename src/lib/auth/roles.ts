@@ -5,7 +5,7 @@ import type { UserRole } from '@/types'
  * Usada en middleware, callbacks y layouts.
  *
  * El egresado aterriza en la raíz localizada ('' → /es), la landing
- * compartida. /junior sigue existiendo y es accesible desde el navbar; solo
+ * compartida. /egresado sigue existiendo y es accesible desde el navbar; solo
  * cambia el destino por defecto post-login. El empresario y el administrador
  * mantienen sus rutas. El valor de rol ya coincide con el nombre_rol de la BD.
  */

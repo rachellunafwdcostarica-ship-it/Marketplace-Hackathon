@@ -97,7 +97,7 @@ export function JuniorDashboardClient({
                 <span className="text-accent">.</span>
               </h2>
               <Link
-                href="/junior/projects"
+                href="/egresado/projects"
                 className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5"
               >
                 {tCommon('viewAll')}
