@@ -25,8 +25,11 @@ import {
 } from './schemas'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
+import { getCurrentUser } from './dal'
 import { normalizeRole } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
+import { evaluateAdminManagement } from '@/lib/admin/admin-management'
+import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
   return getUserRole()
@@ -197,6 +200,11 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     return authResult
   }
 
+  const actor = await getCurrentUser()
+  if (!actor) {
+    return err('unauthenticated')
+  }
+
   // Usar service_role para bypassear RLS (admin no pasa por políticas)
   const adminClient = createSupabaseAdminClient()
 
@@ -217,6 +225,28 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   const rolRaw = Array.isArray(usuario?.roles)
     ? usuario?.roles[0]?.nombre_rol
     : (usuario?.roles as { nombre_rol?: string } | null)?.nombre_rol
+
+  // Reactivar/aprobar a un administrador es acción de superadmin: mismas reglas
+  // que la baja (gate de superadmin + antigüedad), para que el control de
+  // desactivación no se evada reactivando desde aquí.
+  if (rolRaw === 'administrador') {
+    const ctx = await resolveAdminTargetContext(
+      adminClient,
+      actor.id,
+      parsed.data,
+    )
+    const verdict = evaluateAdminManagement({
+      action: 'reactivate',
+      actorNivel: ctx.actorNivel,
+      actorFechaRegistro: ctx.actorFechaRegistro ?? '',
+      targetNivel: ctx.targetNivel,
+      targetFechaRegistro: ctx.targetFechaRegistro ?? '',
+      activeSuperadminCount: ctx.activeSuperadminCount,
+    })
+    if (!verdict.allowed) {
+      return err(verdict.reason)
+    }
+  }
 
   // Bloquear aprobación si el usuario no fue verificado primero
   if (rolRaw === 'egresado') {
@@ -249,8 +279,9 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     return err(error.message)
   }
 
-  // Enviar correo de aprobación. Si falla, no se revierte la aprobación.
-  if (usuario?.correo) {
+  // Enviar correo de aprobación (solo egresado/empresario: la plantilla es
+  // específica de esos roles). Los admins se activan con su flujo de invitación.
+  if (usuario?.correo && rolRaw !== 'administrador') {
     const reqHeaders = await headers()
     const host =
       reqHeaders.get('x-forwarded-host') ??
@@ -302,6 +333,22 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     if (emailError) {
       logger.error('approveUser: fallo al enviar correo de aprobación', {
         error: emailError.message,
+        userId,
+      })
+    }
+  }
+
+  if (rolRaw === 'administrador') {
+    const { error: auditError } = await adminClient.from('auditoria').insert({
+      id_actor: actor.id,
+      accion: 'reactivar_admin',
+      entidad: 'usuarios',
+      id_entidad: parsed.data,
+      valores_despues: { estado_cuenta: 'activa', is_active: true },
+    })
+    if (auditError) {
+      logger.error('approveUser: fallo al registrar en auditoria', {
+        error: auditError.message,
         userId,
       })
     }
@@ -562,6 +609,37 @@ export async function updatePassword(password: string): Promise<Result<void>> {
   if (error) {
     logger.error('updatePassword failed', { error: error.message })
     return err(error.message)
+  }
+
+  // Activación del admin invitado (Opción 1): un administrador nace 'pendiente'
+  // y se activa SOLO al fijar su contraseña por primera vez. La condición es
+  // estrecha (rol administrador + estado pendiente), así que es no-op para un
+  // reset normal (cuentas ya activas) y para un admin desactivado (sigue
+  // 'activa' con is_active = false; su reactivación pasa por approveUser).
+  const {
+    data: { user: invitedUser },
+  } = await supabase.auth.getUser()
+  if (invitedUser) {
+    const adminClient = createSupabaseAdminClient()
+    const { data: row } = await adminClient
+      .from('usuarios')
+      .select('estado_cuenta, roles(nombre_rol)')
+      .eq('id_usuario', invitedUser.id)
+      .maybeSingle()
+    const rolNombre = Array.isArray(row?.roles)
+      ? row?.roles[0]?.nombre_rol
+      : (row?.roles as { nombre_rol?: string } | null)?.nombre_rol
+    if (rolNombre === 'administrador' && row?.estado_cuenta === 'pendiente') {
+      const { error: activateError } = await adminClient
+        .from('usuarios')
+        .update({ estado_cuenta: 'activa', is_active: true })
+        .eq('id_usuario', invitedUser.id)
+      if (activateError) {
+        logger.error('updatePassword: fallo al activar admin invitado', {
+          error: activateError.message,
+        })
+      }
+    }
   }
 
   return ok(undefined)

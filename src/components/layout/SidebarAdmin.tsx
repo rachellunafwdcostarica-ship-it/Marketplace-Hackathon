@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   LayoutDashboard,
   Users,
+  UserPlus,
   Briefcase,
   ShieldCheck,
   Settings,
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils/cn'
 type AdminNavLabel =
   | 'dashboard'
   | 'users'
+  | 'adminRegister'
   | 'projects'
   | 'validations'
   | 'settings'
@@ -30,11 +32,19 @@ interface AdminNavItem {
   href: string
   labelKey: AdminNavLabel
   icon: LucideIcon
+  /** Si es true, el ítem solo se muestra a un superadmin. */
+  superadminOnly?: boolean
 }
 
 const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/admin/users', labelKey: 'users', icon: Users },
+  {
+    href: '/admin/registro-admin',
+    labelKey: 'adminRegister',
+    icon: UserPlus,
+    superadminOnly: true,
+  },
   { href: '/admin/projects', labelKey: 'projects', icon: Briefcase },
   { href: '/admin/validations', labelKey: 'validations', icon: ShieldCheck },
   { href: '/admin/moderation', labelKey: 'moderation', icon: AlertTriangle },
@@ -46,15 +56,21 @@ interface SidebarAdminProps {
   className?: string | undefined
   onNavigate?: (() => void) | undefined
   onLogout?: (() => void) | undefined
+  isSuperadmin?: boolean | undefined
 }
 
 export function SidebarAdmin({
   className,
   onNavigate,
   onLogout,
+  isSuperadmin = false,
 }: SidebarAdminProps) {
   const t = useTranslations('Nav')
   const pathname = usePathname()
+
+  const navItems = ADMIN_NAV.filter(
+    (item) => !item.superadminOnly || isSuperadmin,
+  )
 
   return (
     <nav
@@ -87,7 +103,7 @@ export function SidebarAdmin({
 
       {/* Nav Items */}
       <div className="flex flex-col gap-1.5 px-3 flex-1 z-10">
-        {ADMIN_NAV.map(({ href, labelKey, icon: Icon }) => {
+        {navItems.map(({ href, labelKey, icon: Icon }) => {
           const isActive =
             href === '/admin'
               ? pathname === '/admin'

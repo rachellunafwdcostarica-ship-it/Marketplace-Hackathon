@@ -12,13 +12,17 @@ import { cn } from '@/lib/utils/cn'
 
 interface AdminShellProps {
   children: ReactNode
+  isSuperadmin?: boolean
 }
 
 /**
  * Marco del panel admin — diseño con sidebar morado oscuro + header morado FWD
  * y contenido sobre fondo blanco limpio (§5.7).
  */
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({
+  children,
+  isSuperadmin = false,
+}: AdminShellProps) {
   const t = useTranslations('Nav')
   const locale = useLocale()
   const router = useRouter()
@@ -58,7 +62,11 @@ export function AdminShell({ children }: AdminShellProps) {
   return (
     <div className="flex min-h-screen" style={{ background: '#f5f6fa' }}>
       {/* ── Desktop Sidebar ── */}
-      <SidebarAdmin className="hidden md:flex" onLogout={handleLogout} />
+      <SidebarAdmin
+        className="hidden md:flex"
+        onLogout={handleLogout}
+        isSuperadmin={isSuperadmin}
+      />
 
       {/* ── Mobile drawer overlay ── */}
       {mobileOpen && (
@@ -74,6 +82,7 @@ export function AdminShell({ children }: AdminShellProps) {
               className="h-full"
               onNavigate={closeMobile}
               onLogout={handleLogout}
+              isSuperadmin={isSuperadmin}
             />
           </div>
         </div>
