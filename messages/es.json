@@ -1114,7 +1114,9 @@
     "content": {
       "proyecto_modificado": "El proyecto \"{titulo}\" al que postulaste actualizó su descripción.",
       "strike_recibido": "Recibiste un strike ({cantidad} de {maximo}) por incumplir las normas de la plataforma.",
-      "cuenta_suspendida": "Tu cuenta fue suspendida tras acumular {cantidad} strikes."
+      "cuenta_suspendida": "Tu cuenta fue suspendida tras acumular {cantidad} strikes.",
+      "participacion_contratada": "¡Felicitaciones! La empresa te eligió para \"{titulo}\". Pronto se pondrán en contacto.",
+      "participacion_no_seleccionada": "Esta vez la empresa eligió otro perfil para \"{titulo}\". Gracias por postularte; pronto habrá nuevas oportunidades."
     }
   },
   "EmpresaPerfil": {

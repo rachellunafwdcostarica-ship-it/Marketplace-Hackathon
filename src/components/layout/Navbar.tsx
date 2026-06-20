@@ -302,7 +302,7 @@ export function Navbar({
               >
                 <User className="w-5 h-5" />
               </Link>
-              <div className="absolute right-0 top-full mt-2 w-36 bg-card border border-border rounded-xl shadow-xl py-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="absolute right-0 top-full mt-2 w-36 bg-card border border-border rounded-xl shadow-xl p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <button
                   type="button"
                   onClick={async () => {
@@ -311,7 +311,7 @@ export function Navbar({
                     resetAuth()
                     router.push('/login')
                   }}
-                  className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                  className="w-full text-left px-3 py-1.5 rounded-lg text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
                   {t('logout')}
                 </button>

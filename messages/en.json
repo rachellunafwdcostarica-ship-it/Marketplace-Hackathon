@@ -1114,7 +1114,9 @@
     "content": {
       "proyecto_modificado": "The project \"{titulo}\" you applied to updated its description.",
       "strike_recibido": "You received a strike ({cantidad} of {maximo}) for breaking the platform rules.",
-      "cuenta_suspendida": "Your account was suspended after reaching {cantidad} strikes."
+      "cuenta_suspendida": "Your account was suspended after reaching {cantidad} strikes.",
+      "participacion_contratada": "Congratulations! The company picked you for \"{titulo}\". They'll be in touch soon.",
+      "participacion_no_seleccionada": "This time the company chose someone else for \"{titulo}\". Thanks for applying — new opportunities are on the way."
     }
   },
   "EmpresaPerfil": {
