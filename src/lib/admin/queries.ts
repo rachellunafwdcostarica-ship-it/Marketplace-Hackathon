@@ -210,6 +210,7 @@ export interface AdminUserListItem {
   cantidad_strikes: number
   fecha_registro: string
   nombre_rol: string | null
+  nivel_admin: Database['public']['Enums']['nivel_admin_enum'] | null
 }
 
 export const MAX_STRIKES_LIMIT = 3
@@ -269,7 +270,7 @@ export async function listUsers(
   let query = adminClient
     .from('usuarios')
     .select(
-      'id_usuario, nombre, apellido_1, apellido_2, correo, estado_cuenta, is_active, cantidad_strikes, fecha_registro, id_rol',
+      'id_usuario, nombre, apellido_1, apellido_2, correo, estado_cuenta, is_active, cantidad_strikes, fecha_registro, id_rol, nivel_admin',
     )
     .order('fecha_registro', { ascending: false })
     .limit(MAX_USERS_PER_QUERY)
@@ -313,6 +314,7 @@ export async function listUsers(
     cantidad_strikes: u.cantidad_strikes,
     fecha_registro: u.fecha_registro,
     nombre_rol: u.id_rol === null ? null : (roleNameById.get(u.id_rol) ?? null),
+    nivel_admin: u.nivel_admin,
   }))
 
   return ok(users)

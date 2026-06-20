@@ -7,6 +7,8 @@ import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
+import { evaluateAdminManagement } from '@/lib/admin/admin-management'
+import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
 import {
   validateConfigValue,
   checkPlazoOrder,
@@ -144,6 +146,24 @@ export async function deactivateUser(userId: string): Promise<Result<void>> {
   }
 
   const adminClient = createSupabaseAdminClient()
+
+  // Dar de baja a un administrador es una acción de máximo privilegio: solo un
+  // superadmin, con la regla de antigüedad y sin tumbar al último superadmin.
+  const ctx = await resolveAdminTargetContext(adminClient, user.id, parsed.data)
+  if (ctx.targetIsAdmin) {
+    const verdict = evaluateAdminManagement({
+      action: 'deactivate',
+      actorNivel: ctx.actorNivel,
+      actorFechaRegistro: ctx.actorFechaRegistro ?? '',
+      targetNivel: ctx.targetNivel,
+      targetFechaRegistro: ctx.targetFechaRegistro ?? '',
+      activeSuperadminCount: ctx.activeSuperadminCount,
+    })
+    if (!verdict.allowed) {
+      return err(verdict.reason)
+    }
+  }
+
   const { error } = await adminClient
     .from('usuarios')
     .update({ is_active: false })
@@ -152,6 +172,23 @@ export async function deactivateUser(userId: string): Promise<Result<void>> {
   if (error) {
     logger.error('deactivateUser failed', { error: error.message, userId })
     return err(error.message)
+  }
+
+  if (ctx.targetIsAdmin) {
+    const { error: auditError } = await adminClient.from('auditoria').insert({
+      id_actor: user.id,
+      accion: 'desactivar_admin',
+      entidad: 'usuarios',
+      id_entidad: parsed.data,
+      valores_antes: { is_active: true },
+      valores_despues: { is_active: false },
+    })
+    if (auditError) {
+      logger.error('deactivateUser: fallo al registrar en auditoria', {
+        error: auditError.message,
+        userId,
+      })
+    }
   }
 
   revalidatePath('/admin/users', 'page')
