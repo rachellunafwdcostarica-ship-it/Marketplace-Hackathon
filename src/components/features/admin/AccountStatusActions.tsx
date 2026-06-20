@@ -2,11 +2,12 @@
 
 import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
-import { CheckCircle, Ban } from 'lucide-react'
+import { CheckCircle, Ban, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 import { approveUser } from '@/lib/auth/actions'
 import { deactivateUser } from '@/lib/admin/actions'
+import { resendAdminInvite } from '@/lib/admin/admin-actions'
 import type { AdminAccountStatus } from '@/lib/admin/queries'
 
 interface AccountStatusActionsProps {
@@ -21,6 +22,12 @@ interface AccountStatusActionsProps {
    * backend igual valida; esto solo evita ofrecer una acción que fallaría.
    */
   canManage?: boolean
+  /**
+   * true solo cuando la fila es un administrador `pendiente` y el caller es
+   * superadmin: habilita reenviar la invitación. Es independiente de la regla
+   * de antigüedad (reenviar un enlace de activación es inofensivo).
+   */
+  canResend?: boolean
 }
 
 /**
@@ -36,6 +43,7 @@ export function AccountStatusActions({
   isSelf,
   userName,
   canManage = true,
+  canResend = false,
 }: AccountStatusActionsProps) {
   const t = useTranslations('Admin')
   const router = useRouter()
@@ -44,14 +52,15 @@ export function AccountStatusActions({
     return <span className="text-xs text-muted-foreground">{t('selfRow')}</span>
   }
 
-  if (!canManage) {
+  // Si el caller no puede gestionar la fila y tampoco reenviar, no hay acciones.
+  if (!canManage && !canResend) {
     return (
       <span className="text-xs text-muted-foreground">{t('protectedRow')}</span>
     )
   }
 
-  const canApprove = estadoCuenta !== 'activa' || !isActive
-  const canDeactivate = isActive
+  const canApprove = canManage && (estadoCuenta !== 'activa' || !isActive)
+  const canDeactivate = canManage && isActive
 
   const adminMgmtErrorMessage = (error: string): string | null => {
     switch (error) {
@@ -92,8 +101,45 @@ export function AccountStatusActions({
     }
   }
 
+  const handleResend = async () => {
+    const result = await resendAdminInvite({ idUsuario: userId })
+    if (!result.ok) {
+      toast.error(
+        result.error === 'forbidden'
+          ? t('errorRequiresSuperadmin')
+          : t('inviteResendError'),
+      )
+      return
+    }
+    if (result.data.emailSent) {
+      toast.success(t('inviteResent', { name: userName }))
+    } else if (result.data.inviteLink) {
+      await navigator.clipboard
+        .writeText(result.data.inviteLink)
+        .catch(() => {})
+      toast.warning(t('inviteResentNoEmail'))
+    } else {
+      toast.error(t('inviteResendError'))
+    }
+    router.refresh()
+  }
+
   return (
     <div className="flex items-center gap-2">
+      {canResend && (
+        <ConfirmButton
+          onConfirm={handleResend}
+          title={t('confirmResendTitle')}
+          description={t('confirmResendDesc', { name: userName })}
+          confirmLabel={t('resendInvite')}
+          variant="outline"
+          className="flex items-center gap-1.5 border-primary/20 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+          confirmClassName="bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          <Send className="h-4 w-4" />
+          {t('resendInvite')}
+        </ConfirmButton>
+      )}
       {canApprove && (
         <ConfirmButton
           onConfirm={handleApprove}

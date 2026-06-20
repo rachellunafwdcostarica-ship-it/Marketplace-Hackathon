@@ -7,12 +7,8 @@ import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireSuperadmin } from '@/lib/auth/guards'
-import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
-import {
-  adminInviteHtml,
-  adminInviteSubject,
-} from '@/lib/email/templates/admin-invite'
 import { NIVELES_ADMIN_ASIGNABLES } from '@/lib/admin/admin-management'
+import { generateAndSendAdminInvite } from '@/lib/admin/admin-invite-link'
 
 const InviteAdminSchema = z.object({
   correo: z.string().trim().email().max(150),
@@ -128,65 +124,14 @@ export async function inviteAdmin(
   }
 
   // (5) Enlace para fijar contraseña + (6) correo de invitación.
-  const reqHeaders = await headers()
-  const host =
-    reqHeaders.get('x-forwarded-host') ??
-    reqHeaders.get('host') ??
-    'localhost:3000'
-  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
-  const baseUrl = `${proto}://${host}`
-
-  let inviteLink: string | null = null
-  const { data: linkData, error: linkError } =
-    await adminClient.auth.admin.generateLink({
-      type: 'recovery',
-      email: correo,
-    })
-  if (linkError) {
-    logger.error('inviteAdmin: fallo al generar el enlace de invitación', {
-      error: linkError.message,
-      nuevoId,
-    })
-  } else {
-    // El enlace apunta a /auth/confirm (verifyOtp con token_hash), no al
-    // action_link de Supabase: ese devuelve la sesión en el hash de la URL,
-    // que un route handler del servidor no puede leer.
-    const tokenHash = linkData.properties?.hashed_token
-    const otpType = linkData.properties?.verification_type
-    if (tokenHash && otpType) {
-      const params = new URLSearchParams({
-        token_hash: tokenHash,
-        type: otpType,
-        next: '/reset-password',
-      })
-      inviteLink = `${baseUrl}/auth/confirm?${params.toString()}`
-    } else {
-      logger.error('inviteAdmin: el enlace generado no incluye token_hash', {
-        nuevoId,
-      })
-    }
-  }
-
-  let emailSent = false
-  if (inviteLink) {
-    try {
-      const transport = createGmailTransport()
-      await transport.sendMail({
-        from: getGmailFrom(),
-        to: correo,
-        subject: adminInviteSubject(),
-        html: adminInviteHtml({ inviteUrl: inviteLink, nivelAdmin }),
-      })
-      emailSent = true
-    } catch (e) {
-      logger.error('inviteAdmin: fallo al enviar el correo de invitación', {
-        error: e instanceof Error ? e.message : String(e),
-        nuevoId,
-      })
-    }
-  }
+  const { inviteLink, emailSent } = await generateAndSendAdminInvite({
+    adminClient,
+    correo,
+    nivelAdmin,
+  })
 
   // (7) Auditoría (RNF-05).
+  const reqHeaders = await headers()
   const ipOrigen =
     reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 80) ??
     null
@@ -207,5 +152,99 @@ export async function inviteAdmin(
 
   revalidatePath('/admin/users', 'page')
   revalidatePath('/admin/registro-admin', 'page')
+  return ok({ inviteLink, emailSent })
+}
+
+const ResendAdminInviteSchema = z.object({
+  idUsuario: z.string().uuid(),
+})
+
+export type ResendAdminInviteInput = z.input<typeof ResendAdminInviteSchema>
+
+/**
+ * Reenvía la invitación a un administrador que todavía no activó su cuenta.
+ *
+ * Resuelve el caso de un enlace caído (spam, expirado tras 1 hora, o "quemado"
+ * por un escáner de correo): genera uno fresco y reenvía el correo.
+ *
+ * Reglas:
+ *  - Solo un superadmin puede reenviar (`requireSuperadmin`).
+ *  - El destino debe ser un administrador con `estado_cuenta = 'pendiente'`:
+ *    no tiene sentido reenviar a una cuenta ya activa, ni a un egresado/
+ *    empresario (esos se reactivan por `approveUser`).
+ *  - Reutiliza el mismo helper de enlace + correo que el alta.
+ *  - Deja traza en `auditoria` (RNF-05).
+ */
+export async function resendAdminInvite(
+  input: ResendAdminInviteInput,
+): Promise<Result<InviteAdminResult>> {
+  const auth = await requireSuperadmin()
+  if (!auth.ok) {
+    return auth
+  }
+
+  const parsed = ResendAdminInviteSchema.safeParse(input)
+  if (!parsed.success) {
+    return err('invalid_input')
+  }
+  const { idUsuario } = parsed.data
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: target, error: targetError } = await adminClient
+    .from('usuarios')
+    .select('correo, estado_cuenta, nivel_admin, roles(nombre_rol)')
+    .eq('id_usuario', idUsuario)
+    .maybeSingle()
+  if (targetError) {
+    logger.error('resendAdminInvite: fallo al leer el usuario', {
+      error: targetError.message,
+      idUsuario,
+    })
+    return err('lookup_failed')
+  }
+  if (!target || !target.correo) {
+    return err('user_not_found')
+  }
+
+  const rolNombre = Array.isArray(target.roles)
+    ? target.roles[0]?.nombre_rol
+    : (target.roles as { nombre_rol?: string } | null)?.nombre_rol
+  if (rolNombre !== 'administrador') {
+    return err('not_an_admin')
+  }
+  if (target.estado_cuenta !== 'pendiente') {
+    return err('not_pending')
+  }
+
+  const nivelAdmin: 'superadmin' | 'admin' =
+    target.nivel_admin === 'superadmin' ? 'superadmin' : 'admin'
+
+  const { inviteLink, emailSent } = await generateAndSendAdminInvite({
+    adminClient,
+    correo: target.correo,
+    nivelAdmin,
+  })
+
+  const reqHeaders = await headers()
+  const ipOrigen =
+    reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 80) ??
+    null
+  const { error: auditError } = await adminClient.from('auditoria').insert({
+    id_actor: auth.data.userId,
+    accion: 'reenviar_invitacion',
+    entidad: 'usuarios',
+    id_entidad: idUsuario,
+    valores_despues: { correo: target.correo, nivel_admin: target.nivel_admin },
+    ip_origen: ipOrigen,
+  })
+  if (auditError) {
+    logger.error('resendAdminInvite: fallo al registrar en auditoria', {
+      error: auditError.message,
+      idUsuario,
+    })
+  }
+
+  revalidatePath('/admin/users', 'page')
   return ok({ inviteLink, emailSent })
 }
