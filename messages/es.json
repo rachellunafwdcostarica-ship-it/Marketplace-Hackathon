@@ -1101,6 +1101,9 @@
       "strike_recibido": "Strike",
       "proyecto_modificado": "Proyecto actualizado",
       "generic": "Notificación"
+    },
+    "content": {
+      "proyecto_modificado": "El proyecto \"{titulo}\" al que postulaste actualizó su descripción."
     }
   },
   "EmpresaPerfil": {

@@ -7,7 +7,7 @@ import { Menu, X, ShieldCheck, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { SidebarAdmin } from './SidebarAdmin'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
-import { NotificationBell } from '@/components/features/admin/NotificationBell'
+import { NotificationBell } from '@/components/features/notifications/NotificationBell'
 import { cn } from '@/lib/utils/cn'
 
 interface AdminShellProps {
@@ -121,7 +121,7 @@ export function AdminShell({
           <div className="flex-1" />
 
           {/* Notification bell */}
-          <NotificationBell />
+          <NotificationBell className="shrink-0" />
 
           {/* Language switcher */}
           <div

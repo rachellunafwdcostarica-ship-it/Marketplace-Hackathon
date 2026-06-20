@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
+import { crearNotificaciones } from '@/lib/notifications/create'
 import { toJsonb } from '@/lib/supabase/json'
 import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
 import {
@@ -294,17 +295,18 @@ async function registrarEdicionYNotificar(params: {
   const path = `/${routing.defaultLocale}/junior/projects/${idProyecto}`
   const mensaje = buildNotificacionMensaje(tituloProyecto)
 
-  const { error: notifError } = await admin.from('notificaciones').insert(
+  const notifResult = await crearNotificaciones(
     oferentes.map((o) => ({
-      id_usuario: o.idUsuario,
-      tipo_evento: 'proyecto_modificado' as const,
+      idUsuario: o.idUsuario,
+      tipoEvento: 'proyecto_modificado' as const,
       mensaje,
-      url_destino: path,
+      urlDestino: path,
+      params: { titulo: tituloProyecto },
     })),
   )
-  if (notifError) {
+  if (!notifResult.ok) {
     logger.error('editProjectDescription: fallo al insertar notificaciones', {
-      error: notifError.message,
+      error: notifResult.error,
       idProyecto,
     })
   }

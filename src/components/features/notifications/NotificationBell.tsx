@@ -220,6 +220,7 @@ export function NotificationBell({
                 const content = resolveNotificationContent({
                   tipo: n.tipo_evento,
                   mensaje: n.mensaje,
+                  params: n.params,
                 })
                 const body =
                   content.kind === 'i18n'

@@ -181,8 +181,8 @@ export async function addStrike(
   await createAdminNotification({
     mensaje:
       nuevaCantidad >= maxStrikesLimit
-        ? `⚠️ ${nombreCompleto} fue suspendido automáticamente tras ${nuevaCantidad} strikes. Motivo: ${parsedMotivo.data}.`
-        : `🔴 Strike aplicado a ${nombreCompleto} (${nuevaCantidad}/${maxStrikesLimit}). Motivo: ${parsedMotivo.data}.`,
+        ? `${nombreCompleto} fue suspendido automáticamente tras ${nuevaCantidad} strikes. Motivo: ${parsedMotivo.data}.`
+        : `Strike aplicado a ${nombreCompleto} (${nuevaCantidad}/${maxStrikesLimit}). Motivo: ${parsedMotivo.data}.`,
     tipo_evento: 'strike_recibido',
     url_destino: '/admin/moderation',
   })
