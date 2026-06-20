@@ -100,6 +100,7 @@ export function ParticipationsPanel({
   )
   const [mutatingId, setMutatingId] = useState<string | null>(null)
   const [ratingMutatingId, setRatingMutatingId] = useState<string | null>(null)
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null)
 
   // Sin estado de proyecto (vista cross-project) dejamos abrir: ahí no hay
   // ciclo de vida de proyecto a la mano.
@@ -254,6 +255,7 @@ export function ParticipationsPanel({
               onRate={(calificacion, comentario) =>
                 runRate(participacion, calificacion, comentario)
               }
+              onOpenIframe={setIframeUrl}
             />
           ))}
         </div>
@@ -353,6 +355,41 @@ export function ParticipationsPanel({
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={iframeUrl !== null}
+        onOpenChange={(open) => !open && setIframeUrl(null)}
+      >
+        <DialogContent className="max-w-[90vw] w-[1200px] h-[85vh] flex flex-col p-0 overflow-hidden border border-border">
+          <DialogHeader className="p-4 border-b border-border/40 shrink-0 flex flex-row items-center justify-between">
+            <DialogTitle className="text-lg font-bold font-heading truncate pr-4">
+              Vista Previa
+            </DialogTitle>
+            {iframeUrl && (
+              <a
+                href={iframeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Abrir en pestaña nueva
+              </a>
+            )}
+          </DialogHeader>
+          <div className="flex-1 w-full bg-background relative">
+            {iframeUrl && (
+              <iframe
+                src={iframeUrl}
+                className="w-full h-full border-0"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -371,6 +408,7 @@ interface ParticipationCardProps {
     calificacion: number,
     comentario: string | undefined,
   ) => Promise<void>
+  onOpenIframe: (url: string) => void
 }
 
 function ParticipationCard({
@@ -384,6 +422,7 @@ function ParticipationCard({
   onContratar,
   onRechazar,
   onRate,
+  onOpenIframe,
 }: ParticipationCardProps) {
   const t = useTranslations('ProjectDetail')
   const sealed = isParticipacionSealed(participacion.estado)
@@ -471,6 +510,10 @@ function ParticipationCard({
                     href={enlace}
                     label={t('prototypeLabel')}
                     icon={<ExternalLink className="w-3.5 h-3.5" />}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onOpenIframe(enlace)
+                    }}
                   />
                 ))}
                 {participacion.documentacionTecnica && (
@@ -478,6 +521,10 @@ function ParticipationCard({
                     href={participacion.documentacionTecnica}
                     label={t('techDocLabel')}
                     icon={<FileText className="w-3.5 h-3.5" />}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onOpenIframe(participacion.documentacionTecnica!)
+                    }}
                   />
                 )}
                 {participacion.urlRepositorioProyecto && (
@@ -485,6 +532,10 @@ function ParticipationCard({
                     href={participacion.urlRepositorioProyecto}
                     label={t('repoLabel')}
                     icon={<GitBranch className="w-3.5 h-3.5" />}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onOpenIframe(participacion.urlRepositorioProyecto!)
+                    }}
                   />
                 )}
               </div>
@@ -857,17 +908,20 @@ function ExternalAnchor({
   href,
   label,
   icon,
+  onClick,
 }: {
   href: string
   label: string
   icon: ReactNode
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
     >
       {icon}
       {label}
