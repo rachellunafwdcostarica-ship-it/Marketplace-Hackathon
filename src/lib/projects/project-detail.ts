@@ -5,6 +5,9 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/dal'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { crearNotificaciones } from '@/lib/notifications/create'
+import { routing } from '@/i18n/routing'
 import type { Database } from '@/types/database'
 import {
   PARTICIPACION_ACTION_TARGET,
@@ -15,6 +18,10 @@ import {
   type EstadoProyecto,
 } from './project-detail-logic'
 import { getMyPublishedProjects } from './dashboard'
+import {
+  buildAdjudicacionNotificaciones,
+  type AfectadoAdjudicacion,
+} from './adjudicacion-notificacion-logic'
 
 type TituloFwd = Database['public']['Enums']['titulo_fwd_enum']
 type RpcParticipacionRow =
@@ -420,7 +427,82 @@ export async function adjudicarParticipacion(
     return err('adjudicacion_fallida')
   }
 
+  await notificarAdjudicacion(parsed.data.idProyecto)
+
   return ok(undefined)
+}
+
+interface ParticipacionAfectadaRaw {
+  estado: AfectadoAdjudicacion['estado']
+  estudiantes: { usuarios: { id_usuario: string } | null } | null
+}
+
+/**
+ * Notifica al ganador y a los no seleccionados tras una adjudicación exitosa
+ * (RF-37/39). Best-effort y autoblindada: la adjudicación ya quedó confirmada por
+ * el RPC, así que cualquier fallo aquí se loguea y se traga (log + decisión, §8)
+ * para no devolver error sobre algo que sí ocurrió. Lee con `service_role`: la
+ * audiencia (ganador + resto) no la devuelve el RPC.
+ */
+async function notificarAdjudicacion(idProyecto: string): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+
+    const { data: proyecto, error: proyectoError } = await admin
+      .from('proyectos')
+      .select('titulo')
+      .eq('id_proyecto', idProyecto)
+      .maybeSingle()
+    if (proyectoError || !proyecto) {
+      logger.error('notificarAdjudicacion: fallo al leer el proyecto', {
+        idProyecto,
+        error: proyectoError?.message,
+      })
+      return
+    }
+
+    const { data: filas, error: filasError } = await admin
+      .from('participaciones')
+      .select('estado, estudiantes(usuarios(id_usuario))')
+      .eq('id_proyecto', idProyecto)
+      .in('estado', ['contratada', 'no_seleccionada'])
+    if (filasError) {
+      logger.error('notificarAdjudicacion: fallo al leer participaciones', {
+        idProyecto,
+        error: filasError.message,
+      })
+      return
+    }
+
+    const afectados: AfectadoAdjudicacion[] = (
+      (filas ?? []) as unknown as ParticipacionAfectadaRaw[]
+    )
+      .map((fila) => {
+        const idUsuario = fila.estudiantes?.usuarios?.id_usuario
+        return idUsuario ? { idUsuario, estado: fila.estado } : null
+      })
+      .filter((afectado): afectado is AfectadoAdjudicacion => afectado !== null)
+
+    const urlProyecto = `/${routing.defaultLocale}/egresado/projects/${idProyecto}`
+    const result = await crearNotificaciones(
+      buildAdjudicacionNotificaciones({
+        titulo: proyecto.titulo,
+        urlProyecto,
+        afectados,
+      }),
+    )
+    if (!result.ok) {
+      logger.error('notificarAdjudicacion: fallo al crear notificaciones', {
+        idProyecto,
+        error: result.error,
+      })
+    }
+  } catch (e) {
+    logger.error('notificarAdjudicacion: excepción inesperada', {
+      idProyecto,
+      error: String(e),
+    })
+  }
 }
 
 /**
