@@ -430,7 +430,11 @@ export async function adjudicarParticipacion(
  * estudiante. Una sola query.
  */
 export async function getEmpresarioParticipationStats(): Promise<
-  Result<{ total: number; hired: number }>
+  Result<{
+    total: number
+    hired: number
+    countsByProject: Record<string, number>
+  }>
 > {
   const user = await getCurrentUser()
   if (!user) return err('unauthorized')
@@ -438,7 +442,7 @@ export async function getEmpresarioParticipationStats(): Promise<
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase
     .from('participaciones')
-    .select('estado')
+    .select('estado, id_proyecto')
   if (error) {
     logger.error('getEmpresarioParticipationStats: fallo al contar', {
       error: error.message,
@@ -451,5 +455,14 @@ export async function getEmpresarioParticipationStats(): Promise<
   const hired = filas.filter(
     (fila) => fila.estado === 'contratada' || fila.estado === 'finalizada',
   ).length
-  return ok({ total, hired })
+
+  const countsByProject: Record<string, number> = {}
+  filas.forEach((fila) => {
+    if (fila.id_proyecto) {
+      countsByProject[fila.id_proyecto] =
+        (countsByProject[fila.id_proyecto] || 0) + 1
+    }
+  })
+
+  return ok({ total, hired, countsByProject })
 }

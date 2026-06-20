@@ -11,9 +11,15 @@ import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
 import { Briefcase, Users, Plus, UserCheck } from 'lucide-react'
 import type { PublishedProject } from '@/lib/projects/dashboard'
 
+import { DashboardCharts } from '@/components/features/dashboard/DashboardCharts'
+
 interface CompanyDashboardClientProps {
   initialProjects: PublishedProject[]
-  participationStats: { total: number; hired: number }
+  participationStats: {
+    total: number
+    hired: number
+    countsByProject: Record<string, number>
+  }
 }
 
 /**
@@ -97,6 +103,11 @@ export function CompanyDashboardClient({
               {tEmpresa('myPublishedProjects')}
               <span className="text-secondary">.</span>
             </h2>
+
+            <DashboardCharts
+              projects={initialProjects}
+              countsByProject={participationStats.countsByProject}
+            />
 
             <PublishedProjectsBoard projects={initialProjects} />
           </div>

@@ -22,6 +22,7 @@ import {
   Send,
   MessageSquare,
   HelpCircle,
+  Users,
 } from 'lucide-react'
 
 interface NavItem {
@@ -76,6 +77,13 @@ export function SidebarEmpresaNuevo() {
       label: t('menuPostulaciones'),
       icon: Send,
       isActive: (path) => path.startsWith('/empresario/postulaciones'),
+    },
+    {
+      id: 'contrataciones',
+      href: '/empresario/contrataciones',
+      label: t('menuContrataciones'),
+      icon: Users,
+      isActive: (path) => path.startsWith('/empresario/contrataciones'),
     },
     {
       id: 'mensajes',
