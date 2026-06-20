@@ -7,6 +7,7 @@ import type { UserRole } from '@/types'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
+import { NotificationBell } from '@/components/features/notifications/NotificationBell'
 import {
   Menu,
   X,
@@ -19,7 +20,6 @@ import {
   LayoutDashboard,
   PlusCircle,
   Building2,
-  Bell,
   User,
   Users,
   ShieldCheck,
@@ -254,15 +254,7 @@ export function Navbar({
             </div>
 
             {/* Notification Bell */}
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t('notifications')}
-              className={`h-9 w-9 rounded-full relative shrink-0 transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-magenta animate-pulse" />
-            </Button>
+            <NotificationBell isHero={isHero} className="shrink-0" />
 
             {/* Language Selector */}
             <div
@@ -321,6 +313,8 @@ export function Navbar({
 
           {/* Mobile Controls */}
           <div className="flex items-center md:hidden gap-3">
+            <NotificationBell isHero={isHero} className="shrink-0" />
+
             <Button
               variant="ghost"
               size="icon"
