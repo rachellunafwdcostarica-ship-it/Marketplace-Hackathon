@@ -720,6 +720,7 @@ export type Database = {
           id_usuario: string
           leida: boolean
           mensaje: string
+          params: Json | null
           tipo_evento: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino: string | null
         }
@@ -729,6 +730,7 @@ export type Database = {
           id_usuario: string
           leida?: boolean
           mensaje: string
+          params?: Json | null
           tipo_evento: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino?: string | null
         }
@@ -738,6 +740,7 @@ export type Database = {
           id_usuario?: string
           leida?: boolean
           mensaje?: string
+          params?: Json | null
           tipo_evento?: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino?: string | null
         }

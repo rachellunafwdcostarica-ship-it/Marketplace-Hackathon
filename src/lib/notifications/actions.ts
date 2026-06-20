@@ -17,11 +17,12 @@ export interface NotificacionItem {
   leida: boolean
   url_destino: string | null
   generada_at: string
+  params: Record<string, string> | null
 }
 
 const MAX_NOTIFICACIONES = 30
 const NOTIFICACION_COLUMNS =
-  'id_notificacion, mensaje, tipo_evento, leida, url_destino, generada_at'
+  'id_notificacion, mensaje, tipo_evento, leida, url_destino, generada_at, params'
 const idSchema = z.string().uuid()
 
 /**

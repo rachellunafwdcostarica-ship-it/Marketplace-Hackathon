@@ -53,8 +53,11 @@ function getRouteRole(
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // La ruta de callback de OAuth no necesita locale ni protección
-  if (pathname === '/auth/callback') {
+  // Las rutas de auth (callback de OAuth y confirm de enlaces de email) son
+  // route handlers que gestionan su propia sesión: no necesitan locale ni el
+  // gate de protección. Además, next-intl no debe prefijarles un locale, porque
+  // viven sin él y el redirect a /es/auth/... terminaría en 404.
+  if (pathname.startsWith('/auth/')) {
     return NextResponse.next()
   }
 
@@ -99,6 +102,21 @@ export async function middleware(request: NextRequest) {
     // Si no es una página de autenticación pública, redirigir a /login
     if (!isPublicAuthPage(pathname)) {
       return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+    }
+    return intlResponse
+  }
+
+  // CASO LANDING: usuario autenticado en la raíz localizada (/es, /en).
+  // El administrador no usa la landing compartida; se le envía a su panel.
+  // No se valida aquí is_active ni la sesión: el gate de la ruta protegida
+  // /admin revalida sesión, is_active, suspensión y rol tras el redirect.
+  // Egresado y empresario permanecen en la landing (su home configurado).
+  if (pathname === `/${locale}`) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    if (normalizeRole(roleRaw) === 'administrador') {
+      return NextResponse.redirect(
+        new URL(`/${locale}${ROLE_HOME.administrador}`, request.url),
+      )
     }
     return intlResponse
   }

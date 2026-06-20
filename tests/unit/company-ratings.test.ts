@@ -190,7 +190,7 @@ describe('Company Ratings Server Actions', () => {
     }
   })
 
-  it('debería retornar error si el contrato no se encuentra en estado activo (vigente o finalizado)', async () => {
+  it('debería retornar error si el contrato no está en estado finalizado', async () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockSupabase = {
       auth: {
@@ -327,7 +327,7 @@ describe('Company Ratings Server Actions', () => {
     })
   })
 
-  it('debería registrar exitosamente la calificación de la empresa en estado vigente', async () => {
+  it('debería rechazar la calificación de la empresa en estado vigente (solo finalizado)', async () => {
     vi.mocked(requireRole).mockResolvedValue(ok('egresado' as UserRole))
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     const mockSupabase = {
@@ -393,13 +393,10 @@ describe('Company Ratings Server Actions', () => {
       comentario: 'Buena comunicación inicial',
     })
 
-    expect(res.ok).toBe(true)
-    expect(mockInsert).toHaveBeenCalledWith({
-      id_contratacion: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-      id_estudiante: 'est-456',
-      id_empresario: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-      puntuacion: 4,
-      comentario: 'Buena comunicación inicial',
-    })
+    expect(res.ok).toBe(false)
+    if (!res.ok) {
+      expect(res.error).toBe('contratacion_no_finalizada')
+    }
+    expect(mockInsert).not.toHaveBeenCalled()
   })
 })
