@@ -18,6 +18,11 @@ export type { NotificacionInput, TipoNotificacion } from './create-logic'
  * P1.1). La audiencia ya viene resuelta por el productor que llama.
  *
  * Devuelve cuántas filas se insertaron. Un lote vacío es un no-op (`ok(0)`).
+ *
+ * Blindado: como es un canal best-effort para los productores (un fallo al
+ * notificar no debe abortar la acción que la llamó), captura cualquier excepción
+ * y la traduce a `Result`. Así nunca lanza y los callers solo revisan `result.ok`
+ * sin necesitar su propio `try/catch`.
  */
 export async function crearNotificaciones(
   inputs: NotificacionInput[],
@@ -32,19 +37,26 @@ export async function crearNotificaciones(
     return err(validation.error)
   }
 
-  const admin = createSupabaseAdminClient()
-  const { error } = await admin
-    .from('notificaciones')
-    .insert(buildNotificacionRows(inputs))
+  try {
+    const admin = createSupabaseAdminClient()
+    const { error } = await admin
+      .from('notificaciones')
+      .insert(buildNotificacionRows(inputs))
 
-  if (error) {
-    logger.error('crearNotificaciones: fallo al insertar', {
-      error: error.message,
+    if (error) {
+      logger.error('crearNotificaciones: fallo al insertar', {
+        error: error.message,
+      })
+      return err(error.message)
+    }
+
+    return ok(inputs.length)
+  } catch (e) {
+    logger.error('crearNotificaciones: excepción inesperada', {
+      error: String(e),
     })
-    return err(error.message)
+    return err('notificacion_excepcion')
   }
-
-  return ok(inputs.length)
 }
 
 /** Conveniencia para un solo destinatario. Envuelve {@link crearNotificaciones}. */
