@@ -184,7 +184,7 @@ export function EntregablesClient({
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <Link
-          href={`/junior/projects/${projectId}`}
+          href={`/egresado/projects/${projectId}`}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
         >
           <ArrowLeft className="w-4 h-4" />

@@ -49,7 +49,7 @@ async function registrarEntregable(
     })
 
     if (!insertError) {
-      revalidatePath(`/junior/projects/${input.idProyecto}/entregables`)
+      revalidatePath(`/egresado/projects/${input.idProyecto}/entregables`)
       return ok(undefined)
     }
 
@@ -186,7 +186,9 @@ export async function responderEntregable(
       return err('finalizacion_fallida')
     }
     revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
-    revalidatePath(`/junior/projects/${participacion.id_proyecto}/entregables`)
+    revalidatePath(
+      `/egresado/projects/${participacion.id_proyecto}/entregables`,
+    )
     return ok({ finalizado: true })
   }
 
@@ -212,6 +214,6 @@ export async function responderEntregable(
   }
 
   revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
-  revalidatePath(`/junior/projects/${participacion.id_proyecto}/entregables`)
+  revalidatePath(`/egresado/projects/${participacion.id_proyecto}/entregables`)
   return ok({ finalizado: false })
 }

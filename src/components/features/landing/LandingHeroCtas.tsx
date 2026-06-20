@@ -13,7 +13,7 @@ interface HeroCta {
 
 // CTA principal del hero por rol: lleva a la acción central de cada perfil.
 const PRIMARY_CTA_BY_ROLE: Record<UserRole, HeroCta> = {
-  egresado: { href: '/junior/projects', labelKey: 'ctaFindProjects' },
+  egresado: { href: '/egresado/projects', labelKey: 'ctaFindProjects' },
   empresario: {
     href: '/empresario/new-project',
     labelKey: 'ctaPublishProject',
@@ -23,7 +23,7 @@ const PRIMARY_CTA_BY_ROLE: Record<UserRole, HeroCta> = {
 
 // CTA secundario (estilo contorno): atajo al panel propio. El admin no lo usa.
 const SECONDARY_CTA_BY_ROLE: Record<UserRole, HeroCta | null> = {
-  egresado: { href: '/junior', labelKey: 'ctaGoToPanel' },
+  egresado: { href: '/egresado', labelKey: 'ctaGoToPanel' },
   empresario: { href: '/empresario', labelKey: 'ctaGoToPanel' },
   administrador: null,
 }

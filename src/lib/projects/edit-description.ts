@@ -292,7 +292,7 @@ async function registrarEdicionYNotificar(params: {
   const oferentes = [...porUsuario.values()]
   if (oferentes.length === 0) return 0
 
-  const path = `/${routing.defaultLocale}/junior/projects/${idProyecto}`
+  const path = `/${routing.defaultLocale}/egresado/projects/${idProyecto}`
   const mensaje = buildNotificacionMensaje(tituloProyecto)
 
   const notifResult = await crearNotificaciones(

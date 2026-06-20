@@ -20,13 +20,13 @@ function input(overrides: Partial<NotificacionInput> = {}): NotificacionInput {
 describe('buildNotificacionRows', () => {
   it('mapea camelCase del dominio a snake_case de la tabla', () => {
     const [row] = buildNotificacionRows([
-      input({ urlDestino: '/junior/projects/1', params: { titulo: 'Demo' } }),
+      input({ urlDestino: '/egresado/projects/1', params: { titulo: 'Demo' } }),
     ])
     expect(row).toEqual({
       id_usuario: UUID,
       tipo_evento: 'proyecto_modificado',
       mensaje: 'El proyecto actualizó su descripción.',
-      url_destino: '/junior/projects/1',
+      url_destino: '/egresado/projects/1',
       params: { titulo: 'Demo' },
       leida: false,
     })
