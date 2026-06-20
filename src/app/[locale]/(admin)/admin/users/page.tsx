@@ -155,6 +155,10 @@ export default async function AdminUsersPage({
                         targetNivel: user.nivel_admin,
                         targetFechaRegistro: user.fecha_registro,
                       })
+                    const canResend =
+                      isAdminRow &&
+                      user.estado_cuenta === 'pendiente' &&
+                      callerNivel === 'superadmin'
                     return (
                       <TableRow key={user.id_usuario}>
                         <TableCell className="font-semibold text-foreground">
@@ -196,6 +200,7 @@ export default async function AdminUsersPage({
                             isSelf={user.id_usuario === currentUserId}
                             userName={`${user.nombre} ${user.apellido_1}`}
                             canManage={canManage}
+                            canResend={canResend}
                           />
                         </TableCell>
                       </TableRow>

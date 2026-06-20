@@ -903,6 +903,12 @@
     "errorRequiresSuperadmin": "Only a superadmin can manage an administrator.",
     "errorSeniority": "You can't deactivate a superadmin with more seniority than you.",
     "errorLastSuperadmin": "You can't deactivate the last active superadmin.",
+    "resendInvite": "Resend invitation",
+    "confirmResendTitle": "Resend invitation?",
+    "confirmResendDesc": "A new activation link will be sent to {name}.",
+    "inviteResent": "Invitation resent to {name}.",
+    "inviteResentNoEmail": "Couldn't send the email; the link was copied to your clipboard.",
+    "inviteResendError": "Couldn't resend the invitation. Please try again.",
     "adminRegisterTitle": "Administrator Registration",
     "adminRegisterDesc": "Invite someone as an administrator. They'll receive an email link to set their password and activate their account.",
     "adminRegisterEmailLabel": "Email",
@@ -1103,7 +1109,9 @@
       "generic": "Notification"
     },
     "content": {
-      "proyecto_modificado": "The project \"{titulo}\" you applied to updated its description."
+      "proyecto_modificado": "The project \"{titulo}\" you applied to updated its description.",
+      "strike_recibido": "You received a strike ({cantidad} of {maximo}) for breaking the platform rules.",
+      "cuenta_suspendida": "Your account was suspended after reaching {cantidad} strikes."
     }
   },
   "EmpresaPerfil": {

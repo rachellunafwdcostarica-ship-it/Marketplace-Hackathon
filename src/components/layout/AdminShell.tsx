@@ -63,7 +63,7 @@ export function AdminShell({
     <div className="flex min-h-screen" style={{ background: '#f5f6fa' }}>
       {/* ── Desktop Sidebar ── */}
       <SidebarAdmin
-        className="hidden md:flex"
+        className="hidden md:flex md:sticky md:top-0 md:h-screen md:self-start"
         onLogout={handleLogout}
         isSuperadmin={isSuperadmin}
       />

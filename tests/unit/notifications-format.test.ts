@@ -85,10 +85,10 @@ describe('resolveNotificationContent', () => {
   it('cae al mensaje crudo si el tipo aún no tiene plantilla, aunque haya params', () => {
     expect(
       resolveNotificationContent({
-        tipo: 'strike_recibido',
-        mensaje: 'Recibiste un strike',
-        params: { motivo: 'spam' },
+        tipo: 'mensaje_nuevo',
+        mensaje: 'Tienes un mensaje nuevo',
+        params: { de: 'Ana' },
       }),
-    ).toEqual({ kind: 'raw', text: 'Recibiste un strike' })
+    ).toEqual({ kind: 'raw', text: 'Tienes un mensaje nuevo' })
   })
 })

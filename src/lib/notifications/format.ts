@@ -35,6 +35,8 @@ const TIPOS_CONOCIDOS: ReadonlySet<string> = new Set<TipoNotificacion>(
  */
 const TIPOS_CON_PLANTILLA: ReadonlySet<string> = new Set<TipoNotificacion>([
   'proyecto_modificado',
+  'strike_recibido',
+  'cuenta_suspendida',
 ])
 
 /**

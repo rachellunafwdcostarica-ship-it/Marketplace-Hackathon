@@ -903,6 +903,12 @@
     "errorRequiresSuperadmin": "Solo un superadministrador puede gestionar a un administrador.",
     "errorSeniority": "No podés desactivar a un superadministrador con más antigüedad que vos.",
     "errorLastSuperadmin": "No se puede desactivar al último superadministrador activo.",
+    "resendInvite": "Reenviar invitación",
+    "confirmResendTitle": "¿Reenviar invitación?",
+    "confirmResendDesc": "Se enviará un nuevo enlace de activación a {name}.",
+    "inviteResent": "Invitación reenviada a {name}.",
+    "inviteResentNoEmail": "No se pudo enviar el correo; el enlace se copió al portapapeles.",
+    "inviteResendError": "No se pudo reenviar la invitación. Intentá de nuevo.",
     "adminRegisterTitle": "Registro de Administradores",
     "adminRegisterDesc": "Invitá a una persona como administrador. Recibirá un enlace por correo para definir su contraseña y activar su cuenta.",
     "adminRegisterEmailLabel": "Correo electrónico",
@@ -1103,7 +1109,9 @@
       "generic": "Notificación"
     },
     "content": {
-      "proyecto_modificado": "El proyecto \"{titulo}\" al que postulaste actualizó su descripción."
+      "proyecto_modificado": "El proyecto \"{titulo}\" al que postulaste actualizó su descripción.",
+      "strike_recibido": "Recibiste un strike ({cantidad} de {maximo}) por incumplir las normas de la plataforma.",
+      "cuenta_suspendida": "Tu cuenta fue suspendida tras acumular {cantidad} strikes."
     }
   },
   "EmpresaPerfil": {

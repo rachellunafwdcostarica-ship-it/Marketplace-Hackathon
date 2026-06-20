@@ -8,6 +8,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
 import { getCurrentUser } from '@/lib/auth/dal'
 import { createAdminNotification } from '@/lib/admin/notification-actions'
+import { crearNotificacion } from '@/lib/notifications/create'
+import { buildStrikeNotificacion } from '@/lib/admin/strike-notificacion-logic'
 import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
 import {
   strikeAppliedHtml,
@@ -172,6 +174,30 @@ export async function addStrike(
       })
       // No fallamos la acción principal si el email no llega
     }
+  }
+
+  // ── Notificación in-app para el usuario sancionado (RF-47) ─────────────────
+  // Best-effort: igual que el correo, un fallo aquí no debe abortar el strike.
+  try {
+    const strikeNotif = buildStrikeNotificacion(nuevaCantidad, maxStrikesLimit)
+    const notifResult = await crearNotificacion({
+      idUsuario: parsedId.data,
+      tipoEvento: strikeNotif.tipoEvento,
+      mensaje: strikeNotif.mensaje,
+      params: strikeNotif.params,
+      urlDestino: null,
+    })
+    if (!notifResult.ok) {
+      logger.error('addStrike: fallo al notificar al usuario sancionado', {
+        userId,
+        error: notifResult.error,
+      })
+    }
+  } catch (notifErr) {
+    logger.error('addStrike: excepción al notificar al usuario sancionado', {
+      userId,
+      error: String(notifErr),
+    })
   }
 
   // ── Crear notificación en el panel de admin ────────────────────────────────
