@@ -468,9 +468,11 @@ export type Database = {
           modalidad_preferida:
             | Database['public']['Enums']['modalidad_enum']
             | null
+          pais_iso_residencia: string | null
           participaciones_activas: number
           portafolio_visible_publicamente: boolean
           proyectos_completados: number
+          region_residencia: string | null
           reputacion: number | null
           titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at: string
@@ -486,9 +488,11 @@ export type Database = {
           modalidad_preferida?:
             | Database['public']['Enums']['modalidad_enum']
             | null
+          pais_iso_residencia?: string | null
           participaciones_activas?: number
           portafolio_visible_publicamente?: boolean
           proyectos_completados?: number
+          region_residencia?: string | null
           reputacion?: number | null
           titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at?: string
@@ -504,9 +508,11 @@ export type Database = {
           modalidad_preferida?:
             | Database['public']['Enums']['modalidad_enum']
             | null
+          pais_iso_residencia?: string | null
           participaciones_activas?: number
           portafolio_visible_publicamente?: boolean
           proyectos_completados?: number
+          region_residencia?: string | null
           reputacion?: number | null
           titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at?: string
