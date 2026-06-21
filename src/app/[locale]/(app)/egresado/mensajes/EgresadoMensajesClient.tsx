@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 import { MessageSquare, Send, Lock, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { EgresadoShell } from '@/components/layout/EgresadoShell'
-import { SidebarEgresado } from '@/components/layout/SidebarEgresado'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -220,10 +219,8 @@ export function EgresadoMensajesClient({
 
   return (
     <EgresadoShell>
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <SidebarEgresado />
-
-        <main className="flex-1 flex flex-col gap-6 min-w-0">
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex flex-col gap-6">
           <PageTitle title={t('title')} description={t('description')} />
 
           {conversaciones.length === 0 ? (
