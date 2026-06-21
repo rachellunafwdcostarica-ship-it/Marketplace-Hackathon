@@ -15,7 +15,7 @@ import {
   proyectoModificadoSubject,
 } from '@/lib/email/templates/proyecto-modificado'
 import { getAiProvider } from '@/lib/proposal-ai/provider'
-import { routing } from '@/i18n/routing'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 import {
   computeEstadoEfectivoProyecto,
   type EstadoParticipacion,
@@ -292,7 +292,7 @@ async function registrarEdicionYNotificar(params: {
   const oferentes = [...porUsuario.values()]
   if (oferentes.length === 0) return 0
 
-  const path = `/${routing.defaultLocale}/egresado/projects/${idProyecto}`
+  const path = `/${DEFAULT_LOCALE}/egresado/projects/${idProyecto}`
   const mensaje = buildNotificacionMensaje(tituloProyecto)
 
   const notifResult = await crearNotificaciones(
