@@ -145,6 +145,11 @@ export async function publishProject(
       return err('ubicacion')
     }
 
+    // Al regenerar `database.ts`: `p_id_area`, `p_pais_iso` y `p_region` son
+    // parámetros NULLABLES de la RPC. Si tras un `supabase gen types --linked`
+    // esta llamada falla con "Type 'string | null' is not assignable to type
+    // 'string'", es porque el CLI tipó esos Args sin `| null`. No castees el
+    // valor acá: restaurá `| null` en esos tres parámetros dentro de `database.ts`.
     const { data: projectId, error: rpcError } = await supabase.rpc(
       'publicar_proyecto',
       {
