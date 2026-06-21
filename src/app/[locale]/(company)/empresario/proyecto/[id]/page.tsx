@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { getLocale } from 'next-intl/server'
 import { getMyPublishedProjects } from '@/lib/projects/dashboard'
+import { getCountryName, getSubdivisionName } from '@/lib/geo/catalog'
 import { getProjectParticipations } from '@/lib/projects/project-detail'
 import { getEntregablesDeProyecto } from '@/lib/deliverables/queries'
 import { isCompanyProfileComplete } from '@/lib/company/actions'
@@ -34,9 +35,20 @@ export default async function ProjectDetailPage({
     getEntregablesDeProyecto(id),
   ])
 
+  // El detalle muestra los nombres de ubicación, no los códigos ISO guardados.
+  const projectForDisplay = {
+    ...project,
+    paisProyecto: project.paisProyecto
+      ? (getCountryName(project.paisProyecto, locale) ?? project.paisProyecto)
+      : null,
+    ciudadProyecto: project.ciudadProyecto
+      ? (getSubdivisionName(project.ciudadProyecto) ?? project.ciudadProyecto)
+      : null,
+  }
+
   return (
     <ProjectDetailClient
-      project={project}
+      project={projectForDisplay}
       participationsResult={participationsResult}
       entregablesResult={entregablesResult}
     />

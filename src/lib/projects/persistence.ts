@@ -31,8 +31,8 @@ const logisticaDraftSchema = z.object({
   presupuestoMin: z.number().nullable(),
   presupuestoMax: z.number().nullable(),
   plazoDias: z.number(),
-  paisProyecto: z.string().nullable(),
-  ciudadProyecto: z.string().nullable(),
+  paisIso: z.string().nullable(),
+  region: z.string().nullable(),
 }) satisfies z.ZodType<LogisticaDraft>
 
 const catalogRefSchema = z.object({
