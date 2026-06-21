@@ -29,6 +29,28 @@ vi.mock('@/lib/ai-filtro-ofertas/openrouter-validation', () => ({
   validateApplicationWithAI: vi.fn(),
 }))
 
+// El productor de notificaciones (notificarPostulacion) usa el cliente admin;
+// se mockea para que no intente una conexión real (igual que strike-actions.test).
+vi.mock('@/lib/supabase/admin', () => ({
+  createSupabaseAdminClient: vi.fn(() => ({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: {
+              empresarios: {
+                id_usuario: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
+              },
+            },
+            error: null,
+          }),
+        })),
+      })),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })),
+  })),
+}))
+
 import { validateApplicationWithAI } from '@/lib/ai-filtro-ofertas/openrouter-validation'
 
 const ID_PROYECTO = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'

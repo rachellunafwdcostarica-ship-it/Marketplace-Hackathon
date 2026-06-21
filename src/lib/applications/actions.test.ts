@@ -8,6 +8,27 @@ vi.mock('@/lib/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+// El productor de notificaciones (notificarPostulacion) usa el cliente admin;
+// se mockea para que no intente una conexión real (igual que strike-actions.test).
+vi.mock('@/lib/supabase/admin', () => ({
+  createSupabaseAdminClient: vi.fn(() => ({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: {
+              empresarios: {
+                id_usuario: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
+              },
+            },
+            error: null,
+          }),
+        })),
+      })),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    })),
+  })),
+}))
 
 import { postularse, retirarPostulacion } from './actions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'

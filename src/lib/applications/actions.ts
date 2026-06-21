@@ -7,6 +7,10 @@ import { requireRole } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { validateApplicationWithAI } from '@/lib/ai-filtro-ofertas/openrouter-validation'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { crearNotificacion } from '@/lib/notifications/create'
+import { DEFAULT_LOCALE } from '@/i18n/config'
+import { buildPostulacionNotificacion } from './postulacion-notificacion-logic'
 
 const MIN_PLANTEAMIENTO_LEN = 30
 const MAX_CARTA_LEN = 2800
@@ -128,10 +132,71 @@ export async function postularse(
     return err('database_error')
   }
 
+  await notificarPostulacion(
+    parsed.data.id_proyecto,
+    proyecto.titulo ?? 'tu proyecto',
+  )
+
   revalidatePath('/egresado/applications')
   revalidatePath(`/egresado/projects/${parsed.data.id_proyecto}`)
 
   return ok(undefined)
+}
+
+/**
+ * Notifica al empresario dueño que recibió una nueva postulación
+ * (`postulacion_recibida`). Best-effort y autoblindada: la postulación ya quedó
+ * guardada, así que un fallo al notificar se loguea y se traga (log + decisión,
+ * §8). Lee el `id_usuario` del empresario con `service_role`: la sesión es del
+ * egresado y la RLS no le deja ver al dueño.
+ */
+async function notificarPostulacion(
+  idProyecto: string,
+  titulo: string,
+): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data, error } = await admin
+      .from('proyectos')
+      .select('empresarios(id_usuario)')
+      .eq('id_proyecto', idProyecto)
+      .maybeSingle()
+    if (error || !data) {
+      logger.error('notificarPostulacion: no se pudo leer el proyecto', {
+        idProyecto,
+        error: error?.message,
+      })
+      return
+    }
+    const empresario = (
+      data as unknown as { empresarios: { id_usuario: string } | null }
+    ).empresarios
+    if (!empresario?.id_usuario) {
+      logger.error('notificarPostulacion: proyecto sin empresario', {
+        idProyecto,
+      })
+      return
+    }
+    const urlProyecto = `/${DEFAULT_LOCALE}/empresario/proyecto/${idProyecto}`
+    const result = await crearNotificacion(
+      buildPostulacionNotificacion({
+        idUsuarioEmpresario: empresario.id_usuario,
+        titulo,
+        urlProyecto,
+      }),
+    )
+    if (!result.ok) {
+      logger.error('notificarPostulacion: fallo al crear la notificación', {
+        idProyecto,
+        error: result.error,
+      })
+    }
+  } catch (e) {
+    logger.error('notificarPostulacion: excepción inesperada', {
+      idProyecto,
+      error: String(e),
+    })
+  }
 }
 
 /**
