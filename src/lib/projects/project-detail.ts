@@ -247,6 +247,15 @@ export async function setParticipacionEstado(
   }
   if (!actualizada) return err('update_failed')
 
+  // Rechazo explícito (en_revision -> no_seleccionada): avisar al egresado.
+  // Best-effort; el helper es autoblindado, no altera el resultado del cambio.
+  if (parsed.data.accion === 'rechazar') {
+    await notificarRechazoParticipacion(
+      actual.id_participacion,
+      actual.id_proyecto,
+    )
+  }
+
   return ok({ estado: destino })
 }
 
@@ -500,6 +509,87 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
   } catch (e) {
     logger.error('notificarAdjudicacion: excepción inesperada', {
       idProyecto,
+      error: String(e),
+    })
+  }
+}
+
+/**
+ * Notifica al egresado cuando el empresario rechaza su participación de forma
+ * individual durante la revisión (`en_revision` → `no_seleccionada`). Best-effort
+ * y autoblindada (log + decisión, §8): el cambio de estado ya quedó confirmado,
+ * así que cualquier fallo aquí se loguea y se traga. Lee con `service_role`: la
+ * sesión es del empresario y la RLS no le deja ver al usuario del egresado.
+ * Reusa `buildAdjudicacionNotificaciones` con un solo afectado (mismo tipo_evento).
+ */
+async function notificarRechazoParticipacion(
+  idParticipacion: string,
+  idProyecto: string,
+): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+
+    const { data: proyecto, error: proyectoError } = await admin
+      .from('proyectos')
+      .select('titulo')
+      .eq('id_proyecto', idProyecto)
+      .maybeSingle()
+    if (proyectoError || !proyecto) {
+      logger.error('notificarRechazoParticipacion: fallo al leer el proyecto', {
+        idProyecto,
+        error: proyectoError?.message,
+      })
+      return
+    }
+
+    const { data: fila, error: filaError } = await admin
+      .from('participaciones')
+      .select('estudiantes(usuarios(id_usuario))')
+      .eq('id_participacion', idParticipacion)
+      .maybeSingle()
+    if (filaError || !fila) {
+      logger.error(
+        'notificarRechazoParticipacion: fallo al leer la participación',
+        {
+          idParticipacion,
+          error: filaError?.message,
+        },
+      )
+      return
+    }
+
+    const idUsuario = (
+      fila as unknown as {
+        estudiantes: { usuarios: { id_usuario: string } | null } | null
+      }
+    ).estudiantes?.usuarios?.id_usuario
+    if (!idUsuario) {
+      logger.error('notificarRechazoParticipacion: participación sin usuario', {
+        idParticipacion,
+      })
+      return
+    }
+
+    const urlProyecto = `/${DEFAULT_LOCALE}/egresado/projects/${idProyecto}`
+    const result = await crearNotificaciones(
+      buildAdjudicacionNotificaciones({
+        titulo: proyecto.titulo,
+        urlProyecto,
+        afectados: [{ idUsuario, estado: 'no_seleccionada' }],
+      }),
+    )
+    if (!result.ok) {
+      logger.error(
+        'notificarRechazoParticipacion: fallo al crear la notificación',
+        {
+          idParticipacion,
+          error: result.error,
+        },
+      )
+    }
+  } catch (e) {
+    logger.error('notificarRechazoParticipacion: excepción inesperada', {
+      idParticipacion,
       error: String(e),
     })
   }

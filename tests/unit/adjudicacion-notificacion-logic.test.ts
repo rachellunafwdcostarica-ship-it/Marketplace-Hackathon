@@ -26,7 +26,7 @@ describe('buildAdjudicacionNotificaciones', () => {
       afectados: [{ idUsuario: OTRO, estado: 'no_seleccionada' }],
     })
     expect(n?.tipoEvento).toBe('participacion_no_seleccionada')
-    expect(n?.mensaje).toContain('otro perfil')
+    expect(n?.mensaje).toContain('no fue seleccionada')
   })
 
   it('procesa el lote completo (ganador + varios no seleccionados)', () => {
