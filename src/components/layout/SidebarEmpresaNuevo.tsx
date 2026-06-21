@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Link, usePathname } from '@/i18n/routing'
+import { Link, usePathname, useRouter } from '@/i18n/routing'
 import {
   Dialog,
   DialogContent,
@@ -25,8 +25,11 @@ import {
   Users,
   PanelLeftClose,
   PanelLeftOpen,
+  LogOut,
 } from 'lucide-react'
 import { useSidebarHidden } from '@/hooks/use-sidebar-hidden'
+import { useAuth } from '@/lib/auth/AuthContext'
+import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 
 interface NavItem {
   id: string
@@ -40,8 +43,17 @@ export function SidebarEmpresaNuevo() {
   const t = useTranslations('EmpresaPerfil')
   const tNav = useTranslations('Nav')
   const pathname = usePathname()
+  const router = useRouter()
+  const { resetAuth } = useAuth()
   const { isHidden, toggle } = useSidebarHidden()
   const [isSupportOpen, setIsSupportOpen] = useState(false)
+
+  const handleLogout = async () => {
+    const { signOut } = await import('@/lib/auth/actions')
+    await signOut()
+    resetAuth()
+    router.push('/login')
+  }
   const [supportDescription, setSupportDescription] = useState('')
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false)
 
@@ -118,7 +130,7 @@ export function SidebarEmpresaNuevo() {
   return (
     <aside
       id="empresario-sidebar"
-      className="w-full lg:w-64 shrink-0 flex flex-col gap-6 bg-secondary text-white p-4 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden"
+      className="w-full lg:w-64 shrink-0 flex flex-col gap-6 bg-secondary text-white p-4 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden lg:sticky lg:top-20 lg:self-start"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
       }}
@@ -221,6 +233,24 @@ export function SidebarEmpresaNuevo() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Cerrar sesión (mismo patrón con confirmación que el admin) */}
+        <div className="h-px bg-white/10 my-2" />
+        <ConfirmButton
+          onConfirm={handleLogout}
+          title={tNav('confirmLogoutTitle')}
+          description={tNav('confirmLogoutDesc')}
+          confirmLabel={tNav('logout')}
+          variant="ghost"
+          size="default"
+          className="w-full flex items-center justify-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white/90 transition-all"
+        >
+          <LogOut
+            className="w-4 h-4 shrink-0 text-white/55"
+            aria-hidden="true"
+          />
+          {tNav('logout')}
+        </ConfirmButton>
       </nav>
     </aside>
   )
