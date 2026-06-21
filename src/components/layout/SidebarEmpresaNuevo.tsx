@@ -23,7 +23,10 @@ import {
   MessageSquare,
   HelpCircle,
   Users,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
+import { useSidebarHidden } from '@/hooks/use-sidebar-hidden'
 
 interface NavItem {
   id: string
@@ -35,7 +38,9 @@ interface NavItem {
 
 export function SidebarEmpresaNuevo() {
   const t = useTranslations('EmpresaPerfil')
+  const tNav = useTranslations('Nav')
   const pathname = usePathname()
+  const { isHidden, toggle } = useSidebarHidden()
   const [isSupportOpen, setIsSupportOpen] = useState(false)
   const [supportDescription, setSupportDescription] = useState('')
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false)
@@ -94,9 +99,40 @@ export function SidebarEmpresaNuevo() {
     },
   ]
 
+  if (isHidden) {
+    return (
+      <div className="w-full lg:w-auto shrink-0">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={tNav('showSidebar')}
+          aria-expanded={false}
+          className="inline-flex items-center justify-center p-2 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+        >
+          <PanelLeftOpen className="w-5 h-5 shrink-0" />
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-6">
+    <aside
+      id="empresario-sidebar"
+      className="w-full lg:w-64 shrink-0 flex flex-col gap-6"
+    >
       <nav className="flex flex-col gap-1 px-1">
+        <div className="flex justify-end px-1 pb-1">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={tNav('hideSidebar')}
+            aria-expanded={true}
+            aria-controls="empresario-sidebar"
+            className="inline-flex items-center justify-center p-1.5 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+          >
+            <PanelLeftClose className="w-4 h-4 shrink-0" />
+          </button>
+        </div>
         {navItems.map((item) => {
           const Icon = item.icon
           const active = item.isActive(pathname)
