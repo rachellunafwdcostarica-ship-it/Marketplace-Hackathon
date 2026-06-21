@@ -34,7 +34,8 @@
     "logout": "Cerrar sesión",
     "settings": "Ajustes del sistema",
     "moderation": "Moderación",
-    "adminRegister": "Registro de admin"
+    "adminRegister": "Registro de admin",
+    "messages": "Mensajes"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -1235,6 +1236,25 @@
     "levelIntermediate": "Intermedio",
     "levelAdvanced": "Avanzado",
     "saveSkill": "Guardar Habilidad"
+  },
+  "EgresadoMensajes": {
+    "title": "Mis Mensajes",
+    "description": "Comunicate con las empresas de los proyectos en los que estás adjudicado.",
+    "noConversaciones": "Sin conversaciones activas",
+    "noConversacionesDesc": "Cuando una empresa te adjudique en un proyecto, el chat aparecerá aquí.",
+    "selectConversacion": "Selecciona una conversación",
+    "selectConversacionDesc": "Elegí un proyecto del panel izquierdo para ver el hilo de mensajes.",
+    "estadoActivo": "Activo",
+    "estadoFinalizado": "Finalizado",
+    "inputPlaceholder": "Escribe un mensaje...",
+    "inputDisabledHint": "Este proyecto ha finalizado. No se pueden enviar mensajes nuevos.",
+    "sendBtn": "Enviar",
+    "mensajesEmpty": "Aún no hay mensajes.",
+    "mensajesEmptyDesc": "Sé el primero en escribir para iniciar la conversación.",
+    "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
+    "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
+    "proyectoLabel": "Proyecto",
+    "empresaLabel": "Empresa"
   },
   "CompanyMensajes": {
     "title": "Centro de Mensajes",

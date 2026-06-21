@@ -23,6 +23,7 @@ import {
   User,
   Users,
   ShieldCheck,
+  MessageSquare,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils/cn'
@@ -119,6 +120,7 @@ export function Navbar({
         icon: 'send',
       },
       { href: '/egresado/portfolio', label: t('portfolio'), icon: 'portfolio' },
+      { href: '/egresado/mensajes', label: t('messages'), icon: 'messages' },
     ],
     empresario: [
       { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },
@@ -169,6 +171,8 @@ export function Navbar({
         return <Users className={className} />
       case 'shield':
         return <ShieldCheck className={className} />
+      case 'messages':
+        return <MessageSquare className={className} />
       default:
         return null
     }
