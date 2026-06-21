@@ -702,6 +702,12 @@
     "ratingCommentPlaceholder": "What stands out about their work? (optional)",
     "saveRating": "Save rating",
     "ratingSuccess": "Rating saved.",
+    "ratingViewLabel": "View rating",
+    "ratingHideLabel": "Hide rating",
+    "ratingCommentLabel": "Comment",
+    "ratingNoComment": "No comment.",
+    "contactarBtn": "Open messages",
+    "contactEmailLabel": "Graduate's email",
     "adjudicarSuccess": "Project awarded.",
     "finalizarSuccess": "Final deliverable approved. Project finished.",
     "entregablesTitle": "Contractor Deliverables",
@@ -744,6 +750,7 @@
       "generic": "We couldn't complete the action. Please try again.",
       "adjudicacion_fallida": "Could not complete the award. Please try again.",
       "calificacion_fallida": "We couldn't save the rating. Please try again.",
+      "contact_failed": "We couldn't get the contact info. Please try again.",
       "finalizacion_fallida": "We couldn't finish the project. Please try again.",
       "no_editable": "You can only edit the description while the project is open and within its deadline.",
       "ai_failed": "The AI couldn't review the change. Please try again.",
@@ -1158,7 +1165,8 @@
     "viewProjectsInDashboard": "View your projects in the dashboard",
     "projectsPublished": "{count, plural, one {# published project} other {# published projects}}",
     "cancelar": "Cancel",
-    "supportMinCharsInfo": "characters minimum"
+    "supportMinCharsInfo": "characters minimum",
+    "contratacionesDesc": "Review the list of students you have hired for your projects."
   },
   "CompanyPostulations": {
     "title": "Applications Management",

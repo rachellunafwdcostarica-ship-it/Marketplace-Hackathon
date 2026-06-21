@@ -702,6 +702,12 @@
     "ratingCommentPlaceholder": "¿Qué destacarías del trabajo? (opcional)",
     "saveRating": "Guardar calificación",
     "ratingSuccess": "Calificación guardada.",
+    "ratingViewLabel": "Ver calificación",
+    "ratingHideLabel": "Ocultar calificación",
+    "ratingCommentLabel": "Comentario",
+    "ratingNoComment": "Sin comentario.",
+    "contactarBtn": "Abrir mensajes",
+    "contactEmailLabel": "Correo del egresado",
     "adjudicarSuccess": "Proyecto adjudicado.",
     "finalizarSuccess": "Entregable final aprobado. Proyecto finalizado.",
     "entregablesTitle": "Entregables del contratado",
@@ -744,6 +750,7 @@
       "generic": "No pudimos completar la acción. Intentá de nuevo.",
       "adjudicacion_fallida": "No se pudo adjudicar. Intentá de nuevo.",
       "calificacion_fallida": "No pudimos guardar la calificación.",
+      "contact_failed": "No pudimos obtener el contacto. Intentá de nuevo.",
       "finalizacion_fallida": "No pudimos finalizar el proyecto. Intentá de nuevo.",
       "no_editable": "Solo podés editar la descripción mientras el proyecto está abierto y dentro del plazo.",
       "ai_failed": "La IA no pudo revisar el cambio. Probá de nuevo.",
@@ -1158,7 +1165,8 @@
     "viewProjectsInDashboard": "Ver tus proyectos en el panel",
     "projectsPublished": "{count, plural, one {# proyecto publicado} other {# proyectos publicados}}",
     "cancelar": "Cancelar",
-    "supportMinCharsInfo": "caracteres mínimo"
+    "supportMinCharsInfo": "caracteres mínimo",
+    "contratacionesDesc": "Revisá el listado de los estudiantes que has contratado para tus proyectos."
   },
   "CompanyPostulations": {
     "title": "Gestión de Postulaciones",

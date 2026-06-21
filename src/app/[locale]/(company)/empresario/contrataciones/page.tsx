@@ -6,7 +6,6 @@ import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ContratacionesList } from '@/components/features/projects/ContratacionesList'
 import { getEmpresarioParticipations } from '@/lib/projects/project-detail'
 import { isCompanyProfileComplete } from '@/lib/company/actions'
-import { ok } from '@/lib/result'
 
 /**
  * Vista exclusiva de las Contrataciones del empresario.
@@ -40,7 +39,7 @@ export default async function CompanyContratacionesPage() {
         <main className="flex-1 space-y-8">
           <PageTitle
             title={t('menuContrataciones')}
-            description="Revisá el listado de los estudiantes que has contratado para tus proyectos."
+            description={t('contratacionesDesc')}
             dotColor="text-primary"
           />
           <ContratacionesList contrataciones={contratacionesData} />
