@@ -15,8 +15,6 @@ import {
   Search,
   FolderOpen,
   Send,
-  Heart,
-  GraduationCap,
   LayoutDashboard,
   PlusCircle,
   Building2,
@@ -32,7 +30,6 @@ interface NavLink {
   href: string
   label: string
   icon: string
-  isMock?: boolean
 }
 
 interface NavbarProps {
@@ -96,16 +93,6 @@ export function Navbar({
     router.replace(pathname, { locale: nextLocale })
   }
 
-  const mockLinks: NavLink[] = [
-    { href: '#favorites', label: t('favorites'), icon: 'heart', isMock: true },
-    {
-      href: '#resources',
-      label: t('resources'),
-      icon: 'resources',
-      isMock: true,
-    },
-  ]
-
   const navLinksByRole: Record<UserRole, NavLink[]> = {
     egresado: [
       { href: '/egresado', label: t('dashboard'), icon: 'dashboard' },
@@ -144,7 +131,6 @@ export function Navbar({
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },
       { href: '/admin/validations', label: t('validations'), icon: 'shield' },
-      ...mockLinks,
     ],
   }
 
@@ -163,10 +149,6 @@ export function Navbar({
         return <FolderOpen className={className} />
       case 'send':
         return <Send className={className} />
-      case 'heart':
-        return <Heart className={className} />
-      case 'resources':
-        return <GraduationCap className={className} />
       case 'plus':
         return <PlusCircle className={className} />
       case 'building':
@@ -223,18 +205,6 @@ export function Navbar({
           >
             {navLinks.map((link) => {
               const isActive = pathname === link.href
-              if (link.isMock) {
-                return (
-                  <span
-                    key={`inline-${link.href}`}
-                    aria-disabled="true"
-                    className="px-3.5 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 text-muted-foreground/40 cursor-not-allowed select-none"
-                  >
-                    {renderIcon(link.icon, 'w-4 h-4')}
-                    <span>{link.label}</span>
-                  </span>
-                )
-              }
               return (
                 <Link
                   key={`inline-${link.href}`}
@@ -368,18 +338,6 @@ export function Navbar({
           <div className="flex items-center space-x-1 lg:space-x-2 bg-surface/90 dark:bg-zinc-900/90 backdrop-blur-md border border-border/80 rounded-full py-2.5 px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
             {navLinks.map((link) => {
               const isActive = pathname === link.href
-              if (link.isMock) {
-                return (
-                  <span
-                    key={`float-${link.href}`}
-                    aria-disabled="true"
-                    className="px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 text-ink-subtle/50 cursor-not-allowed select-none"
-                  >
-                    {renderIcon(link.icon, 'w-4 h-4 text-ink-subtle/40')}
-                    <span>{link.label}</span>
-                  </span>
-                )
-              }
               return (
                 <Link
                   key={`float-${link.href}`}
@@ -417,18 +375,6 @@ export function Navbar({
             <div className="space-y-1 pt-2">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href
-                if (link.isMock) {
-                  return (
-                    <span
-                      key={link.href}
-                      aria-disabled="true"
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-base font-semibold text-muted-foreground/40 cursor-not-allowed select-none"
-                    >
-                      {renderIcon(link.icon, 'w-5 h-5')}
-                      <span>{link.label}</span>
-                    </span>
-                  )
-                }
                 return (
                   <Link
                     key={link.href}
