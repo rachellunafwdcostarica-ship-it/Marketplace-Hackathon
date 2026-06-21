@@ -53,6 +53,7 @@ const ADMIN_NAV: AdminNavItem[] = [
 ]
 
 interface SidebarAdminProps {
+  id?: string | undefined
   className?: string | undefined
   onNavigate?: (() => void) | undefined
   onLogout?: (() => void) | undefined
@@ -60,6 +61,7 @@ interface SidebarAdminProps {
 }
 
 export function SidebarAdmin({
+  id,
   className,
   onNavigate,
   onLogout,
@@ -74,6 +76,7 @@ export function SidebarAdmin({
 
   return (
     <nav
+      id={id}
       aria-label={t('roleAdmin')}
       className={cn(
         'flex w-56 shrink-0 flex-col text-white relative overflow-hidden',

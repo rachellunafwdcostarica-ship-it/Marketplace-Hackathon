@@ -3,8 +3,16 @@
 import { useState, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '@/i18n/routing'
-import { Menu, X, ShieldCheck, ChevronDown } from 'lucide-react'
+import {
+  Menu,
+  X,
+  ShieldCheck,
+  ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { useSidebarHidden } from '@/hooks/use-sidebar-hidden'
 import { SidebarAdmin } from './SidebarAdmin'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import { NotificationBell } from '@/components/features/notifications/NotificationBell'
@@ -28,6 +36,8 @@ export function AdminShell({
   const router = useRouter()
   const pathname = usePathname()
   const { resetAuth, currentUser } = useAuth()
+  const { isHidden: isSidebarHidden, toggle: toggleSidebar } =
+    useSidebarHidden()
 
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -62,11 +72,14 @@ export function AdminShell({
   return (
     <div className="flex min-h-screen" style={{ background: '#f5f6fa' }}>
       {/* ── Desktop Sidebar ── */}
-      <SidebarAdmin
-        className="hidden md:flex md:sticky md:top-0 md:h-screen md:self-start"
-        onLogout={handleLogout}
-        isSuperadmin={isSuperadmin}
-      />
+      {!isSidebarHidden && (
+        <SidebarAdmin
+          id="admin-sidebar"
+          className="hidden md:flex md:sticky md:top-0 md:h-screen md:self-start"
+          onLogout={handleLogout}
+          isSuperadmin={isSuperadmin}
+        />
+      )}
 
       {/* ── Mobile drawer overlay ── */}
       {mobileOpen && (
@@ -106,6 +119,22 @@ export function AdminShell({
               <X className="h-5 w-5" />
             ) : (
               <Menu className="h-5 w-5" />
+            )}
+          </button>
+
+          {/* Desktop sidebar toggle */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={isSidebarHidden ? t('showSidebar') : t('hideSidebar')}
+            aria-expanded={!isSidebarHidden}
+            aria-controls="admin-sidebar"
+            className="hidden md:inline-flex rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+          >
+            {isSidebarHidden ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
             )}
           </button>
 

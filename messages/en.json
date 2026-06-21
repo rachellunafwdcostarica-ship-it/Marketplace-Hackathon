@@ -22,6 +22,8 @@
     "notifications": "Notifications",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
+    "hideSidebar": "Hide sidebar",
+    "showSidebar": "Show sidebar",
     "profile": "Profile",
     "language": "Language",
     "validations": "Validations",
