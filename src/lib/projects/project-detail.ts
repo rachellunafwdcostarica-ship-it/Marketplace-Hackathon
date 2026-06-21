@@ -548,3 +548,95 @@ export async function getEmpresarioParticipationStats(): Promise<
 
   return ok({ total, hired, countsByProject })
 }
+
+/**
+ * Obtiene el correo de contacto del egresado adjudicado (RF-38).
+ * Solo disponible para el empresario dueño del proyecto cuando la
+ * participación está en `contratada` o `finalizada`.
+ * Usa admin client para leer `usuarios.correo` (protegido por RLS).
+ */
+export async function getEstudianteContactEmail(
+  idParticipacion: string,
+): Promise<Result<{ correo: string; nombre: string }>> {
+  const parsed = z.string().uuid().safeParse(idParticipacion)
+  if (!parsed.success) return err('invalid_input')
+
+  const user = await getCurrentUser()
+  if (!user) return err('unauthorized')
+
+  const supabase = await createSupabaseServerClient()
+
+  const { data: empresario, error: empError } = await supabase
+    .from('empresarios')
+    .select('id_empresario')
+    .eq('id_usuario', user.id)
+    .maybeSingle()
+  if (empError) {
+    logger.error('getEstudianteContactEmail: fallo al leer empresario', {
+      error: empError.message,
+    })
+    return err('unexpected')
+  }
+  if (!empresario) return err('unauthorized')
+
+  const admin = createSupabaseAdminClient()
+
+  const { data: part, error: partError } = await admin
+    .from('participaciones')
+    .select('estado, id_estudiante, id_proyecto')
+    .eq('id_participacion', parsed.data)
+    .maybeSingle()
+  if (partError || !part) {
+    logger.error('getEstudianteContactEmail: participacion no encontrada', {
+      error: partError?.message,
+    })
+    return err('participacion_no_encontrada')
+  }
+
+  const { data: proy, error: proyError } = await admin
+    .from('proyectos')
+    .select('id_empresario')
+    .eq('id_proyecto', part.id_proyecto)
+    .maybeSingle()
+  if (proyError || !proy) {
+    logger.error('getEstudianteContactEmail: proyecto no encontrado', {
+      error: proyError?.message,
+    })
+    return err('participacion_no_encontrada')
+  }
+  if (proy.id_empresario !== empresario.id_empresario)
+    return err('unauthorized')
+
+  if (part.estado !== 'contratada' && part.estado !== 'finalizada') {
+    return err('estado_invalido')
+  }
+
+  const { data: est, error: estError } = await admin
+    .from('estudiantes')
+    .select('id_usuario')
+    .eq('id_estudiante', part.id_estudiante)
+    .maybeSingle()
+  if (estError || !est) {
+    logger.error('getEstudianteContactEmail: estudiante no encontrado', {
+      error: estError?.message,
+    })
+    return err('estudiante_no_encontrado')
+  }
+
+  const { data: usr, error: usrError } = await admin
+    .from('usuarios')
+    .select('correo, nombre, apellido_1')
+    .eq('id_usuario', est.id_usuario)
+    .maybeSingle()
+  if (usrError || !usr) {
+    logger.error('getEstudianteContactEmail: usuario no encontrado', {
+      error: usrError?.message,
+    })
+    return err('estudiante_no_encontrado')
+  }
+
+  return ok({
+    correo: usr.correo,
+    nombre: `${usr.nombre} ${usr.apellido_1}`.trim(),
+  })
+}

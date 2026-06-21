@@ -34,7 +34,8 @@
     "logout": "Cerrar sesión",
     "settings": "Ajustes del sistema",
     "moderation": "Moderación",
-    "adminRegister": "Registro de admin"
+    "adminRegister": "Registro de admin",
+    "messages": "Mensajes"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -702,6 +703,12 @@
     "ratingCommentPlaceholder": "¿Qué destacarías del trabajo? (opcional)",
     "saveRating": "Guardar calificación",
     "ratingSuccess": "Calificación guardada.",
+    "ratingViewLabel": "Ver calificación",
+    "ratingHideLabel": "Ocultar calificación",
+    "ratingCommentLabel": "Comentario",
+    "ratingNoComment": "Sin comentario.",
+    "contactarBtn": "Abrir mensajes",
+    "contactEmailLabel": "Correo del egresado",
     "adjudicarSuccess": "Proyecto adjudicado.",
     "finalizarSuccess": "Entregable final aprobado. Proyecto finalizado.",
     "entregablesTitle": "Entregables del contratado",
@@ -744,6 +751,7 @@
       "generic": "No pudimos completar la acción. Intentá de nuevo.",
       "adjudicacion_fallida": "No se pudo adjudicar. Intentá de nuevo.",
       "calificacion_fallida": "No pudimos guardar la calificación.",
+      "contact_failed": "No pudimos obtener el contacto. Intentá de nuevo.",
       "finalizacion_fallida": "No pudimos finalizar el proyecto. Intentá de nuevo.",
       "no_editable": "Solo podés editar la descripción mientras el proyecto está abierto y dentro del plazo.",
       "ai_failed": "La IA no pudo revisar el cambio. Probá de nuevo.",
@@ -1158,7 +1166,8 @@
     "viewProjectsInDashboard": "Ver tus proyectos en el panel",
     "projectsPublished": "{count, plural, one {# proyecto publicado} other {# proyectos publicados}}",
     "cancelar": "Cancelar",
-    "supportMinCharsInfo": "caracteres mínimo"
+    "supportMinCharsInfo": "caracteres mínimo",
+    "contratacionesDesc": "Revisá el listado de los estudiantes que has contratado para tus proyectos."
   },
   "CompanyPostulations": {
     "title": "Gestión de Postulaciones",
@@ -1228,10 +1237,42 @@
     "levelAdvanced": "Avanzado",
     "saveSkill": "Guardar Habilidad"
   },
+  "EgresadoMensajes": {
+    "title": "Mis Mensajes",
+    "description": "Comunicate con las empresas de los proyectos en los que estás adjudicado.",
+    "noConversaciones": "Sin conversaciones activas",
+    "noConversacionesDesc": "Cuando una empresa te adjudique en un proyecto, el chat aparecerá aquí.",
+    "selectConversacion": "Selecciona una conversación",
+    "selectConversacionDesc": "Elegí un proyecto del panel izquierdo para ver el hilo de mensajes.",
+    "estadoActivo": "Activo",
+    "estadoFinalizado": "Finalizado",
+    "inputPlaceholder": "Escribe un mensaje...",
+    "inputDisabledHint": "Este proyecto ha finalizado. No se pueden enviar mensajes nuevos.",
+    "sendBtn": "Enviar",
+    "mensajesEmpty": "Aún no hay mensajes.",
+    "mensajesEmptyDesc": "Sé el primero en escribir para iniciar la conversación.",
+    "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
+    "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
+    "proyectoLabel": "Proyecto",
+    "empresaLabel": "Empresa"
+  },
   "CompanyMensajes": {
     "title": "Centro de Mensajes",
-    "description": "Conéctate y chatea directamente con los egresados de FWD Talent.",
-    "placeholderTitle": "Centro de Mensajes en camino",
-    "placeholderDesc": "Próximamente podrás chatear en tiempo real con los candidatos y egresados interesados en tus proyectos directamente desde aquí."
+    "description": "Conéctate con los egresados adjudicados en tus proyectos.",
+    "noConversaciones": "Sin conversaciones activas",
+    "noConversacionesDesc": "Cuando adjudiques un proyecto, el chat con el egresado aparecerá aquí.",
+    "selectConversacion": "Selecciona una conversación",
+    "selectConversacionDesc": "Elegí un proyecto del panel izquierdo para ver el hilo de mensajes.",
+    "estadoActivo": "Activo",
+    "estadoFinalizado": "Finalizado",
+    "inputPlaceholder": "Escribe un mensaje...",
+    "inputDisabledHint": "Este proyecto ha finalizado. No se pueden enviar mensajes nuevos.",
+    "sendBtn": "Enviar",
+    "mensajesEmpty": "Aún no hay mensajes.",
+    "mensajesEmptyDesc": "Sé el primero en escribir para iniciar la conversación.",
+    "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
+    "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
+    "proyectoLabel": "Proyecto",
+    "egresadoLabel": "Egresado"
   }
 }

@@ -1,32 +1,22 @@
-import { redirect } from 'next/navigation'
-import { getLocale } from 'next-intl/server'
-import { isCompanyProfileComplete } from '@/lib/company/actions'
 import { getCurrentUser } from '@/lib/auth/dal'
 import {
-  getConversacionesEmpresario,
+  getConversacionesEgresado,
   getMensajesDeProyecto,
 } from '@/lib/mensajes/actions'
-import { CompanyMensajesClient } from './CompanyMensajesClient'
+import { EgresadoMensajesClient } from './EgresadoMensajesClient'
 
-export default async function CompanyMensajesPage({
+export default async function EgresadoMensajesPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const locale = await getLocale()
-
-  const complete = await isCompanyProfileComplete()
-  if (!complete.ok || !complete.data) {
-    redirect(`/${locale}/empresario/formulario-empresa`)
-  }
-
   const params = await searchParams
   const proyectoParam = params['proyecto']
   const initialProjectId =
     typeof proyectoParam === 'string' ? proyectoParam : null
 
   const [conversacionesResult, user] = await Promise.all([
-    getConversacionesEmpresario(),
+    getConversacionesEgresado(),
     getCurrentUser(),
   ])
 
@@ -44,7 +34,7 @@ export default async function CompanyMensajesPage({
   }
 
   return (
-    <CompanyMensajesClient
+    <EgresadoMensajesClient
       conversaciones={conversaciones}
       initialProjectId={initialProjectId}
       initialMensajes={initialMensajes}

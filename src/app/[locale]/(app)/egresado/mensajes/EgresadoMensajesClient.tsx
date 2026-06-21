@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { MessageSquare, Send, Lock, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
-import { CompanyShell } from '@/components/layout/CompanyShell'
-import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
+import { EgresadoShell } from '@/components/layout/EgresadoShell'
+import { SidebarEgresado } from '@/components/layout/SidebarEgresado'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -33,7 +33,7 @@ function formatHora(fechaEnvio: string): string {
 }
 
 function EstadoBadge({ estado }: { estado: 'contratada' | 'finalizada' }) {
-  const t = useTranslations('CompanyMensajes')
+  const t = useTranslations('EgresadoMensajes')
   const isActivo = estado === 'contratada'
   return (
     <span
@@ -127,7 +127,7 @@ function ChatBubble({
 }
 
 function ChatEmptyState() {
-  const t = useTranslations('CompanyMensajes')
+  const t = useTranslations('EgresadoMensajes')
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-3">
       <div className="p-4 bg-primary/8 rounded-full text-primary">
@@ -141,13 +141,13 @@ function ChatEmptyState() {
   )
 }
 
-export function CompanyMensajesClient({
+export function EgresadoMensajesClient({
   conversaciones,
   initialProjectId,
   initialMensajes,
   currentUserId,
 }: Props) {
-  const t = useTranslations('CompanyMensajes')
+  const t = useTranslations('EgresadoMensajes')
   const scrollEndRef = useRef<HTMLDivElement>(null)
 
   const [selectedConv, setSelectedConv] = useState<ConversacionItem | null>(
@@ -219,9 +219,9 @@ export function CompanyMensajesClient({
   }
 
   return (
-    <CompanyShell>
+    <EgresadoShell>
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
-        <SidebarEmpresaNuevo />
+        <SidebarEgresado />
 
         <main className="flex-1 flex flex-col gap-6 min-w-0">
           <PageTitle title={t('title')} description={t('description')} />
@@ -287,7 +287,7 @@ export function CompanyMensajesClient({
                         <EstadoBadge estado={selectedConv.estado} />
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {t('egresadoLabel')}: {selectedConv.nombreContraparte}
+                        {t('empresaLabel')}: {selectedConv.nombreContraparte}
                       </p>
                     </div>
                   </div>
@@ -356,6 +356,6 @@ export function CompanyMensajesClient({
           )}
         </main>
       </div>
-    </CompanyShell>
+    </EgresadoShell>
   )
 }

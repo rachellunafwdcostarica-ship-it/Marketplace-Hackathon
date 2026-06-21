@@ -34,7 +34,8 @@
     "logout": "Log Out",
     "settings": "System settings",
     "moderation": "Moderation",
-    "adminRegister": "Admin registration"
+    "adminRegister": "Admin registration",
+    "messages": "Messages"
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
@@ -702,6 +703,12 @@
     "ratingCommentPlaceholder": "What stands out about their work? (optional)",
     "saveRating": "Save rating",
     "ratingSuccess": "Rating saved.",
+    "ratingViewLabel": "View rating",
+    "ratingHideLabel": "Hide rating",
+    "ratingCommentLabel": "Comment",
+    "ratingNoComment": "No comment.",
+    "contactarBtn": "Open messages",
+    "contactEmailLabel": "Graduate's email",
     "adjudicarSuccess": "Project awarded.",
     "finalizarSuccess": "Final deliverable approved. Project finished.",
     "entregablesTitle": "Contractor Deliverables",
@@ -744,6 +751,7 @@
       "generic": "We couldn't complete the action. Please try again.",
       "adjudicacion_fallida": "Could not complete the award. Please try again.",
       "calificacion_fallida": "We couldn't save the rating. Please try again.",
+      "contact_failed": "We couldn't get the contact info. Please try again.",
       "finalizacion_fallida": "We couldn't finish the project. Please try again.",
       "no_editable": "You can only edit the description while the project is open and within its deadline.",
       "ai_failed": "The AI couldn't review the change. Please try again.",
@@ -1158,7 +1166,8 @@
     "viewProjectsInDashboard": "View your projects in the dashboard",
     "projectsPublished": "{count, plural, one {# published project} other {# published projects}}",
     "cancelar": "Cancel",
-    "supportMinCharsInfo": "characters minimum"
+    "supportMinCharsInfo": "characters minimum",
+    "contratacionesDesc": "Review the list of students you have hired for your projects."
   },
   "CompanyPostulations": {
     "title": "Applications Management",
@@ -1228,10 +1237,42 @@
     "levelAdvanced": "Advanced",
     "saveSkill": "Save Skill"
   },
+  "EgresadoMensajes": {
+    "title": "My Messages",
+    "description": "Communicate with the companies of the projects you have been hired for.",
+    "noConversaciones": "No active conversations",
+    "noConversacionesDesc": "When a company hires you for a project, the chat will appear here.",
+    "selectConversacion": "Select a conversation",
+    "selectConversacionDesc": "Choose a project from the left panel to view the message thread.",
+    "estadoActivo": "Active",
+    "estadoFinalizado": "Finished",
+    "inputPlaceholder": "Write a message...",
+    "inputDisabledHint": "This project has ended. No new messages can be sent.",
+    "sendBtn": "Send",
+    "mensajesEmpty": "No messages yet.",
+    "mensajesEmptyDesc": "Be the first to write to start the conversation.",
+    "errorCarga": "Could not load messages. Please try again.",
+    "errorEnvio": "Could not send the message. Please try again.",
+    "proyectoLabel": "Project",
+    "empresaLabel": "Company"
+  },
   "CompanyMensajes": {
     "title": "Messages Hub",
-    "description": "Connect and chat directly with FWD Talent graduates.",
-    "placeholderTitle": "Messages Hub Coming Soon",
-    "placeholderDesc": "Soon you will be able to chat in real-time with candidates and graduates interested in your projects right from this platform."
+    "description": "Connect with the graduates hired for your projects.",
+    "noConversaciones": "No active conversations",
+    "noConversacionesDesc": "When you hire a graduate for a project, the chat will appear here.",
+    "selectConversacion": "Select a conversation",
+    "selectConversacionDesc": "Choose a project from the left panel to view the message thread.",
+    "estadoActivo": "Active",
+    "estadoFinalizado": "Finished",
+    "inputPlaceholder": "Write a message...",
+    "inputDisabledHint": "This project has ended. No new messages can be sent.",
+    "sendBtn": "Send",
+    "mensajesEmpty": "No messages yet.",
+    "mensajesEmptyDesc": "Be the first to write to start the conversation.",
+    "errorCarga": "Could not load messages. Please try again.",
+    "errorEnvio": "Could not send the message. Please try again.",
+    "proyectoLabel": "Project",
+    "egresadoLabel": "Graduate"
   }
 }
