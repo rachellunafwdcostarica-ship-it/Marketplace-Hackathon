@@ -38,7 +38,6 @@ export function CompanyCard({
     <Card className="flex flex-col h-full border border-border/80 bg-card/60 backdrop-blur-sm hover:shadow-md transition-all duration-[var(--duration-slow)] ease-[var(--ease-out)]">
       <CardHeader className="p-6 pb-4">
         <div className="flex gap-4 items-center">
-          {/* Company Logo mock */}
           <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted border border-border/80 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
