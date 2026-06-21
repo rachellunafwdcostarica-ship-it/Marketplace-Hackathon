@@ -7,7 +7,7 @@ import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { crearNotificaciones } from '@/lib/notifications/create'
-import { routing } from '@/i18n/routing'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 import type { Database } from '@/types/database'
 import {
   PARTICIPACION_ACTION_TARGET,
@@ -483,7 +483,7 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
       })
       .filter((afectado): afectado is AfectadoAdjudicacion => afectado !== null)
 
-    const urlProyecto = `/${routing.defaultLocale}/egresado/projects/${idProyecto}`
+    const urlProyecto = `/${DEFAULT_LOCALE}/egresado/projects/${idProyecto}`
     const result = await crearNotificaciones(
       buildAdjudicacionNotificaciones({
         titulo: proyecto.titulo,
