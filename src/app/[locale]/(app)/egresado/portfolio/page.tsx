@@ -1,7 +1,9 @@
-import React from 'react'
 import { PortfolioManager } from '@/components/features/marketplace/PortfolioManager'
 import { getTranslations } from 'next-intl/server'
 import { getStudentProfile } from '@/lib/portfolio/actions'
+import { EgresadoShell } from '@/components/layout/EgresadoShell'
+import { SidebarEgresado } from '@/components/layout/SidebarEgresado'
+import { PageTitle } from '@/components/features/brand/PageTitle'
 
 export default async function PortfolioPage() {
   const t = await getTranslations('Portfolio')
@@ -10,16 +12,22 @@ export default async function PortfolioPage() {
   const initialProfile = profileResult.ok ? profileResult.data : null
 
   return (
-    <div className="container mx-auto py-10 space-y-8 max-w-6xl">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {t('title')}
-          <span className="text-primary">.</span>
-        </h1>
-        <p className="text-muted-foreground mt-2">{t('description')}</p>
-      </div>
+    <EgresadoShell>
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+        <SidebarEgresado />
 
-      <PortfolioManager initialProfile={initialProfile} />
-    </div>
+        <main className="flex-1 min-w-0">
+          <PageTitle
+            title={t('title')}
+            description={t('description')}
+            dotColor="text-primary"
+          />
+
+          <div className="mt-8">
+            <PortfolioManager initialProfile={initialProfile} />
+          </div>
+        </main>
+      </div>
+    </EgresadoShell>
   )
 }

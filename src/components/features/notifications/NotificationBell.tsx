@@ -114,11 +114,9 @@ export function NotificationBell({
   }
 
   const toggleOpen = () => {
-    setIsOpen((open) => {
-      const next = !open
-      if (next) void fetchNotifications()
-      return next
-    })
+    const next = !isOpen
+    setIsOpen(next)
+    if (next) void fetchNotifications()
   }
 
   const badgeText =
@@ -254,7 +252,9 @@ export function NotificationBell({
                         {body}
                       </p>
                       <p className="mt-1 text-[10px] text-ink-subtle">
-                        {format.relativeTime(new Date(n.generada_at))}
+                        {format.relativeTime(new Date(n.generada_at), {
+                          now: new Date(),
+                        })}
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-col items-center gap-1">
