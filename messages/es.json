@@ -1126,7 +1126,7 @@
       "strike_recibido": "Recibiste un strike ({cantidad} de {maximo}) por incumplir las normas de la plataforma.",
       "cuenta_suspendida": "Tu cuenta fue suspendida tras acumular {cantidad} strikes.",
       "participacion_contratada": "¡Felicitaciones! La empresa te eligió para \"{titulo}\". Pronto se pondrán en contacto.",
-      "participacion_no_seleccionada": "Esta vez la empresa eligió otro perfil para \"{titulo}\". Gracias por postularte; pronto habrá nuevas oportunidades.",
+      "participacion_no_seleccionada": "Tu propuesta para \"{titulo}\" no fue seleccionada en esta ocasión. Gracias por postularte; pronto habrá nuevas oportunidades.",
       "postulacion_recibida": "Recibiste una nueva postulación en \"{titulo}\"."
     }
   },

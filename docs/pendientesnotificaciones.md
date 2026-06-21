@@ -47,8 +47,32 @@
 | `strike_recibido` | `admin/strike-actions.ts` (`addStrike`) | `{ cantidad, maximo }` |
 | `cuenta_suspendida` | `admin/strike-actions.ts` (`addStrike`, al llegar al límite) | `{ cantidad }` |
 | `participacion_contratada` | `projects/project-detail.ts` (`adjudicarParticipacion` → `notificarAdjudicacion`) | `{ titulo }` |
-| `participacion_no_seleccionada` | idem adjudicación | `{ titulo }` |
+| `participacion_no_seleccionada` | adjudicación (`notificarAdjudicacion`) **+** rechazo individual (`setParticipacionEstado` acción `rechazar` → `notificarRechazoParticipacion`) | `{ titulo }` |
 | `postulacion_recibida` | `applications/actions.ts` (`postularse` → `notificarPostulacion`) | `{ titulo }` |
+
+### 2.1. Rechazo de participación (HECHO 2026-06-21)
+
+Se cerró el agujero de los "sobres cerrados" y se cableó el rechazo individual,
+ambos sobre el tipo existente `participacion_no_seleccionada` (copy **neutro** que
+sirve a los dos flujos: ver `content.participacion_no_seleccionada` en i18n y el
+fallback en `adjudicacion-notificacion-logic.ts`).
+
+- **A — rechazo individual:** `setParticipacionEstado` acción `rechazar`
+  (`en_revision → no_seleccionada`) ahora notifica al egresado vía
+  `notificarRechazoParticipacion` (best-effort, autoblindada, lee con
+  `service_role`; reusa `buildAdjudicacionNotificaciones` con un solo afectado).
+- **B — sobres cerrados al adjudicar:** antes los `enviada` nunca abiertos
+  quedaban vivos en BD (solo se derivaban como `no_seleccionada` en lectura,
+  `computeEstadoParticipacionEfectivo`), sin notificación y **inflando el cupo**.
+  Ahora el RPC `adjudicar_participacion` los barre por el **camino legal**
+  `enviada → en_revision → no_seleccionada` (paso intermedio transitorio dentro
+  de la misma transacción; **no** se relaja la máquina de Santiago). Como terminan
+  en `no_seleccionada`, `notificarAdjudicacion` los recoge y notifica solo.
+- **Migración `20260621000000_adjudicar_barre_sobres_cerrados.sql`** —
+  **PENDIENTE de aplicar por Samir.** Reemplaza el RPC + backfill de una pasada
+  (proyectos ya decididos → `no_seleccionada`; cancelados → `cancelada`; alinea
+  BD con la UI y libera cupo; limpieza silenciosa, sin notificaciones). Tiene
+  nota de veto si el equipo no quiere tocar los `cancelado`.
 
 Lógica pura testeada de cada uno en `*-notificacion-logic.ts`
 (`strike-notificacion-logic.ts`, `adjudicacion-notificacion-logic.ts`,
@@ -78,14 +102,33 @@ Lógica pura testeada de cada uno en `*-notificacion-logic.ts`
      `/login`, sin magic link). NOTA: ya existe `email/templates/account-approved.ts`
      que se usa en `auth/actions.ts approveUser` para OTRO evento (aprobación de
      cuenta con magic link). No confundirlos.
-2. **`evaluacion_recibida`** — cuando el empresario evalúa al estudiante al cierre
-   (RF-49). Buscar el flujo de evaluación (`company/...` o `evaluaciones`).
+2. **`evaluacion_recibida`** — **OJO, el doc viejo estaba mal:** decía "el
+   empresario evalúa al estudiante", pero ese flujo **no existe en código** (solo
+   la tabla `evaluaciones` + RLS `evaluaciones_insert_empresario` + trigger de
+   reputación; cero `.from('evaluaciones')` en `.ts`). El único flujo real es
+   `company/ratings.ts` → `rateCompany` (**egresado → empresario**, tabla
+   `evaluaciones_empresarios`). Cableable solo en esa dirección (notificar al
+   **empresario**); la dirección empresario→estudiante queda **fuera de alcance**
+   hasta que exista su productor.
 3. **`entregable_aprobado` / `entregable_rechazado`** — al revisar un entregable
-   (RF-44). Flujo en `deliverables/actions.ts`.
-4. **`mensaje_nuevo`** — requiere el sistema de mensajería (RF-45). Cablear cuando
-   ese flujo exista.
-5. **`plazo_vence`** — requiere un **scheduler** (`pg_cron`/Edge) que NO existe
-   (RF-33). **Gate Samir/Barry**; no es libre. Va al final.
+   (RF-44), flujo `deliverables/actions.ts` → `responderEntregable` (existe;
+   incluye el path del entregable **final** vía RPC `finalizar_proyecto_por_entregable`).
+   **OJO:** la decisión real es `'aprobado' | 'con_cambios'` — no hay rechazo duro,
+   así que `entregable_rechazado` ≈ "se solicitaron cambios". Destinatario: el
+   egresado (extender la query para resolver su `id_usuario`). Pendiente, cableable.
+4. **`mensaje_nuevo`** — **fuera de alcance:** requiere el sistema de mensajería
+   (RF-45), que no existe. No se hará hasta que ese flujo esté.
+5. **`plazo_vence`** — **fuera de alcance:** requiere un **scheduler**
+   (`pg_cron`/Edge) que NO existe (RF-33). **Gate Samir/Barry.** Va al final.
+
+> Nota de cierre de proyectos (verificado 2026-06-21): NO hay cron. El bloqueo de
+> postulaciones tardías ya está cubierto en **dos capas** (app `postularse` →
+> `plazo_vencido`, y **RLS** `participaciones_insert_egresado` con
+> `fecha_cierre > now()`), así que el "vector de inserción tras el cierre" **no
+> existe**. El estado `proyectos.estado` se queda en `abierto` (la UI deriva
+> `en_evaluacion` en lectura); el cierre automático del estado es RF-35 (#37) y
+> depende del mismo scheduler que `plazo_vence`. Un enum nuevo de "cerrado" no
+> aporta sin ese mecanismo.
 
 ## 4. Patrón paso a paso para agregar un generador (seguir EXACTO)
 
