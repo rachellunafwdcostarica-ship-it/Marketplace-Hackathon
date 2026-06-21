@@ -118,7 +118,10 @@ export function SidebarEmpresaNuevo() {
   return (
     <aside
       id="empresario-sidebar"
-      className="w-full lg:w-64 shrink-0 flex flex-col gap-6"
+      className="w-full lg:w-64 shrink-0 flex flex-col gap-6 bg-secondary text-white p-4 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
+      }}
     >
       <nav className="flex flex-col gap-1 px-1">
         <div className="flex justify-end px-1 pb-1">
@@ -128,7 +131,7 @@ export function SidebarEmpresaNuevo() {
             aria-label={tNav('hideSidebar')}
             aria-expanded={true}
             aria-controls="empresario-sidebar"
-            className="inline-flex items-center justify-center p-1.5 rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+            className="inline-flex items-center justify-center p-1.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)]"
           >
             <PanelLeftClose className="w-4 h-4 shrink-0" />
           </button>
@@ -143,8 +146,8 @@ export function SidebarEmpresaNuevo() {
               aria-current={active ? 'page' : undefined}
               className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
                 active
-                  ? 'bg-primary text-primary-foreground shadow-sm font-bold'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  ? 'bg-gradient-to-r from-primary to-magenta text-white shadow-md font-bold'
+                  : 'text-white/75 hover:bg-white/10 hover:text-white'
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
@@ -158,7 +161,7 @@ export function SidebarEmpresaNuevo() {
           <DialogTrigger asChild>
             <button
               type="button"
-              className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all cursor-pointer"
+              className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
             >
               <HelpCircle className="w-4 h-4 shrink-0" />
               <span>{t('menuAyuda')}</span>

@@ -82,11 +82,10 @@ export function CompanyProfileSidebar({
   return (
     <aside
       className={cn(
-        'w-full lg:w-64 shrink-0 flex flex-col gap-6 text-white p-5 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden',
+        'w-full lg:w-64 shrink-0 flex flex-col gap-6 bg-secondary text-white p-5 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden',
         className,
       )}
       style={{
-        backgroundColor: 'var(--secondary)',
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
       }}
     >
@@ -151,7 +150,7 @@ export function CompanyProfileSidebar({
           className={cn(
             'w-full text-left px-4 py-2.5 rounded-full text-sm font-semibold flex items-center justify-between transition-all duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
             activeTab === 'profile'
-              ? 'bg-gradient-to-r from-violet-500 to-magenta text-white shadow-md font-bold'
+              ? 'bg-gradient-to-r from-primary to-magenta text-white shadow-md font-bold'
               : 'text-white/75 hover:bg-white/10 hover:text-white/90',
           )}
         >
@@ -170,7 +169,7 @@ export function CompanyProfileSidebar({
           className={cn(
             'w-full text-left px-4 py-2.5 rounded-full text-sm font-semibold flex items-center justify-between transition-all duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
             activeTab === 'projects'
-              ? 'bg-gradient-to-r from-violet-500 to-magenta text-white shadow-md font-bold'
+              ? 'bg-gradient-to-r from-primary to-magenta text-white shadow-md font-bold'
               : 'text-white/75 hover:bg-white/10 hover:text-white/90',
           )}
         >
@@ -252,7 +251,7 @@ export function CompanyProfileSidebar({
         <button
           type="button"
           onClick={handleLogout}
-          className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all flex items-center gap-2 cursor-pointer mt-1"
+          className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 transition-all flex items-center gap-2 cursor-pointer mt-1"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>{t('logout')}</span>
