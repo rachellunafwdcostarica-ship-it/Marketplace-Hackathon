@@ -1238,8 +1238,21 @@
   },
   "CompanyMensajes": {
     "title": "Centro de Mensajes",
-    "description": "Conéctate y chatea directamente con los egresados de FWD Talent.",
-    "placeholderTitle": "Centro de Mensajes en camino",
-    "placeholderDesc": "Próximamente podrás chatear en tiempo real con los candidatos y egresados interesados en tus proyectos directamente desde aquí."
+    "description": "Conéctate con los egresados adjudicados en tus proyectos.",
+    "noConversaciones": "Sin conversaciones activas",
+    "noConversacionesDesc": "Cuando adjudiques un proyecto, el chat con el egresado aparecerá aquí.",
+    "selectConversacion": "Selecciona una conversación",
+    "selectConversacionDesc": "Elegí un proyecto del panel izquierdo para ver el hilo de mensajes.",
+    "estadoActivo": "Activo",
+    "estadoFinalizado": "Finalizado",
+    "inputPlaceholder": "Escribe un mensaje...",
+    "inputDisabledHint": "Este proyecto ha finalizado. No se pueden enviar mensajes nuevos.",
+    "sendBtn": "Enviar",
+    "mensajesEmpty": "Aún no hay mensajes.",
+    "mensajesEmptyDesc": "Sé el primero en escribir para iniciar la conversación.",
+    "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
+    "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
+    "proyectoLabel": "Proyecto",
+    "egresadoLabel": "Egresado"
   }
 }
