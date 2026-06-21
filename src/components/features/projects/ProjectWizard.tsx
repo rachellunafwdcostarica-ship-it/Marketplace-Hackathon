@@ -36,6 +36,7 @@ import { sendChatMessage } from '@/lib/proposal-ai/chat'
 import { generateProposal } from '@/lib/proposal-ai/proposal'
 import { publishProject } from '@/lib/projects/publish'
 import type { HistorialEntry } from '@/lib/proposal-ai/types'
+import type { ComboboxOption } from '@/components/ui/combobox'
 
 interface ProjectWizardProps {
   conversationId: string
@@ -45,6 +46,8 @@ interface ProjectWizardProps {
   contextoInicial: string
   historial: HistorialEntry[]
   propuesta: PropuestaProyecto | null
+  countries: ComboboxOption[]
+  initialRegions: ComboboxOption[]
 }
 
 const KNOWN_ERROR_CODES = new Set([
@@ -57,6 +60,7 @@ const KNOWN_ERROR_CODES = new Set([
   'not_verified',
   'plazo',
   'ubicacion',
+  'pais',
   'presupuesto',
   'presupuestoEntero',
   'ai_not_configured',
@@ -78,6 +82,8 @@ export function ProjectWizard({
   contextoInicial,
   historial: historialInicial,
   propuesta: propuestaInicial,
+  countries,
+  initialRegions,
 }: ProjectWizardProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
@@ -328,7 +334,12 @@ export function ProjectWizard({
 
         <FormProvider {...form}>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <LogisticsForm disabled={loading} todayIso={todayIso} />
+            <LogisticsForm
+              disabled={loading}
+              todayIso={todayIso}
+              countries={countries}
+              initialRegions={initialRegions}
+            />
 
             <section className="space-y-2">
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">

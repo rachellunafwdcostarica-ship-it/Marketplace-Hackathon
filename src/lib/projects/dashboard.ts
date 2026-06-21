@@ -50,8 +50,8 @@ interface RawProyecto {
   moneda: Moneda
   presupuesto_min: number | null
   presupuesto_max: number | null
-  pais_proyecto: string | null
-  ciudad_proyecto: string | null
+  pais_iso_proyecto: string | null
+  region_proyecto: string | null
   fecha_publicacion: string | null
   fecha_cierre: string | null
   involucra_ia: boolean
@@ -61,7 +61,7 @@ interface RawProyecto {
 }
 
 const PROYECTO_SELECT =
-  'id_proyecto, titulo, descripcion, estado, modalidad, moneda, presupuesto_min, presupuesto_max, pais_proyecto, ciudad_proyecto, fecha_publicacion, fecha_cierre, involucra_ia, areas_negocio(nombre), proyecto_categorias(categorias(nombre)), proyecto_tecnologias(tecnologias(nombre))'
+  'id_proyecto, titulo, descripcion, estado, modalidad, moneda, presupuesto_min, presupuesto_max, pais_iso_proyecto, region_proyecto, fecha_publicacion, fecha_cierre, involucra_ia, areas_negocio(nombre), proyecto_categorias(categorias(nombre)), proyecto_tecnologias(tecnologias(nombre))'
 
 /**
  * Proyectos del empresario logueado, con nombres de área/categorías/tecnologías
@@ -116,8 +116,8 @@ export async function getMyPublishedProjects(): Promise<
       moneda: p.moneda,
       presupuestoMin: p.presupuesto_min,
       presupuestoMax: p.presupuesto_max,
-      paisProyecto: p.pais_proyecto,
-      ciudadProyecto: p.ciudad_proyecto,
+      paisProyecto: p.pais_iso_proyecto,
+      ciudadProyecto: p.region_proyecto,
       fechaPublicacion: p.fecha_publicacion,
       fechaCierre: p.fecha_cierre,
       areaNombre: p.areas_negocio?.nombre ?? null,

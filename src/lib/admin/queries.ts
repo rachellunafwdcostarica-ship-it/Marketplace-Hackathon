@@ -127,7 +127,7 @@ export async function listCompanyVerifications(
   const { data: empresas, error: empresasError } = await adminClient
     .from('empresarios')
     .select(
-      'id_empresario, id_usuario, nombre_empresa, tipo_empresario, sector, descripcion, cedula, alcance_operativo, pais_sede, ciudad_sede, logo, sitio_web, estado_verificacion',
+      'id_empresario, id_usuario, nombre_empresa, tipo_empresario, sector, descripcion, cedula, alcance_operativo, pais_iso_sede, region_sede, logo, sitio_web, estado_verificacion',
     )
     .eq('estado_verificacion', estado)
     .order('updated_at', { ascending: true })
@@ -166,8 +166,8 @@ export async function listCompanyVerifications(
       descripcion: e.descripcion,
       cedula: e.cedula,
       alcance_operativo: e.alcance_operativo,
-      pais_sede: e.pais_sede,
-      ciudad_sede: e.ciudad_sede,
+      pais_sede: e.pais_iso_sede,
+      ciudad_sede: e.region_sede,
       logo: e.logo,
       sitio_web: e.sitio_web,
       estado_verificacion: e.estado_verificacion,

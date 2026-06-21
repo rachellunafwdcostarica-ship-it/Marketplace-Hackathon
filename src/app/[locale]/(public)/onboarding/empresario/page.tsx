@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
+import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { normalizeRole } from '@/lib/auth/roles'
 import { EmpresarioOnboardingForm } from '@/components/features/auth/EmpresarioOnboardingForm'
+import { getCountryOptions } from '@/lib/geo/catalog'
 
 export default async function EmpresarioOnboardingPage() {
   const supabase = await createSupabaseServerClient()
@@ -25,5 +27,11 @@ export default async function EmpresarioOnboardingPage() {
     await supabase.rpc('assign_my_role', { p_role: 'empresario' })
   }
 
-  return <EmpresarioOnboardingForm userId={user.id} />
+  const locale = await getLocale()
+  const countries = getCountryOptions(locale).map((country) => ({
+    value: country.code,
+    label: country.name,
+  }))
+
+  return <EmpresarioOnboardingForm userId={user.id} countries={countries} />
 }

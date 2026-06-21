@@ -7,6 +7,7 @@ import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { PLAZO_MIN_DIAS, PLAZO_MAX_DIAS } from './schemas'
 import { parseLogistica, parseProposal } from './persistence'
+import { isValidCountry, isValidSubdivision } from '@/lib/geo/catalog'
 
 /** Traduce un error del RPC/constraint a un código amigable de la UI. */
 function mapRpcError(message: string | undefined): string {
@@ -130,6 +131,20 @@ export async function publishProject(
       return err('plazo')
     }
 
+    // Ubicación (defensa server-side, reglas.md §5): el país debe existir en el
+    // catálogo ISO y la región pertenecer a él. El combobox ya lo restringe; el
+    // RPC solo exige país NOT NULL para no-remoto, no que sea un código real.
+    if (logistica.paisIso && !isValidCountry(logistica.paisIso)) {
+      return err('ubicacion')
+    }
+    if (
+      logistica.region &&
+      (!logistica.paisIso ||
+        !isValidSubdivision(logistica.region, logistica.paisIso))
+    ) {
+      return err('ubicacion')
+    }
+
     const { data: projectId, error: rpcError } = await supabase.rpc(
       'publicar_proyecto',
       {
@@ -138,8 +153,8 @@ export async function publishProject(
         p_descripcion: descripcion,
         p_id_area: propuesta.idArea,
         p_modalidad: logistica.modalidad,
-        p_pais: logistica.paisProyecto,
-        p_ciudad: logistica.ciudadProyecto,
+        p_pais_iso: logistica.paisIso,
+        p_region: logistica.region,
         p_moneda: logistica.moneda,
         p_presupuesto_min: logistica.presupuestoMin,
         p_presupuesto_max: logistica.presupuestoMax,

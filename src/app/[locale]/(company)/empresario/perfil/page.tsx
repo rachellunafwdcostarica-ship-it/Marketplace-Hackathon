@@ -5,7 +5,11 @@ import {
   isCompanyProfileComplete,
 } from '@/lib/company/actions'
 import { getMyPublishedProjects } from '@/lib/projects/dashboard'
-import type { VerificationStatus } from '@/lib/company/schemas'
+import { getCountryName, getSubdivisionName } from '@/lib/geo/catalog'
+import type {
+  VerificationStatus,
+  CompanyProfileView,
+} from '@/lib/company/schemas'
 import type { Company, CompanyStatus } from '@/types'
 import { CompanyPerfilClient } from './CompanyPerfilClient'
 
@@ -58,7 +62,19 @@ export default async function CompanyProfilePage() {
     isProfileFilled: true,
   }
 
+  // Para la VISTA del perfil se muestran los nombres, no los códigos ISO. El
+  // formulario (otra página) sigue recibiendo los códigos para los selectores.
+  const profileForDisplay: CompanyProfileView = {
+    ...p,
+    country: p.country ? (getCountryName(p.country, locale) ?? p.country) : '',
+    city: p.city ? (getSubdivisionName(p.city) ?? p.city) : '',
+  }
+
   return (
-    <CompanyPerfilClient company={company} profile={p} projects={proyectos} />
+    <CompanyPerfilClient
+      company={company}
+      profile={profileForDisplay}
+      projects={proyectos}
+    />
   )
 }

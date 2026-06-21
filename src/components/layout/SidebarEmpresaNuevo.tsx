@@ -26,6 +26,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
+  Building2,
 } from 'lucide-react'
 import { useSidebarHidden } from '@/hooks/use-sidebar-hidden'
 import { useAuth } from '@/lib/auth/AuthContext'
@@ -108,6 +109,13 @@ export function SidebarEmpresaNuevo() {
       label: t('menuMensajes'),
       icon: MessageSquare,
       isActive: (path) => path.startsWith('/empresario/mensajes'),
+    },
+    {
+      id: 'perfil',
+      href: '/empresario/perfil',
+      label: t('menuPerfil'),
+      icon: Building2,
+      isActive: (path) => path.startsWith('/empresario/perfil'),
     },
   ]
 

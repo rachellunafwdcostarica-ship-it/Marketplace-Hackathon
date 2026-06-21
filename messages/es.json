@@ -1,4 +1,17 @@
 {
+  "Geo": {
+    "selectCountry": "Seleccioná un país",
+    "searchCountry": "Buscá un país...",
+    "noCountry": "Sin resultados.",
+    "regionLabel": "Provincia / Estado / Región",
+    "regionOptional": "Opcional",
+    "selectRegion": "Seleccioná provincia, estado o región",
+    "searchRegion": "Buscá una provincia, estado o región...",
+    "noRegion": "Sin resultados.",
+    "loadingRegions": "Cargando...",
+    "noRegionsForCountry": "Este país no tiene subdivisiones registradas.",
+    "selectCountryFirst": "Elegí primero un país"
+  },
   "home": {
     "eyebrow": "FWD Talent Marketplace",
     "title": "Forward.",
@@ -557,7 +570,8 @@
       "categoriasMin": "Elegí al menos una categoría.",
       "tecnologiasMin": "Elegí al menos una tecnología.",
       "modalidad": "Seleccioná una modalidad de trabajo.",
-      "ubicacion": "Indicá país y ciudad para modalidad híbrida o presencial.",
+      "ubicacion": "Revisá la ubicación: el país es obligatorio en modalidad híbrida o presencial.",
+      "pais": "Indicá el país para modalidad híbrida o presencial.",
       "presupuesto": "El presupuesto mínimo no puede superar al máximo.",
       "presupuestoMin": "Indicá un presupuesto mínimo mayor a 0.",
       "presupuestoMax": "Indicá un presupuesto máximo mayor a 0.",
@@ -1135,6 +1149,7 @@
     "sidebarHeader": "Mi Empresa",
     "tabProfile": "Perfil de Empresa",
     "tabProjects": "Proyectos Activos",
+    "tabsAria": "Secciones del perfil",
     "support": "Soporte Técnico",
     "logout": "Cerrar Sesión",
     "verifVerified": "Empresa verificada",

@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { ArrowLeft } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ProjectWizard } from '@/components/features/projects/ProjectWizard'
 import { initProjectPublishing } from '@/lib/projects/actions'
+import { getCountryOptions, getSubdivisions } from '@/lib/geo/catalog'
 
 /**
  * Página de publicación de proyecto (flujo IA — Corte 1: Pantalla 1).
@@ -21,6 +22,18 @@ export default async function PublishProjectPage() {
 
   const initRes = await initProjectPublishing()
   const todayIso = new Date().toISOString().slice(0, 10)
+  const locale = await getLocale()
+  const countries = getCountryOptions(locale).map((country) => ({
+    value: country.code,
+    label: country.name,
+  }))
+  const draftCountry = initRes.ok ? initRes.data.logistica?.paisIso : null
+  const initialRegions = draftCountry
+    ? getSubdivisions(draftCountry).map((subdivision) => ({
+        value: subdivision.code,
+        label: subdivision.name,
+      }))
+    : []
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -52,6 +65,8 @@ export default async function PublishProjectPage() {
             contextoInicial={initRes.data.contextoInicial}
             historial={initRes.data.historial}
             propuesta={initRes.data.propuesta}
+            countries={countries}
+            initialRegions={initialRegions}
           />
         ) : (
           <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">

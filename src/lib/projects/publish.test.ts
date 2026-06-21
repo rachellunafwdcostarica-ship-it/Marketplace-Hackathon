@@ -33,8 +33,8 @@ const validLogistica = {
   presupuestoMax: 1500,
   plazoDias: 10,
   moneda: 'USD',
-  paisProyecto: 'Costa Rica',
-  ciudadProyecto: null,
+  paisIso: 'CR',
+  region: null,
 }
 
 function withAuth(

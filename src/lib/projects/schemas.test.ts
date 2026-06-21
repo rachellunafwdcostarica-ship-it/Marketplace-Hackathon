@@ -19,8 +19,8 @@ function baseValues(
     presupuestoMin: '1000',
     presupuestoMax: '5000',
     plazoDias: '7', // dentro de 5..15
-    paisProyecto: '',
-    ciudadProyecto: '',
+    paisIso: '',
+    region: '',
     contextoInicial:
       'Somos una marca de café de especialidad de Costa Rica y necesitamos una landing page para captar leads, con formulario de contacto integrado a nuestro CRM, una sección de testimonios de clientes, un blog para publicar contenido de marketing y analítica para medir las conversiones de cada campaña que lancemos durante el año.',
     ...overrides,
@@ -82,20 +82,25 @@ describe('buildLogisticsSchema', () => {
     expect(schema.safeParse(baseValues({ plazoDias: '15' })).success).toBe(true)
   })
 
-  it('exige país y ciudad cuando no es remoto', () => {
+  it('exige país cuando no es remoto (la región es opcional)', () => {
     const result = schema.safeParse(
       baseValues({
         modalidad: 'hibrido',
-        paisProyecto: '',
-        ciudadProyecto: '',
+        paisIso: '',
+        region: '',
       }),
     )
     expect(result.success).toBe(false)
     if (!result.success) {
-      expect(result.error.issues.some((i) => i.message === 'ubicacion')).toBe(
-        true,
-      )
+      expect(result.error.issues.some((i) => i.message === 'pais')).toBe(true)
     }
+  })
+
+  it('acepta país sin región cuando no es remoto', () => {
+    const result = schema.safeParse(
+      baseValues({ modalidad: 'hibrido', paisIso: 'CR', region: '' }),
+    )
+    expect(result.success).toBe(true)
   })
 
   it('rechaza presupuesto mínimo mayor al máximo', () => {
@@ -164,26 +169,26 @@ describe('buildLogisticsSchema', () => {
 })
 
 describe('toLogisticaDraft', () => {
-  it('anula país/ciudad y deja título null cuando es remoto y vacío', () => {
+  it('anula país/región y deja título null cuando es remoto y vacío', () => {
     const draft = toLogisticaDraft(
-      baseValues({ paisProyecto: 'Costa Rica', ciudadProyecto: 'San José' }),
+      baseValues({ paisIso: 'CR', region: 'CR-SJ' }),
     )
-    expect(draft.paisProyecto).toBeNull()
-    expect(draft.ciudadProyecto).toBeNull()
+    expect(draft.paisIso).toBeNull()
+    expect(draft.region).toBeNull()
     expect(draft.titulo).toBeNull()
   })
 
-  it('conserva país/ciudad y título cuando es presencial', () => {
+  it('conserva país/región y título cuando es presencial', () => {
     const draft = toLogisticaDraft(
       baseValues({
         titulo: 'Landing institucional',
         modalidad: 'presencial',
-        paisProyecto: 'Costa Rica',
-        ciudadProyecto: 'San José',
+        paisIso: 'CR',
+        region: 'CR-SJ',
       }),
     )
-    expect(draft.paisProyecto).toBe('Costa Rica')
-    expect(draft.ciudadProyecto).toBe('San José')
+    expect(draft.paisIso).toBe('CR')
+    expect(draft.region).toBe('CR-SJ')
     expect(draft.titulo).toBe('Landing institucional')
   })
 
@@ -202,8 +207,8 @@ describe('draftToFormValues', () => {
       presupuestoMin: 1000,
       presupuestoMax: 5000,
       plazoDias: 10,
-      paisProyecto: 'Costa Rica',
-      ciudadProyecto: 'Cartago',
+      paisIso: 'CR',
+      region: 'CR-C',
     }
     const values = draftToFormValues(draft, 'Contexto del proyecto guardado.')
     expect(values.titulo).toBe('App de pedidos')
@@ -211,7 +216,7 @@ describe('draftToFormValues', () => {
     expect(values.presupuestoMin).toBe('1000')
     expect(values.presupuestoMax).toBe('5000')
     expect(values.plazoDias).toBe('10')
-    expect(values.ciudadProyecto).toBe('Cartago')
+    expect(values.region).toBe('CR-C')
     expect(values.contextoInicial).toBe('Contexto del proyecto guardado.')
   })
 
