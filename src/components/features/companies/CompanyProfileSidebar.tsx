@@ -18,6 +18,7 @@ import { toast } from 'sonner'
 import { createSupportTicket } from '@/lib/company/actions'
 import { Loader2, LogOut, HelpCircle } from 'lucide-react'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
+import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 import { cn } from '@/lib/utils/cn'
 import { useRouter } from '@/i18n/routing'
 import { useAuth } from '@/lib/auth/AuthContext'
@@ -40,6 +41,7 @@ export function CompanyProfileSidebar({
   hideLogo = false,
 }: CompanyProfileSidebarProps) {
   const t = useTranslations('EmpresaPerfil')
+  const tNav = useTranslations('Nav')
   const router = useRouter()
   const { resetAuth } = useAuth()
 
@@ -248,14 +250,21 @@ export function CompanyProfileSidebar({
           </DialogContent>
         </Dialog>
 
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="w-full text-left px-3 py-2 rounded-xl text-xs font-semibold text-destructive hover:bg-destructive/10 transition-all flex items-center gap-2 cursor-pointer mt-1"
+        <ConfirmButton
+          onConfirm={handleLogout}
+          title={tNav('confirmLogoutTitle')}
+          description={tNav('confirmLogoutDesc')}
+          confirmLabel={tNav('logout')}
+          variant="ghost"
+          size="default"
+          className="w-full flex items-center justify-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-white/65 hover:bg-white/8 hover:text-white/90 transition-all mt-1"
         >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>{t('logout')}</span>
-        </button>
+          <LogOut
+            className="w-3.5 h-3.5 shrink-0 text-white/55"
+            aria-hidden="true"
+          />
+          {t('logout')}
+        </ConfirmButton>
       </div>
     </aside>
   )
