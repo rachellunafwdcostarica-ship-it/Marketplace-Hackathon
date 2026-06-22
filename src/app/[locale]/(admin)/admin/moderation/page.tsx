@@ -257,7 +257,9 @@ export default async function AdminModerationPage() {
                               userName={`${user.nombre} ${user.apellido_1}`}
                               cantidadStrikes={user.cantidad_strikes}
                               isSelf={user.id_usuario === currentUserId}
-                              isExpelled={user.estado_cuenta === 'suspendida_severa'}
+                              isExpelled={
+                                user.estado_cuenta === 'suspendida_severa'
+                              }
                             />
                           </TableCell>
                         </TableRow>

@@ -52,10 +52,7 @@ export function AdminCancelProjectButton({
     if (motivo.trim().length < 5) return
     setLoading(true)
     try {
-      const result = await cancelProjectAsAdmin(
-        projectId,
-        motivo.trim(),
-      )
+      const result = await cancelProjectAsAdmin(projectId, motivo.trim())
       if (result.ok) {
         toast.success(t('cancelProjectSuccess'))
         setOpen(false)
