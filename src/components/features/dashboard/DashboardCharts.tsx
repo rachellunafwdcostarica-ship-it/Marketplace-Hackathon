@@ -350,7 +350,6 @@ export function DashboardCharts({
                   verticalAlign="bottom"
                   height={36}
                   iconType="circle"
-                   
                   formatter={(value: string) => (
                     <span className="text-xs font-semibold text-muted-foreground ml-1">
                       {value}

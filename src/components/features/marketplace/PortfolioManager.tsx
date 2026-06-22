@@ -44,6 +44,7 @@ import {
   Globe,
   Lock,
   BookOpen,
+  Loader2,
 } from 'lucide-react'
 import type { PortfolioProject, StudentSkill } from '@/types'
 import { z } from 'zod'
@@ -105,11 +106,15 @@ async function getCroppedImg(
 function SkillForm({
   initialData,
   availableTechnologies,
+  existingSkills,
+  isSaving,
   onSave,
   onCancel,
 }: {
   initialData?: StudentSkill
   availableTechnologies: { id: string; name: string }[]
+  existingSkills: StudentSkill[]
+  isSaving: boolean
   onSave: (skill: StudentSkill) => void
   onCancel: () => void
 }) {
@@ -117,10 +122,19 @@ function SkillForm({
 
   const skillSchema = React.useMemo(() => {
     return z.object({
-      name: z.string().min(2, t('errorTitleReq')),
+      name: z
+        .string()
+        .min(2, t('errorTitleReq'))
+        .refine(
+          (val) => {
+            if (initialData && initialData.name === val) return true
+            return !existingSkills.some((s) => s.name === val)
+          },
+          t('errorSkillExists') || 'Esta habilidad ya existe',
+        ),
       level: z.enum(['basico', 'intermedio', 'avanzado']),
     })
-  }, [t])
+  }, [t, initialData, existingSkills])
   type SkillFormValues = z.infer<typeof skillSchema>
 
   const {
@@ -183,10 +197,24 @@ function SkillForm({
         )}
       </div>
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSaving}
+        >
           {t('cancel')}
         </Button>
-        <Button type="submit">{t('saveSkill')}</Button>
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t('saving')}
+            </>
+          ) : (
+            t('saveSkill')
+          )}
+        </Button>
       </div>
     </form>
   )
@@ -1021,6 +1049,8 @@ export function PortfolioManager({
               <SkillForm
                 {...(editingSkill ? { initialData: editingSkill } : {})}
                 availableTechnologies={availableTechnologies}
+                existingSkills={skills}
+                isSaving={isSavingBio}
                 onSave={handleSaveSkill}
                 onCancel={() => setIsSkillDialogOpen(false)}
               />

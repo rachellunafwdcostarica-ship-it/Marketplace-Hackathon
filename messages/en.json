@@ -1313,6 +1313,8 @@
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
     "saveSkill": "Save Skill",
+    "saving": "Saving...",
+    "errorSkillExists": "This skill already exists",
     "cropImageTitle": "Crop image",
     "cropImageDesc": "Adjust your image to look perfect.",
     "cropAndUpload": "Crop and Upload"
