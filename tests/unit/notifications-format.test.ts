@@ -26,6 +26,7 @@ describe('getNotificationTone', () => {
   it('asigna primary a eventos informativos', () => {
     expect(getNotificationTone('proyecto_modificado')).toBe('primary')
     expect(getNotificationTone('mensaje_nuevo')).toBe('primary')
+    expect(getNotificationTone('participacion_en_revision')).toBe('primary')
   })
 
   it('cae a primary ante un tipo desconocido', () => {
@@ -43,13 +44,13 @@ describe('getNotificationTypeKey', () => {
     )
   })
 
-  it('cae a la clave genérica ante un tipo desconocido', () => {
+  it('cae a la clave generica ante un tipo desconocido', () => {
     expect(getNotificationTypeKey('tipo_inexistente')).toBe('types.generic')
   })
 })
 
 describe('resolveNotificationContent', () => {
-  it('usa el mensaje crudo cuando no hay parámetros', () => {
+  it('usa el mensaje crudo cuando no hay parametros', () => {
     expect(
       resolveNotificationContent({
         tipo: 'proyecto_modificado',
@@ -58,7 +59,7 @@ describe('resolveNotificationContent', () => {
     ).toEqual({ kind: 'raw', text: 'Texto guardado' })
   })
 
-  it('usa el mensaje crudo cuando params es un objeto vacío', () => {
+  it('usa el mensaje crudo cuando params es un objeto vacio', () => {
     expect(
       resolveNotificationContent({
         tipo: 'proyecto_modificado',
@@ -82,7 +83,21 @@ describe('resolveNotificationContent', () => {
     })
   })
 
-  it('cae al mensaje crudo si el tipo aún no tiene plantilla, aunque haya params', () => {
+  it('traduce participacion_en_revision con params', () => {
+    expect(
+      resolveNotificationContent({
+        tipo: 'participacion_en_revision',
+        mensaje: 'Texto guardado',
+        params: { titulo: 'Mi Proyecto' },
+      }),
+    ).toEqual({
+      kind: 'i18n',
+      key: 'content.participacion_en_revision',
+      values: { titulo: 'Mi Proyecto' },
+    })
+  })
+
+  it('cae al mensaje crudo si el tipo aun no tiene plantilla, aunque haya params', () => {
     expect(
       resolveNotificationContent({
         tipo: 'mensaje_nuevo',

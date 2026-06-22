@@ -1150,6 +1150,7 @@
       "plazo_vence": "Deadline",
       "participacion_no_seleccionada": "Not selected",
       "participacion_contratada": "Hired",
+      "participacion_en_revision": "Under review",
       "entregable_aprobado": "Deliverable approved",
       "entregable_rechazado": "Deliverable rejected",
       "evaluacion_recibida": "Review",
@@ -1168,6 +1169,7 @@
       "postulacion_recibida": "You have a new application for \"{titulo}\".",
       "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon.",
       "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
+      "participacion_en_revision": "The company is reviewing your proposal for \"{titulo}\".",
       "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\"."
     }
   },
