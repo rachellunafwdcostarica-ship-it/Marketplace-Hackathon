@@ -109,11 +109,10 @@ export async function GET(request: NextRequest) {
         ? `${origin}/${locale}/pending-approval`
         : `${origin}/${locale}${ROLE_HOME[role]}`
   } else {
-    // Usuario nuevo: onboarding según rol elegido en register.
-    redirectTarget =
-      oauthRole === 'empresario'
-        ? `${origin}/${locale}/onboarding/empresario`
-        : `${origin}/${locale}/onboarding`
+    // Usuario nuevo: onboarding unificado. La página ramifica por el rol elegido
+    // (user_metadata.role, fijado arriba) entre el form de egresado y el de
+    // empresario.
+    redirectTarget = `${origin}/${locale}/onboarding`
   }
 
   const response = NextResponse.redirect(redirectTarget)
