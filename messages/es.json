@@ -330,6 +330,7 @@
     "uploadSectionTitle": "Subir entregable",
     "uploadHito": "Subir Hito (Parcial)",
     "uploadFinal": "Subir Entregable Final",
+    "uploadDisabledNotVigente": "Solo podés subir entregables cuando el contrato está vigente.",
     "uploadSuccess": "Entregable subido con éxito.",
     "uploadError": "Error al subir el entregable.",
     "tipoParcial": "Hito parcial",
@@ -1141,7 +1142,8 @@
       "cuenta_suspendida": "Tu cuenta fue suspendida tras acumular {cantidad} strikes.",
       "participacion_contratada": "¡Felicitaciones! La empresa te eligió para \"{titulo}\". Pronto se pondrán en contacto.",
       "participacion_no_seleccionada": "Tu propuesta para \"{titulo}\" no fue seleccionada en esta ocasión. Gracias por postularte; pronto habrá nuevas oportunidades.",
-      "postulacion_recibida": "Recibiste una nueva postulación en \"{titulo}\"."
+      "postulacion_recibida": "Recibiste una nueva postulación en \"{titulo}\".",
+      "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión."
     }
   },
   "EmpresaPerfil": {

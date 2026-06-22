@@ -330,6 +330,7 @@
     "uploadSectionTitle": "Upload deliverable",
     "uploadHito": "Upload Milestone (Partial)",
     "uploadFinal": "Upload Final Deliverable",
+    "uploadDisabledNotVigente": "You can only upload deliverables while the contract is active.",
     "uploadSuccess": "Deliverable uploaded successfully.",
     "uploadError": "Failed to upload the deliverable.",
     "tipoParcial": "Partial milestone",
@@ -1141,7 +1142,8 @@
       "cuenta_suspendida": "Your account was suspended after reaching {cantidad} strikes.",
       "participacion_contratada": "Congratulations! The company picked you for \"{titulo}\". They'll be in touch soon.",
       "participacion_no_seleccionada": "Your proposal for \"{titulo}\" wasn't selected this time. Thanks for applying — new opportunities are on the way.",
-      "postulacion_recibida": "You have a new application for \"{titulo}\"."
+      "postulacion_recibida": "You have a new application for \"{titulo}\".",
+      "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon."
     }
   },
   "EmpresaPerfil": {

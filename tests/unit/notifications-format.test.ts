@@ -91,4 +91,18 @@ describe('resolveNotificationContent', () => {
       }),
     ).toEqual({ kind: 'raw', text: 'Tienes un mensaje nuevo' })
   })
+
+  it('usa clave i18n para plazo_vence con params.titulo (RF-33)', () => {
+    expect(
+      resolveNotificationContent({
+        tipo: 'plazo_vence',
+        mensaje: 'La ventana de ofertas de "Mi Proyecto" esta por cerrar.',
+        params: { titulo: 'Mi Proyecto' },
+      }),
+    ).toEqual({
+      kind: 'i18n',
+      key: 'content.plazo_vence',
+      values: { titulo: 'Mi Proyecto' },
+    })
+  })
 })
