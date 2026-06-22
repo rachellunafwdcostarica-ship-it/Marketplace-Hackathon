@@ -1179,6 +1179,7 @@
       "plazo_vence": "Deadline",
       "participacion_no_seleccionada": "Not selected",
       "participacion_contratada": "Hired",
+      "participacion_en_revision": "Under review",
       "entregable_aprobado": "Deliverable approved",
       "entregable_rechazado": "Deliverable rejected",
       "evaluacion_recibida": "Review",
@@ -1198,6 +1199,7 @@
       "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon.",
       "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
       "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
+      "participacion_en_revision": "The company is reviewing your proposal for \"{titulo}\".",
       "cuenta_verificada": "{rol, select, empresario {Your company was verified. You can now post projects.} other {Your graduation was verified. You can now apply to projects.}}"
     }
   },
@@ -1306,11 +1308,15 @@
     "editSkill": "Edit Skill",
     "noSkills": "No skills registered yet",
     "skillName": "Skill name",
+    "selectSkillPlaceholder": "Select a skill...",
     "skillLevel": "Level",
     "levelBasic": "Basic",
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
-    "saveSkill": "Save Skill"
+    "saveSkill": "Save Skill",
+    "cropImageTitle": "Crop image",
+    "cropImageDesc": "Adjust your image to look perfect.",
+    "cropAndUpload": "Crop and Upload"
   },
   "EgresadoMensajes": {
     "title": "My Messages",

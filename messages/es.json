@@ -1179,6 +1179,7 @@
       "plazo_vence": "Plazo",
       "participacion_no_seleccionada": "No seleccionada",
       "participacion_contratada": "Contratada",
+      "participacion_en_revision": "En revisión",
       "entregable_aprobado": "Entregable aprobado",
       "entregable_rechazado": "Entregable rechazado",
       "evaluacion_recibida": "Evaluación",
@@ -1198,6 +1199,7 @@
       "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión.",
       "entregable_aprobado": "Tu entregable del proyecto \"{titulo}\" fue aprobado.",
       "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\".",
+      "participacion_en_revision": "La empresa está revisando tu propuesta para \"{titulo}\".",
       "cuenta_verificada": "{rol, select, empresario {Tu empresa fue verificada. Ya podés publicar proyectos.} other {Tu egreso fue verificado. Ya podés postular a proyectos.}}"
     }
   },
@@ -1306,11 +1308,15 @@
     "editSkill": "Editar Habilidad",
     "noSkills": "No hay habilidades registradas",
     "skillName": "Nombre de habilidad",
+    "selectSkillPlaceholder": "Selecciona una habilidad...",
     "skillLevel": "Nivel",
     "levelBasic": "Básico",
     "levelIntermediate": "Intermedio",
     "levelAdvanced": "Avanzado",
-    "saveSkill": "Guardar Habilidad"
+    "saveSkill": "Guardar Habilidad",
+    "cropImageTitle": "Recortar imagen",
+    "cropImageDesc": "Ajustá tu imagen para que se vea perfecta.",
+    "cropAndUpload": "Recortar y Subir"
   },
   "EgresadoMensajes": {
     "title": "Mis Mensajes",

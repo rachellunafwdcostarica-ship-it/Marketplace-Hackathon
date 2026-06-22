@@ -1553,6 +1553,7 @@ export type Database = {
         | 'plazo_vence'
         | 'participacion_no_seleccionada'
         | 'participacion_contratada'
+        | 'participacion_en_revision'
         | 'entregable_aprobado'
         | 'entregable_rechazado'
         | 'evaluacion_recibida'
@@ -1776,6 +1777,7 @@ export const Constants = {
         'plazo_vence',
         'participacion_no_seleccionada',
         'participacion_contratada',
+        'participacion_en_revision',
         'entregable_aprobado',
         'entregable_rechazado',
         'evaluacion_recibida',
