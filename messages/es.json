@@ -1197,7 +1197,8 @@
       "postulacion_recibida": "Recibiste una nueva postulación en \"{titulo}\".",
       "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión.",
       "entregable_aprobado": "Tu entregable del proyecto \"{titulo}\" fue aprobado.",
-      "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\"."
+      "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\".",
+      "cuenta_verificada": "{rol, select, empresario {Tu empresa fue verificada. Ya podés publicar proyectos.} other {Tu egreso fue verificado. Ya podés postular a proyectos.}}"
     }
   },
   "EmpresaPerfil": {

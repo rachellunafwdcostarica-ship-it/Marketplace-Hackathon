@@ -12,6 +12,13 @@ vi.mock('@/lib/supabase/admin', () => ({ createSupabaseAdminClient: vi.fn() }))
 vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServerClient: vi.fn(),
 }))
+vi.mock('@/lib/notifications/create', () => ({ crearNotificacion: vi.fn() }))
+vi.mock('@/lib/email/gmail', () => ({
+  createGmailTransport: vi.fn(() => ({
+    sendMail: vi.fn().mockResolvedValue(undefined),
+  })),
+  getGmailFrom: vi.fn(() => 'FWD <test@example.com>'),
+}))
 
 import {
   verificarEgresado,
@@ -22,16 +29,19 @@ import {
 import { requireRole } from '@/lib/auth/guards'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { crearNotificacion } from '@/lib/notifications/create'
 
 const mockedRequireRole = vi.mocked(requireRole)
 const mockedAdmin = vi.mocked(createSupabaseAdminClient)
 const mockedServer = vi.mocked(createSupabaseServerClient)
+const mockedNotif = vi.mocked(crearNotificacion)
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000'
 
 beforeEach(() => {
   vi.clearAllMocks()
   mockedRequireRole.mockResolvedValue({ ok: true, data: 'administrador' })
+  mockedNotif.mockResolvedValue({ ok: true, data: undefined })
   mockedServer.mockResolvedValue({
     auth: {
       getUser: vi
@@ -40,6 +50,21 @@ beforeEach(() => {
     },
   } as never)
 })
+
+// Mock de `usuarios.select('correo, nombre').eq().maybeSingle()` que usa el
+// envío de correo/notificación de cuenta verificada.
+function usuarioConCorreo() {
+  return {
+    select: vi.fn(() => ({
+      eq: vi.fn(() => ({
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: { correo: 'persona@example.com', nombre: 'Ana' },
+          error: null,
+        }),
+      })),
+    })),
+  }
+}
 
 function buildGraduateAdmin(opts: {
   hasConsent?: boolean
@@ -88,6 +113,9 @@ function buildGraduateAdmin(opts: {
       if (table === 'auditoria') {
         return { insert }
       }
+      if (table === 'usuarios') {
+        return usuarioConCorreo()
+      }
       // estudiantes: SELECT previo (.select().eq().maybeSingle()) y UPDATE (.update().eq().select())
       return { select: selectBefore, update }
     }),
@@ -115,6 +143,7 @@ function buildCompanyAdmin(opts: { updateRows?: unknown[]; before?: unknown }) {
           estado_verificacion: 'pendiente',
           verificado_at: null,
           verificado_por: null,
+          id_usuario: 'u-emp-1',
         },
         error: null,
       }),
@@ -124,6 +153,9 @@ function buildCompanyAdmin(opts: { updateRows?: unknown[]; before?: unknown }) {
     from: vi.fn((table: string) => {
       if (table === 'auditoria') {
         return { insert }
+      }
+      if (table === 'usuarios') {
+        return usuarioConCorreo()
       }
       return { select: selectBefore, update }
     }),
@@ -177,6 +209,17 @@ describe('verificarEgresado', () => {
       }),
     )
   })
+
+  it('al verificar, notifica al egresado (cuenta_verificada)', async () => {
+    buildGraduateAdmin({ hasConsent: true })
+    await verificarEgresado(VALID_UUID)
+    expect(mockedNotif).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipoEvento: 'cuenta_verificada',
+        params: { rol: 'egresado' },
+      }),
+    )
+  })
 })
 
 describe('rechazarEgresado', () => {
@@ -185,6 +228,12 @@ describe('rechazarEgresado', () => {
     const result = await rechazarEgresado(VALID_UUID)
     expect(result).toEqual({ ok: true, data: undefined })
     expect(admin.update).toHaveBeenCalledTimes(1)
+  })
+
+  it('no notifica al rechazar', async () => {
+    buildGraduateAdmin({ hasConsent: false })
+    await rechazarEgresado(VALID_UUID)
+    expect(mockedNotif).not.toHaveBeenCalled()
   })
 })
 
@@ -205,6 +254,17 @@ describe('verificarEmpresa', () => {
     buildCompanyAdmin({ updateRows: [] })
     const result = await verificarEmpresa(VALID_UUID)
     expect(result).toEqual({ ok: false, error: 'empresa_no_encontrada' })
+  })
+
+  it('al verificar, notifica al empresario (cuenta_verificada)', async () => {
+    buildCompanyAdmin({})
+    await verificarEmpresa(VALID_UUID)
+    expect(mockedNotif).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipoEvento: 'cuenta_verificada',
+        params: { rol: 'empresario' },
+      }),
+    )
   })
 })
 

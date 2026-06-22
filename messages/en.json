@@ -1197,7 +1197,8 @@
       "postulacion_recibida": "You have a new application for \"{titulo}\".",
       "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon.",
       "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
-      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\"."
+      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
+      "cuenta_verificada": "{rol, select, empresario {Your company was verified. You can now post projects.} other {Your graduation was verified. You can now apply to projects.}}"
     }
   },
   "EmpresaPerfil": {
