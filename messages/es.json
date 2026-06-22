@@ -1143,7 +1143,9 @@
       "participacion_contratada": "¡Felicitaciones! La empresa te eligió para \"{titulo}\". Pronto se pondrán en contacto.",
       "participacion_no_seleccionada": "Tu propuesta para \"{titulo}\" no fue seleccionada en esta ocasión. Gracias por postularte; pronto habrá nuevas oportunidades.",
       "postulacion_recibida": "Recibiste una nueva postulación en \"{titulo}\".",
-      "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión."
+      "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión.",
+      "entregable_aprobado": "Tu entregable del proyecto \"{titulo}\" fue aprobado.",
+      "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\"."
     }
   },
   "EmpresaPerfil": {
