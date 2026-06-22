@@ -220,10 +220,10 @@ export function CompanyMensajesClient({
 
   return (
     <CompanyShell>
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+      <div className="flex-1 w-full flex flex-col lg:flex-row">
         <SidebarEmpresaNuevo />
 
-        <main className="flex-1 flex flex-col gap-6 min-w-0">
+        <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6 min-w-0">
           <PageTitle title={t('title')} description={t('description')} />
 
           {conversaciones.length === 0 ? (

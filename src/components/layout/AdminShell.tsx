@@ -106,7 +106,7 @@ export function AdminShell({
         {/* ── Top Header Bar (White / very light gray) ── */}
         <header
           className="sticky top-0 z-30 flex h-[52px] items-center gap-3 px-5 border-b border-gray-100 shadow-sm"
-          style={{ background: '#ffffff' }}
+          style={{ background: 'var(--surface)' }}
         >
           {/* Mobile hamburger */}
           <button

@@ -154,12 +154,7 @@ export function PortfolioManager({
   const t = useTranslations('Portfolio')
 
   useEffect(() => {
-    if (initialProfile) {
-      const fullName =
-        `${initialProfile.firstName} ${initialProfile.lastName1} ${initialProfile.lastName2}`.trim()
-      console.log('User Full Name:', fullName)
-      console.log('User ID:', initialProfile.id_usuario)
-    }
+    // No-op for analytics/tracking (retained structure)
   }, [initialProfile])
 
   const bioSchema = React.useMemo(() => {

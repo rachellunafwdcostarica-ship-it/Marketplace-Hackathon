@@ -77,10 +77,26 @@ export function DashboardCharts({
     color: statusMap[estado]?.color || '#cbd5e1',
   }))
 
+  interface CustomTooltipProps {
+    active?: boolean
+    payload?: Array<{
+      value: number
+      payload: {
+        name: string
+        value: number
+        color?: string
+      }
+    }>
+    label?: string
+  }
+
   // Custom Tooltip para Postulaciones
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltipPostulaciones = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltipPostulaciones = ({
+    active,
+    payload,
+    label,
+  }: CustomTooltipProps) => {
+    if (active && payload && payload.length && payload[0]) {
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-4 animate-in fade-in zoom-in-95 duration-200">
           <p className="font-semibold text-foreground text-sm mb-1">{label}</p>
@@ -95,9 +111,12 @@ export function DashboardCharts({
   }
 
   // Custom Tooltip para Tecnologías
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltipTech = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltipTech = ({
+    active,
+    payload,
+    label,
+  }: CustomTooltipProps) => {
+    if (active && payload && payload.length && payload[0]) {
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-4 animate-in fade-in zoom-in-95 duration-200">
           <p className="font-semibold text-foreground text-sm mb-1 uppercase tracking-wider">
@@ -117,9 +136,8 @@ export function DashboardCharts({
   }
 
   // Custom Tooltip para Estados (Pie Chart)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltipPie = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltipPie = ({ active, payload }: CustomTooltipProps) => {
+    if (active && payload && payload.length && payload[0]) {
       const data = payload[0].payload
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-3 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-3">
