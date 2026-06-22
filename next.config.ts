@@ -4,6 +4,14 @@ import type { NextConfig } from 'next'
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Los entregables se suben por una server action (FormData). El bucket
+    // admite 50MB; damos algo de aire por el overhead de multipart para que un
+    // archivo cercano al límite no lo rechace Next antes de llegar a Storage.
+    serverActions: {
+      bodySizeLimit: '55mb',
+    },
+  },
   // Permite acceder al dev server desde la IP de red local (ademas de localhost)
   // sin el aviso de cross-origin de Next.js.
   allowedDevOrigins: ['192.168.0.7'],

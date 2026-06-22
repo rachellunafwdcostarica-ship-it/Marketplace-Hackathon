@@ -24,9 +24,9 @@ import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { subirHito, subirEntregableFinal } from '@/lib/deliverables/actions'
 import { rateCompany } from '@/lib/company/ratings'
+import { logger } from '@/lib/logger'
 import type {
   MiContratacion,
   EntregablePropio,
@@ -143,31 +143,19 @@ export function EntregablesClient({
   ) => {
     setLoading(true)
     try {
-      const supabase = createSupabaseBrowserClient()
-      const ext = file.name.split('.').pop() ?? 'bin'
-      const path = `${contratacion.id_contratacion}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`
-
-      const { error: uploadError } = await Promise.race([
-        supabase.storage.from('entregables').upload(path, file),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('upload_timeout')), 20_000),
-        ),
-      ])
-
-      if (uploadError) {
-        toast.error(tEgresado('uploadError'))
-        return
-      }
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('idContratacion', contratacion.id_contratacion)
+      formData.append('idProyecto', projectId)
 
       const action = tipo === 'parcial' ? subirHito : subirEntregableFinal
-      const result = await action({
-        idContratacion: contratacion.id_contratacion,
-        archivoPath: path,
-        idProyecto: projectId,
-      })
+      const result = await action(formData)
 
       if (!result.ok) {
-        await supabase.storage.from('entregables').remove([path])
+        logger.error('handleUpload: la server action devolvio error', {
+          tipo,
+          error: result.error,
+        })
         toast.error(tEgresado('uploadError'))
         return
       }
@@ -175,7 +163,12 @@ export function EntregablesClient({
       toast.success(tEgresado('uploadSuccess'))
       clearInput()
       router.refresh()
-    } catch {
+    } catch (error) {
+      logger.error('handleUpload: excepcion no controlada', {
+        tipo,
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : undefined,
+      })
       toast.error(tEgresado('uploadError'))
     } finally {
       setLoading(false)
