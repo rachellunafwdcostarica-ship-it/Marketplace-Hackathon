@@ -39,6 +39,20 @@ export default async function CompanyLayout({
     redirect(`/${locale}${ROLE_HOME[role]}`)
   }
 
+  // Gate de verificación: con el correo confirmado la cuenta queda 'activa',
+  // pero el acceso al panel exige que el admin haya verificado a la empresa
+  // (RF-17). Mientras no esté 'verificado' (pendiente o rechazado), a la
+  // pantalla de "en revisión".
+  const { data: empresario } = await supabase
+    .from('empresarios')
+    .select('estado_verificacion')
+    .eq('id_usuario', user.id)
+    .maybeSingle()
+
+  if (empresario?.estado_verificacion !== 'verificado') {
+    redirect(`/${locale}/pending-approval`)
+  }
+
   const estado = estadoCuenta as string | null
 
   return (

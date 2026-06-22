@@ -29,18 +29,12 @@ export async function createCatalogItem(
 
   const adminClient = createSupabaseAdminClient()
 
-  let error
-  if (type === 'tecnologias') {
-    const res = await adminClient
-      .from('tecnologias')
-      .insert({ nombre: parsedName.data, is_active: true })
-    error = res.error
-  } else {
-    const res = await adminClient
-      .from('categorias')
-      .insert({ nombre: parsedName.data, is_active: true })
-    error = res.error
-  }
+  const table = type === 'tecnologias' ? 'tecnologias' : 'categorias'
+
+  const { error } = await adminClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from(table as any)
+    .insert({ nombre: parsedName.data, is_active: true })
 
   if (error) {
     logger.error('createCatalogItem failed', {
@@ -68,20 +62,14 @@ export async function toggleCatalogItemStatus(
 
   const adminClient = createSupabaseAdminClient()
 
-  let error
-  if (type === 'tecnologias') {
-    const res = await adminClient
-      .from('tecnologias')
-      .update({ is_active: newStatus })
-      .eq('id_tecnologia', parsedId.data)
-    error = res.error
-  } else {
-    const res = await adminClient
-      .from('categorias')
-      .update({ is_active: newStatus })
-      .eq('id_categoria', parsedId.data)
-    error = res.error
-  }
+  const table = type === 'tecnologias' ? 'tecnologias' : 'categorias'
+  const idColumn = type === 'tecnologias' ? 'id_tecnologia' : 'id_categoria'
+
+  const { error } = await adminClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from(table as any)
+    .update({ is_active: newStatus })
+    .eq(idColumn, parsedId.data)
 
   if (error) {
     logger.error('toggleCatalogItemStatus failed', {
