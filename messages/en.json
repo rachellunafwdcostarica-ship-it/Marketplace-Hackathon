@@ -48,7 +48,8 @@
     "settings": "System settings",
     "moderation": "Moderation",
     "adminRegister": "Admin registration",
-    "messages": "Messages"
+    "messages": "Messages",
+    "myContracts": "My Contracts"
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
@@ -245,6 +246,17 @@
     "marketplaceDesc": "Find and apply to short-term freelance projects that match your skills.",
     "applications": "My Applications",
     "applicationsDesc": "Track the applications you have sent to different companies.",
+    "myContracts": "My Contracts",
+    "myContractsDesc": "Projects you were selected for. Access your deliverables from here.",
+    "emptyContracts": "You have no active contracts yet.",
+    "emptyContractsDesc": "When a company selects you for a project, it will appear here.",
+    "contractActive": "Active",
+    "contractFinished": "Finished",
+    "contractPaused": "Paused",
+    "contractCancelled": "Cancelled",
+    "viewDeliverables": "View deliverables",
+    "contractStart": "Start",
+    "contractEnd": "Estimated end",
     "statsTitle": "Activity Summary",
     "statsRecommended": "Recommended Projects",
     "appliedProjects": "Applied Projects",

@@ -325,3 +325,99 @@ export async function getMisEntregables(
 
   return ok((data ?? []) as EntregablePropio[])
 }
+
+export interface ContratacionResumen {
+  id_contratacion: string
+  estado_periodo: string
+  fecha_inicio: string | null
+  fecha_fin_estimada: string | null
+  id_proyecto: string
+  titulo_proyecto: string
+  estado_proyecto: string
+}
+
+/**
+ * Lista todas las contrataciones del egresado autenticado (estado contratada
+ * o finalizada) junto con los datos básicos del proyecto. RF-40/41.
+ */
+export async function getMisContrataciones(): Promise<
+  Result<ContratacionResumen[]>
+> {
+  const roleResult = await requireRole('egresado')
+  if (!roleResult.ok) return roleResult
+
+  const supabase = await createSupabaseServerClient()
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData.user) return err('unauthenticated')
+
+  const { data: estudiante, error: estError } = await supabase
+    .from('estudiantes')
+    .select('id_estudiante')
+    .eq('id_usuario', userData.user.id)
+    .single()
+  if (estError || !estudiante) return err('estudiante_not_found')
+
+  const { data: participaciones, error: partError } = await supabase
+    .from('participaciones')
+    .select('id_participacion, id_proyecto')
+    .eq('id_estudiante', estudiante.id_estudiante)
+    .in('estado', ['contratada', 'finalizada'])
+  if (partError) {
+    logger.error('getMisContrataciones: participaciones query failed', {
+      error: partError.message,
+    })
+    return err('database_error')
+  }
+  if (!participaciones || participaciones.length === 0) return ok([])
+
+  const idParticipaciones = participaciones.map((p) => p.id_participacion)
+
+  const { data: contrataciones, error: contError } = await supabase
+    .from('contrataciones')
+    .select(
+      'id_contratacion, id_participacion, estado_periodo, fecha_inicio, fecha_fin_estimada',
+    )
+    .in('id_participacion', idParticipaciones)
+  if (contError) {
+    logger.error('getMisContrataciones: contrataciones query failed', {
+      error: contError.message,
+    })
+    return err('database_error')
+  }
+  if (!contrataciones || contrataciones.length === 0) return ok([])
+
+  const idProyectos = participaciones.map((p) => p.id_proyecto)
+  const { data: proyectos, error: proyError } = await supabase
+    .from('proyectos')
+    .select('id_proyecto, titulo, estado')
+    .in('id_proyecto', idProyectos)
+  if (proyError) {
+    logger.error('getMisContrataciones: proyectos query failed', {
+      error: proyError.message,
+    })
+    return err('database_error')
+  }
+
+  const proyectoMap = new Map((proyectos ?? []).map((p) => [p.id_proyecto, p]))
+  const partMap = new Map(participaciones.map((p) => [p.id_participacion, p]))
+
+  const result: ContratacionResumen[] = contrataciones
+    .map((c) => {
+      const part = partMap.get(c.id_participacion)
+      if (!part) return null
+      const proyecto = proyectoMap.get(part.id_proyecto)
+      if (!proyecto) return null
+      return {
+        id_contratacion: c.id_contratacion,
+        estado_periodo: c.estado_periodo as string,
+        fecha_inicio: c.fecha_inicio,
+        fecha_fin_estimada: c.fecha_fin_estimada,
+        id_proyecto: part.id_proyecto,
+        titulo_proyecto: proyecto.titulo,
+        estado_proyecto: proyecto.estado as string,
+      } satisfies ContratacionResumen
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+
+  return ok(result)
+}

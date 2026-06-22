@@ -48,7 +48,8 @@
     "settings": "Ajustes del sistema",
     "moderation": "Moderación",
     "adminRegister": "Registro de admin",
-    "messages": "Mensajes"
+    "messages": "Mensajes",
+    "myContracts": "Mis Contrataciones"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -245,6 +246,17 @@
     "marketplaceDesc": "Encuentra y postúlate a proyectos freelance de corta duración que se adapten a tus habilidades.",
     "applications": "Mis Postulaciones",
     "applicationsDesc": "Realiza el seguimiento de tus candidaturas enviadas a las distintas empresas.",
+    "myContracts": "Mis Contrataciones",
+    "myContractsDesc": "Proyectos en los que fuiste seleccionado. Accedé a tus entregables desde aquí.",
+    "emptyContracts": "Todavía no tenés contrataciones activas.",
+    "emptyContractsDesc": "Cuando una empresa te seleccione para un proyecto, aparecerá aquí.",
+    "contractActive": "Vigente",
+    "contractFinished": "Finalizado",
+    "contractPaused": "Pausado",
+    "contractCancelled": "Cancelado",
+    "viewDeliverables": "Ver entregables",
+    "contractStart": "Inicio",
+    "contractEnd": "Vencimiento estimado",
     "statsTitle": "Resumen de Actividad",
     "statsRecommended": "Proyectos Recomendados",
     "appliedProjects": "Proyectos Postulados",
