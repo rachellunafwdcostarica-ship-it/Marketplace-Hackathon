@@ -197,6 +197,19 @@ export async function responderEntregable(
     revalidatePath(
       `/egresado/projects/${participacion.id_proyecto}/entregables`,
     )
+    const { error: comentFinalErr } = await supabase
+      .from('comentarios_entregables')
+      .insert({
+        id_entregable: parsed.data.idEntregable,
+        id_autor: userData.user.id,
+        contenido: parsed.data.comentario ?? '',
+        tipo_comentario: 'aprobacion',
+      })
+    if (comentFinalErr) {
+      logger.error('responderEntregable: comentario final insert failed', {
+        error: comentFinalErr.message,
+      })
+    }
     if (estudianteNotif?.id_usuario) {
       const notifResult = await crearNotificacion({
         idUsuario: estudianteNotif.id_usuario,
@@ -237,6 +250,22 @@ export async function responderEntregable(
 
   revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
   revalidatePath(`/egresado/projects/${participacion.id_proyecto}/entregables`)
+  const { error: comentErr } = await supabase
+    .from('comentarios_entregables')
+    .insert({
+      id_entregable: parsed.data.idEntregable,
+      id_autor: userData.user.id,
+      contenido: parsed.data.comentario ?? '',
+      tipo_comentario:
+        parsed.data.decision === 'aprobado'
+          ? ('aprobacion' as const)
+          : ('revision_solicitada' as const),
+    })
+  if (comentErr) {
+    logger.error('responderEntregable: comentario insert failed', {
+      error: comentErr.message,
+    })
+  }
   if (estudianteNotif?.id_usuario) {
     const tipoEvento =
       parsed.data.decision === 'aprobado'
@@ -260,4 +289,79 @@ export async function responderEntregable(
     }
   }
   return ok({ finalizado: false })
+}
+
+const ComentarEntregableSchema = z.object({
+  idEntregable: z.string().uuid(),
+  contenido: z.string().min(1).max(1000),
+})
+
+/**
+ * El empresario agrega un comentario libre (aclaración) sobre un entregable (RF-44).
+ * Inserta en `comentarios_entregables` con tipo_comentario = 'aclaracion'.
+ * Verifica propiedad del proyecto antes de insertar.
+ */
+export async function comentarEntregable(
+  input: z.infer<typeof ComentarEntregableSchema>,
+): Promise<Result<void>> {
+  const parsed = ComentarEntregableSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const supabase = await createSupabaseServerClient()
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData.user) return err('unauthenticated')
+
+  const { data: entregable, error: entErr } = await supabase
+    .from('entregables')
+    .select('id_entregable, id_contratacion')
+    .eq('id_entregable', parsed.data.idEntregable)
+    .maybeSingle()
+  if (entErr || !entregable) return err('entregable_not_found')
+
+  const { data: contratacion, error: contErr } = await supabase
+    .from('contrataciones')
+    .select('id_participacion')
+    .eq('id_contratacion', entregable.id_contratacion)
+    .maybeSingle()
+  if (contErr || !contratacion) return err('unauthorized')
+
+  const { data: participacion, error: partErr } = await supabase
+    .from('participaciones')
+    .select('id_proyecto')
+    .eq('id_participacion', contratacion.id_participacion)
+    .maybeSingle()
+  if (partErr || !participacion) return err('unauthorized')
+
+  const { data: empresario, error: empErr } = await supabase
+    .from('empresarios')
+    .select('id_empresario')
+    .eq('id_usuario', userData.user.id)
+    .maybeSingle()
+  if (empErr || !empresario) return err('unauthorized')
+
+  const { data: proyectoOwned, error: proyErr } = await supabase
+    .from('proyectos')
+    .select('id_proyecto')
+    .eq('id_proyecto', participacion.id_proyecto)
+    .eq('id_empresario', empresario.id_empresario)
+    .maybeSingle()
+  if (proyErr || !proyectoOwned) return err('unauthorized')
+
+  const { error: insertErr } = await supabase
+    .from('comentarios_entregables')
+    .insert({
+      id_entregable: parsed.data.idEntregable,
+      id_autor: userData.user.id,
+      contenido: parsed.data.contenido,
+      tipo_comentario: 'aclaracion',
+    })
+  if (insertErr) {
+    logger.error('comentarEntregable: insert failed', {
+      error: insertErr.message,
+    })
+    return err('database_error')
+  }
+
+  revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
+  return ok(undefined)
 }

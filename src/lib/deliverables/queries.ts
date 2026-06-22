@@ -88,6 +88,13 @@ export async function getMiContratacion(
   })
 }
 
+export interface ComentarioEntregable {
+  id_comentario_entregable: string
+  contenido: string
+  tipo_comentario: string
+  comentado_at: string
+}
+
 export interface EntregableEmpresario {
   id_entregable: string
   tipo_entregable: 'parcial' | 'final'
@@ -96,6 +103,7 @@ export interface EntregableEmpresario {
   estado: 'enviado' | 'en_revision' | 'aprobado' | 'con_cambios'
   comentario_empresario: string | null
   cargado_at: string
+  comentarios: ComentarioEntregable[]
 }
 
 /**
@@ -169,7 +177,10 @@ export async function getEntregablesDeProyecto(
   const { data, error } = await supabase
     .from('entregables')
     .select(
-      'id_entregable, tipo_entregable, version, archivo_url, estado, comentario_empresario, cargado_at',
+      `id_entregable, tipo_entregable, version, archivo_url, estado, comentario_empresario, cargado_at,
+      comentarios_entregables (
+        id_comentario_entregable, contenido, tipo_comentario, comentado_at
+      )`,
     )
     .eq('id_contratacion', contratacion.id_contratacion)
     .order('cargado_at', { ascending: false })
@@ -180,7 +191,23 @@ export async function getEntregablesDeProyecto(
     return err('database_error')
   }
 
-  return ok((data ?? []) as EntregableEmpresario[])
+  const mapped: EntregableEmpresario[] = (data ?? []).map((e) => ({
+    id_entregable: e.id_entregable,
+    tipo_entregable: e.tipo_entregable as 'parcial' | 'final',
+    version: e.version,
+    archivo_url: e.archivo_url,
+    estado: e.estado as EntregableEmpresario['estado'],
+    comentario_empresario: e.comentario_empresario,
+    cargado_at: e.cargado_at,
+    comentarios: (e.comentarios_entregables ?? []).map((c) => ({
+      id_comentario_entregable: c.id_comentario_entregable,
+      contenido: c.contenido,
+      tipo_comentario: c.tipo_comentario,
+      comentado_at: c.comentado_at,
+    })),
+  }))
+
+  return ok(mapped)
 }
 
 /**
