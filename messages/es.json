@@ -368,6 +368,14 @@
     "versionLabel": "v{n}",
     "uploadedAtLabel": "Subido el",
     "empresarioComment": "Comentario del empresario",
+    "uploadDuplicate": "Ese archivo ya lo subiste; no se puede subir dos veces el mismo.",
+    "threadTitle": "Seguimiento",
+    "threadEmpty": "Sin comentarios todavía. Escribí un mensaje o pegá un link.",
+    "authorYou": "Vos",
+    "authorCompany": "Empresario",
+    "replyPlaceholder": "Escribí un mensaje o pegá un link…",
+    "replySend": "Enviar",
+    "replyError": "No se pudo enviar el mensaje.",
     "periodoVigente": "Contrato vigente",
     "periodoPausado": "Pausado",
     "periodoFinalizado": "Finalizado",
@@ -1256,7 +1264,10 @@
     "cancelar": "Cancelar",
     "supportMinCharsInfo": "caracteres mínimo",
     "contratacionesDesc": "Revisá el listado de los estudiantes que has contratado para tus proyectos.",
-    "viewEntregables": "Ver entregables"
+    "viewEntregables": "Ver entregables",
+    "backToContrataciones": "Volver a Contrataciones",
+    "entregablesPageDesc": "Revisá y gestioná los entregables de este proyecto.",
+    "entregablesPageDescEgresado": "Entregables de {nombre} para este proyecto."
   },
   "CompanyPostulations": {
     "title": "Gestión de Postulaciones",

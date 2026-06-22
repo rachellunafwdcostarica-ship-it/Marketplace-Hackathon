@@ -368,6 +368,14 @@
     "versionLabel": "v{n}",
     "uploadedAtLabel": "Uploaded on",
     "empresarioComment": "Business comment",
+    "uploadDuplicate": "You already uploaded that file; the same file can't be uploaded twice.",
+    "threadTitle": "Follow-up",
+    "threadEmpty": "No comments yet. Write a message or paste a link.",
+    "authorYou": "You",
+    "authorCompany": "Business",
+    "replyPlaceholder": "Write a message or paste a link…",
+    "replySend": "Send",
+    "replyError": "Couldn't send the message.",
     "periodoVigente": "Active contract",
     "periodoPausado": "Paused",
     "periodoFinalizado": "Completed",
@@ -1256,7 +1264,10 @@
     "cancelar": "Cancel",
     "supportMinCharsInfo": "characters minimum",
     "contratacionesDesc": "Review the list of students you have hired for your projects.",
-    "viewEntregables": "View deliverables"
+    "viewEntregables": "View deliverables",
+    "backToContrataciones": "Back to Hires",
+    "entregablesPageDesc": "Review and manage the deliverables for this project.",
+    "entregablesPageDescEgresado": "Deliverables from {nombre} for this project."
   },
   "CompanyPostulations": {
     "title": "Applications Management",

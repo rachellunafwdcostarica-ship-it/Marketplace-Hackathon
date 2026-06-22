@@ -84,25 +84,50 @@ function withNoAuth() {
   }
 }
 
-// fromImpl reutilizable: tabla `entregables` con version base 0 e insert OK.
-function entregablesInsertOk(table: string): unknown {
-  if (table === 'entregables') {
-    return {
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          order: vi.fn(() => ({
-            limit: vi.fn(() => ({
-              maybeSingle: vi
-                .fn()
-                .mockResolvedValue({ data: null, error: null }),
-            })),
-          })),
-        })),
-      })),
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    }
+type MockChain = {
+  eq: () => MockChain
+  order: () => MockChain
+  limit: () => MockChain
+  maybeSingle: () => Promise<{ data: unknown; error: null }>
+}
+
+// Mock de la tabla `entregables`. registrarEntregable hace DOS consultas:
+//   - dedup:   select('id_entregable').eq().eq().limit().maybeSingle() -> { data: dup }
+//   - version: select('version').eq().order().limit().maybeSingle()    -> { data: maxVersion }
+// y luego insert() -> { error: insertError }.
+function makeEntregablesTable({
+  dup = null,
+  maxVersion = null,
+  insertError = null,
+}: {
+  dup?: unknown
+  maxVersion?: unknown
+  insertError?: unknown
+} = {}): unknown {
+  const dedupChain: MockChain = {
+    eq: () => dedupChain,
+    order: () => dedupChain,
+    limit: () => dedupChain,
+    maybeSingle: () => Promise.resolve({ data: dup, error: null }),
   }
-  return {}
+  const versionChain: MockChain = {
+    eq: () => versionChain,
+    order: () => versionChain,
+    limit: () => versionChain,
+    maybeSingle: () => Promise.resolve({ data: maxVersion, error: null }),
+  }
+  return {
+    select: (cols: string) =>
+      String(cols).includes('version') ? versionChain : dedupChain,
+    insert: vi.fn().mockResolvedValue({ error: insertError }),
+  }
+}
+
+// fromImpl: la tabla `entregables` con el mock de arriba; el resto vacío.
+function entregablesFrom(
+  opts?: Parameters<typeof makeEntregablesTable>[0],
+): (table: string) => unknown {
+  return (table) => (table === 'entregables' ? makeEntregablesTable(opts) : {})
 }
 
 beforeEach(() => {
@@ -137,7 +162,7 @@ describe('subirHito', () => {
 
   it('retorna storage_error si falla el upload al storage', async () => {
     mockedServer.mockResolvedValue(
-      withAuth(entregablesInsertOk, makeStorage({ message: 'boom' })) as never,
+      withAuth(entregablesFrom(), makeStorage({ message: 'boom' })) as never,
     )
 
     const result = await subirHito(makeSubirFormData())
@@ -146,7 +171,7 @@ describe('subirHito', () => {
   })
 
   it('registra el hito parcial exitosamente', async () => {
-    mockedServer.mockResolvedValue(withAuth(entregablesInsertOk) as never)
+    mockedServer.mockResolvedValue(withAuth(entregablesFrom()) as never)
 
     const result = await subirHito(makeSubirFormData())
     expect(result.ok).toBe(true)
@@ -154,26 +179,7 @@ describe('subirHito', () => {
 
   it('usa version incrementada si ya existe un hito previo', async () => {
     mockedServer.mockResolvedValue(
-      withAuth((table) => {
-        if (table === 'entregables') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                order: vi.fn(() => ({
-                  limit: vi.fn(() => ({
-                    maybeSingle: vi.fn().mockResolvedValue({
-                      data: { version: 2 },
-                      error: null,
-                    }),
-                  })),
-                })),
-              })),
-            })),
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          }
-        }
-        return {}
-      }) as never,
+      withAuth(entregablesFrom({ maxVersion: { version: 2 } })) as never,
     )
 
     const result = await subirHito(makeSubirFormData())
@@ -182,32 +188,24 @@ describe('subirHito', () => {
 
   it('retorna database_error si el insert falla', async () => {
     mockedServer.mockResolvedValue(
-      withAuth((table) => {
-        if (table === 'entregables') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                order: vi.fn(() => ({
-                  limit: vi.fn(() => ({
-                    maybeSingle: vi
-                      .fn()
-                      .mockResolvedValue({ data: null, error: null }),
-                  })),
-                })),
-              })),
-            })),
-            insert: vi
-              .fn()
-              .mockResolvedValue({ error: { message: 'insert failed' } }),
-          }
-        }
-        return {}
-      }) as never,
+      withAuth(
+        entregablesFrom({ insertError: { message: 'insert failed' } }),
+      ) as never,
     )
 
     const result = await subirHito(makeSubirFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('database_error')
+  })
+
+  it('retorna archivo_duplicado si el contenido ya existe en la contratación', async () => {
+    mockedServer.mockResolvedValue(
+      withAuth(entregablesFrom({ dup: { id_entregable: ENTR_UUID } })) as never,
+    )
+
+    const result = await subirHito(makeSubirFormData())
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('archivo_duplicado')
   })
 })
 
@@ -223,7 +221,7 @@ describe('subirEntregableFinal', () => {
   })
 
   it('registra el entregable final exitosamente', async () => {
-    mockedServer.mockResolvedValue(withAuth(entregablesInsertOk) as never)
+    mockedServer.mockResolvedValue(withAuth(entregablesFrom()) as never)
 
     const result = await subirEntregableFinal(makeSubirFormData())
     expect(result.ok).toBe(true)
