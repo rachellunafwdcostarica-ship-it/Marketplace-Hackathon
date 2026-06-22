@@ -51,17 +51,24 @@ beforeEach(() => {
   } as never)
 })
 
+// Resultado de una cadena `.eq()` que tolera tanto `.maybeSingle()` (lo que usa
+// el código) como `.single()`, devolviendo el mismo dato. Defensivo ante
+// diferencias de resolución de mocks entre entornos (CI vs local).
+function eqResult(data: unknown) {
+  return {
+    maybeSingle: vi.fn().mockResolvedValue({ data, error: null }),
+    single: vi.fn().mockResolvedValue({ data, error: null }),
+  }
+}
+
 // Mock de `usuarios.select('correo, nombre').eq().maybeSingle()` que usa el
 // envío de correo/notificación de cuenta verificada.
 function usuarioConCorreo() {
   return {
     select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        maybeSingle: vi.fn().mockResolvedValue({
-          data: { correo: 'persona@example.com', nombre: 'Ana' },
-          error: null,
-        }),
-      })),
+      eq: vi.fn(() =>
+        eqResult({ correo: 'persona@example.com', nombre: 'Ana' }),
+      ),
     })),
   }
 }
@@ -81,16 +88,15 @@ function buildGraduateAdmin(opts: {
   }))
   const insert = vi.fn().mockResolvedValue({ error: null })
   const selectBefore = vi.fn(() => ({
-    eq: vi.fn(() => ({
-      maybeSingle: vi.fn().mockResolvedValue({
-        data: opts.before ?? {
+    eq: vi.fn(() =>
+      eqResult(
+        opts.before ?? {
           estado_verificacion: 'pendiente',
           verificado_at: null,
           verificado_por: null,
         },
-        error: null,
-      }),
-    })),
+      ),
+    ),
   }))
   const client = {
     from: vi.fn((table: string) => {
@@ -137,17 +143,16 @@ function buildCompanyAdmin(opts: { updateRows?: unknown[]; before?: unknown }) {
   }))
   const insert = vi.fn().mockResolvedValue({ error: null })
   const selectBefore = vi.fn(() => ({
-    eq: vi.fn(() => ({
-      maybeSingle: vi.fn().mockResolvedValue({
-        data: opts.before ?? {
+    eq: vi.fn(() =>
+      eqResult(
+        opts.before ?? {
           estado_verificacion: 'pendiente',
           verificado_at: null,
           verificado_por: null,
           id_usuario: 'u-emp-1',
         },
-        error: null,
-      }),
-    })),
+      ),
+    ),
   }))
   const client = {
     from: vi.fn((table: string) => {
