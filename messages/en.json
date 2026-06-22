@@ -721,6 +721,8 @@
     "ratingHideLabel": "Hide rating",
     "ratingCommentLabel": "Comment",
     "ratingNoComment": "No comment.",
+    "iframePreviewTitle": "Preview",
+    "iframeOpenNewTab": "Open in new tab",
     "contactarBtn": "Open messages",
     "contactEmailLabel": "Graduate's email",
     "adjudicarSuccess": "Project awarded.",
