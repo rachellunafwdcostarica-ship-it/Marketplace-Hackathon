@@ -359,10 +359,15 @@ describe('responderEntregable', () => {
             select: vi.fn(() => ({
               eq: vi.fn().mockReturnThis(),
               maybeSingle: vi.fn().mockResolvedValue({
-                data: { id_proyecto: PROJ_UUID },
+                data: { id_proyecto: PROJ_UUID, titulo: 'Proyecto Test' },
                 error: null,
               }),
             })),
+          }
+        }
+        if (table === 'comentarios_entregables') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
           }
         }
         return {}
