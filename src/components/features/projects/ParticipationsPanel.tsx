@@ -366,7 +366,7 @@ export function ParticipationsPanel({
         <DialogContent className="max-w-[90vw] w-[1200px] h-[85vh] flex flex-col p-0 overflow-hidden border border-border">
           <DialogHeader className="p-4 border-b border-border/40 shrink-0 flex flex-row items-center justify-between">
             <DialogTitle className="text-lg font-bold font-heading truncate pr-4">
-              Vista Previa
+              {t('iframePreviewTitle')}
             </DialogTitle>
             {iframeUrl && (
               <a
@@ -376,7 +376,7 @@ export function ParticipationsPanel({
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                Abrir en pestaña nueva
+                {t('iframeOpenNewTab')}
               </a>
             )}
           </DialogHeader>
