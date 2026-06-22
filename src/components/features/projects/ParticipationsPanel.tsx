@@ -6,11 +6,13 @@ import { toast } from 'sonner'
 import {
   Briefcase,
   CheckCircle2,
+  ChevronDown,
   ExternalLink,
   FileText,
   GitBranch,
   Lock,
   Mail,
+  MessageSquare,
   Star,
   Users,
   XCircle,
@@ -100,6 +102,7 @@ export function ParticipationsPanel({
   )
   const [mutatingId, setMutatingId] = useState<string | null>(null)
   const [ratingMutatingId, setRatingMutatingId] = useState<string | null>(null)
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null)
 
   // Sin estado de proyecto (vista cross-project) dejamos abrir: ahí no hay
   // ciclo de vida de proyecto a la mano.
@@ -237,6 +240,7 @@ export function ParticipationsPanel({
             <ParticipationCard
               key={participacion.idParticipacion}
               participacion={participacion}
+              {...(projectId !== undefined ? { projectId } : {})}
               isMutating={mutatingId === participacion.idParticipacion}
               isRatingMutating={
                 ratingMutatingId === participacion.idParticipacion
@@ -254,6 +258,7 @@ export function ParticipationsPanel({
               onRate={(calificacion, comentario) =>
                 runRate(participacion, calificacion, comentario)
               }
+              onOpenIframe={setIframeUrl}
             />
           ))}
         </div>
@@ -353,12 +358,48 @@ export function ParticipationsPanel({
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={iframeUrl !== null}
+        onOpenChange={(open) => !open && setIframeUrl(null)}
+      >
+        <DialogContent className="max-w-[90vw] w-[1200px] h-[85vh] flex flex-col p-0 overflow-hidden border border-border">
+          <DialogHeader className="p-4 border-b border-border/40 shrink-0 flex flex-row items-center justify-between">
+            <DialogTitle className="text-lg font-bold font-heading truncate pr-4">
+              {t('iframePreviewTitle')}
+            </DialogTitle>
+            {iframeUrl && (
+              <a
+                href={iframeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                {t('iframeOpenNewTab')}
+              </a>
+            )}
+          </DialogHeader>
+          <div className="flex-1 w-full bg-background relative">
+            {iframeUrl && (
+              <iframe
+                src={iframeUrl}
+                className="w-full h-full border-0"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
 
 interface ParticipationCardProps {
   participacion: ParticipacionPanelItem
+  projectId?: string
   isMutating: boolean
   isRatingMutating: boolean
   isPending: boolean
@@ -371,10 +412,12 @@ interface ParticipationCardProps {
     calificacion: number,
     comentario: string | undefined,
   ) => Promise<void>
+  onOpenIframe: (url: string) => void
 }
 
 function ParticipationCard({
   participacion,
+  projectId,
   isMutating,
   isRatingMutating,
   isPending,
@@ -384,12 +427,14 @@ function ParticipationCard({
   onContratar,
   onRechazar,
   onRate,
+  onOpenIframe,
 }: ParticipationCardProps) {
   const t = useTranslations('ProjectDetail')
   const sealed = isParticipacionSealed(participacion.estado)
   const acciones = getParticipacionActions(participacion.estado)
   const nombreCompleto =
     `${participacion.estudianteNombre} ${participacion.estudianteApellidos}`.trim()
+  const effectiveProjectId = participacion.proyecto?.id ?? projectId
 
   return (
     <Card className="border border-border/80 bg-card/40">
@@ -471,6 +516,10 @@ function ParticipationCard({
                     href={enlace}
                     label={t('prototypeLabel')}
                     icon={<ExternalLink className="w-3.5 h-3.5" />}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onOpenIframe(enlace)
+                    }}
                   />
                 ))}
                 {participacion.documentacionTecnica && (
@@ -478,6 +527,10 @@ function ParticipationCard({
                     href={participacion.documentacionTecnica}
                     label={t('techDocLabel')}
                     icon={<FileText className="w-3.5 h-3.5" />}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onOpenIframe(participacion.documentacionTecnica!)
+                    }}
                   />
                 )}
                 {participacion.urlRepositorioProyecto && (
@@ -485,6 +538,10 @@ function ParticipationCard({
                     href={participacion.urlRepositorioProyecto}
                     label={t('repoLabel')}
                     icon={<GitBranch className="w-3.5 h-3.5" />}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onOpenIframe(participacion.urlRepositorioProyecto!)
+                    }}
                   />
                 )}
               </div>
@@ -503,15 +560,6 @@ function ParticipationCard({
                     </span>
                   </span>
                 )}
-                {participacion.calificacionPrototipo !== null &&
-                  participacion.estado !== 'en_revision' && (
-                    <span>
-                      {t('prototypeRatingLabel')}:{' '}
-                      <span className="font-semibold text-foreground">
-                        {participacion.calificacionPrototipo}/5
-                      </span>
-                    </span>
-                  )}
               </div>
             </div>
 
@@ -522,6 +570,14 @@ function ParticipationCard({
                 onRate={onRate}
               />
             )}
+
+            {participacion.calificacionPrototipo !== null &&
+              participacion.estado !== 'en_revision' && (
+                <RatingCollapsible
+                  calificacion={participacion.calificacionPrototipo}
+                  comentario={participacion.comentarioPrototipo}
+                />
+              )}
 
             {acciones.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-3 border-t border-border/40">
@@ -546,6 +602,14 @@ function ParticipationCard({
                 )}
               </div>
             )}
+
+            {effectiveProjectId &&
+              (participacion.estado === 'contratada' ||
+                participacion.estado === 'finalizada') && (
+                <div className="pt-3 border-t border-border/40">
+                  <ContactButton idProyecto={effectiveProjectId} />
+                </div>
+              )}
           </>
         )}
       </CardContent>
@@ -759,6 +823,84 @@ function StarRating({
   )
 }
 
+function StarReadOnly({ value }: { value: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          className={cn(
+            'w-4 h-4',
+            value >= n
+              ? 'text-highlight fill-highlight'
+              : 'text-muted-foreground/30',
+          )}
+        />
+      ))}
+    </div>
+  )
+}
+
+function RatingCollapsible({
+  calificacion,
+  comentario,
+}: {
+  calificacion: number
+  comentario: string | null
+}) {
+  const t = useTranslations('ProjectDetail')
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="pt-2">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+      >
+        <Star className="w-3.5 h-3.5 text-highlight" />
+        {t('prototypeRatingLabel')}: {calificacion}/5
+        <ChevronDown
+          className={cn(
+            'w-3.5 h-3.5 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-out)]',
+            open && 'rotate-180',
+          )}
+        />
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2 pl-1">
+          <StarReadOnly value={calificacion} />
+          {comentario ? (
+            <div className="space-y-0.5">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                {t('ratingCommentLabel')}
+              </p>
+              <p className="text-sm text-foreground">{comentario}</p>
+            </div>
+          ) : (
+            <p className="text-xs italic text-muted-foreground">
+              {t('ratingNoComment')}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ContactButton({ idProyecto }: { idProyecto: string }) {
+  const t = useTranslations('ProjectDetail')
+  return (
+    <Link
+      href={`/empresario/mensajes?proyecto=${idProyecto}`}
+      className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+    >
+      <MessageSquare className="w-3.5 h-3.5" />
+      {t('contactarBtn')}
+    </Link>
+  )
+}
+
 function ActionButton({
   accion,
   disabled,
@@ -857,17 +999,20 @@ function ExternalAnchor({
   href,
   label,
   icon,
+  onClick,
 }: {
   href: string
   label: string
   icon: ReactNode
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline cursor-pointer"
     >
       {icon}
       {label}

@@ -7,6 +7,7 @@ import type { UserRole } from '@/types'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { Button } from '@/components/ui/button'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
+import { NotificationBell } from '@/components/features/notifications/NotificationBell'
 import {
   Menu,
   X,
@@ -14,15 +15,14 @@ import {
   Search,
   FolderOpen,
   Send,
-  Heart,
-  GraduationCap,
   LayoutDashboard,
   PlusCircle,
   Building2,
-  Bell,
   User,
   Users,
   ShieldCheck,
+  MessageSquare,
+  FileCheck2,
 } from 'lucide-react'
 
 import { cn } from '@/lib/utils/cn'
@@ -31,7 +31,6 @@ interface NavLink {
   href: string
   label: string
   icon: string
-  isMock?: boolean
 }
 
 interface NavbarProps {
@@ -95,22 +94,30 @@ export function Navbar({
     router.replace(pathname, { locale: nextLocale })
   }
 
-  const mockLinks: NavLink[] = [
-    { href: '#favorites', label: t('favorites'), icon: 'heart', isMock: true },
-    {
-      href: '#resources',
-      label: t('resources'),
-      icon: 'resources',
-      isMock: true,
-    },
-  ]
-
   const navLinksByRole: Record<UserRole, NavLink[]> = {
     egresado: [
-      { href: '/junior', label: t('dashboard'), icon: 'dashboard' },
-      { href: '/junior/projects', label: t('searchProjects'), icon: 'search' },
-      { href: '/junior/applications', label: t('applications'), icon: 'send' },
-      { href: '/junior/portfolio', label: t('portfolio'), icon: 'portfolio' },
+      { href: '/egresado', label: t('dashboard'), icon: 'dashboard' },
+      {
+        href: '/egresado/projects',
+        label: t('searchProjects'),
+        icon: 'search',
+      },
+      {
+        href: '/egresado/applications',
+        label: t('applications'),
+        icon: 'send',
+      },
+      { href: '/egresado/portfolio', label: t('portfolio'), icon: 'portfolio' },
+      {
+        href: '/egresado/mensajes',
+        label: t('messages'),
+        icon: 'messages',
+      },
+      {
+        href: '/egresado/contrataciones',
+        label: t('myContracts'),
+        icon: 'contracts',
+      },
     ],
     empresario: [
       { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },
@@ -130,7 +137,6 @@ export function Navbar({
       { href: '/admin/companies', label: t('companies'), icon: 'building' },
       { href: '/admin/projects', label: t('projects'), icon: 'briefcase' },
       { href: '/admin/validations', label: t('validations'), icon: 'shield' },
-      ...mockLinks,
     ],
   }
 
@@ -149,10 +155,6 @@ export function Navbar({
         return <FolderOpen className={className} />
       case 'send':
         return <Send className={className} />
-      case 'heart':
-        return <Heart className={className} />
-      case 'resources':
-        return <GraduationCap className={className} />
       case 'plus':
         return <PlusCircle className={className} />
       case 'building':
@@ -161,6 +163,10 @@ export function Navbar({
         return <Users className={className} />
       case 'shield':
         return <ShieldCheck className={className} />
+      case 'messages':
+        return <MessageSquare className={className} />
+      case 'contracts':
+        return <FileCheck2 className={className} />
       default:
         return null
     }
@@ -207,18 +213,6 @@ export function Navbar({
           >
             {navLinks.map((link) => {
               const isActive = pathname === link.href
-              if (link.isMock) {
-                return (
-                  <span
-                    key={`inline-${link.href}`}
-                    aria-disabled="true"
-                    className="px-3.5 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5 text-muted-foreground/40 cursor-not-allowed select-none"
-                  >
-                    {renderIcon(link.icon, 'w-4 h-4')}
-                    <span>{link.label}</span>
-                  </span>
-                )
-              }
               return (
                 <Link
                   key={`inline-${link.href}`}
@@ -254,15 +248,7 @@ export function Navbar({
             </div>
 
             {/* Notification Bell */}
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={t('notifications')}
-              className={`h-9 w-9 rounded-full relative shrink-0 transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-magenta animate-pulse" />
-            </Button>
+            <NotificationBell isHero={isHero} className="shrink-0" />
 
             {/* Language Selector */}
             <div
@@ -302,7 +288,7 @@ export function Navbar({
               >
                 <User className="w-5 h-5" />
               </Link>
-              <div className="absolute right-0 top-full mt-2 w-36 bg-card border border-border rounded-xl shadow-xl py-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="absolute right-0 top-full mt-2 w-36 bg-card border border-border rounded-xl shadow-xl p-1.5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                 <button
                   type="button"
                   onClick={async () => {
@@ -311,7 +297,7 @@ export function Navbar({
                     resetAuth()
                     router.push('/login')
                   }}
-                  className="w-full text-left px-3 py-1.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                  className="w-full text-left px-3 py-1.5 rounded-lg text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
                   {t('logout')}
                 </button>
@@ -321,6 +307,8 @@ export function Navbar({
 
           {/* Mobile Controls */}
           <div className="flex items-center md:hidden gap-3">
+            <NotificationBell isHero={isHero} className="shrink-0" />
+
             <Button
               variant="ghost"
               size="icon"
@@ -358,18 +346,6 @@ export function Navbar({
           <div className="flex items-center space-x-1 lg:space-x-2 bg-surface/90 dark:bg-zinc-900/90 backdrop-blur-md border border-border/80 rounded-full py-2.5 px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
             {navLinks.map((link) => {
               const isActive = pathname === link.href
-              if (link.isMock) {
-                return (
-                  <span
-                    key={`float-${link.href}`}
-                    aria-disabled="true"
-                    className="px-4 py-2 rounded-full text-xs font-bold flex items-center gap-1.5 text-ink-subtle/50 cursor-not-allowed select-none"
-                  >
-                    {renderIcon(link.icon, 'w-4 h-4 text-ink-subtle/40')}
-                    <span>{link.label}</span>
-                  </span>
-                )
-              }
               return (
                 <Link
                   key={`float-${link.href}`}
@@ -407,18 +383,6 @@ export function Navbar({
             <div className="space-y-1 pt-2">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href
-                if (link.isMock) {
-                  return (
-                    <span
-                      key={link.href}
-                      aria-disabled="true"
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-base font-semibold text-muted-foreground/40 cursor-not-allowed select-none"
-                    >
-                      {renderIcon(link.icon, 'w-5 h-5')}
-                      <span>{link.label}</span>
-                    </span>
-                  )
-                }
                 return (
                   <Link
                     key={link.href}

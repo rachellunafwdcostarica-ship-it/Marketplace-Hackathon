@@ -19,10 +19,14 @@ import {
   PLAZO_MIN_DIAS,
   type LogisticsFormValues,
 } from '@/lib/projects/schemas'
+import { CountryRegionFields } from '@/components/features/geo/CountryRegionFields'
+import type { ComboboxOption } from '@/components/ui/combobox'
 
 interface LogisticsFormProps {
   disabled: boolean
   todayIso: string
+  countries: ComboboxOption[]
+  initialRegions: ComboboxOption[]
 }
 
 /** Opciones del plazo de recepción (RF-21): 5..15 días. */
@@ -72,18 +76,26 @@ function FieldError({ code }: { code?: string | undefined }) {
  * OPCIONAL. El fondo (descripción, área, categorías, tecnologías) NO va acá: lo
  * produce la IA y se revisa en la propuesta (Pantalla 2).
  */
-export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
+export function LogisticsForm({
+  disabled,
+  todayIso,
+  countries,
+  initialRegions,
+}: LogisticsFormProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
   const {
     register,
     control,
+    setValue,
     formState: { errors },
   } = useFormContext<LogisticsFormValues>()
 
   const locale = useLocale()
   const modalidad = useWatch({ control, name: 'modalidad' })
   const requiereUbicacion = modalidad !== '' && modalidad !== 'remoto'
+  const paisIso = useWatch({ control, name: 'paisIso' })
+  const region = useWatch({ control, name: 'region' })
 
   // Decimales por defecto (USD); en colones solo enteros (céntimos en desuso).
   // El `step` lo refleja en el input; la validación dura vive en el schema/backend.
@@ -153,34 +165,25 @@ export function LogisticsForm({ disabled, todayIso }: LogisticsFormProps) {
       </div>
 
       {requiereUbicacion && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="paisProyecto" className="text-sm font-bold">
-              {t('fieldCountry')}
-            </Label>
-            <Input
-              id="paisProyecto"
-              type="text"
-              disabled={disabled}
-              placeholder={t('fieldCountryPlaceholder')}
-              className="bg-card/50 border-border focus-visible:ring-primary"
-              {...register('paisProyecto')}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ciudadProyecto" className="text-sm font-bold">
-              {t('fieldCity')}
-            </Label>
-            <Input
-              id="ciudadProyecto"
-              type="text"
-              disabled={disabled}
-              placeholder={t('fieldCityPlaceholder')}
-              className="bg-card/50 border-border focus-visible:ring-primary"
-              {...register('ciudadProyecto')}
-            />
-            <FieldError code={errors.ciudadProyecto?.message} />
-          </div>
+        <div className="space-y-2">
+          <CountryRegionFields
+            countries={countries}
+            initialRegions={initialRegions}
+            countryValue={paisIso ?? ''}
+            regionValue={region ?? ''}
+            onCountryChange={(code) =>
+              setValue('paisIso', code, { shouldValidate: true })
+            }
+            onRegionChange={(code) =>
+              setValue('region', code, { shouldValidate: true })
+            }
+            countryLabel={t('fieldCountry')}
+            countryId="paisIso"
+            regionId="region"
+            disabled={disabled}
+            countryInvalid={Boolean(errors.paisIso)}
+          />
+          <FieldError code={errors.paisIso?.message} />
         </div>
       )}
 

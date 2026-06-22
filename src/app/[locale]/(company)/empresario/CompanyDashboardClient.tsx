@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { PageTitle } from '@/components/features/brand/PageTitle'
@@ -11,9 +12,24 @@ import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
 import { Briefcase, Users, Plus, UserCheck } from 'lucide-react'
 import type { PublishedProject } from '@/lib/projects/dashboard'
 
+// Charts solo en cliente: Recharts mide el contenedor con ResizeObserver, que en
+// SSR no tiene layout y emite "width(-1)/height(-1)". Con ssr:false no se renderiza
+// en el servidor; en el cliente el contenedor ya tiene alto fijo y dibuja sin avisos.
+const DashboardCharts = dynamic(
+  () =>
+    import('@/components/features/dashboard/DashboardCharts').then(
+      (mod) => mod.DashboardCharts,
+    ),
+  { ssr: false },
+)
+
 interface CompanyDashboardClientProps {
   initialProjects: PublishedProject[]
-  participationStats: { total: number; hired: number }
+  participationStats: {
+    total: number
+    hired: number
+    countsByProject: Record<string, number>
+  }
 }
 
 /**
@@ -97,6 +113,11 @@ export function CompanyDashboardClient({
               {tEmpresa('myPublishedProjects')}
               <span className="text-secondary">.</span>
             </h2>
+
+            <DashboardCharts
+              projects={initialProjects}
+              countsByProject={participationStats.countsByProject}
+            />
 
             <PublishedProjectsBoard projects={initialProjects} />
           </div>

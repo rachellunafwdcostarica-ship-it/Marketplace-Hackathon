@@ -8,6 +8,8 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
 import { getCurrentUser } from '@/lib/auth/dal'
 import { createAdminNotification } from '@/lib/admin/notification-actions'
+import { crearNotificacion } from '@/lib/notifications/create'
+import { buildStrikeNotificacion } from '@/lib/admin/strike-notificacion-logic'
 import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
 import {
   strikeAppliedHtml,
@@ -174,6 +176,23 @@ export async function addStrike(
     }
   }
 
+  // ── Notificación in-app para el usuario sancionado (RF-47) ─────────────────
+  // Best-effort: el núcleo nunca lanza; si falla, se loguea sin abortar el strike.
+  const strikeNotif = buildStrikeNotificacion(nuevaCantidad, maxStrikesLimit)
+  const notifResult = await crearNotificacion({
+    idUsuario: parsedId.data,
+    tipoEvento: strikeNotif.tipoEvento,
+    mensaje: strikeNotif.mensaje,
+    params: strikeNotif.params,
+    urlDestino: null,
+  })
+  if (!notifResult.ok) {
+    logger.error('addStrike: fallo al notificar al usuario sancionado', {
+      userId,
+      error: notifResult.error,
+    })
+  }
+
   // ── Crear notificación en el panel de admin ────────────────────────────────
   const nombreCompleto = usuarioCompleto
     ? `${usuarioCompleto.nombre} ${usuarioCompleto.apellido_1}`
@@ -181,8 +200,8 @@ export async function addStrike(
   await createAdminNotification({
     mensaje:
       nuevaCantidad >= maxStrikesLimit
-        ? `⚠️ ${nombreCompleto} fue suspendido automáticamente tras ${nuevaCantidad} strikes. Motivo: ${parsedMotivo.data}.`
-        : `🔴 Strike aplicado a ${nombreCompleto} (${nuevaCantidad}/${maxStrikesLimit}). Motivo: ${parsedMotivo.data}.`,
+        ? `${nombreCompleto} fue suspendido automáticamente tras ${nuevaCantidad} strikes. Motivo: ${parsedMotivo.data}.`
+        : `Strike aplicado a ${nombreCompleto} (${nuevaCantidad}/${maxStrikesLimit}). Motivo: ${parsedMotivo.data}.`,
     tipo_evento: 'strike_recibido',
     url_destino: '/admin/moderation',
   })

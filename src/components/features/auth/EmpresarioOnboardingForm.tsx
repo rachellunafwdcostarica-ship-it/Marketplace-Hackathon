@@ -15,13 +15,17 @@ import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { saveEmpresarioProfile } from '@/lib/auth/actions'
+import { CountryRegionFields } from '@/components/features/geo/CountryRegionFields'
+import type { ComboboxOption } from '@/components/ui/combobox'
 
 interface EmpresarioOnboardingFormProps {
   userId: string
+  countries: ComboboxOption[]
 }
 
 export function EmpresarioOnboardingForm({
   userId,
+  countries,
 }: EmpresarioOnboardingFormProps) {
   const tO = useTranslations('Onboarding')
   const router = useRouter()
@@ -75,11 +79,8 @@ export function EmpresarioOnboardingForm({
         tipo_empresario: z.enum(['empresa_formal', 'emprendedor'], {
           message: tO('errorTipoEmpresario'),
         }),
-        pais: z.string().min(2, tO('errorPais')).max(80, tO('errorPaisMax')),
-        ciudad: z
-          .string()
-          .min(2, tO('errorCiudad'))
-          .max(80, tO('errorCiudadMax')),
+        pais: z.string().min(2, tO('errorPais')),
+        ciudad: z.string(),
         alcance_operativo: z.enum(['nacional', 'internacional', 'ambos'], {
           message: tO('errorAlcance'),
         }),
@@ -95,10 +96,12 @@ export function EmpresarioOnboardingForm({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { acepta_terminos: false },
+    defaultValues: { acepta_terminos: false, pais: '', ciudad: '' },
   })
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -379,35 +382,23 @@ export function EmpresarioOnboardingForm({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className={labelClass}>{tO('labelPais')}</Label>
-                <Input
-                  {...register('pais')}
-                  type="text"
-                  autoComplete="country-name"
-                  placeholder={tO('labelPais')}
-                  className={errors.pais ? inputErrorClass : inputClass}
-                />
-                {errors.pais && (
-                  <p className={errorClass}>{errors.pais.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className={labelClass}>{tO('labelCiudad')}</Label>
-                <Input
-                  {...register('ciudad')}
-                  type="text"
-                  autoComplete="address-level2"
-                  placeholder={tO('labelCiudad')}
-                  className={errors.ciudad ? inputErrorClass : inputClass}
-                />
-                {errors.ciudad && (
-                  <p className={errorClass}>{errors.ciudad.message}</p>
-                )}
-              </div>
-            </div>
+            <CountryRegionFields
+              countries={countries}
+              initialRegions={[]}
+              countryValue={watch('pais') ?? ''}
+              regionValue={watch('ciudad') ?? ''}
+              onCountryChange={(code) =>
+                setValue('pais', code, { shouldValidate: true })
+              }
+              onRegionChange={(code) =>
+                setValue('ciudad', code, { shouldValidate: true })
+              }
+              countryLabel={tO('labelPais')}
+              countryId="pais"
+              regionId="ciudad"
+              countryInvalid={Boolean(errors.pais)}
+            />
+            {errors.pais && <p className={errorClass}>{errors.pais.message}</p>}
 
             <div className="space-y-1.5">
               <Label className={labelClass}>{tO('labelAlcance')}</Label>

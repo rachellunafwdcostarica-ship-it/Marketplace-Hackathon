@@ -28,7 +28,9 @@ export default async function CompanyDashboardPage() {
     <CompanyDashboardClient
       initialProjects={projectsResult.ok ? projectsResult.data : []}
       participationStats={
-        statsResult.ok ? statsResult.data : { total: 0, hired: 0 }
+        statsResult.ok
+          ? statsResult.data
+          : { total: 0, hired: 0, countsByProject: {} }
       }
     />
   )

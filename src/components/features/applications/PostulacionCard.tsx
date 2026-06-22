@@ -1,10 +1,9 @@
 'use client'
 
-import { Calendar, X, FolderOpen } from 'lucide-react'
+import { Calendar, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Link } from '@/i18n/routing'
 import { cn } from '@/lib/utils/cn'
 import type { EstadoParticipacion } from '@/lib/projects/project-detail-logic'
 
@@ -89,34 +88,17 @@ export function PostulacionCard({
         </CardContent>
       )}
 
-      {(canWithdraw || postulacion.estadoEfectivo === 'contratada') && (
+      {canWithdraw && onWithdraw && (
         <CardFooter className="p-6 pt-4 border-t border-border/40 bg-muted/10 flex flex-wrap gap-2">
-          {postulacion.estadoEfectivo === 'contratada' && (
-            <Button
-              size="sm"
-              variant="default"
-              asChild
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold flex items-center gap-1.5 px-4"
-            >
-              <Link
-                href={`/junior/projects/${postulacion.id_proyecto}/entregables`}
-              >
-                <FolderOpen className="w-4 h-4" />
-                {tEgresado('viewDeliverables')}
-              </Link>
-            </Button>
-          )}
-          {canWithdraw && onWithdraw && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onWithdraw}
-              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5 px-4"
-            >
-              <X className="w-4 h-4" />
-              {tEgresado('withdrawOffer')}
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onWithdraw}
+            className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center justify-center gap-1.5 px-4"
+          >
+            <X className="w-4 h-4" />
+            {tEgresado('withdrawOffer')}
+          </Button>
         </CardFooter>
       )}
     </Card>

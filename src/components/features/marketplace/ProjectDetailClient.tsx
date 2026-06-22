@@ -70,7 +70,7 @@ export function ProjectDetailClient({
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
-            href="/junior/projects"
+            href="/egresado/projects"
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -337,7 +337,7 @@ export function ProjectDetailClient({
                     </Button>
                   ) : (
                     <Link
-                      href={`/junior/projects/${project.id}/apply`}
+                      href={`/egresado/projects/${project.id}/apply`}
                       className="w-full bg-primary hover:bg-primary/95 text-primary-foreground font-semibold h-11 shadow-md hover:scale-[1.02] transition-transform inline-flex items-center justify-center rounded-lg text-sm cursor-pointer"
                     >
                       <FileText className="w-4 h-4 mr-2" />

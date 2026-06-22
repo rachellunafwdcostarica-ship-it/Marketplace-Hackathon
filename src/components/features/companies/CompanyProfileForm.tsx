@@ -38,10 +38,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils/cn'
+import { CountryRegionFields } from '@/components/features/geo/CountryRegionFields'
+import type { ComboboxOption } from '@/components/ui/combobox'
 
 interface CompanyProfileFormProps {
   initialProfile: CompanyProfileView
   userId: string
+  countries: ComboboxOption[]
+  initialRegions: ComboboxOption[]
 }
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
@@ -61,6 +65,8 @@ const VERIF_STYLE: Record<VerificationStatus, string> = {
 export function CompanyProfileForm({
   initialProfile,
   userId,
+  countries,
+  initialRegions,
 }: CompanyProfileFormProps) {
   const tEmpresa = useTranslations('Empresa')
   const tCommon = useTranslations('Common')
@@ -95,6 +101,7 @@ export function CompanyProfileForm({
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CompanyProfileInput>({
     resolver: zodResolver(profileSchema),
@@ -418,34 +425,24 @@ export function CompanyProfileForm({
               />
             </Field>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Field
-                id="country"
-                label={tEmpresa('fieldCountry')}
-                error={errors.country?.message}
-              >
-                <Input
-                  id="country"
-                  type="text"
-                  placeholder={tEmpresa('fieldCountryPlaceholder')}
-                  className="bg-card/50 border-border focus-visible:ring-primary"
-                  {...register('country')}
-                />
-              </Field>
-              <Field
-                id="city"
-                label={tEmpresa('fieldCity')}
-                optional={tEmpresa('optionalTag')}
-                error={errors.city?.message}
-              >
-                <Input
-                  id="city"
-                  type="text"
-                  placeholder={tEmpresa('fieldCityPlaceholder')}
-                  className="bg-card/50 border-border focus-visible:ring-primary"
-                  {...register('city')}
-                />
-              </Field>
+            <CountryRegionFields
+              countries={countries}
+              initialRegions={initialRegions}
+              countryValue={watch('country') ?? ''}
+              regionValue={watch('city') ?? ''}
+              onCountryChange={(code) =>
+                setValue('country', code, { shouldValidate: true })
+              }
+              onRegionChange={(code) =>
+                setValue('city', code, { shouldValidate: true })
+              }
+              countryLabel={tEmpresa('fieldCountry')}
+              countryId="country"
+              regionId="city"
+              countryInvalid={Boolean(errors.country)}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Field
                 id="operatingScope"
                 label={tEmpresa('fieldScope')}

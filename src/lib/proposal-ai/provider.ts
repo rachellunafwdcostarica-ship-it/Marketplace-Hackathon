@@ -13,6 +13,8 @@ import {
 } from './schemas'
 import type { LogisticaDraft } from '@/lib/projects/schemas'
 import { logger } from '@/lib/logger'
+import { getCountryName, getSubdivisionName } from '@/lib/geo/catalog'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 
 /**
  * Proveedor de IA intercambiable (errolpendiente §5.1): un solo modelo y una
@@ -201,10 +203,13 @@ function resumenLogistica(logistica: LogisticaDraft | null): string {
     )
   }
   partes.push(`plazo de recepción ${logistica.plazoDias} días`)
-  if (logistica.paisProyecto) {
-    partes.push(
-      `ubicación ${[logistica.ciudadProyecto, logistica.paisProyecto].filter(Boolean).join(', ')}`,
-    )
+  if (logistica.paisIso) {
+    const pais =
+      getCountryName(logistica.paisIso, DEFAULT_LOCALE) ?? logistica.paisIso
+    const region = logistica.region
+      ? getSubdivisionName(logistica.region)
+      : null
+    partes.push(`ubicación ${[region, pais].filter(Boolean).join(', ')}`)
   }
   return `Logística ya elegida por el empresario: ${partes.join('; ')}.`
 }

@@ -4,8 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { Project } from '@/types'
 import { matchesDurationBucket } from '@/lib/projects/duration'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
+import { EgresadoShell } from '@/components/layout/EgresadoShell'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { SearchBar } from '@/components/features/SearchBar'
 import { ProjectFilters } from '@/components/features/marketplace/ProjectFilters'
@@ -91,59 +90,57 @@ export function MarketplaceClient({ initialProjects }: MarketplaceClientProps) {
   ])
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <PageTitle
-          title={tEgresado('marketplace')}
-          description={tEgresado('marketplaceDesc')}
-          dotColor="text-accent"
-        />
-
-        <div className="space-y-6">
-          <SearchBar
-            value={search}
-            onChange={setSearch}
-            placeholder={tEgresado('searchPlaceholder')}
+    <EgresadoShell>
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 min-w-0">
+          <PageTitle
+            title={tEgresado('marketplace')}
+            description={tEgresado('marketplaceDesc')}
+            dotColor="text-accent"
           />
 
-          <ProjectFilters
-            selectedStack={selectedStack}
-            setSelectedStack={setSelectedStack}
-            selectedMode={selectedMode}
-            setSelectedMode={setSelectedMode}
-            selectedDuration={selectedDuration}
-            setSelectedDuration={setSelectedDuration}
-            selectedBudget={selectedBudget}
-            setSelectedBudget={setSelectedBudget}
-            availableStacks={availableStacks}
-            onClear={handleClearFilters}
-          />
+          <div className="space-y-6 mt-6">
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder={tEgresado('searchPlaceholder')}
+            />
 
-          <div className="pt-4">
-            {loading ? (
-              <LoadingSkeleton type="card" count={4} />
-            ) : filteredProjects.length === 0 ? (
-              <EmptyState
-                title={tEgresado('emptyState')}
-                description={tEgresado('emptyStateDesc')}
-                icon={Briefcase}
-                actionText={tCommon('clearFilters')}
-                onAction={handleClearFilters}
-              />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-            )}
+            <ProjectFilters
+              selectedStack={selectedStack}
+              setSelectedStack={setSelectedStack}
+              selectedMode={selectedMode}
+              setSelectedMode={setSelectedMode}
+              selectedDuration={selectedDuration}
+              setSelectedDuration={setSelectedDuration}
+              selectedBudget={selectedBudget}
+              setSelectedBudget={setSelectedBudget}
+              availableStacks={availableStacks}
+              onClear={handleClearFilters}
+            />
+
+            <div className="pt-4">
+              {loading ? (
+                <LoadingSkeleton type="card" count={4} />
+              ) : filteredProjects.length === 0 ? (
+                <EmptyState
+                  title={tEgresado('emptyState')}
+                  description={tEgresado('emptyStateDesc')}
+                  icon={Briefcase}
+                  actionText={tCommon('clearFilters')}
+                  onAction={handleClearFilters}
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {filteredProjects.map((project) => (
+                    <ProjectCard key={project.id} project={project} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+        </main>
+      </div>
+    </EgresadoShell>
   )
 }

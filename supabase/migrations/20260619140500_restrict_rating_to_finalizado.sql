@@ -1,10 +1,11 @@
 -- ============================================================
--- MIGRACIÓN 20260619140500 — Restringir Calificaciones a Periodo Finalizado
+-- MIGRACIÓN 20260619140500 — Restringir calificación a estado finalizado
 -- Fecha: 2026-06-19
--- Autor: Antigravity
---
--- Restringe la política RLS de evaluaciones_empresarios para permitir calificar
--- únicamente cuando el estado del periodo de contratación es 'finalizado' (RF-49).
+-- ============================================================
+-- Revierte la apertura de 20260617120000 (vigente + finalizado) y deja la
+-- política de INSERT en evaluaciones_empresarios restringida a 'finalizado'
+-- únicamente, alineada con RF-49 del SRS.
+-- Idempotente: DROP POLICY IF EXISTS + CREATE POLICY.
 -- ============================================================
 
 DROP POLICY IF EXISTS "evaluaciones_empresarios_insert_estudiante" ON public.evaluaciones_empresarios;
@@ -13,7 +14,7 @@ CREATE POLICY "evaluaciones_empresarios_insert_estudiante"
   TO authenticated
   WITH CHECK (
     id_estudiante IN (
-      SELECT id_estudiante FROM public.estudiantes WHERE id_usuario = auth.uid()
+      SELECT id_estudiante FROM public.estudiantes WHERE id_usuario = (SELECT auth.uid())
     )
     AND EXISTS (
       SELECT 1

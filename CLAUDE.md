@@ -76,5 +76,14 @@ Agent: He terminado de revisar los cambios y he realizado el commit.
 ## migraciones supabase
 A la hora de realizar migracioes, no se enviaran directamente. Tendrás que comunicarte con el dueño de la base de datos [Samir] y pedirle que te de permiso para enviar las migraciones y hacer pruebas locales. una vez que te de permiso, puedes hacer las migraciones y pruebas locales. luego tendras que comunicarte de nuevo con [Samir] y pedirle que te de permiso para enviar las migraciones a la base de datos remota. no hagas push directo al dev. Solo después de que Samir apruebe, haras el push al dev. Asimismo, no haras migraciones a la base de datos local sin antes haber hecho las pruebas locales y recibido la aprobacion de Samir. 
 
+## tipos generados (src/types/database.ts)
+`database.ts` se regenera con `npx supabase gen types typescript --linked` (no con `--local`: este proyecto no tiene `config.toml` ni entorno local en Docker; la BD es remota). PERO ese CLI tipa los parámetros de las funciones RPC como REQUERIDOS (`string`), aunque el parámetro acepte `null`. Eso rompe el build: por ejemplo `publish.ts` pasa `null` a `p_id_area`, `p_pais_iso` y `p_region` de la RPC `publicar_proyecto`, y el typecheck falla con `Type 'string | null' is not assignable to type 'string'`.
+
+Cómo resolverlo cuando pase:
+- Restaurá `| null` a mano en esos parámetros dentro de `database.ts` (ej. `p_id_area: string | null`). NO castees ni fuerces el valor en el código (nada de `?? ''`): eso esconde que el campo puede ser null.
+- Para cambios acotados de esquema, preferí editar `database.ts` a mano en vez de regenerarlo, así no se reintroduce este desajuste.
+
+El mismo aviso vive junto a la llamada RPC en `src/lib/projects/publish.ts`.
+
 ## importante
 Todo esto tiene que estar ligado al archivo @reglas.md y lo mas importante es que respetes las reglas de CLAUDE, estas son la prioridad ante cualquier otra instrucción, asi mismo como con las de [reglas.md], ya que son las que definen el comportamiento que debes seguir. si no estas seguro de algo, pregunta. Si algo puede cambiar en el futuro, implementa de manera modular. no implementes código que sea difícil de cambiar o modificar, piensa en el futuro. 

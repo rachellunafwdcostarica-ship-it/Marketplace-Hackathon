@@ -25,8 +25,11 @@ import {
 } from './schemas'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
-import { normalizeRole } from './roles'
+import { getCurrentUser } from './dal'
+import { normalizeRole, ROLE_HOME } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
+import { evaluateAdminManagement } from '@/lib/admin/admin-management'
+import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
   return getUserRole()
@@ -197,6 +200,11 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     return authResult
   }
 
+  const actor = await getCurrentUser()
+  if (!actor) {
+    return err('unauthenticated')
+  }
+
   // Usar service_role para bypassear RLS (admin no pasa por políticas)
   const adminClient = createSupabaseAdminClient()
 
@@ -217,6 +225,28 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   const rolRaw = Array.isArray(usuario?.roles)
     ? usuario?.roles[0]?.nombre_rol
     : (usuario?.roles as { nombre_rol?: string } | null)?.nombre_rol
+
+  // Reactivar/aprobar a un administrador es acción de superadmin: mismas reglas
+  // que la baja (gate de superadmin + antigüedad), para que el control de
+  // desactivación no se evada reactivando desde aquí.
+  if (rolRaw === 'administrador') {
+    const ctx = await resolveAdminTargetContext(
+      adminClient,
+      actor.id,
+      parsed.data,
+    )
+    const verdict = evaluateAdminManagement({
+      action: 'reactivate',
+      actorNivel: ctx.actorNivel,
+      actorFechaRegistro: ctx.actorFechaRegistro ?? '',
+      targetNivel: ctx.targetNivel,
+      targetFechaRegistro: ctx.targetFechaRegistro ?? '',
+      activeSuperadminCount: ctx.activeSuperadminCount,
+    })
+    if (!verdict.allowed) {
+      return err(verdict.reason)
+    }
+  }
 
   // Bloquear aprobación si el usuario no fue verificado primero
   if (rolRaw === 'egresado') {
@@ -249,8 +279,9 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     return err(error.message)
   }
 
-  // Enviar correo de aprobación. Si falla, no se revierte la aprobación.
-  if (usuario?.correo) {
+  // Enviar correo de aprobación (solo egresado/empresario: la plantilla es
+  // específica de esos roles). Los admins se activan con su flujo de invitación.
+  if (usuario?.correo && rolRaw !== 'administrador') {
     const reqHeaders = await headers()
     const host =
       reqHeaders.get('x-forwarded-host') ??
@@ -262,14 +293,14 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     const rol: 'egresado' | 'empresario' =
       rolRaw === 'empresario' ? 'empresario' : 'egresado'
 
-    // Generar magic link para acceso directo con un click.
-    // Si falla, se usa el link de login estático como fallback.
+    // Generar magic link de acceso directo hacia /auth/confirm (verifyOtp con
+    // token_hash). Si falla, se usa el login estático como fallback.
     let accessUrl = `${baseUrl}/login`
+    let isMagicLink = false
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: 'magiclink',
         email: usuario.correo,
-        options: { redirectTo: `${baseUrl}/auth/callback` },
       })
 
     if (linkError) {
@@ -277,8 +308,22 @@ export async function approveUser(userId: string): Promise<Result<void>> {
         error: linkError.message,
         userId,
       })
-    } else if (linkData.properties?.action_link) {
-      accessUrl = linkData.properties.action_link
+    } else {
+      const tokenHash = linkData.properties?.hashed_token
+      const otpType = linkData.properties?.verification_type
+      if (tokenHash && otpType) {
+        const params = new URLSearchParams({
+          token_hash: tokenHash,
+          type: otpType,
+          next: ROLE_HOME[rol],
+        })
+        accessUrl = `${baseUrl}/auth/confirm?${params.toString()}`
+        isMagicLink = true
+      } else {
+        logger.error('approveUser: el magic link no incluye token_hash', {
+          userId,
+        })
+      }
     }
 
     let emailError: Error | null = null
@@ -292,7 +337,7 @@ export async function approveUser(userId: string): Promise<Result<void>> {
           nombre: usuario.nombre ?? 'Usuario',
           rol,
           accessUrl,
-          isMagicLink: !linkError && !!linkData?.properties?.action_link,
+          isMagicLink,
         }),
       })
     } catch (e) {
@@ -302,6 +347,22 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     if (emailError) {
       logger.error('approveUser: fallo al enviar correo de aprobación', {
         error: emailError.message,
+        userId,
+      })
+    }
+  }
+
+  if (rolRaw === 'administrador') {
+    const { error: auditError } = await adminClient.from('auditoria').insert({
+      id_actor: actor.id,
+      accion: 'reactivar_admin',
+      entidad: 'usuarios',
+      id_entidad: parsed.data,
+      valores_despues: { estado_cuenta: 'activa', is_active: true },
+    })
+    if (auditError) {
+      logger.error('approveUser: fallo al registrar en auditoria', {
+        error: auditError.message,
         userId,
       })
     }
@@ -503,8 +564,8 @@ export async function saveEmpresarioProfile(
       id_usuario: user.id,
       tipo_empresario: parsed.data.tipo_empresario,
       nombre_empresa: parsed.data.nombre_empresa,
-      pais_sede: parsed.data.pais,
-      ciudad_sede: parsed.data.ciudad,
+      pais_iso_sede: parsed.data.pais,
+      region_sede: parsed.data.ciudad,
       alcance_operativo: parsed.data.alcance_operativo,
     },
     { onConflict: 'id_usuario' },
@@ -560,8 +621,71 @@ export async function updatePassword(password: string): Promise<Result<void>> {
   const { error } = await supabase.auth.updateUser({ password: parsed.data })
 
   if (error) {
-    logger.error('updatePassword failed', { error: error.message })
-    return err(error.message)
+    const code = (error as { code?: string }).code ?? ''
+    const detail = error.message?.toLowerCase() ?? ''
+    logger.error('updatePassword failed', { error: error.message, code })
+    if (code === 'same_password' || detail.includes('different from the old')) {
+      return err('password_same_as_old')
+    }
+    if (
+      code === 'weak_password' ||
+      detail.includes('password should be') ||
+      detail.includes('weak')
+    ) {
+      return err('password_weak')
+    }
+    if (
+      code === 'session_not_found' ||
+      detail.includes('session') ||
+      detail.includes('jwt') ||
+      detail.includes('not authenticated')
+    ) {
+      return err('session_expired')
+    }
+    return err('update_failed')
+  }
+
+  // Activación del admin invitado (Opción 1): un administrador nace 'pendiente'
+  // y se activa SOLO al fijar su contraseña por primera vez. La condición es
+  // estrecha (rol administrador + estado pendiente), así que es no-op para un
+  // reset normal (cuentas ya activas) y para un admin desactivado (sigue
+  // 'activa' con is_active = false; su reactivación pasa por approveUser).
+  const {
+    data: { user: invitedUser },
+  } = await supabase.auth.getUser()
+  if (invitedUser) {
+    const adminClient = createSupabaseAdminClient()
+    const { data: row } = await adminClient
+      .from('usuarios')
+      .select('estado_cuenta, roles(nombre_rol)')
+      .eq('id_usuario', invitedUser.id)
+      .maybeSingle()
+    const rolNombre = Array.isArray(row?.roles)
+      ? row?.roles[0]?.nombre_rol
+      : (row?.roles as { nombre_rol?: string } | null)?.nombre_rol
+    if (rolNombre === 'administrador' && row?.estado_cuenta === 'pendiente') {
+      const { error: activateError } = await adminClient
+        .from('usuarios')
+        .update({ estado_cuenta: 'activa', is_active: true })
+        .eq('id_usuario', invitedUser.id)
+      if (activateError) {
+        logger.error('updatePassword: fallo al activar admin invitado', {
+          error: activateError.message,
+        })
+      }
+    }
+  }
+
+  // Endurecimiento: el enlace de recuperación/invitación crea una sesión
+  // completa, no solo "permiso para cambiar la clave". Dejarla viva equivale a
+  // un login persistente obtenido sin conocer la contraseña. Cerramos la sesión
+  // (scope global: revoca también otras sesiones del usuario tras el cambio) y
+  // así forzamos un login fresco con la contraseña nueva.
+  const { error: signOutError } = await supabase.auth.signOut()
+  if (signOutError) {
+    logger.error('updatePassword: fallo al cerrar la sesión de recuperación', {
+      error: signOutError.message,
+    })
   }
 
   return ok(undefined)

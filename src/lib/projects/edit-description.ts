@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
+import { crearNotificaciones } from '@/lib/notifications/create'
 import { toJsonb } from '@/lib/supabase/json'
 import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
 import {
@@ -14,7 +15,7 @@ import {
   proyectoModificadoSubject,
 } from '@/lib/email/templates/proyecto-modificado'
 import { getAiProvider } from '@/lib/proposal-ai/provider'
-import { routing } from '@/i18n/routing'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 import {
   computeEstadoEfectivoProyecto,
   type EstadoParticipacion,
@@ -291,20 +292,21 @@ async function registrarEdicionYNotificar(params: {
   const oferentes = [...porUsuario.values()]
   if (oferentes.length === 0) return 0
 
-  const path = `/${routing.defaultLocale}/junior/projects/${idProyecto}`
+  const path = `/${DEFAULT_LOCALE}/egresado/projects/${idProyecto}`
   const mensaje = buildNotificacionMensaje(tituloProyecto)
 
-  const { error: notifError } = await admin.from('notificaciones').insert(
+  const notifResult = await crearNotificaciones(
     oferentes.map((o) => ({
-      id_usuario: o.idUsuario,
-      tipo_evento: 'proyecto_modificado' as const,
+      idUsuario: o.idUsuario,
+      tipoEvento: 'proyecto_modificado' as const,
       mensaje,
-      url_destino: path,
+      urlDestino: path,
+      params: { titulo: tituloProyecto },
     })),
   )
-  if (notifError) {
+  if (!notifResult.ok) {
     logger.error('editProjectDescription: fallo al insertar notificaciones', {
-      error: notifError.message,
+      error: notifResult.error,
       idProyecto,
     })
   }
