@@ -15,6 +15,14 @@ import {
   strikeAppliedHtml,
   strikeAppliedSubject,
 } from '@/lib/email/templates/strike-applied'
+import {
+  accountExpelledHtml,
+  accountExpelledSubject,
+} from '@/lib/email/templates/account-expelled'
+import {
+  accountRestoredHtml,
+  accountRestoredSubject,
+} from '@/lib/email/templates/account-restored'
 import type { Database } from '@/types/database'
 
 type MotivoStrikeEnum = Database['public']['Enums']['motivo_strike_enum']
@@ -85,12 +93,20 @@ export async function addStrike(
 
   const updateFields: {
     cantidad_strikes: number
-    estado_cuenta?: 'suspendida'
+    estado_cuenta?: 'suspendida' | 'suspendida_severa'
+    is_active?: boolean
   } = {
     cantidad_strikes: nuevaCantidad,
   }
 
-  if (nuevaCantidad >= maxStrikesLimit) {
+  if (nuevaCantidad >= 5) {
+    updateFields.estado_cuenta = 'suspendida_severa'
+    updateFields.is_active = false
+    logger.warn('addStrike: usuario expulsado automáticamente', {
+      userId,
+      nuevaCantidad,
+    })
+  } else if (nuevaCantidad >= maxStrikesLimit) {
     updateFields.estado_cuenta = 'suspendida'
     logger.warn('addStrike: usuario suspendido automáticamente', {
       userId,
@@ -149,24 +165,50 @@ export async function addStrike(
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fwdtalent.com'
     try {
       const transporter = createGmailTransport()
-      await transporter.sendMail({
-        from: getGmailFrom(),
-        to: usuarioCompleto.correo,
-        subject: strikeAppliedSubject(nuevaCantidad, maxStrikesLimit),
-        html: strikeAppliedHtml({
-          nombre: usuarioCompleto.nombre,
+
+      if (nuevaCantidad >= 5) {
+        // Enviar correo de Expulsión
+        const { data: strikesAnteriores } = await adminClient
+          .from('strikes')
+          .select('motivo')
+          .eq('id_usuario', parsedId.data)
+          .order('aplicado_at', { ascending: true })
+
+        const motivosHistorial = (strikesAnteriores ?? []).map((s) => s.motivo)
+
+        await transporter.sendMail({
+          from: getGmailFrom(),
+          to: usuarioCompleto.correo,
+          subject: accountExpelledSubject(),
+          html: accountExpelledHtml({
+            nombre: usuarioCompleto.nombre,
+            correo: usuarioCompleto.correo,
+            cantidadStrikes: nuevaCantidad,
+            motivosHistorial,
+          }),
+        })
+        logger.info('addStrike: correo de expulsión enviado', { userId })
+      } else {
+        // Enviar correo normal de Strike o Suspensión temporal
+        await transporter.sendMail({
+          from: getGmailFrom(),
+          to: usuarioCompleto.correo,
+          subject: strikeAppliedSubject(nuevaCantidad, maxStrikesLimit),
+          html: strikeAppliedHtml({
+            nombre: usuarioCompleto.nombre,
+            correo: usuarioCompleto.correo,
+            motivo: parsedMotivo.data,
+            descripcion: parsedDesc.data ?? undefined,
+            cantidadStrikes: nuevaCantidad,
+            maxStrikes: maxStrikesLimit,
+            dashboardUrl: `${baseUrl}/dashboard`,
+          }),
+        })
+        logger.info('addStrike: correo enviado al usuario', {
+          userId,
           correo: usuarioCompleto.correo,
-          motivo: parsedMotivo.data,
-          descripcion: parsedDesc.data ?? undefined,
-          cantidadStrikes: nuevaCantidad,
-          maxStrikes: maxStrikesLimit,
-          dashboardUrl: `${baseUrl}/dashboard`,
-        }),
-      })
-      logger.info('addStrike: correo enviado al usuario', {
-        userId,
-        correo: usuarioCompleto.correo,
-      })
+        })
+      }
     } catch (emailErr) {
       logger.error('addStrike: fallo al enviar correo', {
         userId,
@@ -197,9 +239,11 @@ export async function addStrike(
   const nombreCompleto = usuarioCompleto
     ? `${usuarioCompleto.nombre} ${usuarioCompleto.apellido_1}`
     : `usuario ${parsedId.data.slice(0, 8)}`
+  const isExpelled = nuevaCantidad >= 5
   await createAdminNotification({
-    mensaje:
-      nuevaCantidad >= maxStrikesLimit
+    mensaje: isExpelled
+      ? `${nombreCompleto} fue expulsado permanentemente tras ${nuevaCantidad} strikes. Motivo: ${parsedMotivo.data}.`
+      : nuevaCantidad >= maxStrikesLimit
         ? `${nombreCompleto} fue suspendido automáticamente tras ${nuevaCantidad} strikes. Motivo: ${parsedMotivo.data}.`
         : `Strike aplicado a ${nombreCompleto} (${nuevaCantidad}/${maxStrikesLimit}). Motivo: ${parsedMotivo.data}.`,
     tipo_evento: 'strike_recibido',
@@ -344,3 +388,90 @@ export async function resetStrikes(
   revalidatePath('/admin/users', 'page')
   return ok(undefined)
 }
+
+/**
+ * Restaura el acceso a un usuario expulsado (suspendida_severa).
+ * Lo devuelve a estado activa y resetea sus strikes a 0.
+ */
+export async function restoreAccess(userId: string): Promise<Result<void>> {
+  const parsedId = UserIdSchema.safeParse(userId)
+  if (!parsedId.success) return err('invalid_user_id')
+
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) return authResult
+
+  const me = await getCurrentUser()
+  if (!me) return err('unauthenticated')
+
+  const adminClient = createSupabaseAdminClient()
+
+  // Verificar que el usuario está expulsado
+  const { data: usuario, error: readError } = await adminClient
+    .from('usuarios')
+    .select('estado_cuenta, nombre, correo')
+    .eq('id_usuario', parsedId.data)
+    .single()
+
+  if (readError || !usuario) return err('user_not_found')
+  if (usuario.estado_cuenta !== 'suspendida_severa') {
+    return err('user_not_expelled')
+  }
+
+  // Restaurar la cuenta a activa y 0 strikes
+  const { error: updateError } = await adminClient
+    .from('usuarios')
+    .update({
+      estado_cuenta: 'activa',
+      is_active: true,
+      cantidad_strikes: 0,
+    })
+    .eq('id_usuario', parsedId.data)
+
+  if (updateError) {
+    logger.error('restoreAccess: fallo al actualizar', {
+      userId,
+      error: updateError.message,
+    })
+    return err(updateError.message)
+  }
+
+  // Revocar todos los strikes
+  await adminClient
+    .from('strikes')
+    .update({
+      revocado: true,
+      revocado_at: new Date().toISOString(),
+      revocado_por: me.id,
+      motivo_revocacion: 'Restauración de cuenta por administrador',
+    })
+    .eq('id_usuario', parsedId.data)
+    .eq('revocado', false)
+
+  logger.info('restoreAccess: acceso restaurado', { userId })
+
+  // Enviar correo de restauración
+  if (usuario.correo) {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fwdtalent.com'
+    try {
+      const transporter = createGmailTransport()
+      await transporter.sendMail({
+        from: getGmailFrom(),
+        to: usuario.correo,
+        subject: accountRestoredSubject(),
+        html: accountRestoredHtml({
+          nombre: usuario.nombre,
+          dashboardUrl: `${baseUrl}/login`,
+        }),
+      })
+    } catch (e) {
+      logger.error('restoreAccess: error al enviar correo de restauración', {
+        error: String(e),
+      })
+    }
+  }
+
+  revalidatePath('/admin/moderation', 'page')
+  revalidatePath('/admin/users', 'page')
+  return ok(undefined)
+}
+
