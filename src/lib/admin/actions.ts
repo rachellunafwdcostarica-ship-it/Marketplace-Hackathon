@@ -140,7 +140,57 @@ async function setGraduateVerification(
 
 /** Verifica a un egresado (estado_verificacion → 'verificado'). Solo admin. */
 export async function verificarEgresado(userId: string): Promise<Result<void>> {
-  return setGraduateVerification(userId, 'verificado')
+  const parsed = z.string().uuid().safeParse(userId)
+  if (!parsed.success) {
+    return err('invalid_user_id')
+  }
+
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: usuario, error: fetchError } = await adminClient
+    .from('usuarios')
+    .select('correo')
+    .eq('id_usuario', parsed.data)
+    .single()
+
+  if (fetchError || !usuario?.correo) {
+    logger.error('verificarEgresado: fallo al obtener correo del usuario', {
+      error: fetchError?.message,
+      userId,
+    })
+    return err('user_not_found')
+  }
+
+  // Casting a 'any' temporalmente porque egresados_fwd_oficial
+  // no está en los tipos autogenerados.
+  const { data: fwdRecord, error: fwdError } = await adminClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from('egresados_fwd_oficial' as any)
+    .select('correo')
+    .eq('correo', usuario.correo)
+    .maybeSingle()
+
+  if (fwdError) {
+    logger.error(
+      'verificarEgresado: fallo al consultar egresados_fwd_oficial',
+      {
+        error: fwdError.message,
+      },
+    )
+    return err('database_error')
+  }
+
+  if (!fwdRecord) {
+    // Si no está en la tabla, se rechaza la verificación
+    return err('egresado_no_encontrado')
+  }
+
+  return setGraduateVerification(parsed.data, 'verificado')
 }
 
 /** Rechaza a un egresado (estado_verificacion → 'rechazado'). Solo admin. */
