@@ -168,8 +168,8 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
 
   // Casting a 'any' temporalmente porque egresados_fwd_oficial
   // no está en los tipos autogenerados.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: fwdRecord, error: fwdError } = await adminClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .from('egresados_fwd_oficial' as any)
     .select('correo')
     .eq('correo', usuario.correo)
