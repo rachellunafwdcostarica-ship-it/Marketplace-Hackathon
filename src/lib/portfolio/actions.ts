@@ -3,7 +3,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
-import { v2 as cloudinary } from 'cloudinary'
+import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
 import type { Database } from '@/types/database'
 
 cloudinary.config({
@@ -176,6 +176,27 @@ export async function saveStudentProfile(
 // ----------------------------------------------------------------------------
 // Habilidades (Skills)
 // ----------------------------------------------------------------------------
+
+export async function getActiveTechnologies(): Promise<
+  Result<{ id: string; name: string }[]>
+> {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const { data, error } = await supabase
+      .from('tecnologias')
+      .select('id_tecnologia, nombre')
+      .eq('is_active', true)
+      .order('nombre')
+
+    if (error) return err(error.message)
+
+    return ok(data.map((t) => ({ id: t.id_tecnologia, name: t.nombre })))
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : 'unexpected_error'
+    logger.error('getActiveTechnologies: error inesperado', { error: errorMsg })
+    return err(errorMsg)
+  }
+}
 
 export async function addStudentSkill(
   name: string,
@@ -406,7 +427,7 @@ export async function uploadAndSaveProfilePhoto(
     const buffer = Buffer.from(arrayBuffer)
     const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`
 
-    const uploadResult = await new Promise<cloudinary.UploadApiResponse>(
+    const uploadResult = await new Promise<UploadApiResponse>(
       (resolve, reject) => {
         cloudinary.uploader.upload(
           base64Image,
@@ -417,7 +438,8 @@ export async function uploadAndSaveProfilePhoto(
           },
           (error, result) => {
             if (error) reject(error)
-            else resolve(result)
+            else if (result) resolve(result)
+            else reject(new Error('Upload result is undefined'))
           },
         )
       },

@@ -1146,6 +1146,7 @@
     "editSkill": "Editar Habilidad",
     "noSkills": "No hay habilidades registradas",
     "skillName": "Nombre de habilidad",
+    "selectSkillPlaceholder": "Selecciona una habilidad...",
     "skillLevel": "Nivel",
     "levelBasic": "Básico",
     "levelIntermediate": "Intermedio",

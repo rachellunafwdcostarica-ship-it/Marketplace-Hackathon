@@ -12,6 +12,7 @@ import {
   saveStudentProfile,
   addStudentSkill,
   deleteStudentSkill,
+  getActiveTechnologies,
   savePortfolioProject,
   deletePortfolioProject,
   uploadAndSaveProfilePhoto,
@@ -103,10 +104,12 @@ async function getCroppedImg(
 
 function SkillForm({
   initialData,
+  availableTechnologies,
   onSave,
   onCancel,
 }: {
   initialData?: StudentSkill
+  availableTechnologies: { id: string; name: string }[]
   onSave: (skill: StudentSkill) => void
   onCancel: () => void
 }) {
@@ -146,12 +149,18 @@ function SkillForm({
         <label htmlFor="skill-name" className="text-sm font-medium">
           {t('skillName')}
         </label>
-        <input
+        <select
           id="skill-name"
-          type="text"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           {...register('name')}
-        />
+        >
+          <option value="">{t('selectSkillPlaceholder')}</option>
+          {availableTechnologies.map((tech) => (
+            <option key={tech.id} value={tech.name}>
+              {tech.name}
+            </option>
+          ))}
+        </select>
         {errors.name && (
           <p className="text-xs text-destructive">{errors.name.message}</p>
         )}
@@ -191,6 +200,9 @@ export function PortfolioManager({
   const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false)
+  const [availableTechnologies, setAvailableTechnologies] = useState<
+    { id: string; name: string }[]
+  >([])
   const [isSavingVis, setIsSavingVis] = useState(false)
   const [isSavingBio, setIsSavingBio] = useState(false)
   const [visibility, setVisibility] = useState<'publico' | 'empresas'>(
@@ -222,6 +234,12 @@ export function PortfolioManager({
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
 
   const t = useTranslations('Portfolio')
+
+  useEffect(() => {
+    getActiveTechnologies().then((res) => {
+      if (res.ok) setAvailableTechnologies(res.data)
+    })
+  }, [])
 
   useEffect(() => {
     if (initialProfile) {
@@ -570,25 +588,9 @@ export function PortfolioManager({
                     open={isCropModalOpen}
                     onOpenChange={setIsCropModalOpen}
                   >
-                    <DialogContent
-                      showCloseButton={false}
-                      className="sm:max-w-[600px] flex flex-col gap-0 p-0 overflow-hidden bg-surface rounded-xl"
-                    >
-                      <DialogHeader className="p-3 border-b bg-muted/30 flex flex-row items-center">
-                        <div className="flex items-center gap-2 pl-1">
-                          <DialogClose asChild>
-                            <button
-                              className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
-                              aria-label="Cerrar modal"
-                              onClick={() => {
-                                setImageToCrop(null)
-                                setCroppedAreaPixels(null)
-                              }}
-                            />
-                          </DialogClose>
-                          <div className="w-3 h-3 rounded-full bg-[#27c93f] opacity-50 cursor-not-allowed" />
-                        </div>
-                        <DialogTitle className="flex-1 text-center text-xs font-medium text-muted-foreground pr-10">
+                    <DialogContent className="sm:max-w-[600px] flex flex-col gap-0 p-0 overflow-hidden bg-surface rounded-xl">
+                      <DialogHeader className="p-4 border-b bg-muted/30">
+                        <DialogTitle className="text-center font-medium">
                           {t('cropImageTitle')}
                         </DialogTitle>
                       </DialogHeader>
@@ -1018,6 +1020,7 @@ export function PortfolioManager({
               </DialogHeader>
               <SkillForm
                 {...(editingSkill ? { initialData: editingSkill } : {})}
+                availableTechnologies={availableTechnologies}
                 onSave={handleSaveSkill}
                 onCancel={() => setIsSkillDialogOpen(false)}
               />
