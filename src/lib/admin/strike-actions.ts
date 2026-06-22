@@ -474,4 +474,3 @@ export async function restoreAccess(userId: string): Promise<Result<void>> {
   revalidatePath('/admin/users', 'page')
   return ok(undefined)
 }
-

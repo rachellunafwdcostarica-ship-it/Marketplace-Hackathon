@@ -26,7 +26,8 @@ export function AdminReportsInterface() {
     try {
       const filters: { fechaInicio?: string; fechaFin?: string } = {}
       if (fechaInicio) filters.fechaInicio = new Date(fechaInicio).toISOString()
-      if (fechaFin) filters.fechaFin = new Date(fechaFin + 'T23:59:59.999Z').toISOString()
+      if (fechaFin)
+        filters.fechaFin = new Date(fechaFin + 'T23:59:59.999Z').toISOString()
 
       let result
       if (tipo === 'usuarios') {

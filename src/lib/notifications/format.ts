@@ -47,6 +47,7 @@ const TIPOS_CON_PLANTILLA: ReadonlySet<string> = new Set<TipoNotificacion>([
   'proyecto_modificado',
   'strike_recibido',
   'cuenta_suspendida',
+  'cuenta_verificada',
   'participacion_contratada',
   'participacion_no_seleccionada',
   'participacion_en_revision',

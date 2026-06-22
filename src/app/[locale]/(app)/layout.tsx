@@ -39,6 +39,20 @@ export default async function AppLayout({
     redirect(`/${locale}${ROLE_HOME[role]}`)
   }
 
+  // Gate de verificación: con el correo confirmado la cuenta queda 'activa',
+  // pero el acceso al panel exige que el admin haya verificado al egresado
+  // (RF-64). Mientras no esté 'verificado' (pendiente o rechazado), a la
+  // pantalla de "en revisión".
+  const { data: estudiante } = await supabase
+    .from('estudiantes')
+    .select('estado_verificacion')
+    .eq('id_usuario', user.id)
+    .maybeSingle()
+
+  if (estudiante?.estado_verificacion !== 'verificado') {
+    redirect(`/${locale}/pending-approval`)
+  }
+
   const estado = estadoCuenta as string | null
 
   return (
