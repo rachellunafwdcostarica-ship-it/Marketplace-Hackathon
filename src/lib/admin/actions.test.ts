@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/headers', () => ({
+  headers: vi.fn(() => ({ get: vi.fn(() => null) })),
+}))
 vi.mock('@/lib/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }))
@@ -41,11 +44,25 @@ beforeEach(() => {
 function buildGraduateAdmin(opts: {
   hasConsent?: boolean
   updateRows?: unknown[]
+  before?: unknown
 }) {
   const update = vi.fn(() => ({
     eq: vi.fn(() => ({
       select: vi.fn().mockResolvedValue({
         data: opts.updateRows ?? [{ id_estudiante: 'e1' }],
+        error: null,
+      }),
+    })),
+  }))
+  const insert = vi.fn().mockResolvedValue({ error: null })
+  const selectBefore = vi.fn(() => ({
+    eq: vi.fn(() => ({
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: opts.before ?? {
+          estado_verificacion: 'pendiente',
+          verificado_at: null,
+          verificado_por: null,
+        },
         error: null,
       }),
     })),
@@ -68,15 +85,20 @@ function buildGraduateAdmin(opts: {
           })),
         }
       }
-      return { update }
+      if (table === 'auditoria') {
+        return { insert }
+      }
+      // estudiantes: SELECT previo (.select().eq().maybeSingle()) y UPDATE (.update().eq().select())
+      return { select: selectBefore, update }
     }),
     update,
+    insert,
   }
   mockedAdmin.mockReturnValue(client as never)
   return client
 }
 
-function buildCompanyAdmin(opts: { updateRows?: unknown[] }) {
+function buildCompanyAdmin(opts: { updateRows?: unknown[]; before?: unknown }) {
   const update = vi.fn(() => ({
     eq: vi.fn(() => ({
       select: vi.fn().mockResolvedValue({
@@ -85,7 +107,29 @@ function buildCompanyAdmin(opts: { updateRows?: unknown[] }) {
       }),
     })),
   }))
-  const client = { from: vi.fn(() => ({ update })), update }
+  const insert = vi.fn().mockResolvedValue({ error: null })
+  const selectBefore = vi.fn(() => ({
+    eq: vi.fn(() => ({
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: opts.before ?? {
+          estado_verificacion: 'pendiente',
+          verificado_at: null,
+          verificado_por: null,
+        },
+        error: null,
+      }),
+    })),
+  }))
+  const client = {
+    from: vi.fn((table: string) => {
+      if (table === 'auditoria') {
+        return { insert }
+      }
+      return { select: selectBefore, update }
+    }),
+    update,
+    insert,
+  }
   mockedAdmin.mockReturnValue(client as never)
   return client
 }
@@ -120,6 +164,18 @@ describe('verificarEgresado', () => {
     buildGraduateAdmin({ hasConsent: true, updateRows: [] })
     const result = await verificarEgresado(VALID_UUID)
     expect(result).toEqual({ ok: false, error: 'not_a_student' })
+  })
+
+  it('registra la verificación en auditoría (RNF-05)', async () => {
+    const admin = buildGraduateAdmin({ hasConsent: true })
+    await verificarEgresado(VALID_UUID)
+    expect(admin.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        accion: 'verificar_egresado',
+        entidad: 'estudiantes',
+        id_actor: 'admin-1',
+      }),
+    )
   })
 })
 
