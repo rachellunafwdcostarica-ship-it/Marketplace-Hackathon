@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
@@ -68,11 +69,19 @@ async function setGraduateVerification(
     }
   }
 
+  // Estado anterior, para la traza de auditoría (RNF-05)
+  const { data: before } = await adminClient
+    .from('estudiantes')
+    .select('estado_verificacion, verificado_at, verificado_por')
+    .eq('id_usuario', parsed.data)
+    .maybeSingle()
+
+  const verificadoAt = new Date().toISOString()
   const { data, error } = await adminClient
     .from('estudiantes')
     .update({
       estado_verificacion: estado,
-      verificado_at: new Date().toISOString(),
+      verificado_at: verificadoAt,
       verificado_por: user.id,
     })
     .eq('id_usuario', parsed.data)
@@ -88,8 +97,41 @@ async function setGraduateVerification(
   }
 
   // El usuario no tiene fila en estudiantes (no es egresado): no se tocó nada
-  if (!data || data.length === 0) {
+  const fila = data?.[0]
+  if (!fila) {
     return err('not_a_student')
+  }
+
+  // RNF-05: traza de la validación del egresado (best-effort, no aborta)
+  const reqHeaders = await headers()
+  const ipOrigen =
+    reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 80) ??
+    null
+  const { error: auditError } = await adminClient.from('auditoria').insert({
+    id_actor: user.id,
+    accion:
+      estado === 'verificado' ? 'verificar_egresado' : 'rechazar_egresado',
+    entidad: 'estudiantes',
+    id_entidad: fila.id_estudiante,
+    valores_antes: before
+      ? {
+          estado_verificacion: before.estado_verificacion,
+          verificado_at: before.verificado_at,
+          verificado_por: before.verificado_por,
+        }
+      : null,
+    valores_despues: {
+      estado_verificacion: estado,
+      verificado_at: verificadoAt,
+      verificado_por: user.id,
+    },
+    ip_origen: ipOrigen,
+  })
+  if (auditError) {
+    logger.error('setGraduateVerification: fallo al registrar en auditoria', {
+      error: auditError.message,
+      userId,
+    })
   }
 
   revalidatePath('/admin/validations', 'page')
@@ -224,11 +266,20 @@ async function setCompanyVerification(
   }
 
   const adminClient = createSupabaseAdminClient()
+
+  // Estado anterior, para la traza de auditoría (RNF-05)
+  const { data: before } = await adminClient
+    .from('empresarios')
+    .select('estado_verificacion, verificado_at, verificado_por')
+    .eq('id_empresario', parsed.data)
+    .maybeSingle()
+
+  const verificadoAt = new Date().toISOString()
   const { data, error } = await adminClient
     .from('empresarios')
     .update({
       estado_verificacion: estado,
-      verificado_at: new Date().toISOString(),
+      verificado_at: verificadoAt,
       verificado_por: user.id,
     })
     .eq('id_empresario', parsed.data)
@@ -245,6 +296,37 @@ async function setCompanyVerification(
 
   if (!data || data.length === 0) {
     return err('empresa_no_encontrada')
+  }
+
+  // RNF-05: traza de la validación de la empresa (best-effort, no aborta)
+  const reqHeaders = await headers()
+  const ipOrigen =
+    reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 80) ??
+    null
+  const { error: auditError } = await adminClient.from('auditoria').insert({
+    id_actor: user.id,
+    accion: estado === 'verificado' ? 'verificar_empresa' : 'rechazar_empresa',
+    entidad: 'empresarios',
+    id_entidad: parsed.data,
+    valores_antes: before
+      ? {
+          estado_verificacion: before.estado_verificacion,
+          verificado_at: before.verificado_at,
+          verificado_por: before.verificado_por,
+        }
+      : null,
+    valores_despues: {
+      estado_verificacion: estado,
+      verificado_at: verificadoAt,
+      verificado_por: user.id,
+    },
+    ip_origen: ipOrigen,
+  })
+  if (auditError) {
+    logger.error('setCompanyVerification: fallo al registrar en auditoria', {
+      error: auditError.message,
+      idEmpresario,
+    })
   }
 
   revalidatePath('/admin/validations', 'page')
