@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
 import { useTranslations } from 'next-intl'
@@ -12,8 +12,10 @@ import {
   saveStudentProfile,
   addStudentSkill,
   deleteStudentSkill,
+  getActiveTechnologies,
   savePortfolioProject,
   deletePortfolioProject,
+  uploadAndSaveProfilePhoto,
   type StudentProfileView,
 } from '@/lib/portfolio/actions'
 import {
@@ -47,13 +49,67 @@ import type { PortfolioProject, StudentSkill } from '@/types'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Cropper from 'react-easy-crop'
+
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image()
+    image.addEventListener('load', () => resolve(image))
+    image.addEventListener('error', (error) => reject(error))
+    image.setAttribute('crossOrigin', 'anonymous')
+    image.src = url
+  })
+
+async function getCroppedImg(
+  imageSrc: string,
+  pixelCrop: { x: number; y: number; width: number; height: number },
+): Promise<File | null> {
+  const image = await createImage(imageSrc)
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+
+  if (!ctx) {
+    return null
+  }
+
+  canvas.width = 500
+  canvas.height = 500
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    500,
+    500,
+  )
+
+  return new Promise((resolve) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return resolve(null)
+        const file = new File([blob], 'profile_photo.jpg', {
+          type: 'image/jpeg',
+        })
+        resolve(file)
+      },
+      'image/jpeg',
+      0.9,
+    )
+  })
+}
 
 function SkillForm({
   initialData,
+  availableTechnologies,
   onSave,
   onCancel,
 }: {
   initialData?: StudentSkill
+  availableTechnologies: { id: string; name: string }[]
   onSave: (skill: StudentSkill) => void
   onCancel: () => void
 }) {
@@ -93,12 +149,18 @@ function SkillForm({
         <label htmlFor="skill-name" className="text-sm font-medium">
           {t('skillName')}
         </label>
-        <input
+        <select
           id="skill-name"
-          type="text"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           {...register('name')}
-        />
+        >
+          <option value="">{t('selectSkillPlaceholder')}</option>
+          {availableTechnologies.map((tech) => (
+            <option key={tech.id} value={tech.name}>
+              {tech.name}
+            </option>
+          ))}
+        </select>
         {errors.name && (
           <p className="text-xs text-destructive">{errors.name.message}</p>
         )}
@@ -138,6 +200,9 @@ export function PortfolioManager({
   const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isSkillDialogOpen, setIsSkillDialogOpen] = useState(false)
+  const [availableTechnologies, setAvailableTechnologies] = useState<
+    { id: string; name: string }[]
+  >([])
   const [isSavingVis, setIsSavingVis] = useState(false)
   const [isSavingBio, setIsSavingBio] = useState(false)
   const [visibility, setVisibility] = useState<'publico' | 'empresas'>(
@@ -151,7 +216,30 @@ export function PortfolioManager({
   const [editingSkill, setEditingSkill] = useState<StudentSkill | undefined>(
     undefined,
   )
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [localPhotoUrl, setLocalPhotoUrl] = useState<string | null>(null)
+
+  // Crop state
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<{
+    x: number
+    y: number
+    width: number
+    height: number
+  } | null>(null)
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false)
+
   const t = useTranslations('Portfolio')
+
+  useEffect(() => {
+    getActiveTechnologies().then((res) => {
+      if (res.ok) setAvailableTechnologies(res.data)
+    })
+  }, [])
 
   useEffect(() => {
     if (initialProfile) {
@@ -387,18 +475,208 @@ export function PortfolioManager({
             <CardHeader className="border-b bg-muted/20 pb-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
-                  {initialProfile?.profilePhoto ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={initialProfile.profilePhoto}
-                      alt="Profile"
-                      className="w-12 h-12 rounded-full object-cover border border-primary/20"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-bold">
-                      {initialProfile?.firstName?.charAt(0) || 'U'}
-                    </div>
-                  )}
+                  <Dialog
+                    open={isPhotoModalOpen}
+                    onOpenChange={setIsPhotoModalOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <button className="relative group rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-transform hover:scale-105 active:scale-95 cursor-pointer">
+                        {localPhotoUrl || initialProfile?.profilePhoto ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={
+                              (localPhotoUrl ||
+                                initialProfile?.profilePhoto) as string
+                            }
+                            alt="Profile"
+                            className="w-12 h-12 rounded-full object-cover border border-primary/20"
+                            style={{ opacity: isUploadingPhoto ? 0.5 : 1 }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary font-bold">
+                            {initialProfile?.firstName?.charAt(0) || 'U'}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Pencil className="w-4 h-4" />
+                        </div>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px] flex flex-col items-center text-center p-8 gap-6">
+                      {localPhotoUrl || initialProfile?.profilePhoto ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={
+                            (localPhotoUrl ||
+                              initialProfile?.profilePhoto) as string
+                          }
+                          alt="Profile preview"
+                          className="w-32 h-32 rounded-full object-cover border shadow-sm"
+                          style={{ opacity: isUploadingPhoto ? 0.5 : 1 }}
+                        />
+                      ) : (
+                        <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center border text-primary font-bold text-4xl shadow-sm">
+                          {initialProfile?.firstName?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <DialogTitle className="text-xl font-semibold">
+                          Editar foto de perfil
+                        </DialogTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Selecciona una nueva imagen para actualizar tu
+                          identidad visual en la plataforma.
+                        </p>
+                      </div>
+                      <div className="flex w-full justify-end bg-muted/20 p-4 -mx-8 -mb-8 mt-2 rounded-b-xl gap-2">
+                        <DialogClose asChild>
+                          <Button
+                            variant="ghost"
+                            className="font-semibold text-muted-foreground hover:text-foreground"
+                          >
+                            Cancelar
+                          </Button>
+                        </DialogClose>
+                        <Button
+                          className="bg-[#0066cc] hover:bg-[#005bb5] text-white px-6"
+                          onClick={() => {
+                            fileInputRef.current?.click()
+                            setIsPhotoModalOpen(false)
+                          }}
+                        >
+                          Aceptar
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+
+                      const isValidType = [
+                        'image/jpeg',
+                        'image/png',
+                        'image/webp',
+                      ].includes(file.type)
+                      const isValidSize = file.size <= 5 * 1024 * 1024
+
+                      if (!isValidType || !isValidSize) {
+                        toast.error(
+                          'La imagen debe ser JPG, PNG o WEBP y menor a 5MB.',
+                        )
+                        return
+                      }
+
+                      const reader = new FileReader()
+                      reader.readAsDataURL(file)
+                      reader.onload = () => {
+                        setImageToCrop(reader.result as string)
+                        setIsCropModalOpen(true)
+                        setIsPhotoModalOpen(false)
+                      }
+
+                      e.target.value = ''
+                    }}
+                  />
+
+                  <Dialog
+                    open={isCropModalOpen}
+                    onOpenChange={setIsCropModalOpen}
+                  >
+                    <DialogContent className="sm:max-w-[600px] flex flex-col gap-0 p-0 overflow-hidden bg-surface rounded-xl">
+                      <DialogHeader className="p-4 border-b bg-muted/30">
+                        <DialogTitle className="text-center font-medium">
+                          {t('cropImageTitle')}
+                        </DialogTitle>
+                      </DialogHeader>
+                      <div className="p-6 space-y-6">
+                        <div className="space-y-2 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            {t('cropImageDesc')}
+                          </p>
+                        </div>
+                        <div className="relative w-full h-[400px] bg-black/5 rounded-md overflow-hidden">
+                          {imageToCrop && (
+                            <Cropper
+                              image={imageToCrop}
+                              crop={crop}
+                              zoom={zoom}
+                              aspect={1}
+                              cropShape="rect"
+                              showGrid={true}
+                              onCropChange={setCrop}
+                              onZoomChange={setZoom}
+                              onCropComplete={(_, croppedPixels) => {
+                                setCroppedAreaPixels(croppedPixels)
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="flex w-full justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            onClick={() => setIsCropModalOpen(false)}
+                          >
+                            {t('cancel')}
+                          </Button>
+                          <Button
+                            className="bg-primary text-primary-foreground hover:bg-primary/90"
+                            disabled={isUploadingPhoto}
+                            onClick={async () => {
+                              if (!imageToCrop || !croppedAreaPixels) return
+                              setIsUploadingPhoto(true)
+                              const toastId = toast.loading(
+                                'Subiendo foto de perfil...',
+                              )
+                              try {
+                                const croppedFile = await getCroppedImg(
+                                  imageToCrop,
+                                  croppedAreaPixels,
+                                )
+                                if (!croppedFile)
+                                  throw new Error('Error al recortar la imagen')
+
+                                const formData = new FormData()
+                                formData.append('file', croppedFile)
+
+                                const result =
+                                  await uploadAndSaveProfilePhoto(formData)
+
+                                if (result.ok) {
+                                  // @ts-expect-error cloudinary result contains secureUrl in data but typing might vary
+                                  setLocalPhotoUrl(result.data || result.value)
+                                  toast.success(
+                                    'Foto de perfil actualizada exitosamente.',
+                                    { id: toastId },
+                                  )
+                                  setIsCropModalOpen(false)
+                                } else {
+                                  toast.error(
+                                    'Hubo un error al actualizar la foto de perfil.',
+                                    { id: toastId },
+                                  )
+                                }
+                              } catch {
+                                toast.error(
+                                  'Ocurrió un error inesperado al subir la imagen.',
+                                  { id: toastId },
+                                )
+                              } finally {
+                                setIsUploadingPhoto(false)
+                              }
+                            }}
+                          >
+                            {isUploadingPhoto ? '...' : t('cropAndUpload')}
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   <div>
                     <CardTitle className="text-xl font-bold font-display">
                       {initialProfile?.firstName} {initialProfile?.lastName1}{' '}
@@ -742,6 +1020,7 @@ export function PortfolioManager({
               </DialogHeader>
               <SkillForm
                 {...(editingSkill ? { initialData: editingSkill } : {})}
+                availableTechnologies={availableTechnologies}
                 onSave={handleSaveSkill}
                 onCancel={() => setIsSkillDialogOpen(false)}
               />
