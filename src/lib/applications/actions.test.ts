@@ -72,6 +72,7 @@ const validInput = {
     'Esta es mi propuesta de solución detallada para el proyecto.',
   prototipo_enlaces: ['https://github.com/test/prototype'],
   carta_postulacion: 'Carta de presentación del egresado.',
+  documentacion_tecnica: `https://supabase.co/storage/v1/object/public/documentacion_tecnica/${PROJ_UUID}/${USER_ID}/file.pdf`,
 }
 
 beforeEach(() => {
