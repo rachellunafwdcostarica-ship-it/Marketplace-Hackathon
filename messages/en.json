@@ -273,7 +273,6 @@
     "contractFinished": "Finished",
     "contractPaused": "Paused",
     "contractCancelled": "Cancelled",
-    "viewDeliverables": "View deliverables",
     "contractStart": "Start",
     "contractEnd": "Estimated end",
     "statsTitle": "Activity Summary",
@@ -1313,6 +1312,8 @@
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
     "saveSkill": "Save Skill",
+    "saving": "Saving...",
+    "errorSkillExists": "This skill already exists",
     "cropImageTitle": "Crop image",
     "cropImageDesc": "Adjust your image to look perfect.",
     "cropAndUpload": "Crop and Upload"

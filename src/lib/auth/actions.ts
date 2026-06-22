@@ -16,6 +16,11 @@ import {
   accountVerificationSubject,
 } from '@/lib/email/templates/account-verification'
 import {
+  accountVerifiedHtml,
+  accountVerifiedSubject,
+} from '@/lib/email/templates/account-verified'
+import { ROLE_HOME } from '@/lib/auth/roles'
+import {
   OnboardingSchema,
   SignInSchema,
   SignUpSchema,
@@ -239,7 +244,7 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
 
   const { data: usuario, error: fetchError } = await adminClient
     .from('usuarios')
-    .select('roles(nombre_rol)')
+    .select('roles(nombre_rol), correo, nombre')
     .eq('id_usuario', parsed.data)
     .maybeSingle()
 
@@ -299,8 +304,7 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
     })
   }
 
-  // Enviar correo de aprobación (solo egresado/empresario: la plantilla es
-  // específica de esos roles). Los admins se activan con su flujo de invitación.
+  // Enviar correo de reactivación (solo egresado/empresario).
   if (usuario?.correo && rolRaw !== 'administrador') {
     const reqHeaders = await headers()
     const host =
@@ -313,10 +317,7 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
     const rol: 'egresado' | 'empresario' =
       rolRaw === 'empresario' ? 'empresario' : 'egresado'
 
-    // Generar magic link de acceso directo hacia /auth/confirm (verifyOtp con
-    // token_hash). Si falla, se usa el login estático como fallback.
-    let accessUrl = `${baseUrl}/login`
-    let isMagicLink = false
+    let loginUrl = `${baseUrl}/login`
     const { data: linkData, error: linkError } =
       await adminClient.auth.admin.generateLink({
         type: 'magiclink',
@@ -324,7 +325,7 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
       })
 
     if (linkError) {
-      logger.error('approveUser: fallo al generar magic link', {
+      logger.error('reactivarUsuario: fallo al generar magic link', {
         error: linkError.message,
         userId,
       })
@@ -337,10 +338,9 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
           type: otpType,
           next: ROLE_HOME[rol],
         })
-        accessUrl = `${baseUrl}/auth/confirm?${params.toString()}`
-        isMagicLink = true
+        loginUrl = `${baseUrl}/auth/confirm?${params.toString()}`
       } else {
-        logger.error('approveUser: el magic link no incluye token_hash', {
+        logger.error('reactivarUsuario: el magic link no incluye token_hash', {
           userId,
         })
       }
@@ -352,12 +352,11 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
       await transport.sendMail({
         from: getGmailFrom(),
         to: usuario.correo,
-        subject: accountApprovedSubject(),
-        html: accountApprovedHtml({
+        subject: accountVerifiedSubject(),
+        html: accountVerifiedHtml({
           nombre: usuario.nombre ?? 'Usuario',
           rol,
-          accessUrl,
-          isMagicLink,
+          loginUrl,
         }),
       })
     } catch (e) {
@@ -365,7 +364,7 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
     }
 
     if (emailError) {
-      logger.error('approveUser: fallo al enviar correo de aprobación', {
+      logger.error('reactivarUsuario: fallo al enviar correo de reactivación', {
         error: emailError.message,
         userId,
       })

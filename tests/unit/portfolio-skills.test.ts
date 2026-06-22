@@ -43,7 +43,7 @@ describe('Portfolio Skills Helper Functions', () => {
       const result = deleteSkill(mockSkills, '1')
 
       expect(result).toHaveLength(1)
-      expect(result.some((s) => s.id === '1')).toBe(false)
+      expect(result.some((s: StudentSkill) => s.id === '1')).toBe(false)
       // Original list should not be mutated
       expect(mockSkills).toHaveLength(2)
     })

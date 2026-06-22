@@ -22,12 +22,19 @@ import {
   PieChart,
   Pie,
   Legend,
+  type TooltipContentProps,
 } from 'recharts'
 import { PieChart as PieChartIcon } from 'lucide-react'
 
 interface DashboardChartsProps {
   projects: PublishedProject[]
   countsByProject: Record<string, number>
+}
+
+interface StatusDatum {
+  name: string
+  value: number
+  color: string
 }
 
 export function DashboardCharts({
@@ -78,15 +85,19 @@ export function DashboardCharts({
   }))
 
   // Custom Tooltip para Postulaciones
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltipPostulaciones = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltipPostulaciones = ({
+    active,
+    payload,
+    label,
+  }: Partial<TooltipContentProps>) => {
+    const entry = payload?.[0]
+    if (active && entry) {
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-4 animate-in fade-in zoom-in-95 duration-200">
           <p className="font-semibold text-foreground text-sm mb-1">{label}</p>
           <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold">
             <TrendingUp className="w-4 h-4" />
-            <span>{payload[0].value} postulantes</span>
+            <span>{entry.value} postulantes</span>
           </div>
         </div>
       )
@@ -95,9 +106,13 @@ export function DashboardCharts({
   }
 
   // Custom Tooltip para Tecnologías
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltipTech = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltipTech = ({
+    active,
+    payload,
+    label,
+  }: Partial<TooltipContentProps>) => {
+    const entry = payload?.[0]
+    if (active && entry) {
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-4 animate-in fade-in zoom-in-95 duration-200">
           <p className="font-semibold text-foreground text-sm mb-1 uppercase tracking-wider">
@@ -106,8 +121,7 @@ export function DashboardCharts({
           <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-bold">
             <Cpu className="w-4 h-4" />
             <span>
-              {payload[0].value}{' '}
-              {payload[0].value === 1 ? 'proyecto' : 'proyectos'}
+              {entry.value} {entry.value === 1 ? 'proyecto' : 'proyectos'}
             </span>
           </div>
         </div>
@@ -117,20 +131,23 @@ export function DashboardCharts({
   }
 
   // Custom Tooltip para Estados (Pie Chart)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltipPie = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload
+  const CustomTooltipPie = ({
+    active,
+    payload,
+  }: Partial<TooltipContentProps>) => {
+    const entry = payload?.[0]
+    if (active && entry) {
+      const datum = entry.payload as StatusDatum
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-3 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-3">
           <div
             className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: data.color }}
+            style={{ backgroundColor: datum.color }}
           />
           <div>
-            <p className="font-bold text-foreground text-sm">{data.name}</p>
+            <p className="font-bold text-foreground text-sm">{datum.name}</p>
             <p className="text-muted-foreground text-xs font-medium">
-              {data.value} {data.value === 1 ? 'proyecto' : 'proyectos'}
+              {datum.value} {datum.value === 1 ? 'proyecto' : 'proyectos'}
             </p>
           </div>
         </div>
@@ -350,7 +367,6 @@ export function DashboardCharts({
                   verticalAlign="bottom"
                   height={36}
                   iconType="circle"
-                   
                   formatter={(value: string) => (
                     <span className="text-xs font-semibold text-muted-foreground ml-1">
                       {value}

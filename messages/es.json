@@ -1313,6 +1313,8 @@
     "levelIntermediate": "Intermedio",
     "levelAdvanced": "Avanzado",
     "saveSkill": "Guardar Habilidad",
+    "saving": "Guardando...",
+    "errorSkillExists": "Esta habilidad ya existe",
     "cropImageTitle": "Recortar imagen",
     "cropImageDesc": "Ajustá tu imagen para que se vea perfecta.",
     "cropAndUpload": "Recortar y Subir"

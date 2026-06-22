@@ -340,6 +340,21 @@ export type Database = {
           },
         ]
       }
+      egresados_fwd_oficial: {
+        Row: {
+          correo: string
+          fecha_agregado: string
+        }
+        Insert: {
+          correo: string
+          fecha_agregado?: string
+        }
+        Update: {
+          correo?: string
+          fecha_agregado?: string
+        }
+        Relationships: []
+      }
       empresarios: {
         Row: {
           alcance_operativo: Database['public']['Enums']['alcance_enum'] | null
