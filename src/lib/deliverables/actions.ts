@@ -7,6 +7,7 @@ import { requireRole } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { crearNotificacion } from '@/lib/notifications/create'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 
 const SubirEntregableSchema = z.object({
   idContratacion: z.string().uuid(),
@@ -201,7 +202,7 @@ export async function responderEntregable(
         idUsuario: estudianteNotif.id_usuario,
         tipoEvento: 'entregable_aprobado',
         params: { titulo: proyectoOwned.titulo },
-        urlDestino: `/egresado/projects/${participacion.id_proyecto}/entregables`,
+        urlDestino: `/${DEFAULT_LOCALE}/egresado/projects/${participacion.id_proyecto}/entregables`,
         mensaje: `Tu entregable final del proyecto "${proyectoOwned.titulo}" fue aprobado. El proyecto está finalizado.`,
       })
       if (!notifResult.ok) {
@@ -249,7 +250,7 @@ export async function responderEntregable(
       idUsuario: estudianteNotif.id_usuario,
       tipoEvento,
       params: { titulo: proyectoOwned.titulo },
-      urlDestino: `/egresado/projects/${participacion.id_proyecto}/entregables`,
+      urlDestino: `/${DEFAULT_LOCALE}/egresado/projects/${participacion.id_proyecto}/entregables`,
       mensaje,
     })
     if (!notifResult.ok) {
