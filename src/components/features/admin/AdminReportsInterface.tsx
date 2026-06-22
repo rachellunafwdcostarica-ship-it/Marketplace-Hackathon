@@ -24,14 +24,9 @@ export function AdminReportsInterface() {
   ) => {
     setLoading(tipo)
     try {
-      const filters = {
-        fechaInicio: fechaInicio
-          ? new Date(fechaInicio).toISOString()
-          : undefined,
-        fechaFin: fechaFin
-          ? new Date(fechaFin + 'T23:59:59.999Z').toISOString()
-          : undefined,
-      }
+      const filters: { fechaInicio?: string; fechaFin?: string } = {}
+      if (fechaInicio) filters.fechaInicio = new Date(fechaInicio).toISOString()
+      if (fechaFin) filters.fechaFin = new Date(fechaFin + 'T23:59:59.999Z').toISOString()
 
       let result
       if (tipo === 'usuarios') {

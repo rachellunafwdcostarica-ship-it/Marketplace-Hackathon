@@ -166,10 +166,11 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
     return err('user_not_found')
   }
 
-  // Verificar en la base de egresados FWD oficial
-  // @ts-expect-error - Tabla local pendiente de regeneración de tipos en database.ts
+  // Casting a 'any' temporalmente porque egresados_fwd_oficial
+  // no está en los tipos autogenerados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: fwdRecord, error: fwdError } = await adminClient
-    .from('egresados_fwd_oficial')
+    .from('egresados_fwd_oficial' as any)
     .select('correo')
     .eq('correo', usuario.correo)
     .maybeSingle()

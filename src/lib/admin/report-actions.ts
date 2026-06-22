@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger'
 interface UsuarioData {
   nombre: string
   apellido_1: string | null
+  nombre_rol?: string
 }
 
 type ReportFilters = {
