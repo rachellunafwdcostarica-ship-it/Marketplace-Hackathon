@@ -31,8 +31,8 @@ export async function createCatalogItem(
 
   const table = type === 'tecnologias' ? 'tecnologias' : 'categorias'
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await adminClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .from(table as any)
     .insert({ nombre: parsedName.data, is_active: true })
 
@@ -65,8 +65,8 @@ export async function toggleCatalogItemStatus(
   const table = type === 'tecnologias' ? 'tecnologias' : 'categorias'
   const idColumn = type === 'tecnologias' ? 'id_tecnologia' : 'id_categoria'
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await adminClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .from(table as any)
     .update({ is_active: newStatus })
     .eq(idColumn, parsedId.data)
