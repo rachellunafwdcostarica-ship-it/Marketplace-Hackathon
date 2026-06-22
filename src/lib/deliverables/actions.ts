@@ -107,8 +107,8 @@ const ResponderEntregableSchema = z
 
 /**
  * El empresario aprueba o solicita cambios sobre un entregable (RF-44).
- * Solo se puede responder cuando estado === 'enviado'. Si se APRUEBA un
- * entregable `final`, cierra el ciclo (RF-41) vía el RPC atómico
+ * Solo se puede responder cuando estado === 'enviado' | 'en_revision'. Si se
+ * APRUEBA un entregable `final`, cierra el ciclo (RF-41) vía el RPC atómico
  * `finalizar_proyecto_por_entregable`: aprueba el entregable y pasa
  * proyecto/contratación/participación a finalizado, habilitando las
  * calificaciones mutuas. Devuelve `finalizado` para que la UI muestre el aviso.
@@ -136,7 +136,8 @@ export async function responderEntregable(
     return err('database_error')
   }
   if (!entregable) return err('entregable_not_found')
-  if (entregable.estado !== 'enviado') return err('estado_invalido')
+  if (entregable.estado !== 'enviado' && entregable.estado !== 'en_revision')
+    return err('estado_invalido')
 
   const { data: contratacion, error: contErr } = await supabase
     .from('contrataciones')

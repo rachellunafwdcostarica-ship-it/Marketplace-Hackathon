@@ -235,36 +235,37 @@ export function EntregablesEmpresario({
                 </Button>
               )}
 
-              {e.estado === 'enviado' && respondingId !== e.id_entregable && (
-                <>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="accent"
-                    disabled={submittingId === e.id_entregable}
-                    onClick={() =>
-                      void handleRespond(e.id_entregable, 'aprobado')
-                    }
-                    className="font-semibold"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    {t('aprobarBtn')}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setRespondingId(e.id_entregable)
-                      setRespondComment('')
-                    }}
-                    className="font-semibold text-warning hover:text-warning hover:bg-warning/10"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    {t('solicitarCambiosBtn')}
-                  </Button>
-                </>
-              )}
+              {(e.estado === 'enviado' || e.estado === 'en_revision') &&
+                respondingId !== e.id_entregable && (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="accent"
+                      disabled={submittingId === e.id_entregable}
+                      onClick={() =>
+                        void handleRespond(e.id_entregable, 'aprobado')
+                      }
+                      className="font-semibold"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {t('aprobarBtn')}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setRespondingId(e.id_entregable)
+                        setRespondComment('')
+                      }}
+                      className="font-semibold text-warning hover:text-warning hover:bg-warning/10"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      {t('solicitarCambiosBtn')}
+                    </Button>
+                  </>
+                )}
 
               {commentingId !== e.id_entregable && (
                 <Button
@@ -283,46 +284,47 @@ export function EntregablesEmpresario({
               )}
             </div>
 
-            {e.estado === 'enviado' && respondingId === e.id_entregable && (
-              <div className="space-y-2 pt-2 border-t border-border/40">
-                <Textarea
-                  value={respondComment}
-                  onChange={(ev) => setRespondComment(ev.target.value)}
-                  placeholder={t('responderCommentPlaceholder')}
-                  rows={2}
-                  disabled={submittingId === e.id_entregable}
-                  className="bg-card/50 border-border text-sm resize-none"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    disabled={
-                      submittingId === e.id_entregable ||
-                      respondComment.trim() === ''
-                    }
-                    onClick={() =>
-                      void handleRespond(e.id_entregable, 'con_cambios')
-                    }
-                    className="font-semibold text-warning hover:text-warning hover:bg-warning/10"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    {t('confirmarCambiosBtn')}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
+            {(e.estado === 'enviado' || e.estado === 'en_revision') &&
+              respondingId === e.id_entregable && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <Textarea
+                    value={respondComment}
+                    onChange={(ev) => setRespondComment(ev.target.value)}
+                    placeholder={t('responderCommentPlaceholder')}
+                    rows={2}
                     disabled={submittingId === e.id_entregable}
-                    onClick={() => setRespondingId(null)}
-                    className="font-semibold text-muted-foreground"
-                  >
-                    {tCommon('cancel')}
-                  </Button>
+                    className="bg-card/50 border-border text-sm resize-none"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={
+                        submittingId === e.id_entregable ||
+                        respondComment.trim() === ''
+                      }
+                      onClick={() =>
+                        void handleRespond(e.id_entregable, 'con_cambios')
+                      }
+                      className="font-semibold text-warning hover:text-warning hover:bg-warning/10"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      {t('confirmarCambiosBtn')}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={submittingId === e.id_entregable}
+                      onClick={() => setRespondingId(null)}
+                      className="font-semibold text-muted-foreground"
+                    >
+                      {tCommon('cancel')}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {commentingId === e.id_entregable && (
               <div className="space-y-2 pt-2 border-t border-border/40">
