@@ -1141,7 +1141,18 @@
     "errorCiudadMax": "La ciudad no puede superar 80 caracteres.",
     "errorAlcance": "Seleccioná el alcance operativo de tu empresa.",
     "errorTerminos": "Debés aceptar los términos para continuar.",
-    "errorSubmitFields": "Hay campos incompletos o con errores. Revisá los marcados en rojo."
+    "errorSubmitFields": "Hay campos incompletos o con errores. Revisá los marcados en rojo.",
+    "labelTituloFwd": "Título FWD",
+    "tituloFwdPlaceholder": "Seleccioná tu título",
+    "tituloFrontend": "Frontend",
+    "tituloBackend": "Backend",
+    "tituloFullstack": "Fullstack",
+    "tituloFwdRequired": "Seleccioná tu título FWD.",
+    "labelCedula": "Cédula o identificación",
+    "labelSitioWeb": "Sitio web (opcional)",
+    "errorCedula": "Ingresá una cédula o identificación válida.",
+    "errorSitioWeb": "Ingresá una URL válida (ej. https://...).",
+    "emailNotAllowed": "Tu correo no está habilitado como egresado FWD. Comunicáte con Forward Costa Rica."
   },
   "Account": {
     "pendingBanner": "Tu cuenta está pendiente de aprobación por el equipo FWD. Las acciones se habilitarán una vez aprobada.",

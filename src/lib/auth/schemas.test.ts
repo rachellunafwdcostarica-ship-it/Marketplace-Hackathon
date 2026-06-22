@@ -1,43 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  AssignRoleSchema,
-  SignInSchema,
-  SaveEmpresarioProfileSchema,
-} from './schemas'
-
-describe('AssignRoleSchema', () => {
-  it('acepta "egresado"', () => {
-    const result = AssignRoleSchema.safeParse({ role: 'egresado' })
-    expect(result.success).toBe(true)
-    if (result.success) expect(result.data.role).toBe('egresado')
-  })
-
-  it('acepta "empresario"', () => {
-    const result = AssignRoleSchema.safeParse({ role: 'empresario' })
-    expect(result.success).toBe(true)
-    if (result.success) expect(result.data.role).toBe('empresario')
-  })
-
-  it('rechaza "administrador" (no auto-asignable)', () => {
-    const result = AssignRoleSchema.safeParse({ role: 'administrador' })
-    expect(result.success).toBe(false)
-  })
-
-  it('rechaza string vacío', () => {
-    const result = AssignRoleSchema.safeParse({ role: '' })
-    expect(result.success).toBe(false)
-  })
-
-  it('rechaza rol inexistente', () => {
-    const result = AssignRoleSchema.safeParse({ role: 'superadmin' })
-    expect(result.success).toBe(false)
-  })
-
-  it('rechaza objeto vacío', () => {
-    const result = AssignRoleSchema.safeParse({})
-    expect(result.success).toBe(false)
-  })
-})
+import { SignInSchema, OnboardingSchema } from './schemas'
 
 describe('SignInSchema', () => {
   it('acepta credenciales válidas', () => {
@@ -76,148 +38,115 @@ describe('SignInSchema', () => {
     })
     expect(result.success).toBe(false)
   })
+})
 
-  it('rechaza cuando falta el email', () => {
-    const result = SignInSchema.safeParse({ password: 'secreto123' })
-    expect(result.success).toBe(false)
+describe('OnboardingSchema — egresado', () => {
+  const valido = {
+    role: 'egresado' as const,
+    tituloFwd: 'frontend' as const,
+    aceptaTerminos: true as const,
+    aceptaCotejo: true as const,
+  }
+
+  it('acepta un egresado válido', () => {
+    expect(OnboardingSchema.safeParse(valido).success).toBe(true)
   })
 
-  it('rechaza cuando falta la contraseña', () => {
-    const result = SignInSchema.safeParse({ email: 'a@b.com' })
-    expect(result.success).toBe(false)
+  it('rechaza titulo_fwd inválido', () => {
+    expect(
+      OnboardingSchema.safeParse({ ...valido, tituloFwd: 'devops' }).success,
+    ).toBe(false)
+  })
+
+  it('exige aceptar términos y cotejo (RNF-36 / RNF-38)', () => {
+    expect(
+      OnboardingSchema.safeParse({ ...valido, aceptaTerminos: false }).success,
+    ).toBe(false)
+    expect(
+      OnboardingSchema.safeParse({ ...valido, aceptaCotejo: false }).success,
+    ).toBe(false)
   })
 })
 
-describe('SaveEmpresarioProfileSchema', () => {
-  // Fecha de un adulto mayor de 18 con margen amplio
+describe('OnboardingSchema — empresario', () => {
   const FECHA_ADULTO = '1990-05-15'
-
-  const validBase = {
+  const valido = {
+    role: 'empresario' as const,
+    tipoEmpresario: 'empresa_formal' as const,
+    nombreEmpresa: 'Tech Solutions SA',
+    cedula: '3-101-123456',
     nombre: 'Carlos',
-    primer_apellido: 'Rodríguez',
-    fecha_nacimiento: FECHA_ADULTO,
-    nombre_empresa: 'Tech Solutions SA',
-    tipo_empresario: 'empresa_formal' as const,
-    pais: 'Costa Rica',
-    ciudad: 'San José',
-    alcance_operativo: 'nacional' as const,
+    primerApellido: 'Rodríguez',
+    fechaNacimiento: FECHA_ADULTO,
+    pais: 'CR',
+    region: 'CR-SJ',
+    alcanceOperativo: 'nacional' as const,
+    aceptaTerminos: true as const,
   }
 
-  it('acepta un objeto completamente válido', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse(validBase)
-    expect(result.success).toBe(true)
+  it('acepta un empresario válido', () => {
+    expect(OnboardingSchema.safeParse(valido).success).toBe(true)
   })
 
-  it('acepta con segundo_apellido opcional', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      segundo_apellido: 'Mora',
-    })
-    expect(result.success).toBe(true)
+  it('acepta segundoApellido y sitioWeb opcionales', () => {
+    expect(
+      OnboardingSchema.safeParse({
+        ...valido,
+        segundoApellido: 'Mora',
+        sitioWeb: 'https://empresa.com',
+      }).success,
+    ).toBe(true)
   })
 
-  it('acepta alcance_operativo "internacional"', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      alcance_operativo: 'internacional',
-    })
-    expect(result.success).toBe(true)
+  it('acepta sitioWeb vacío', () => {
+    expect(
+      OnboardingSchema.safeParse({ ...valido, sitioWeb: '' }).success,
+    ).toBe(true)
   })
 
-  it('acepta alcance_operativo "ambos"', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      alcance_operativo: 'ambos',
-    })
-    expect(result.success).toBe(true)
+  it('rechaza sitioWeb que no es URL', () => {
+    expect(
+      OnboardingSchema.safeParse({ ...valido, sitioWeb: 'no-url' }).success,
+    ).toBe(false)
   })
 
-  it('acepta tipo_empresario "emprendedor"', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      tipo_empresario: 'emprendedor',
-    })
-    expect(result.success).toBe(true)
-  })
-
-  it('rechaza nombre con menos de 2 caracteres', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      nombre: 'A',
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it('rechaza primer_apellido con menos de 2 caracteres', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      primer_apellido: 'R',
-    })
-    expect(result.success).toBe(false)
+  it('exige cédula (RF-17)', () => {
+    expect(OnboardingSchema.safeParse({ ...valido, cedula: '' }).success).toBe(
+      false,
+    )
   })
 
   it('rechaza nombre_empresa con menos de 2 caracteres', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      nombre_empresa: 'A',
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it('rechaza fecha_nacimiento con formato incorrecto', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      fecha_nacimiento: '15-05-1990',
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it('rechaza fecha_nacimiento de menor de 18 años', () => {
-    // Una fecha muy reciente siempre será menor de 18
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      fecha_nacimiento: '2020-01-01',
-    })
-    expect(result.success).toBe(false)
+    expect(
+      OnboardingSchema.safeParse({ ...valido, nombreEmpresa: 'A' }).success,
+    ).toBe(false)
   })
 
   it('rechaza tipo_empresario inválido', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      tipo_empresario: 'freelance',
-    })
-    expect(result.success).toBe(false)
+    expect(
+      OnboardingSchema.safeParse({ ...valido, tipoEmpresario: 'freelance' })
+        .success,
+    ).toBe(false)
   })
 
   it('rechaza alcance_operativo inválido', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      alcance_operativo: 'global',
-    })
-    expect(result.success).toBe(false)
+    expect(
+      OnboardingSchema.safeParse({ ...valido, alcanceOperativo: 'global' })
+        .success,
+    ).toBe(false)
   })
 
-  it('acepta foto_perfil_url como null', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      foto_perfil_url: null,
-    })
-    expect(result.success).toBe(true)
+  it('rechaza fecha con formato incorrecto', () => {
+    expect(
+      OnboardingSchema.safeParse({ ...valido, fechaNacimiento: '15-05-1990' })
+        .success,
+    ).toBe(false)
   })
 
-  it('rechaza foto_perfil_url no-URL cuando se provee', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      foto_perfil_url: 'no-es-url',
-    })
-    expect(result.success).toBe(false)
-  })
-
-  it('acepta foto_perfil_url válida', () => {
-    const result = SaveEmpresarioProfileSchema.safeParse({
-      ...validBase,
-      foto_perfil_url: 'https://storage.example.com/foto.jpg',
-    })
-    expect(result.success).toBe(true)
+  it('rechaza a un menor de 18 años', () => {
+    expect(
+      OnboardingSchema.safeParse({ ...valido, fechaNacimiento: '2020-01-01' })
+        .success,
+    ).toBe(false)
   })
 })

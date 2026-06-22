@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { ArrowLeft, RefreshCw, Edit2, ShieldCheck } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { resendVerificationEmail } from '@/lib/auth/actions'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { VerificationMessage } from '@/components/features/auth/VerificationMessage'
 
@@ -68,11 +69,10 @@ export default function VerifyEmailPage() {
       return
     }
     setResending(true)
-    const supabase = createSupabaseBrowserClient()
-    const { error } = await supabase.auth.resend({ type: 'signup', email })
+    const result = await resendVerificationEmail(email)
     setResending(false)
-    if (error) {
-      toast.error(error.message)
+    if (!result.ok) {
+      toast.error(tAuth('errorUnexpected'))
       return
     }
     toast.success(tAuth('resendSuccess'))

@@ -16,21 +16,19 @@ import {
   accountVerificationSubject,
 } from '@/lib/email/templates/account-verification'
 import {
-  AssignRoleSchema,
-  SaveEmpresarioProfileSchema,
+  OnboardingSchema,
   SignInSchema,
   SignUpSchema,
-  type AssignRoleInput,
-  type SaveEmpresarioProfileInput,
+  type OnboardingInput,
+  type PerfilInput,
   type SignInInput,
   type SignUpInput,
 } from './schemas'
-import { crearPerfilUsuario } from './profile'
+import { crearPerfilUsuario, type DatosPerfilOpcionales } from './profile'
 import { isEgresadoEmailAllowed } from './egresado-allowlist'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
 import { getCurrentUser } from './dal'
-import { normalizeRole } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
 import { evaluateAdminManagement } from '@/lib/admin/admin-management'
 import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
@@ -110,77 +108,101 @@ export async function requestPasswordReset(
 }
 
 /**
- * Asigna el rol al usuario actual durante el onboarding.
- *
- * - Solo acepta 'egresado' o 'empresario' (nunca 'administrador'; Q6).
- * - El valor ya coincide con nombre_rol de la BD: no se necesita traducción.
- * - El rol es PERMANENTE: si ya tiene uno, retorna err('role_already_assigned').
- * - La permanencia se refuerza también a nivel BD en assign_my_role().
+ * Completa el onboarding del Camino B (OAuth): el usuario ya tiene sesión y
+ * correo confirmado por el proveedor, pero no tiene rol ni perfil. Elige su rol
+ * (RF-01) y carga sus campos; se crean rol + perfil con service_role
+ * (`crearPerfilUsuario`, jubila `assign_my_role`) y se registran los
+ * consentimientos (RNF-36 términos; RNF-38 cotejo para egresado).
  */
-export async function assignRole(
-  input: AssignRoleInput,
+export async function completarOnboarding(
+  input: OnboardingInput,
 ): Promise<Result<void>> {
-  const parsed = AssignRoleSchema.safeParse(input)
-  if (!parsed.success) {
-    return err('invalid_role')
-  }
+  const parsed = OnboardingSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+  const data = parsed.data
 
-  const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase.rpc('assign_my_role', {
-    p_role: parsed.data.role,
-  })
-
-  if (error) {
-    logger.error('assignRole failed', { error: error.message })
-    return err(error.message)
-  }
-
-  if (data === false) {
-    // La BD rechazó la asignación: el usuario ya tiene un rol
-    return err('role_already_assigned')
-  }
-
-  revalidatePath('/', 'layout')
-  return ok(undefined)
-}
-
-/**
- * Registra el consentimiento explícito del egresado para el cotejo de su correo
- * contra la base de egresados de FWD (RNF-38). Lo otorga el propio usuario en su
- * sesión; la policy `consentimientos_insert_own` permite el insert. Es requisito
- * para que un admin pueda verificarlo (gate en `verificarEgresado`).
- */
-export async function registrarConsentimientoCotejo(): Promise<Result<void>> {
   const supabase = await createSupabaseServerClient()
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser()
-  if (userError || !user) {
-    return err('unauthenticated')
+  if (!user) return err('unauthenticated')
+
+  // Gate del egresado (stand-in de RF-64), también en OAuth (Camino B).
+  if (data.role === 'egresado' && !isEgresadoEmailAllowed(user.email ?? '')) {
+    return err('email_not_allowed')
   }
 
+  const admin = createSupabaseAdminClient()
+
+  const perfil: PerfilInput =
+    data.role === 'egresado'
+      ? { role: 'egresado', tituloFwd: data.tituloFwd }
+      : {
+          role: 'empresario',
+          tipoEmpresario: data.tipoEmpresario,
+          nombreEmpresa: data.nombreEmpresa,
+          cedula: data.cedula,
+          ...(data.sitioWeb ? { sitioWeb: data.sitioWeb } : {}),
+        }
+
+  const opcionales: DatosPerfilOpcionales | undefined =
+    data.role === 'empresario'
+      ? {
+          nombre: data.nombre,
+          apellido1: data.primerApellido,
+          apellido2: data.segundoApellido ?? null,
+          fechaNacimiento: data.fechaNacimiento,
+          ...(data.fotoPerfilUrl ? { fotoPerfilUrl: data.fotoPerfilUrl } : {}),
+          paisIso: data.pais,
+          region: data.region,
+          alcanceOperativo: data.alcanceOperativo,
+        }
+      : undefined
+
+  const perfilResult = await crearPerfilUsuario(
+    admin,
+    user.id,
+    perfil,
+    opcionales,
+  )
+  if (!perfilResult.ok) return perfilResult
+
+  // Consentimientos (RNF-36 términos; RNF-38 cotejo para egresado).
   const reqHeaders = await headers()
   const ipOrigen =
     reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 60) ??
     null
   const userAgent = reqHeaders.get('user-agent')?.slice(0, 255) ?? null
 
-  const { error } = await supabase.from('consentimientos').insert({
-    id_usuario: user.id,
-    tipo_consentimiento: 'cotejo_fwd',
-    otorgado: true,
-    ip_origen: ipOrigen,
-    user_agent: userAgent,
-  })
-
-  if (error) {
-    logger.error('registrarConsentimientoCotejo failed', {
-      error: error.message,
+  const consentimientos: Database['public']['Tables']['consentimientos']['Insert'][] =
+    [
+      {
+        id_usuario: user.id,
+        tipo_consentimiento: 'terminos_servicio',
+        otorgado: true,
+        ip_origen: ipOrigen,
+        user_agent: userAgent,
+      },
+    ]
+  if (data.role === 'egresado') {
+    consentimientos.push({
+      id_usuario: user.id,
+      tipo_consentimiento: 'cotejo_fwd',
+      otorgado: true,
+      ip_origen: ipOrigen,
+      user_agent: userAgent,
     })
-    return err(error.message)
+  }
+  const { error: consentError } = await admin
+    .from('consentimientos')
+    .insert(consentimientos)
+  if (consentError) {
+    logger.error('completarOnboarding: fallo al registrar consentimientos', {
+      error: consentError.message,
+    })
   }
 
+  revalidatePath('/', 'layout')
   return ok(undefined)
 }
 
@@ -478,91 +500,75 @@ export async function signInWithPassword(
 }
 
 /**
- * Guarda el perfil del empresario al completar el onboarding (RF-06 / RF-16).
- *
- * - Verifica que el usuario esté autenticado y tenga rol 'empresario'.
- * - UPDATE en usuarios (nombre, apellidos, fecha de nacimiento, foto de perfil).
- * - UPSERT en empresarios (idempotente si el usuario re-envía el formulario).
- * - INSERT en consentimientos con tipo 'terminos_servicio'.
+ * Reenvía el correo de verificación (enlace + código) por Gmail a un usuario que
+ * aún no confirmó (RF-02). Usa generateLink type:'magiclink' (no requiere la
+ * contraseña y es válido para un usuario sin confirmar) y nuestra plantilla, de
+ * modo que el reenvío sale con la marca FWD igual que el del registro.
  */
-export async function saveEmpresarioProfile(
-  input: SaveEmpresarioProfileInput,
+export async function resendVerificationEmail(
+  email: string,
 ): Promise<Result<void>> {
-  const parsed = SaveEmpresarioProfileSchema.safeParse(input)
-  if (!parsed.success) return err('invalid_input')
+  const parsed = z.string().email().safeParse(email)
+  if (!parsed.success) return err('invalid_email')
 
-  const supabase = await createSupabaseServerClient()
+  const admin = createSupabaseAdminClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return err('unauthorized')
-
-  const { data: roleRaw } = await supabase.rpc('get_my_role')
-  if (normalizeRole(roleRaw as string | null) !== 'empresario') {
-    return err('forbidden')
+  const { data: linkData, error: linkError } =
+    await admin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: parsed.data,
+    })
+  if (linkError || !linkData?.properties) {
+    logger.error('resendVerificationEmail: fallo al generar enlace', {
+      error: linkError?.message,
+    })
+    return err('resend_failed')
   }
 
-  const { error: usuariosError } = await supabase
+  const { data: usuario } = await admin
     .from('usuarios')
-    .update({
-      nombre: parsed.data.nombre,
-      apellido_1: parsed.data.primer_apellido,
-      apellido_2: parsed.data.segundo_apellido || null,
-      fecha_nacimiento: parsed.data.fecha_nacimiento,
-      foto_perfil: parsed.data.foto_perfil_url ?? null,
-    })
-    .eq('id_usuario', user.id)
-
-  if (usuariosError) {
-    logger.error('saveEmpresarioProfile: fallo al actualizar usuarios', {
-      error: usuariosError.message,
-    })
-    return err(usuariosError.message)
-  }
-
-  const { error: empresarioError } = await supabase.from('empresarios').upsert(
-    {
-      id_usuario: user.id,
-      tipo_empresario: parsed.data.tipo_empresario,
-      nombre_empresa: parsed.data.nombre_empresa,
-      pais_iso_sede: parsed.data.pais,
-      region_sede: parsed.data.ciudad,
-      alcance_operativo: parsed.data.alcance_operativo,
-    },
-    { onConflict: 'id_usuario' },
-  )
-
-  if (empresarioError) {
-    logger.error('saveEmpresarioProfile: fallo al upsert empresarios', {
-      error: empresarioError.message,
-    })
-    return err(empresarioError.message)
-  }
+    .select('nombre')
+    .eq('correo', parsed.data)
+    .maybeSingle()
 
   const reqHeaders = await headers()
-  const ipOrigen =
-    reqHeaders.get('x-forwarded-for')?.split(',')[0]?.trim().slice(0, 60) ??
-    null
-  const userAgent = reqHeaders.get('user-agent')?.slice(0, 255) ?? null
+  const host =
+    reqHeaders.get('x-forwarded-host') ??
+    reqHeaders.get('host') ??
+    'localhost:3000'
+  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+  const baseUrl = `${proto}://${host}`
 
-  const { error: consentError } = await supabase
-    .from('consentimientos')
-    .insert({
-      id_usuario: user.id,
-      tipo_consentimiento: 'terminos_servicio',
-      otorgado: true,
-      ip_origen: ipOrigen,
-      user_agent: userAgent,
-    })
+  const tokenHash = linkData.properties.hashed_token
+  const otpType = linkData.properties.verification_type ?? 'magiclink'
+  const code = linkData.properties.email_otp ?? ''
+  const confirmUrl = tokenHash
+    ? `${baseUrl}/auth/confirm?${new URLSearchParams({
+        token_hash: tokenHash,
+        type: otpType,
+        next: '/pending-approval',
+      }).toString()}`
+    : `${baseUrl}/verify-email?email=${encodeURIComponent(parsed.data)}`
 
-  if (consentError) {
-    logger.error('saveEmpresarioProfile: fallo al registrar consentimiento', {
-      error: consentError.message,
+  try {
+    const transport = createGmailTransport()
+    await transport.sendMail({
+      from: getGmailFrom(),
+      to: parsed.data,
+      subject: accountVerificationSubject(),
+      html: accountVerificationHtml({
+        nombre: usuario?.nombre ?? '',
+        confirmUrl,
+        code,
+      }),
     })
+  } catch (e) {
+    logger.error('resendVerificationEmail: fallo al enviar correo', {
+      error: e instanceof Error ? e.message : String(e),
+    })
+    return err('resend_failed')
   }
 
-  revalidatePath('/', 'layout')
   return ok(undefined)
 }
 

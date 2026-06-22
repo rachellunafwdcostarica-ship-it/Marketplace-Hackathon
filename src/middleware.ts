@@ -30,15 +30,8 @@ function isVerifyEmailPath(pathname: string): boolean {
   return /^\/(es|en)\/verify-email(\/|$)/.test(pathname)
 }
 
-function isEmpresarioSetupPath(pathname: string): boolean {
-  return /^\/(es|en)\/onboarding\/empresario(\/|$)/.test(pathname)
-}
-
 function isOnboardingPath(pathname: string): boolean {
-  return (
-    /^\/(es|en)\/onboarding(\/|$)/.test(pathname) &&
-    !isEmpresarioSetupPath(pathname)
-  )
+  return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
 }
 
 function isPendingApprovalPath(pathname: string): boolean {
@@ -144,8 +137,7 @@ export async function middleware(request: NextRequest) {
     isProtected(pathname) ||
     isPublicAuthPage(pathname) ||
     isOnboardingPath(pathname) ||
-    isPendingApprovalPath(pathname) ||
-    isEmpresarioSetupPath(pathname)
+    isPendingApprovalPath(pathname)
   ) {
     const [{ data: accountStatus }, { data: usuarioRow }] = await Promise.all([
       supabase.rpc('get_my_account_status'),
@@ -225,9 +217,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url))
   }
 
-  // CASO D: /onboarding. Sin rol → dejar elegir rol y ver el formulario. Con rol
-  // → home (el empresario por OAuth completa su perfil en /onboarding/empresario,
-  // CASO F; el gate del layout lo lleva a "en revisión" si no está verificado).
+  // CASO D: /onboarding. Sin rol → dejar elegir rol y completar el perfil
+  // (Camino B / OAuth, formulario único por rol). Con rol → home (el gate del
+  // layout lo lleva a "en revisión" si todavía no está verificado).
   if (isOnboardingPath(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
     const role = normalizeRole(roleRaw)
@@ -245,24 +237,6 @@ export async function middleware(request: NextRequest) {
   // panel si el perfil ya está verificado (evita el rebote por estado_cuenta,
   // que ahora pasa a 'activa' apenas se confirma el correo).
   if (isPendingApprovalPath(pathname)) {
-    return intlResponse
-  }
-
-  // CASO F: /onboarding/empresario — formulario de perfil antes de pending-approval.
-  // Accesible aunque la cuenta esté pendiente: es el paso previo a la aprobación.
-  // Si aún no hay rol en BD (recién creado, trigger pendiente), la página se
-  // encarga de asignarlo usando el metadata — no rebotar a /onboarding.
-  // Las verificaciones de suspensión/desactivación ya se evaluaron en el gate.
-  if (isEmpresarioSetupPath(pathname)) {
-    const { data: roleRaw } = await supabase.rpc('get_my_role')
-    const role = normalizeRole(roleRaw)
-    if (role && role !== 'empresario') {
-      // Tiene un rol distinto a empresario → su pantalla de espera
-      return NextResponse.redirect(
-        new URL(`/${locale}/pending-approval`, request.url),
-      )
-    }
-    // Sin rol (page lo asigna) o ya es empresario → dejar pasar
     return intlResponse
   }
 

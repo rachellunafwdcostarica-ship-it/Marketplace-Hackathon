@@ -1141,7 +1141,18 @@
     "errorCiudadMax": "City cannot exceed 80 characters.",
     "errorAlcance": "Please select your company's operational scope.",
     "errorTerminos": "You must accept the terms to continue.",
-    "errorSubmitFields": "Some fields are incomplete or have errors. Review the ones marked in red."
+    "errorSubmitFields": "Some fields are incomplete or have errors. Review the ones marked in red.",
+    "labelTituloFwd": "FWD track",
+    "tituloFwdPlaceholder": "Select your track",
+    "tituloFrontend": "Frontend",
+    "tituloBackend": "Backend",
+    "tituloFullstack": "Fullstack",
+    "tituloFwdRequired": "Select your FWD track.",
+    "labelCedula": "ID number",
+    "labelSitioWeb": "Website (optional)",
+    "errorCedula": "Enter a valid ID number.",
+    "errorSitioWeb": "Enter a valid URL (e.g. https://...).",
+    "emailNotAllowed": "Your email is not enabled as an FWD graduate. Contact Forward Costa Rica."
   },
   "Account": {
     "pendingBanner": "Your account is pending activation. Please verify your email.",
