@@ -1,9 +1,9 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { redirect } from 'next/navigation'
 import { Clock, LogOut } from 'lucide-react'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { normalizeRole } from '@/lib/auth/roles'
+import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
 import { signOut } from '@/lib/auth/actions'
 
 async function handleSignOut() {
@@ -17,8 +17,36 @@ export default async function PendingApprovalPage() {
   const tCommon = await getTranslations('Common')
 
   const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const { data: roleRaw } = await supabase.rpc('get_my_role')
   const role = normalizeRole(roleRaw as string | null)
+
+  // Si el perfil ya está verificado, esta pantalla no aplica → al panel. Esto
+  // evita el rebote con el gate del layout (que solo deja entrar a verificados).
+  if (user && (role === 'egresado' || role === 'empresario')) {
+    let verified = false
+    if (role === 'egresado') {
+      const { data } = await supabase
+        .from('estudiantes')
+        .select('estado_verificacion')
+        .eq('id_usuario', user.id)
+        .maybeSingle()
+      verified = data?.estado_verificacion === 'verificado'
+    } else {
+      const { data } = await supabase
+        .from('empresarios')
+        .select('estado_verificacion')
+        .eq('id_usuario', user.id)
+        .maybeSingle()
+      verified = data?.estado_verificacion === 'verificado'
+    }
+    if (verified) {
+      const locale = await getLocale()
+      redirect(`/${locale}${ROLE_HOME[role]}`)
+    }
+  }
 
   const roleMsg =
     role === 'empresario' ? t('pendingEmpresarioMsg') : t('pendingEgresadoMsg')

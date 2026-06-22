@@ -21,7 +21,7 @@ function escapeHtml(value: string): string {
 
 /**
  * Correo al oferente cuando el empresario edita la descripción de un proyecto al
- * que ya postuló (es-only, igual que `account-approved.ts`: no se guarda el
+ * que ya postuló (es-only, igual que `admin-invite.ts`: no se guarda el
  * idioma del usuario). Mismo layout de marca que el resto de correos FWD.
  */
 export function proyectoModificadoHtml({

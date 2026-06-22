@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl'
 import { CheckCircle, Ban, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
-import { approveUser } from '@/lib/auth/actions'
+import { reactivarUsuario } from '@/lib/auth/actions'
 import { deactivateUser } from '@/lib/admin/actions'
 import { resendAdminInvite } from '@/lib/admin/admin-actions'
 import type { AdminAccountStatus } from '@/lib/admin/queries'
@@ -31,10 +31,12 @@ interface AccountStatusActionsProps {
 }
 
 /**
- * Acciones de cuenta por fila (RF-63): aprobar (estado_cuenta = 'activa',
- * is_active = true) y desactivar (is_active = false), cada una con confirmación.
- * En la propia fila del admin no se muestran (self-guard). Sobre un admin que
- * el caller no puede gestionar, tampoco (canManage = false).
+ * Acciones de cuenta por fila (RF-63): reactivar (estado_cuenta = 'activa',
+ * is_active = true — solo cuentas suspendidas/desactivadas, RF-65) y desactivar
+ * (is_active = false), cada una con confirmación. Las cuentas 'pendiente' NO se
+ * reactivan desde aquí: se activan solas al confirmar el correo. En la propia
+ * fila del admin no se muestran (self-guard); sobre un admin que el caller no
+ * puede gestionar, tampoco (canManage = false).
  */
 export function AccountStatusActions({
   userId,
@@ -59,7 +61,12 @@ export function AccountStatusActions({
     )
   }
 
-  const canApprove = canManage && (estadoCuenta !== 'activa' || !isActive)
+  // Reactivar (RF-65): solo cuentas suspendidas o desactivadas. Las 'pendiente'
+  // (correo sin confirmar) NO se tocan desde aquí — se activan al confirmar.
+  const canReactivate =
+    canManage &&
+    estadoCuenta !== 'pendiente' &&
+    (estadoCuenta !== 'activa' || !isActive)
   const canDeactivate = canManage && isActive
 
   const adminMgmtErrorMessage = (error: string): string | null => {
@@ -75,15 +82,15 @@ export function AccountStatusActions({
     }
   }
 
-  const handleApprove = async () => {
-    const result = await approveUser(userId)
+  const handleReactivate = async () => {
+    const result = await reactivarUsuario(userId)
     if (result.ok) {
-      toast.success(t('userApproved', { name: userName }))
+      toast.success(t('userReactivated', { name: userName }))
       router.refresh()
-    } else if (result.error === 'user_not_verified') {
-      toast.error(t('userApproveNotVerified'))
     } else {
-      toast.error(adminMgmtErrorMessage(result.error) ?? t('userApproveError'))
+      toast.error(
+        adminMgmtErrorMessage(result.error) ?? t('userReactivateError'),
+      )
     }
   }
 
@@ -140,17 +147,17 @@ export function AccountStatusActions({
           {t('resendInvite')}
         </ConfirmButton>
       )}
-      {canApprove && (
+      {canReactivate && (
         <ConfirmButton
-          onConfirm={handleApprove}
-          title={t('confirmApproveTitle')}
-          description={t('confirmApproveDesc', { name: userName })}
-          confirmLabel={t('approveUser')}
+          onConfirm={handleReactivate}
+          title={t('confirmReactivateTitle')}
+          description={t('confirmReactivateDesc', { name: userName })}
+          confirmLabel={t('reactivateUser')}
           className="flex items-center gap-1.5 bg-accent font-semibold text-accent-foreground hover:bg-accent/90"
           confirmClassName="bg-accent text-accent-foreground hover:bg-accent/90"
         >
           <CheckCircle className="h-4 w-4" />
-          {t('approveUser')}
+          {t('reactivateUser')}
         </ConfirmButton>
       )}
       {canDeactivate && (

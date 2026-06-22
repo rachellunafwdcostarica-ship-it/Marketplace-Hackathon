@@ -12,21 +12,25 @@ import { env } from '@/lib/env'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
 import {
-  accountApprovedHtml,
-  accountApprovedSubject,
-} from '@/lib/email/templates/account-approved'
+  accountVerificationHtml,
+  accountVerificationSubject,
+} from '@/lib/email/templates/account-verification'
 import {
   AssignRoleSchema,
   SaveEmpresarioProfileSchema,
   SignInSchema,
+  SignUpSchema,
   type AssignRoleInput,
   type SaveEmpresarioProfileInput,
   type SignInInput,
+  type SignUpInput,
 } from './schemas'
+import { crearPerfilUsuario } from './profile'
+import { isEgresadoEmailAllowed } from './egresado-allowlist'
 import { getUserRole } from './queries'
 import { requireRole } from './guards'
 import { getCurrentUser } from './dal'
-import { normalizeRole, ROLE_HOME } from './roles'
+import { normalizeRole } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
 import { evaluateAdminManagement } from '@/lib/admin/admin-management'
 import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
@@ -181,14 +185,15 @@ export async function registrarConsentimientoCotejo(): Promise<Result<void>> {
 }
 
 /**
- * Aprueba la cuenta de un usuario (estado_cuenta → 'activa', is_active → true).
- * Solo puede ser llamada por un usuario con rol 'admin'.
- * Usa el cliente de servicio para bypassear RLS.
+ * Reactiva la cuenta de un usuario (estado_cuenta → 'activa', is_active → true).
+ * Solo un administrador puede llamarla. Usa el cliente de servicio (RLS bypass).
  *
- * Setea is_active = true a propósito: aprobar reactiva también a una cuenta que
- * el admin haya desactivado antes (ver `deactivateUser`).
+ * Es la reactivación de RF-65: vuelve a habilitar una cuenta suspendida o
+ * desactivada. NO activa cuentas nuevas — esas se activan solas al confirmar el
+ * correo (trigger de activación). Reactivar a un admin exige las mismas reglas
+ * que su baja (superadmin + antigüedad).
  */
-export async function approveUser(userId: string): Promise<Result<void>> {
+export async function reactivarUsuario(userId: string): Promise<Result<void>> {
   const parsed = z.string().uuid().safeParse(userId)
   if (!parsed.success) {
     return err('invalid_user_id')
@@ -210,18 +215,18 @@ export async function approveUser(userId: string): Promise<Result<void>> {
 
   const { data: usuario, error: fetchError } = await adminClient
     .from('usuarios')
-    .select('nombre, correo, roles(nombre_rol)')
+    .select('roles(nombre_rol)')
     .eq('id_usuario', parsed.data)
     .maybeSingle()
 
   if (fetchError) {
-    logger.error('approveUser: fallo al obtener datos del usuario', {
+    logger.error('reactivarUsuario: fallo al obtener datos del usuario', {
       error: fetchError.message,
       userId,
     })
   }
 
-  // Extraer rol para verificar estado antes de aprobar
+  // Extraer rol: reactivar a un admin exige las reglas de gestión de admins.
   const rolRaw = Array.isArray(usuario?.roles)
     ? usuario?.roles[0]?.nombre_rol
     : (usuario?.roles as { nombre_rol?: string } | null)?.nombre_rol
@@ -248,108 +253,14 @@ export async function approveUser(userId: string): Promise<Result<void>> {
     }
   }
 
-  // Bloquear aprobación si el usuario no fue verificado primero
-  if (rolRaw === 'egresado') {
-    const { data: estudiante } = await adminClient
-      .from('estudiantes')
-      .select('estado_verificacion')
-      .eq('id_usuario', parsed.data)
-      .maybeSingle()
-    if (estudiante?.estado_verificacion !== 'verificado') {
-      return err('user_not_verified')
-    }
-  } else if (rolRaw === 'empresario') {
-    const { data: empresario } = await adminClient
-      .from('empresarios')
-      .select('estado_verificacion')
-      .eq('id_usuario', parsed.data)
-      .maybeSingle()
-    if (empresario?.estado_verificacion !== 'verificado') {
-      return err('user_not_verified')
-    }
-  }
-
   const { error } = await adminClient
     .from('usuarios')
     .update({ estado_cuenta: 'activa', is_active: true })
     .eq('id_usuario', parsed.data)
 
   if (error) {
-    logger.error('approveUser failed', { error: error.message, userId })
+    logger.error('reactivarUsuario failed', { error: error.message, userId })
     return err(error.message)
-  }
-
-  // Enviar correo de aprobación (solo egresado/empresario: la plantilla es
-  // específica de esos roles). Los admins se activan con su flujo de invitación.
-  if (usuario?.correo && rolRaw !== 'administrador') {
-    const reqHeaders = await headers()
-    const host =
-      reqHeaders.get('x-forwarded-host') ??
-      reqHeaders.get('host') ??
-      'localhost:3000'
-    const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
-    const baseUrl = `${proto}://${host}`
-
-    const rol: 'egresado' | 'empresario' =
-      rolRaw === 'empresario' ? 'empresario' : 'egresado'
-
-    // Generar magic link de acceso directo hacia /auth/confirm (verifyOtp con
-    // token_hash). Si falla, se usa el login estático como fallback.
-    let accessUrl = `${baseUrl}/login`
-    let isMagicLink = false
-    const { data: linkData, error: linkError } =
-      await adminClient.auth.admin.generateLink({
-        type: 'magiclink',
-        email: usuario.correo,
-      })
-
-    if (linkError) {
-      logger.error('approveUser: fallo al generar magic link', {
-        error: linkError.message,
-        userId,
-      })
-    } else {
-      const tokenHash = linkData.properties?.hashed_token
-      const otpType = linkData.properties?.verification_type
-      if (tokenHash && otpType) {
-        const params = new URLSearchParams({
-          token_hash: tokenHash,
-          type: otpType,
-          next: ROLE_HOME[rol],
-        })
-        accessUrl = `${baseUrl}/auth/confirm?${params.toString()}`
-        isMagicLink = true
-      } else {
-        logger.error('approveUser: el magic link no incluye token_hash', {
-          userId,
-        })
-      }
-    }
-
-    let emailError: Error | null = null
-    try {
-      const transport = createGmailTransport()
-      await transport.sendMail({
-        from: getGmailFrom(),
-        to: usuario.correo,
-        subject: accountApprovedSubject(),
-        html: accountApprovedHtml({
-          nombre: usuario.nombre ?? 'Usuario',
-          rol,
-          accessUrl,
-          isMagicLink,
-        }),
-      })
-    } catch (e) {
-      emailError = e instanceof Error ? e : new Error(String(e))
-    }
-
-    if (emailError) {
-      logger.error('approveUser: fallo al enviar correo de aprobación', {
-        error: emailError.message,
-        userId,
-      })
-    }
   }
 
   if (rolRaw === 'administrador') {
@@ -361,7 +272,7 @@ export async function approveUser(userId: string): Promise<Result<void>> {
       valores_despues: { estado_cuenta: 'activa', is_active: true },
     })
     if (auditError) {
-      logger.error('approveUser: fallo al registrar en auditoria', {
+      logger.error('reactivarUsuario: fallo al registrar en auditoria', {
         error: auditError.message,
         userId,
       })
@@ -373,30 +284,33 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   return ok(undefined)
 }
 
-export async function signUpWithPassword(input: {
-  email: string
-  password: string
-  fullName: string
-  role: 'egresado' | 'empresario'
-}): Promise<Result<void>> {
-  const parsed = z
-    .object({
-      email: z.string().email(),
-      password: z.string().min(8),
-      fullName: z.string().min(2),
-      role: z.enum(['egresado', 'empresario']),
-    })
-    .safeParse(input)
-
+/**
+ * Registro por correo y contraseña (RF-01 / RF-02), Camino A.
+ *
+ * Crea la cuenta SIN confirmar y SIN sesión (registro ≠ login): el usuario debe
+ * confirmar su correo (enlace o código) para activarse. Asigna el rol y crea el
+ * perfil con service_role, y envía el correo de verificación por Gmail.
+ */
+export async function signUpWithPassword(
+  input: SignUpInput,
+): Promise<Result<void>> {
+  const parsed = SignUpSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
+
+  const data = parsed.data
+
+  // Gate del egresado (stand-in de RF-64): solo correos de la allowlist pueden
+  // registrarse como egresado mientras no exista el cotejo real (RNF-30).
+  if (data.role === 'egresado' && !isEgresadoEmailAllowed(data.email)) {
+    return err('email_not_allowed')
+  }
 
   let pwnedCount: number
   try {
-    pwnedCount = await checkPwnedPassword(parsed.data.password)
+    pwnedCount = await checkPwnedPassword(data.password)
   } catch {
     return err('pwned_check_failed')
   }
-
   if (pwnedCount > 0) return err('password_breached')
 
   const adminClient = createSupabaseAdminClient()
@@ -404,36 +318,84 @@ export async function signUpWithPassword(input: {
   const { data: existingUser } = await adminClient
     .from('usuarios')
     .select('id_usuario')
-    .eq('correo', parsed.data.email)
+    .eq('correo', data.email)
     .maybeSingle()
-
   if (existingUser) {
     // Anti-enumeración: no revelar que el correo ya está registrado.
     return err('email_already_exists')
   }
 
-  // Ningún rol requiere verificación de correo: se usa admin.createUser con
-  // email_confirm: true para que el usuario quede activo de inmediato y pueda
-  // hacer auto-login desde el cliente sin pasar por un link de confirmación.
-  const { error } = await adminClient.auth.admin.createUser({
-    email: parsed.data.email,
-    password: parsed.data.password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: parsed.data.fullName,
-      role: parsed.data.role,
-    },
-  })
+  // generateLink type:'signup' crea el usuario no confirmado y devuelve el
+  // enlace (hashed_token) y el código (email_otp) sin enviar correo (lo
+  // enviamos nosotros por Gmail). No crea sesión.
+  const { data: linkData, error: linkError } =
+    await adminClient.auth.admin.generateLink({
+      type: 'signup',
+      email: data.email,
+      password: data.password,
+      options: {
+        data: { full_name: data.fullName, role: data.role },
+      },
+    })
 
-  if (error) {
-    if (
-      error.message.toLowerCase().includes('already') ||
-      error.message.toLowerCase().includes('exist')
-    ) {
+  if (linkError || !linkData?.user) {
+    const msg = linkError?.message?.toLowerCase() ?? ''
+    if (msg.includes('already') || msg.includes('exist')) {
       return err('email_already_exists')
     }
-    logger.error('signUpWithPassword failed', { error: error.message })
-    return err(error.message)
+    logger.error('signUpWithPassword: fallo al crear usuario', {
+      error: linkError?.message,
+    })
+    return err(linkError?.message ?? 'signup_failed')
+  }
+
+  // Asignar rol + crear perfil con service_role (no hay sesión).
+  const perfil = await crearPerfilUsuario(adminClient, linkData.user.id, data)
+  if (!perfil.ok) {
+    // Si el perfil falla, borrar el usuario a medio crear para no dejar una
+    // cuenta sin perfil que quedaría trabada.
+    await adminClient.auth.admin.deleteUser(linkData.user.id)
+    return perfil
+  }
+
+  // Enviar el correo de verificación (enlace + código) por Gmail.
+  const reqHeaders = await headers()
+  const host =
+    reqHeaders.get('x-forwarded-host') ??
+    reqHeaders.get('host') ??
+    'localhost:3000'
+  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+  const baseUrl = `${proto}://${host}`
+
+  const tokenHash = linkData.properties?.hashed_token
+  const otpType = linkData.properties?.verification_type ?? 'signup'
+  const code = linkData.properties?.email_otp ?? ''
+  const confirmUrl = tokenHash
+    ? `${baseUrl}/auth/confirm?${new URLSearchParams({
+        token_hash: tokenHash,
+        type: otpType,
+        next: '/pending-approval',
+      }).toString()}`
+    : `${baseUrl}/verify-email?email=${encodeURIComponent(data.email)}`
+
+  try {
+    const transport = createGmailTransport()
+    await transport.sendMail({
+      from: getGmailFrom(),
+      to: data.email,
+      subject: accountVerificationSubject(),
+      html: accountVerificationHtml({
+        nombre: data.fullName,
+        confirmUrl,
+        code,
+      }),
+    })
+  } catch (e) {
+    // Si el envío falla, la cuenta queda creada; el usuario puede reintentar
+    // desde /verify-email. Se registra pero no se aborta el registro.
+    logger.error('signUpWithPassword: fallo al enviar correo de verificación', {
+      error: e instanceof Error ? e.message : String(e),
+    })
   }
 
   return ok(undefined)
