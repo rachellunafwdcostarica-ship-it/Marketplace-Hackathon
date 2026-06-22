@@ -432,6 +432,7 @@ export type Database = {
       }
       entregables: {
         Row: {
+          archivo_hash: string | null
           archivo_url: string | null
           cargado_at: string
           comentario_empresario: string | null
@@ -443,6 +444,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          archivo_hash?: string | null
           archivo_url?: string | null
           cargado_at?: string
           comentario_empresario?: string | null
@@ -454,6 +456,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          archivo_hash?: string | null
           archivo_url?: string | null
           cargado_at?: string
           comentario_empresario?: string | null
