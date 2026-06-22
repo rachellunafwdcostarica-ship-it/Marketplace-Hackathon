@@ -247,6 +247,15 @@ export async function setParticipacionEstado(
   }
   if (!actualizada) return err('update_failed')
 
+  // Revision explicita (enviada -> en_revision): avisar al egresado.
+  // Best-effort; el helper es autoblindado, no altera el resultado del cambio.
+  if (parsed.data.accion === 'revisar') {
+    await notificarParticipacionEnRevision(
+      actual.id_participacion,
+      actual.id_proyecto,
+    )
+  }
+
   // Rechazo explícito (en_revision -> no_seleccionada): avisar al egresado.
   // Best-effort; el helper es autoblindado, no altera el resultado del cambio.
   if (parsed.data.accion === 'rechazar') {
@@ -515,12 +524,100 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
 }
 
 /**
- * Notifica al egresado cuando el empresario rechaza su participación de forma
- * individual durante la revisión (`en_revision` → `no_seleccionada`). Best-effort
- * y autoblindada (log + decisión, §8): el cambio de estado ya quedó confirmado,
- * así que cualquier fallo aquí se loguea y se traga. Lee con `service_role`: la
- * sesión es del empresario y la RLS no le deja ver al usuario del egresado.
- * Reusa `buildAdjudicacionNotificaciones` con un solo afectado (mismo tipo_evento).
+ * Notifica al egresado cuando el empresario abre su propuesta y la pasa a
+ * revision (`enviada` -> `en_revision`). Best-effort y autoblindada: el cambio
+ * de estado ya quedo confirmado, asi que cualquier fallo aqui se loguea y se
+ * traga. Lee con `service_role`: la sesion es del empresario y la RLS no le deja
+ * ver al usuario del egresado.
+ */
+async function notificarParticipacionEnRevision(
+  idParticipacion: string,
+  idProyecto: string,
+): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+
+    const { data: proyecto, error: proyectoError } = await admin
+      .from('proyectos')
+      .select('titulo')
+      .eq('id_proyecto', idProyecto)
+      .maybeSingle()
+    if (proyectoError || !proyecto) {
+      logger.error(
+        'notificarParticipacionEnRevision: fallo al leer el proyecto',
+        {
+          idProyecto,
+          error: proyectoError?.message,
+        },
+      )
+      return
+    }
+
+    const { data: fila, error: filaError } = await admin
+      .from('participaciones')
+      .select('estudiantes(usuarios(id_usuario))')
+      .eq('id_participacion', idParticipacion)
+      .maybeSingle()
+    if (filaError || !fila) {
+      logger.error(
+        'notificarParticipacionEnRevision: fallo al leer la participacion',
+        {
+          idParticipacion,
+          error: filaError?.message,
+        },
+      )
+      return
+    }
+
+    const idUsuario = (
+      fila as unknown as {
+        estudiantes: { usuarios: { id_usuario: string } | null } | null
+      }
+    ).estudiantes?.usuarios?.id_usuario
+    if (!idUsuario) {
+      logger.error(
+        'notificarParticipacionEnRevision: participacion sin usuario',
+        {
+          idParticipacion,
+        },
+      )
+      return
+    }
+
+    const urlProyecto = `/${DEFAULT_LOCALE}/egresado/projects/${idProyecto}`
+    const result = await crearNotificaciones([
+      {
+        idUsuario,
+        tipoEvento: 'participacion_en_revision',
+        mensaje: `La empresa está revisando tu propuesta para "${proyecto.titulo}".`,
+        params: { titulo: proyecto.titulo },
+        urlDestino: urlProyecto,
+      },
+    ])
+    if (!result.ok) {
+      logger.error(
+        'notificarParticipacionEnRevision: fallo al crear la notificacion',
+        {
+          idParticipacion,
+          error: result.error,
+        },
+      )
+    }
+  } catch (e) {
+    logger.error('notificarParticipacionEnRevision: excepcion inesperada', {
+      idParticipacion,
+      error: String(e),
+    })
+  }
+}
+
+/**
+ * Notifica al egresado cuando el empresario rechaza su participacion de forma
+ * individual durante la revision (`en_revision` -> `no_seleccionada`).
+ * Best-effort y autoblindada: el cambio de estado ya quedo confirmado, asi que
+ * cualquier fallo aqui se loguea y se traga. Lee con `service_role`: la sesion
+ * es del empresario y la RLS no le deja ver al usuario del egresado. Reusa
+ * `buildAdjudicacionNotificaciones` con un solo afectado (mismo tipo_evento).
  */
 async function notificarRechazoParticipacion(
   idParticipacion: string,
