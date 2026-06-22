@@ -48,7 +48,8 @@
     "settings": "Ajustes del sistema",
     "moderation": "Moderación",
     "adminRegister": "Registro de admin",
-    "messages": "Mensajes"
+    "messages": "Mensajes",
+    "myContracts": "Mis Contrataciones"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -245,6 +246,17 @@
     "marketplaceDesc": "Encuentra y postúlate a proyectos freelance de corta duración que se adapten a tus habilidades.",
     "applications": "Mis Postulaciones",
     "applicationsDesc": "Realiza el seguimiento de tus candidaturas enviadas a las distintas empresas.",
+    "myContracts": "Mis Contrataciones",
+    "myContractsDesc": "Proyectos en los que fuiste seleccionado. Accedé a tus entregables desde aquí.",
+    "emptyContracts": "Todavía no tenés contrataciones activas.",
+    "emptyContractsDesc": "Cuando una empresa te seleccione para un proyecto, aparecerá aquí.",
+    "contractActive": "Vigente",
+    "contractFinished": "Finalizado",
+    "contractPaused": "Pausado",
+    "contractCancelled": "Cancelado",
+    "viewDeliverables": "Ver entregables",
+    "contractStart": "Inicio",
+    "contractEnd": "Vencimiento estimado",
     "statsTitle": "Resumen de Actividad",
     "statsRecommended": "Proyectos Recomendados",
     "appliedProjects": "Proyectos Postulados",
@@ -330,6 +342,7 @@
     "uploadSectionTitle": "Subir entregable",
     "uploadHito": "Subir Hito (Parcial)",
     "uploadFinal": "Subir Entregable Final",
+    "uploadDisabledNotVigente": "Solo podés subir entregables cuando el contrato está vigente.",
     "uploadSuccess": "Entregable subido con éxito.",
     "uploadError": "Error al subir el entregable.",
     "tipoParcial": "Hito parcial",
@@ -749,6 +762,17 @@
     "responderCommentPlaceholder": "Describe los cambios necesarios...",
     "responderSuccess": "Respuesta enviada.",
     "responderError": "No pudimos enviar la respuesta.",
+    "comentariosLabel": "Historial de comentarios",
+    "sinComentarios": "Sin comentarios aún.",
+    "tipoComentario_aprobacion": "Aprobado",
+    "tipoComentario_revision_solicitada": "Cambios solicitados",
+    "tipoComentario_aclaracion": "Comentario",
+    "tipoComentario_rechazo": "Rechazado",
+    "agregarComentarioPlaceholder": "Escribe un comentario o aclaración sobre este entregable...",
+    "agregarComentarioBtn": "Comentar",
+    "comentandoBtn": "Comentando...",
+    "comentarExitoso": "Comentario registrado.",
+    "comentarError": "No se pudo registrar el comentario.",
     "editDescriptionAction": "Editar descripción",
     "editDescriptionTitle": "Editar la descripción del proyecto",
     "editDescriptionDesc": "La IA revisará tu cambio antes de publicarlo. Si lo acepta, se avisará por correo y notificación a quienes ya postularon.",
@@ -1141,7 +1165,10 @@
       "cuenta_suspendida": "Tu cuenta fue suspendida tras acumular {cantidad} strikes.",
       "participacion_contratada": "¡Felicitaciones! La empresa te eligió para \"{titulo}\". Pronto se pondrán en contacto.",
       "participacion_no_seleccionada": "Tu propuesta para \"{titulo}\" no fue seleccionada en esta ocasión. Gracias por postularte; pronto habrá nuevas oportunidades.",
-      "postulacion_recibida": "Recibiste una nueva postulación en \"{titulo}\"."
+      "postulacion_recibida": "Recibiste una nueva postulación en \"{titulo}\".",
+      "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión.",
+      "entregable_aprobado": "Tu entregable del proyecto \"{titulo}\" fue aprobado.",
+      "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\"."
     }
   },
   "EmpresaPerfil": {
@@ -1184,7 +1211,8 @@
     "projectsPublished": "{count, plural, one {# proyecto publicado} other {# proyectos publicados}}",
     "cancelar": "Cancelar",
     "supportMinCharsInfo": "caracteres mínimo",
-    "contratacionesDesc": "Revisá el listado de los estudiantes que has contratado para tus proyectos."
+    "contratacionesDesc": "Revisá el listado de los estudiantes que has contratado para tus proyectos.",
+    "viewEntregables": "Ver entregables"
   },
   "CompanyPostulations": {
     "title": "Gestión de Postulaciones",

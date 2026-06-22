@@ -2,7 +2,17 @@
 
 import React from 'react'
 import { ParticipacionConProyecto } from '@/lib/projects/project-detail'
-import { Star, Briefcase, Award, Calendar, Eye, FileText } from 'lucide-react'
+import {
+  Star,
+  Briefcase,
+  Award,
+  Calendar,
+  Eye,
+  FileText,
+  FileCheck2,
+} from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/routing'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -71,6 +81,7 @@ function getTituloLabel(titulo: string | null) {
 export function ContratacionesList({
   contrataciones,
 }: ContratacionesListProps) {
+  const tEmpresa = useTranslations('EmpresaPerfil')
   const [selectedTitle, setSelectedTitle] = React.useState<string | null>(null)
   const [selectedMotivacion, setSelectedMotivacion] =
     React.useState<ParticipacionConProyecto | null>(null)
@@ -179,6 +190,17 @@ export function ContratacionesList({
               >
                 <FileText className="w-4 h-4" />
                 Ver Motivación
+              </Button>
+
+              <Button
+                asChild
+                variant="default"
+                className="w-full gap-2 text-xs font-semibold h-8 bg-accent hover:bg-accent/90 text-accent-foreground"
+              >
+                <Link href={`/empresario/proyecto/${item.proyecto.id}`}>
+                  <FileCheck2 className="w-4 h-4" />
+                  {tEmpresa('viewEntregables')}
+                </Link>
               </Button>
             </div>
           </CardContent>

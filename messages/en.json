@@ -48,7 +48,8 @@
     "settings": "System settings",
     "moderation": "Moderation",
     "adminRegister": "Admin registration",
-    "messages": "Messages"
+    "messages": "Messages",
+    "myContracts": "My Contracts"
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
@@ -245,6 +246,17 @@
     "marketplaceDesc": "Find and apply to short-term freelance projects that match your skills.",
     "applications": "My Applications",
     "applicationsDesc": "Track the applications you have sent to different companies.",
+    "myContracts": "My Contracts",
+    "myContractsDesc": "Projects you were selected for. Access your deliverables from here.",
+    "emptyContracts": "You have no active contracts yet.",
+    "emptyContractsDesc": "When a company selects you for a project, it will appear here.",
+    "contractActive": "Active",
+    "contractFinished": "Finished",
+    "contractPaused": "Paused",
+    "contractCancelled": "Cancelled",
+    "viewDeliverables": "View deliverables",
+    "contractStart": "Start",
+    "contractEnd": "Estimated end",
     "statsTitle": "Activity Summary",
     "statsRecommended": "Recommended Projects",
     "appliedProjects": "Applied Projects",
@@ -330,6 +342,7 @@
     "uploadSectionTitle": "Upload deliverable",
     "uploadHito": "Upload Milestone (Partial)",
     "uploadFinal": "Upload Final Deliverable",
+    "uploadDisabledNotVigente": "You can only upload deliverables while the contract is active.",
     "uploadSuccess": "Deliverable uploaded successfully.",
     "uploadError": "Failed to upload the deliverable.",
     "tipoParcial": "Partial milestone",
@@ -749,6 +762,17 @@
     "responderCommentPlaceholder": "Describe the required changes...",
     "responderSuccess": "Response sent.",
     "responderError": "Could not send the response.",
+    "comentariosLabel": "Comment history",
+    "sinComentarios": "No comments yet.",
+    "tipoComentario_aprobacion": "Approved",
+    "tipoComentario_revision_solicitada": "Changes requested",
+    "tipoComentario_aclaracion": "Comment",
+    "tipoComentario_rechazo": "Rejected",
+    "agregarComentarioPlaceholder": "Write a comment or clarification about this deliverable...",
+    "agregarComentarioBtn": "Comment",
+    "comentandoBtn": "Commenting...",
+    "comentarExitoso": "Comment registered.",
+    "comentarError": "Could not register the comment.",
     "editDescriptionAction": "Edit description",
     "editDescriptionTitle": "Edit the project description",
     "editDescriptionDesc": "The AI will review your change before publishing it. If accepted, applicants will be notified by email and in-app.",
@@ -1141,7 +1165,10 @@
       "cuenta_suspendida": "Your account was suspended after reaching {cantidad} strikes.",
       "participacion_contratada": "Congratulations! The company picked you for \"{titulo}\". They'll be in touch soon.",
       "participacion_no_seleccionada": "Your proposal for \"{titulo}\" wasn't selected this time. Thanks for applying — new opportunities are on the way.",
-      "postulacion_recibida": "You have a new application for \"{titulo}\"."
+      "postulacion_recibida": "You have a new application for \"{titulo}\".",
+      "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon.",
+      "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
+      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\"."
     }
   },
   "EmpresaPerfil": {
@@ -1184,7 +1211,8 @@
     "projectsPublished": "{count, plural, one {# published project} other {# published projects}}",
     "cancelar": "Cancel",
     "supportMinCharsInfo": "characters minimum",
-    "contratacionesDesc": "Review the list of students you have hired for your projects."
+    "contratacionesDesc": "Review the list of students you have hired for your projects.",
+    "viewEntregables": "View deliverables"
   },
   "CompanyPostulations": {
     "title": "Applications Management",
