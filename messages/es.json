@@ -1278,11 +1278,15 @@
     "editSkill": "Editar Habilidad",
     "noSkills": "No hay habilidades registradas",
     "skillName": "Nombre de habilidad",
+    "selectSkillPlaceholder": "Selecciona una habilidad...",
     "skillLevel": "Nivel",
     "levelBasic": "Básico",
     "levelIntermediate": "Intermedio",
     "levelAdvanced": "Avanzado",
-    "saveSkill": "Guardar Habilidad"
+    "saveSkill": "Guardar Habilidad",
+    "cropImageTitle": "Recortar imagen",
+    "cropImageDesc": "Ajustá tu imagen para que se vea perfecta.",
+    "cropAndUpload": "Recortar y Subir"
   },
   "EgresadoMensajes": {
     "title": "Mis Mensajes",
