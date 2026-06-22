@@ -1170,7 +1170,8 @@
       "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión.",
       "entregable_aprobado": "Tu entregable del proyecto \"{titulo}\" fue aprobado.",
       "participacion_en_revision": "La empresa está revisando tu propuesta para \"{titulo}\".",
-      "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\"."
+      "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\".",
+      "cuenta_verificada": "Tu cuenta ha sido activada. Ya puedes explorar proyectos y postularte."
     }
   },
   "EmpresaPerfil": {

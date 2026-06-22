@@ -30,6 +30,8 @@ import { normalizeRole, ROLE_HOME } from './roles'
 import { checkPwnedPassword } from './check-pwned-password'
 import { evaluateAdminManagement } from '@/lib/admin/admin-management'
 import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
+import { crearNotificacion } from '@/lib/notifications/create'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
   return getUserRole()
@@ -277,6 +279,18 @@ export async function approveUser(userId: string): Promise<Result<void>> {
   if (error) {
     logger.error('approveUser failed', { error: error.message, userId })
     return err(error.message)
+  }
+
+  // Notificación in-app: el usuario la ve al primer login. Best-effort.
+  if (rolRaw !== 'administrador') {
+    const rolParaNotif: 'egresado' | 'empresario' =
+      rolRaw === 'empresario' ? 'empresario' : 'egresado'
+    await crearNotificacion({
+      idUsuario: parsed.data,
+      tipoEvento: 'cuenta_verificada',
+      mensaje: 'content.cuenta_verificada',
+      urlDestino: `/${DEFAULT_LOCALE}${ROLE_HOME[rolParaNotif]}`,
+    })
   }
 
   // Enviar correo de aprobación (solo egresado/empresario: la plantilla es

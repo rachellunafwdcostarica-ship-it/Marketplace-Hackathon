@@ -1170,7 +1170,8 @@
       "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon.",
       "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
       "participacion_en_revision": "The company is reviewing your proposal for \"{titulo}\".",
-      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\"."
+      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
+      "cuenta_verificada": "Your account has been activated. You can now explore projects and apply."
     }
   },
   "EmpresaPerfil": {
