@@ -3,26 +3,41 @@
 import { useState, type ReactNode } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { usePathname, useRouter } from '@/i18n/routing'
-import { Menu, X, ShieldCheck, ChevronDown } from 'lucide-react'
+import {
+  Menu,
+  X,
+  ShieldCheck,
+  ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react'
 import { useAuth } from '@/lib/auth/AuthContext'
+import { useSidebarHidden } from '@/hooks/use-sidebar-hidden'
 import { SidebarAdmin } from './SidebarAdmin'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
+import { NotificationBell } from '@/components/features/notifications/NotificationBell'
 import { cn } from '@/lib/utils/cn'
 
 interface AdminShellProps {
   children: ReactNode
+  isSuperadmin?: boolean
 }
 
 /**
  * Marco del panel admin — diseño con sidebar morado oscuro + header morado FWD
  * y contenido sobre fondo blanco limpio (§5.7).
  */
-export function AdminShell({ children }: AdminShellProps) {
+export function AdminShell({
+  children,
+  isSuperadmin = false,
+}: AdminShellProps) {
   const t = useTranslations('Nav')
   const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const { resetAuth, currentUser } = useAuth()
+  const { isHidden: isSidebarHidden, toggle: toggleSidebar } =
+    useSidebarHidden()
 
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -57,7 +72,14 @@ export function AdminShell({ children }: AdminShellProps) {
   return (
     <div className="flex min-h-screen" style={{ background: '#f5f6fa' }}>
       {/* ── Desktop Sidebar ── */}
-      <SidebarAdmin className="hidden md:flex" onLogout={handleLogout} />
+      {!isSidebarHidden && (
+        <SidebarAdmin
+          id="admin-sidebar"
+          className="hidden md:flex md:sticky md:top-0 md:h-screen md:self-start"
+          onLogout={handleLogout}
+          isSuperadmin={isSuperadmin}
+        />
+      )}
 
       {/* ── Mobile drawer overlay ── */}
       {mobileOpen && (
@@ -73,6 +95,7 @@ export function AdminShell({ children }: AdminShellProps) {
               className="h-full"
               onNavigate={closeMobile}
               onLogout={handleLogout}
+              isSuperadmin={isSuperadmin}
             />
           </div>
         </div>
@@ -99,6 +122,22 @@ export function AdminShell({ children }: AdminShellProps) {
             )}
           </button>
 
+          {/* Desktop sidebar toggle */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={isSidebarHidden ? t('showSidebar') : t('hideSidebar')}
+            aria-expanded={!isSidebarHidden}
+            aria-controls="admin-sidebar"
+            className="hidden md:inline-flex rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+          >
+            {isSidebarHidden ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+          </button>
+
           {/* Foundation brand pill */}
           <span className="flex items-center gap-2 mr-2">
             <ShieldCheck className="h-4 w-4 text-purple-700 shrink-0" />
@@ -109,6 +148,9 @@ export function AdminShell({ children }: AdminShellProps) {
 
           {/* Spacer */}
           <div className="flex-1" />
+
+          {/* Notification bell */}
+          <NotificationBell className="shrink-0" />
 
           {/* Language switcher */}
           <div

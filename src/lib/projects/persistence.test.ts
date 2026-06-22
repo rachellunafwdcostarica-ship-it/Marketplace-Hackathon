@@ -74,8 +74,8 @@ describe('parseLogistica', () => {
       presupuestoMin: 1000,
       presupuestoMax: 5000,
       plazoDias: 7,
-      paisProyecto: null,
-      ciudadProyecto: null,
+      paisIso: null,
+      region: null,
     }
     const result = parseLogistica(data as Json)
     expect(result).toEqual(data)

@@ -28,8 +28,8 @@ const mockRawProject = {
   moneda: 'USD' as const,
   presupuesto_min: 500,
   presupuesto_max: 1500,
-  pais_proyecto: 'Costa Rica',
-  ciudad_proyecto: null,
+  pais_iso_proyecto: 'CR',
+  region_proyecto: null,
   fecha_publicacion: '2024-06-01T00:00:00Z',
   fecha_cierre: null,
   involucra_ia: false,
@@ -56,12 +56,10 @@ function withAuth(fromImpl: (table: string) => unknown) {
 function withNoAuth() {
   return {
     auth: {
-      getUser: vi
-        .fn()
-        .mockResolvedValue({
-          data: { user: null },
-          error: { message: 'no auth' },
-        }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: null },
+        error: { message: 'no auth' },
+      }),
     },
     from: vi.fn(),
   }
@@ -114,12 +112,10 @@ describe('getMyPublishedProjects', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: null,
-                    error: { message: 'db error' },
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'db error' },
+                }),
               })),
             })),
           }
@@ -140,12 +136,10 @@ describe('getMyPublishedProjects', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_empresario: EMP_ID },
-                    error: null,
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: EMP_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -175,12 +169,10 @@ describe('getMyPublishedProjects', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_empresario: EMP_ID },
-                    error: null,
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: EMP_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -227,12 +219,10 @@ describe('getMyPublishedProjects', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_empresario: EMP_ID },
-                    error: null,
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: EMP_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -266,12 +256,10 @@ describe('getMyPublishedProjects', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_empresario: EMP_ID },
-                    error: null,
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: EMP_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -280,12 +268,10 @@ describe('getMyPublishedProjects', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                order: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: null,
-                    error: { message: 'db fail' },
-                  }),
+                order: vi.fn().mockResolvedValue({
+                  data: null,
+                  error: { message: 'db fail' },
+                }),
               })),
             })),
           }
@@ -349,12 +335,10 @@ describe('cancelProject', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_empresario: EMP_ID },
-                    error: null,
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: EMP_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -389,12 +373,10 @@ describe('cancelProject', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_empresario: EMP_ID },
-                    error: null,
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: EMP_ID },
+                  error: null,
+                }),
               })),
             })),
           }
@@ -429,12 +411,10 @@ describe('cancelProject', () => {
           return {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
-                maybeSingle: vi
-                  .fn()
-                  .mockResolvedValue({
-                    data: { id_empresario: EMP_ID },
-                    error: null,
-                  }),
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: EMP_ID },
+                  error: null,
+                }),
               })),
             })),
           }

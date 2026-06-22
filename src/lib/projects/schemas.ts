@@ -32,8 +32,8 @@ export interface LogisticsFormValues {
   presupuestoMin: string
   presupuestoMax: string
   plazoDias: string
-  paisProyecto: string
-  ciudadProyecto: string
+  paisIso: string
+  region: string
   contextoInicial: string
 }
 
@@ -49,8 +49,8 @@ export interface LogisticaDraft {
   presupuestoMin: number | null
   presupuestoMax: number | null
   plazoDias: number
-  paisProyecto: string | null
-  ciudadProyecto: string | null
+  paisIso: string | null
+  region: string | null
 }
 
 /** Referencia a un ítem de catálogo ya resuelto (id + nombre legible). */
@@ -107,8 +107,8 @@ export function buildLogisticsSchema() {
       presupuestoMin: z.string(),
       presupuestoMax: z.string(),
       plazoDias: z.string(),
-      paisProyecto: z.string().trim().max(UBICACION_MAX),
-      ciudadProyecto: z.string().trim().max(UBICACION_MAX),
+      paisIso: z.string().trim(),
+      region: z.string().trim(),
       contextoInicial: z
         .string()
         .trim()
@@ -124,14 +124,12 @@ export function buildLogisticsSchema() {
         })
       }
 
-      if (valores.modalidad !== 'remoto') {
-        if (!valores.paisProyecto.trim() || !valores.ciudadProyecto.trim()) {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'ubicacion',
-            path: ['ciudadProyecto'],
-          })
-        }
+      if (valores.modalidad !== 'remoto' && !valores.paisIso.trim()) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'pais',
+          path: ['paisIso'],
+        })
       }
 
       const min = parseMoney(valores.presupuestoMin)
@@ -196,8 +194,8 @@ export function buildLogisticsSchema() {
  */
 export function toLogisticaDraft(values: LogisticsFormValues): LogisticaDraft {
   const esRemoto = values.modalidad === 'remoto'
-  const pais = values.paisProyecto.trim()
-  const ciudad = values.ciudadProyecto.trim()
+  const paisIso = values.paisIso.trim()
+  const region = values.region.trim()
   const titulo = values.titulo.trim()
 
   return {
@@ -207,8 +205,8 @@ export function toLogisticaDraft(values: LogisticsFormValues): LogisticaDraft {
     presupuestoMin: parseMoney(values.presupuestoMin),
     presupuestoMax: parseMoney(values.presupuestoMax),
     plazoDias: parsePlazo(values.plazoDias) ?? PLAZO_MIN_DIAS,
-    paisProyecto: esRemoto || pais === '' ? null : pais,
-    ciudadProyecto: esRemoto || ciudad === '' ? null : ciudad,
+    paisIso: esRemoto || paisIso === '' ? null : paisIso,
+    region: esRemoto || region === '' ? null : region,
   }
 }
 
@@ -230,8 +228,8 @@ export function draftToFormValues(
     presupuestoMax:
       draft?.presupuestoMax != null ? String(draft.presupuestoMax) : '',
     plazoDias: draft?.plazoDias != null ? String(draft.plazoDias) : '',
-    paisProyecto: draft?.paisProyecto ?? '',
-    ciudadProyecto: draft?.ciudadProyecto ?? '',
+    paisIso: draft?.paisIso ?? '',
+    region: draft?.region ?? '',
     contextoInicial,
   }
 }

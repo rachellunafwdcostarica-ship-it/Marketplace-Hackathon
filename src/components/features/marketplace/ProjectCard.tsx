@@ -118,7 +118,7 @@ export function ProjectCard({
           actionButton
         ) : (
           <Link
-            href={`/junior/projects/${project.id}`}
+            href={`/egresado/projects/${project.id}`}
             className="inline-flex items-center justify-center text-sm font-semibold text-primary hover:text-primary/80 transition-colors group/link w-full py-2"
           >
             {tCommon('viewDetails')}

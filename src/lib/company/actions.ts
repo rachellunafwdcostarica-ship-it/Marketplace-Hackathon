@@ -90,8 +90,8 @@ export async function getCompanyProfile(): Promise<
       contactEmail: user.email ?? '',
       website: empresario.sitio_web ?? '',
       logo: empresario.logo ?? '',
-      country: empresario.pais_sede ?? '',
-      city: empresario.ciudad_sede ?? '',
+      country: empresario.pais_iso_sede ?? '',
+      city: empresario.region_sede ?? '',
       verificationStatus: empresario.estado_verificacion ?? null,
       reputacion: empresario.reputacion ? Number(empresario.reputacion) : 0,
       ...(empresario.alcance_operativo
@@ -164,8 +164,8 @@ export async function getCompanyProfileForEdit(): Promise<
       contactEmail: user.email ?? '',
       website: empresario?.sitio_web ?? '',
       logo: empresario?.logo ?? '',
-      country: empresario?.pais_sede ?? '',
-      city: empresario?.ciudad_sede ?? '',
+      country: empresario?.pais_iso_sede ?? '',
+      city: empresario?.region_sede ?? '',
       verificationStatus: empresario?.estado_verificacion ?? null,
       reputacion: empresario?.reputacion ? Number(empresario.reputacion) : 0,
       ...(empresario?.alcance_operativo
@@ -224,8 +224,8 @@ export async function saveCompanyProfile(
         descripcion: data.description,
         logo: data.logo,
         sitio_web: data.website,
-        pais_sede: data.country ?? null,
-        ciudad_sede: data.city ?? null,
+        pais_iso_sede: data.country ?? null,
+        region_sede: data.city ?? null,
         alcance_operativo: data.operatingScope ?? null,
       }
 

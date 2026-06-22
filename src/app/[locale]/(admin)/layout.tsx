@@ -34,5 +34,14 @@ export default async function AdminLayout({
     redirect(`/${locale}${ROLE_HOME[role]}`)
   }
 
-  return <AdminShell>{children}</AdminShell>
+  // El nivel_admin gobierna qué puede el admin (p. ej. registrar admins es solo
+  // superadmin). La policy usuario_lee_su_perfil permite esta lectura propia.
+  const { data: me } = await supabase
+    .from('usuarios')
+    .select('nivel_admin')
+    .eq('id_usuario', user.id)
+    .maybeSingle()
+  const isSuperadmin = me?.nivel_admin === 'superadmin'
+
+  return <AdminShell isSuperadmin={isSuperadmin}>{children}</AdminShell>
 }

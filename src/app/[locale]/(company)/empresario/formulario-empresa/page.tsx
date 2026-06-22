@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { ArrowLeft } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
@@ -7,6 +7,7 @@ import { PageTitle } from '@/components/features/brand/PageTitle'
 import { CompanyProfileForm } from '@/components/features/companies/CompanyProfileForm'
 import { getCompanyProfileForEdit } from '@/lib/company/actions'
 import { getCurrentUser } from '@/lib/auth/dal'
+import { getCountryOptions, getSubdivisions } from '@/lib/geo/catalog'
 
 /**
  * Formulario de empresa. Server Component: el perfil (datos de empresa + datos
@@ -18,6 +19,18 @@ export default async function CompanyProfileFormPage() {
   const tEmpresa = await getTranslations('Empresa')
   const user = await getCurrentUser()
   const profileRes = await getCompanyProfileForEdit()
+  const locale = await getLocale()
+  const countries = getCountryOptions(locale).map((country) => ({
+    value: country.code,
+    label: country.name,
+  }))
+  const profileCountry = profileRes.ok ? profileRes.data.country : ''
+  const initialRegions = profileCountry
+    ? getSubdivisions(profileCountry).map((subdivision) => ({
+        value: subdivision.code,
+        label: subdivision.name,
+      }))
+    : []
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -44,6 +57,8 @@ export default async function CompanyProfileFormPage() {
           <CompanyProfileForm
             initialProfile={profileRes.data}
             userId={user.id}
+            countries={countries}
+            initialRegions={initialRegions}
           />
         ) : (
           <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center">

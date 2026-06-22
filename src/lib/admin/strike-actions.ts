@@ -7,6 +7,14 @@ import { logger } from '@/lib/logger'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
 import { getCurrentUser } from '@/lib/auth/dal'
+import { createAdminNotification } from '@/lib/admin/notification-actions'
+import { crearNotificacion } from '@/lib/notifications/create'
+import { buildStrikeNotificacion } from '@/lib/admin/strike-notificacion-logic'
+import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
+import {
+  strikeAppliedHtml,
+  strikeAppliedSubject,
+} from '@/lib/email/templates/strike-applied'
 import type { Database } from '@/types/database'
 
 type MotivoStrikeEnum = Database['public']['Enums']['motivo_strike_enum']
@@ -127,6 +135,75 @@ export async function addStrike(
     motivo: parsedMotivo.data,
     descripcion: parsedDesc.data ?? 'sin descripción',
     autoSuspended: nuevaCantidad >= maxStrikesLimit,
+  })
+
+  // ── Obtener datos del usuario para enviar el correo ────────────────────────
+  const { data: usuarioCompleto } = await adminClient
+    .from('usuarios')
+    .select('nombre, apellido_1, correo')
+    .eq('id_usuario', parsedId.data)
+    .single()
+
+  // ── Enviar correo de notificación al usuario ───────────────────────────────
+  if (usuarioCompleto?.correo) {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fwdtalent.com'
+    try {
+      const transporter = createGmailTransport()
+      await transporter.sendMail({
+        from: getGmailFrom(),
+        to: usuarioCompleto.correo,
+        subject: strikeAppliedSubject(nuevaCantidad, maxStrikesLimit),
+        html: strikeAppliedHtml({
+          nombre: usuarioCompleto.nombre,
+          correo: usuarioCompleto.correo,
+          motivo: parsedMotivo.data,
+          descripcion: parsedDesc.data ?? undefined,
+          cantidadStrikes: nuevaCantidad,
+          maxStrikes: maxStrikesLimit,
+          dashboardUrl: `${baseUrl}/dashboard`,
+        }),
+      })
+      logger.info('addStrike: correo enviado al usuario', {
+        userId,
+        correo: usuarioCompleto.correo,
+      })
+    } catch (emailErr) {
+      logger.error('addStrike: fallo al enviar correo', {
+        userId,
+        error: String(emailErr),
+      })
+      // No fallamos la acción principal si el email no llega
+    }
+  }
+
+  // ── Notificación in-app para el usuario sancionado (RF-47) ─────────────────
+  // Best-effort: el núcleo nunca lanza; si falla, se loguea sin abortar el strike.
+  const strikeNotif = buildStrikeNotificacion(nuevaCantidad, maxStrikesLimit)
+  const notifResult = await crearNotificacion({
+    idUsuario: parsedId.data,
+    tipoEvento: strikeNotif.tipoEvento,
+    mensaje: strikeNotif.mensaje,
+    params: strikeNotif.params,
+    urlDestino: null,
+  })
+  if (!notifResult.ok) {
+    logger.error('addStrike: fallo al notificar al usuario sancionado', {
+      userId,
+      error: notifResult.error,
+    })
+  }
+
+  // ── Crear notificación en el panel de admin ────────────────────────────────
+  const nombreCompleto = usuarioCompleto
+    ? `${usuarioCompleto.nombre} ${usuarioCompleto.apellido_1}`
+    : `usuario ${parsedId.data.slice(0, 8)}`
+  await createAdminNotification({
+    mensaje:
+      nuevaCantidad >= maxStrikesLimit
+        ? `${nombreCompleto} fue suspendido automáticamente tras ${nuevaCantidad} strikes. Motivo: ${parsedMotivo.data}.`
+        : `Strike aplicado a ${nombreCompleto} (${nuevaCantidad}/${maxStrikesLimit}). Motivo: ${parsedMotivo.data}.`,
+    tipo_evento: 'strike_recibido',
+    url_destino: '/admin/moderation',
   })
 
   revalidatePath('/admin/moderation', 'page')

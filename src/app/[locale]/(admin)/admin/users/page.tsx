@@ -14,6 +14,8 @@ import {
 import { AdminUserFilters } from '@/components/features/admin/AdminUserFilters'
 import { AccountStatusActions } from '@/components/features/admin/AccountStatusActions'
 import { getCurrentUser } from '@/lib/auth/dal'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { canManageAdminInUi } from '@/lib/admin/admin-management'
 import {
   listUsers,
   ADMIN_USER_ROLES,
@@ -54,6 +56,21 @@ export default async function AdminUsersPage({
 
   const currentUser = await getCurrentUser()
   const currentUserId = currentUser?.id ?? null
+
+  // Nivel y antigüedad del caller para decidir, por fila de admin, si puede
+  // gestionarla (el backend igual valida; esto solo oculta acciones inválidas).
+  let callerNivel: 'superadmin' | 'admin' | 'moderador' | null = null
+  let callerFechaRegistro = ''
+  if (currentUserId) {
+    const adminClient = createSupabaseAdminClient()
+    const { data: callerRow } = await adminClient
+      .from('usuarios')
+      .select('nivel_admin, fecha_registro')
+      .eq('id_usuario', currentUserId)
+      .maybeSingle()
+    callerNivel = callerRow?.nivel_admin ?? null
+    callerFechaRegistro = callerRow?.fecha_registro ?? ''
+  }
 
   const statusLabel = (value: AdminAccountStatus): string => {
     switch (value) {
@@ -128,50 +145,67 @@ export default async function AdminUsersPage({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id_usuario}>
-                      <TableCell className="font-semibold text-foreground">
-                        {user.nombre} {user.apellido_1}
-                        {user.apellido_2 ? ` ${user.apellido_2}` : ''}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {user.correo}
-                      </TableCell>
-                      <TableCell>{roleLabel(user.nombre_rol)}</TableCell>
-                      <TableCell>
-                        {user.is_active ? (
-                          <Badge
-                            variant="outline"
-                            className={`rounded-full border px-2 text-[10px] font-semibold ${STATUS_BADGE_CLASS[user.estado_cuenta]}`}
-                          >
-                            {statusLabel(user.estado_cuenta)}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="rounded-full border border-magenta/20 bg-magenta/10 px-2 text-[10px] font-semibold text-magenta"
-                          >
-                            {t('accountInactive')}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(user.fecha_registro).toLocaleDateString(
-                          locale,
-                          { year: 'numeric', month: 'short', day: 'numeric' },
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <AccountStatusActions
-                          userId={user.id_usuario}
-                          estadoCuenta={user.estado_cuenta}
-                          isActive={user.is_active}
-                          isSelf={user.id_usuario === currentUserId}
-                          userName={`${user.nombre} ${user.apellido_1}`}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {users.map((user) => {
+                    const isAdminRow = user.nombre_rol === 'administrador'
+                    const canManage =
+                      !isAdminRow ||
+                      canManageAdminInUi({
+                        actorNivel: callerNivel,
+                        actorFechaRegistro: callerFechaRegistro,
+                        targetNivel: user.nivel_admin,
+                        targetFechaRegistro: user.fecha_registro,
+                      })
+                    const canResend =
+                      isAdminRow &&
+                      user.estado_cuenta === 'pendiente' &&
+                      callerNivel === 'superadmin'
+                    return (
+                      <TableRow key={user.id_usuario}>
+                        <TableCell className="font-semibold text-foreground">
+                          {user.nombre} {user.apellido_1}
+                          {user.apellido_2 ? ` ${user.apellido_2}` : ''}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {user.correo}
+                        </TableCell>
+                        <TableCell>{roleLabel(user.nombre_rol)}</TableCell>
+                        <TableCell>
+                          {user.is_active ? (
+                            <Badge
+                              variant="outline"
+                              className={`rounded-full border px-2 text-[10px] font-semibold ${STATUS_BADGE_CLASS[user.estado_cuenta]}`}
+                            >
+                              {statusLabel(user.estado_cuenta)}
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="rounded-full border border-magenta/20 bg-magenta/10 px-2 text-[10px] font-semibold text-magenta"
+                            >
+                              {t('accountInactive')}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(user.fecha_registro).toLocaleDateString(
+                            locale,
+                            { year: 'numeric', month: 'short', day: 'numeric' },
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <AccountStatusActions
+                            userId={user.id_usuario}
+                            estadoCuenta={user.estado_cuenta}
+                            isActive={user.is_active}
+                            isSelf={user.id_usuario === currentUserId}
+                            userName={`${user.nombre} ${user.apellido_1}`}
+                            canManage={canManage}
+                            canResend={canResend}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>

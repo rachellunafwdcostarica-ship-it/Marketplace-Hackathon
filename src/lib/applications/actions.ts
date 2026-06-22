@@ -6,6 +6,11 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
+import { validateApplicationWithAI } from '@/lib/ai-filtro-ofertas/openrouter-validation'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { crearNotificacion } from '@/lib/notifications/create'
+import { DEFAULT_LOCALE } from '@/i18n/config'
+import { buildPostulacionNotificacion } from './postulacion-notificacion-logic'
 
 const MIN_PLANTEAMIENTO_LEN = 30
 const MAX_CARTA_LEN = 2800
@@ -69,7 +74,7 @@ export async function postularse(
 
   const { data: proyecto, error: proyectoError } = await supabase
     .from('proyectos')
-    .select('estado, fecha_cierre, is_active')
+    .select('titulo, descripcion, estado, fecha_cierre, is_active')
     .eq('id_proyecto', parsed.data.id_proyecto)
     .single()
 
@@ -88,6 +93,24 @@ export async function postularse(
     return err('plazo_vencido')
   }
 
+  // Validación de IA antes de insertar
+  const aiValidation = await validateApplicationWithAI({
+    projectTitle: proyecto.titulo || 'Proyecto FWD',
+    projectDescription: proyecto.descripcion || '',
+    coverLetter: parsed.data.carta_postulacion,
+    solutionApproach: parsed.data.planteamiento_solucion,
+    externalLink:
+      parsed.data.prototipo_enlaces?.[1] ||
+      parsed.data.prototipo_enlaces?.[0] ||
+      null, // Dependiendo de cuántos hay
+    uploadedPrototypeUrl: parsed.data.prototipo_enlaces?.[0] || null,
+    technicalDocUrl: parsed.data.documentacion_tecnica || null,
+  })
+
+  if (!aiValidation.isRelated) {
+    return err(`AI_REJECTED::${aiValidation.reason}`)
+  }
+
   const { error: insertError } = await supabase.from('participaciones').insert({
     id_proyecto: parsed.data.id_proyecto,
     id_estudiante: estudiante.id_estudiante,
@@ -100,16 +123,80 @@ export async function postularse(
 
   if (insertError) {
     logger.error('postularse failed', { error: insertError.message })
-    if (insertError.code === 'P0001' || insertError.message.includes('cupo')) {
+    if (
+      insertError.code === 'P0001' ||
+      insertError.message.toLowerCase().includes('cupo')
+    ) {
       return err('cupo_excedido')
     }
     return err('database_error')
   }
 
-  revalidatePath('/junior/applications')
-  revalidatePath(`/junior/projects/${parsed.data.id_proyecto}`)
+  await notificarPostulacion(
+    parsed.data.id_proyecto,
+    proyecto.titulo ?? 'tu proyecto',
+  )
+
+  revalidatePath('/egresado/applications')
+  revalidatePath(`/egresado/projects/${parsed.data.id_proyecto}`)
 
   return ok(undefined)
+}
+
+/**
+ * Notifica al empresario dueño que recibió una nueva postulación
+ * (`postulacion_recibida`). Best-effort y autoblindada: la postulación ya quedó
+ * guardada, así que un fallo al notificar se loguea y se traga (log + decisión,
+ * §8). Lee el `id_usuario` del empresario con `service_role`: la sesión es del
+ * egresado y la RLS no le deja ver al dueño.
+ */
+async function notificarPostulacion(
+  idProyecto: string,
+  titulo: string,
+): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data, error } = await admin
+      .from('proyectos')
+      .select('empresarios(id_usuario)')
+      .eq('id_proyecto', idProyecto)
+      .maybeSingle()
+    if (error || !data) {
+      logger.error('notificarPostulacion: no se pudo leer el proyecto', {
+        idProyecto,
+        error: error?.message,
+      })
+      return
+    }
+    const empresario = (
+      data as unknown as { empresarios: { id_usuario: string } | null }
+    ).empresarios
+    if (!empresario?.id_usuario) {
+      logger.error('notificarPostulacion: proyecto sin empresario', {
+        idProyecto,
+      })
+      return
+    }
+    const urlProyecto = `/${DEFAULT_LOCALE}/empresario/proyecto/${idProyecto}`
+    const result = await crearNotificacion(
+      buildPostulacionNotificacion({
+        idUsuarioEmpresario: empresario.id_usuario,
+        titulo,
+        urlProyecto,
+      }),
+    )
+    if (!result.ok) {
+      logger.error('notificarPostulacion: fallo al crear la notificación', {
+        idProyecto,
+        error: result.error,
+      })
+    }
+  } catch (e) {
+    logger.error('notificarPostulacion: excepción inesperada', {
+      idProyecto,
+      error: String(e),
+    })
+  }
 }
 
 /**
@@ -174,6 +261,6 @@ export async function retirarPostulacion(
     return err('database_error')
   }
 
-  revalidatePath('/junior/applications')
+  revalidatePath('/egresado/applications')
   return ok(undefined)
 }

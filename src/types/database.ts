@@ -344,14 +344,14 @@ export type Database = {
         Row: {
           alcance_operativo: Database['public']['Enums']['alcance_enum'] | null
           cedula: string | null
-          ciudad_sede: string | null
+          region_sede: string | null
           descripcion: string | null
           estado_verificacion: Database['public']['Enums']['estado_verif_enum']
           id_empresario: string
           id_usuario: string
           logo: string | null
           nombre_empresa: string | null
-          pais_sede: string | null
+          pais_iso_sede: string | null
           reputacion: number | null
           sector: string | null
           sitio_web: string | null
@@ -363,14 +363,14 @@ export type Database = {
         Insert: {
           alcance_operativo?: Database['public']['Enums']['alcance_enum'] | null
           cedula?: string | null
-          ciudad_sede?: string | null
+          region_sede?: string | null
           descripcion?: string | null
           estado_verificacion?: Database['public']['Enums']['estado_verif_enum']
           id_empresario?: string
           id_usuario: string
           logo?: string | null
           nombre_empresa?: string | null
-          pais_sede?: string | null
+          pais_iso_sede?: string | null
           reputacion?: number | null
           sector?: string | null
           sitio_web?: string | null
@@ -382,14 +382,14 @@ export type Database = {
         Update: {
           alcance_operativo?: Database['public']['Enums']['alcance_enum'] | null
           cedula?: string | null
-          ciudad_sede?: string | null
+          region_sede?: string | null
           descripcion?: string | null
           estado_verificacion?: Database['public']['Enums']['estado_verif_enum']
           id_empresario?: string
           id_usuario?: string
           logo?: string | null
           nombre_empresa?: string | null
-          pais_sede?: string | null
+          pais_iso_sede?: string | null
           reputacion?: number | null
           sector?: string | null
           sitio_web?: string | null
@@ -468,9 +468,11 @@ export type Database = {
           modalidad_preferida:
             | Database['public']['Enums']['modalidad_enum']
             | null
+          pais_iso_residencia: string | null
           participaciones_activas: number
           portafolio_visible_publicamente: boolean
           proyectos_completados: number
+          region_residencia: string | null
           reputacion: number | null
           titulo_fwd: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at: string
@@ -486,9 +488,11 @@ export type Database = {
           modalidad_preferida?:
             | Database['public']['Enums']['modalidad_enum']
             | null
+          pais_iso_residencia?: string | null
           participaciones_activas?: number
           portafolio_visible_publicamente?: boolean
           proyectos_completados?: number
+          region_residencia?: string | null
           reputacion?: number | null
           titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at?: string
@@ -504,9 +508,11 @@ export type Database = {
           modalidad_preferida?:
             | Database['public']['Enums']['modalidad_enum']
             | null
+          pais_iso_residencia?: string | null
           participaciones_activas?: number
           portafolio_visible_publicamente?: boolean
           proyectos_completados?: number
+          region_residencia?: string | null
           reputacion?: number | null
           titulo_fwd?: Database['public']['Enums']['titulo_fwd_enum'] | null
           updated_at?: string
@@ -720,6 +726,7 @@ export type Database = {
           id_usuario: string
           leida: boolean
           mensaje: string
+          params: Json | null
           tipo_evento: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino: string | null
         }
@@ -729,6 +736,7 @@ export type Database = {
           id_usuario: string
           leida?: boolean
           mensaje: string
+          params?: Json | null
           tipo_evento: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino?: string | null
         }
@@ -738,6 +746,7 @@ export type Database = {
           id_usuario?: string
           leida?: boolean
           mensaje?: string
+          params?: Json | null
           tipo_evento?: Database['public']['Enums']['tipo_notificacion_enum']
           url_destino?: string | null
         }
@@ -924,7 +933,7 @@ export type Database = {
       }
       proyectos: {
         Row: {
-          ciudad_proyecto: string | null
+          region_proyecto: string | null
           created_at: string
           descripcion: string
           estado: Database['public']['Enums']['estado_proyecto_enum']
@@ -939,7 +948,7 @@ export type Database = {
           modalidad: Database['public']['Enums']['modalidad_enum']
           moneda: Database['public']['Enums']['moneda_enum']
           motivo_cancelacion: string | null
-          pais_proyecto: string | null
+          pais_iso_proyecto: string | null
           postulaciones_pendientes_revisar: number
           presupuesto_max: number | null
           presupuesto_min: number | null
@@ -947,7 +956,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          ciudad_proyecto?: string | null
+          region_proyecto?: string | null
           created_at?: string
           descripcion: string
           estado?: Database['public']['Enums']['estado_proyecto_enum']
@@ -962,7 +971,7 @@ export type Database = {
           modalidad: Database['public']['Enums']['modalidad_enum']
           moneda?: Database['public']['Enums']['moneda_enum']
           motivo_cancelacion?: string | null
-          pais_proyecto?: string | null
+          pais_iso_proyecto?: string | null
           postulaciones_pendientes_revisar?: number
           presupuesto_max?: number | null
           presupuesto_min?: number | null
@@ -970,7 +979,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          ciudad_proyecto?: string | null
+          region_proyecto?: string | null
           created_at?: string
           descripcion?: string
           estado?: Database['public']['Enums']['estado_proyecto_enum']
@@ -985,7 +994,7 @@ export type Database = {
           modalidad?: Database['public']['Enums']['modalidad_enum']
           moneda?: Database['public']['Enums']['moneda_enum']
           motivo_cancelacion?: string | null
-          pais_proyecto?: string | null
+          pais_iso_proyecto?: string | null
           postulaciones_pendientes_revisar?: number
           presupuesto_max?: number | null
           presupuesto_min?: number | null
@@ -1450,7 +1459,7 @@ export type Database = {
         // proyectos `remoto` se publican sin país/ciudad y sin área asignada.
         Args: {
           p_categorias: string[]
-          p_ciudad: string | null
+          p_region: string | null
           p_conversacion: string
           p_descripcion: string
           p_generado_por_ia: boolean
@@ -1458,7 +1467,7 @@ export type Database = {
           p_involucra_ia: boolean
           p_modalidad: Database['public']['Enums']['modalidad_enum']
           p_moneda: Database['public']['Enums']['moneda_enum']
-          p_pais: string | null
+          p_pais_iso: string | null
           p_plazo_dias: number
           p_presupuesto_max: number
           p_presupuesto_min: number
@@ -1544,6 +1553,7 @@ export type Database = {
         | 'plazo_vence'
         | 'participacion_no_seleccionada'
         | 'participacion_contratada'
+        | 'participacion_en_revision'
         | 'entregable_aprobado'
         | 'entregable_rechazado'
         | 'evaluacion_recibida'
@@ -1767,6 +1777,7 @@ export const Constants = {
         'plazo_vence',
         'participacion_no_seleccionada',
         'participacion_contratada',
+        'participacion_en_revision',
         'entregable_aprobado',
         'entregable_rechazado',
         'evaluacion_recibida',

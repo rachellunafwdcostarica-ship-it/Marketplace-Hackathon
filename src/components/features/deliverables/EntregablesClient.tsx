@@ -184,7 +184,7 @@ export function EntregablesClient({
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <Link
-          href={`/junior/projects/${projectId}`}
+          href={`/egresado/projects/${projectId}`}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -430,81 +430,90 @@ export function EntregablesClient({
           </CardContent>
         </Card>
 
-        {/* Upload section */}
-        <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
-          <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-secondary to-accent" />
-          <CardContent className="p-6 pt-8 space-y-6">
-            <SectionHeading>{tEgresado('uploadSectionTitle')}</SectionHeading>
+        {/* Upload section — solo visible cuando el contrato está vigente (RF-40/41) */}
+        {contratacion.estado_periodo === 'vigente' ? (
+          <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-secondary to-accent" />
+            <CardContent className="p-6 pt-8 space-y-6">
+              <SectionHeading>{tEgresado('uploadSectionTitle')}</SectionHeading>
 
-            {/* Subir hito */}
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Upload className="w-4 h-4 text-primary" />
-                {tEgresado('uploadHito')}
-              </p>
-              <div className="flex items-center gap-3 flex-wrap">
-                <input
-                  ref={hitoRef}
-                  type="file"
-                  className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-muted cursor-pointer"
-                  disabled={uploadingHito}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={uploadingHito}
-                  className="font-semibold"
-                  onClick={() => {
-                    const file = hitoRef.current?.files?.[0]
-                    if (!file) return
-                    handleUpload(file, 'parcial', setUploadingHito, () => {
-                      if (hitoRef.current) hitoRef.current.value = ''
-                    })
-                  }}
-                >
-                  {uploadingHito ? tCommon('loading') : tEgresado('uploadHito')}
-                </Button>
+              {/* Subir hito */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-primary" />
+                  {tEgresado('uploadHito')}
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <input
+                    ref={hitoRef}
+                    type="file"
+                    className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-muted cursor-pointer"
+                    disabled={uploadingHito}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingHito}
+                    className="font-semibold"
+                    onClick={() => {
+                      const file = hitoRef.current?.files?.[0]
+                      if (!file) return
+                      handleUpload(file, 'parcial', setUploadingHito, () => {
+                        if (hitoRef.current) hitoRef.current.value = ''
+                      })
+                    }}
+                  >
+                    {uploadingHito
+                      ? tCommon('loading')
+                      : tEgresado('uploadHito')}
+                  </Button>
+                </div>
               </div>
-            </div>
 
-            <div className="border-t border-border/40" />
+              <div className="border-t border-border/40" />
 
-            {/* Subir entregable final */}
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <FileCheck2 className="w-4 h-4 text-accent" />
-                {tEgresado('uploadFinal')}
-              </p>
-              <div className="flex items-center gap-3 flex-wrap">
-                <input
-                  ref={finalRef}
-                  type="file"
-                  className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-muted cursor-pointer"
-                  disabled={uploadingFinal}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={uploadingFinal}
-                  className="font-semibold"
-                  onClick={() => {
-                    const file = finalRef.current?.files?.[0]
-                    if (!file) return
-                    handleUpload(file, 'final', setUploadingFinal, () => {
-                      if (finalRef.current) finalRef.current.value = ''
-                    })
-                  }}
-                >
-                  {uploadingFinal
-                    ? tCommon('loading')
-                    : tEgresado('uploadFinal')}
-                </Button>
+              {/* Subir entregable final */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <FileCheck2 className="w-4 h-4 text-accent" />
+                  {tEgresado('uploadFinal')}
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <input
+                    ref={finalRef}
+                    type="file"
+                    className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-muted cursor-pointer"
+                    disabled={uploadingFinal}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={uploadingFinal}
+                    className="font-semibold"
+                    onClick={() => {
+                      const file = finalRef.current?.files?.[0]
+                      if (!file) return
+                      handleUpload(file, 'final', setUploadingFinal, () => {
+                        if (finalRef.current) finalRef.current.value = ''
+                      })
+                    }}
+                  >
+                    {uploadingFinal
+                      ? tCommon('loading')
+                      : tEgresado('uploadFinal')}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {tEgresado('uploadDisabledNotVigente')}
+          </div>
+        )}
       </main>
 
       <Footer />

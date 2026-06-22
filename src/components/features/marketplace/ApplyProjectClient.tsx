@@ -128,27 +128,33 @@ export function ApplyProjectClient({
       })
 
       if (!result.ok) {
-        const errorMessages: Partial<Record<string, string>> = {
-          cuenta_no_verificada: tEgresado('applyErrorCuentaNoVerificada'),
-          cupo_excedido: tEgresado('applyErrorCupoExcedido'),
-          proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
-          plazo_vencido: tEgresado('applyErrorPlazoVencido'),
-          proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
-          estudiante_not_found: tEgresado('applyErrorPerfil'),
-          unauthenticated: tEgresado('applyErrorSesion'),
-          database_error: tEgresado('applyErrorDatabase'),
+        if (
+          typeof result.error === 'string' &&
+          result.error.startsWith('AI_REJECTED::')
+        ) {
+          const reason = result.error.replace('AI_REJECTED::', '')
+          toast.error(tEgresado('applyErrorAiRejected', { reason }))
+        } else {
+          const errorMessages: Partial<Record<string, string>> = {
+            cuenta_no_verificada: tEgresado('applyErrorCuentaNoVerificada'),
+            cupo_excedido: tEgresado('applyErrorCupoExcedido'),
+            proyecto_cerrado: tEgresado('applyErrorProyectoCerrado'),
+            plazo_vencido: tEgresado('applyErrorPlazoVencido'),
+            proyecto_not_found: tEgresado('applyErrorProyectoCerrado'),
+            estudiante_not_found: tEgresado('applyErrorPerfil'),
+            unauthenticated: tEgresado('applyErrorSesion'),
+            database_error: tEgresado('applyErrorDatabase'),
+          }
+          toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
         }
-        toast.error(errorMessages[result.error] ?? tEgresado('applyError'))
       } else {
         toast.success(tEgresado('applySuccess'))
-        router.push('/junior/applications')
+        router.push('/egresado/applications')
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      } else {
-        toast.error(tEgresado('unexpectedError'))
-      }
+      toast.error(
+        err instanceof Error ? err.message : tEgresado('unexpectedError'),
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -161,7 +167,7 @@ export function ApplyProjectClient({
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
-            href={`/junior/projects/${projectId}`}
+            href={`/egresado/projects/${projectId}`}
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -355,7 +361,7 @@ export function ApplyProjectClient({
 
               <div className="flex gap-3 justify-end pt-4 border-t border-border/40">
                 <Link
-                  href={`/junior/projects/${projectId}`}
+                  href={`/egresado/projects/${projectId}`}
                   className="border border-border bg-background text-foreground hover:bg-muted inline-flex items-center justify-center rounded-lg text-sm font-semibold h-8 px-3"
                 >
                   {tCommon('cancel')}

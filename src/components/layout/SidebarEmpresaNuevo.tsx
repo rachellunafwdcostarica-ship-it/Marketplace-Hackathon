@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Link, usePathname } from '@/i18n/routing'
+import { Link, usePathname, useRouter } from '@/i18n/routing'
 import {
   Dialog,
   DialogContent,
@@ -21,11 +21,16 @@ import {
   LayoutDashboard,
   Send,
   MessageSquare,
-  Building2,
   HelpCircle,
+  Users,
+  PanelLeftClose,
+  PanelLeftOpen,
+  LogOut,
+  Building2,
 } from 'lucide-react'
-import { FwdLogo } from '@/components/features/brand/FwdLogo'
-import { cn } from '@/lib/utils/cn'
+import { useSidebarHidden } from '@/hooks/use-sidebar-hidden'
+import { useAuth } from '@/lib/auth/AuthContext'
+import { ConfirmButton } from '@/components/features/shared/ConfirmButton'
 
 interface NavItem {
   id: string
@@ -35,18 +40,21 @@ interface NavItem {
   isActive: (pathname: string) => boolean
 }
 
-interface SidebarEmpresaNuevoProps {
-  className?: string
-  onNavigate?: () => void
-}
-
-export function SidebarEmpresaNuevo({
-  className,
-  onNavigate,
-}: SidebarEmpresaNuevoProps) {
+export function SidebarEmpresaNuevo() {
   const t = useTranslations('EmpresaPerfil')
+  const tNav = useTranslations('Nav')
   const pathname = usePathname()
+  const router = useRouter()
+  const { resetAuth } = useAuth()
+  const { isHidden, toggle } = useSidebarHidden()
   const [isSupportOpen, setIsSupportOpen] = useState(false)
+
+  const handleLogout = async () => {
+    const { signOut } = await import('@/lib/auth/actions')
+    await signOut()
+    resetAuth()
+    router.push('/login')
+  }
   const [supportDescription, setSupportDescription] = useState('')
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false)
 
@@ -58,7 +66,6 @@ export function SidebarEmpresaNuevo({
     }
     setIsSubmittingSupport(true)
     const res = await createSupportTicket(supportDescription)
-    setIsSubmittingSupport(true) // will be set to false below
     setIsSubmittingSupport(false)
     if (res.ok) {
       toast.success(t('supportSuccess'))
@@ -69,6 +76,8 @@ export function SidebarEmpresaNuevo({
     }
   }
 
+  // El highlight sigue la SECCIÓN, no solo la URL exacta: las subrutas de
+  // proyecto/new-project cuentan como Panel; formulario-empresa como Perfil.
   const navItems: NavItem[] = [
     {
       id: 'panel',
@@ -81,11 +90,25 @@ export function SidebarEmpresaNuevo({
         path.startsWith('/empresario/new-project'),
     },
     {
+      id: 'perfil',
+      href: '/empresario/perfil',
+      label: t('menuPerfil'),
+      icon: Building2,
+      isActive: (path) => path.startsWith('/empresario/perfil'),
+    },
+    {
       id: 'postulaciones',
       href: '/empresario/postulaciones',
       label: t('menuPostulaciones'),
       icon: Send,
       isActive: (path) => path.startsWith('/empresario/postulaciones'),
+    },
+    {
+      id: 'contrataciones',
+      href: '/empresario/contrataciones',
+      label: t('menuContrataciones'),
+      icon: Users,
+      isActive: (path) => path.startsWith('/empresario/contrataciones'),
     },
     {
       id: 'mensajes',
@@ -94,43 +117,45 @@ export function SidebarEmpresaNuevo({
       icon: MessageSquare,
       isActive: (path) => path.startsWith('/empresario/mensajes'),
     },
-    {
-      id: 'perfil',
-      href: '/empresario/perfil',
-      label: t('menuPerfil'),
-      icon: Building2,
-      isActive: (path) =>
-        path.startsWith('/empresario/perfil') ||
-        path.startsWith('/empresario/formulario-empresa'),
-    },
   ]
+
+  if (isHidden) {
+    return (
+      <div className="w-full lg:w-auto shrink-0">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={tNav('showSidebar')}
+          aria-expanded={false}
+          className="inline-flex items-center justify-center p-2 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+        >
+          <PanelLeftOpen className="w-5 h-5 shrink-0" />
+        </button>
+      </div>
+    )
+  }
 
   return (
     <aside
-      className={cn(
-        'flex w-56 shrink-0 flex-col bg-[#3d1a6e] text-white',
-        className,
-      )}
+      id="empresario-sidebar"
+      className="w-full lg:w-64 shrink-0 flex flex-col gap-6 bg-secondary text-white p-4 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden lg:sticky lg:top-20 lg:self-start lg:h-[calc(100vh-7rem)]"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
+      }}
     >
-      {/* Brand logo header */}
-      <Link
-        href="/empresario"
-        onClick={onNavigate}
-        className="flex items-center gap-3 px-5 py-5 hover:opacity-90 transition-opacity"
-      >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
-          <FwdLogo className="h-6 w-6" />
+      <nav className="flex flex-col gap-1 px-1 flex-1">
+        <div className="flex justify-end px-1 pb-1">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={tNav('hideSidebar')}
+            aria-expanded={true}
+            aria-controls="empresario-sidebar"
+            className="inline-flex items-center justify-center p-1.5 rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+          >
+            <PanelLeftClose className="w-4 h-4 shrink-0" />
+          </button>
         </div>
-        <span className="font-heading text-base font-bold tracking-tight leading-tight text-white">
-          Marketplace<span className="text-[#ec008c]"> FWD</span>
-        </span>
-      </Link>
-
-      {/* Divider */}
-      <div className="mx-4 mb-3 h-px bg-white/10" />
-
-      {/* Nav list */}
-      <nav className="flex flex-col gap-0.5 px-3 flex-1">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = item.isActive(pathname)
@@ -138,37 +163,27 @@ export function SidebarEmpresaNuevo({
             <Link
               key={item.id}
               href={item.href}
-              onClick={onNavigate}
               aria-current={active ? 'page' : undefined}
-              className={cn(
-                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
+              className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
                 active
-                  ? 'bg-gradient-to-r from-[#ec008c] to-[#ec008c]/80 text-white shadow-sm font-bold'
-                  : 'text-white/65 hover:bg-white/8 hover:text-white/90',
-              )}
+                  ? 'bg-gradient-to-r from-primary to-magenta text-white shadow-md font-bold'
+                  : 'text-white/75 hover:bg-white/10 hover:text-white'
+              }`}
             >
-              <Icon
-                className={cn(
-                  'h-4 w-4 shrink-0 transition-colors',
-                  active ? 'text-white' : 'text-white/55',
-                )}
-              />
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{item.label}</span>
             </Link>
           )
         })}
 
-        {/* Dialog for help/support */}
+        {/* Ayuda / Soporte Técnico abre el Dialog */}
         <Dialog open={isSupportOpen} onOpenChange={setIsSupportOpen}>
           <DialogTrigger asChild>
             <button
               type="button"
-              onClick={() => {
-                if (onNavigate) onNavigate()
-              }}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white/90 transition-all cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
             >
-              <HelpCircle className="h-4 w-4 shrink-0 text-white/55" />
+              <HelpCircle className="w-4 h-4 shrink-0" />
               <span>{t('menuAyuda')}</span>
             </button>
           </DialogTrigger>
@@ -227,6 +242,26 @@ export function SidebarEmpresaNuevo({
           </DialogContent>
         </Dialog>
       </nav>
+
+      {/* Cerrar sesión (mismo patrón con confirmación que el admin) */}
+      <div className="px-1">
+        <div className="h-px bg-white/10 mb-2" />
+        <ConfirmButton
+          onConfirm={handleLogout}
+          title={tNav('confirmLogoutTitle')}
+          description={tNav('confirmLogoutDesc')}
+          confirmLabel={tNav('logout')}
+          variant="ghost"
+          size="default"
+          className="w-full flex items-center justify-start gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white/65 hover:bg-white/8 hover:text-white/90 transition-all"
+        >
+          <LogOut
+            className="w-4 h-4 shrink-0 text-white/55"
+            aria-hidden="true"
+          />
+          {tNav('logout')}
+        </ConfirmButton>
+      </div>
     </aside>
   )
 }

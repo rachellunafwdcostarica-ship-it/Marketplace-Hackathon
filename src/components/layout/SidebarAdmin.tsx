@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   LayoutDashboard,
   Users,
+  UserPlus,
   Briefcase,
   ShieldCheck,
   Settings,
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils/cn'
 type AdminNavLabel =
   | 'dashboard'
   | 'users'
+  | 'adminRegister'
   | 'projects'
   | 'validations'
   | 'settings'
@@ -30,11 +32,19 @@ interface AdminNavItem {
   href: string
   labelKey: AdminNavLabel
   icon: LucideIcon
+  /** Si es true, el ítem solo se muestra a un superadmin. */
+  superadminOnly?: boolean
 }
 
 const ADMIN_NAV: AdminNavItem[] = [
   { href: '/admin', labelKey: 'dashboard', icon: LayoutDashboard },
   { href: '/admin/users', labelKey: 'users', icon: Users },
+  {
+    href: '/admin/registro-admin',
+    labelKey: 'adminRegister',
+    icon: UserPlus,
+    superadminOnly: true,
+  },
   { href: '/admin/projects', labelKey: 'projects', icon: Briefcase },
   { href: '/admin/validations', labelKey: 'validations', icon: ShieldCheck },
   { href: '/admin/moderation', labelKey: 'moderation', icon: AlertTriangle },
@@ -43,28 +53,36 @@ const ADMIN_NAV: AdminNavItem[] = [
 ]
 
 interface SidebarAdminProps {
+  id?: string | undefined
   className?: string | undefined
   onNavigate?: (() => void) | undefined
   onLogout?: (() => void) | undefined
+  isSuperadmin?: boolean | undefined
 }
 
 export function SidebarAdmin({
+  id,
   className,
   onNavigate,
   onLogout,
+  isSuperadmin = false,
 }: SidebarAdminProps) {
   const t = useTranslations('Nav')
   const pathname = usePathname()
 
+  const navItems = ADMIN_NAV.filter(
+    (item) => !item.superadminOnly || isSuperadmin,
+  )
+
   return (
     <nav
+      id={id}
       aria-label={t('roleAdmin')}
       className={cn(
-        'flex w-56 shrink-0 flex-col text-white relative overflow-hidden',
+        'flex w-56 shrink-0 flex-col bg-secondary text-white relative overflow-hidden',
         className,
       )}
       style={{
-        backgroundColor: '#662D91',
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
       }}
     >
@@ -78,7 +96,7 @@ export function SidebarAdmin({
           <FwdLogo className="h-6 w-6" />
         </div>
         <span className="font-heading text-base font-bold tracking-tight leading-tight text-white">
-          Marketplace<span className="text-[#ec008c]"> FWD</span>
+          Marketplace<span className="text-magenta"> FWD</span>
         </span>
       </Link>
 
@@ -87,7 +105,7 @@ export function SidebarAdmin({
 
       {/* Nav Items */}
       <div className="flex flex-col gap-1.5 px-3 flex-1 z-10">
-        {ADMIN_NAV.map(({ href, labelKey, icon: Icon }) => {
+        {navItems.map(({ href, labelKey, icon: Icon }) => {
           const isActive =
             href === '/admin'
               ? pathname === '/admin'
@@ -101,7 +119,7 @@ export function SidebarAdmin({
               className={cn(
                 'flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40',
                 isActive
-                  ? 'bg-gradient-to-r from-[#a25ddc] to-[#ec008c] text-white shadow-md'
+                  ? 'bg-gradient-to-r from-primary to-magenta text-white shadow-md'
                   : 'text-white/75 hover:bg-white/10 hover:text-white/90',
               )}
             >
