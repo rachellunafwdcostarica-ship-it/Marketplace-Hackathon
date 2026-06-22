@@ -12,6 +12,13 @@ vi.mock('@/lib/supabase/admin', () => ({ createSupabaseAdminClient: vi.fn() }))
 vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServerClient: vi.fn(),
 }))
+vi.mock('@/lib/notifications/create', () => ({ crearNotificacion: vi.fn() }))
+vi.mock('@/lib/email/gmail', () => ({
+  createGmailTransport: vi.fn(() => ({
+    sendMail: vi.fn().mockResolvedValue(undefined),
+  })),
+  getGmailFrom: vi.fn(() => 'FWD <test@example.com>'),
+}))
 
 import {
   verificarEgresado,
@@ -22,16 +29,20 @@ import {
 import { requireRole } from '@/lib/auth/guards'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { crearNotificacion } from '@/lib/notifications/create'
 
 const mockedRequireRole = vi.mocked(requireRole)
 const mockedAdmin = vi.mocked(createSupabaseAdminClient)
 const mockedServer = vi.mocked(createSupabaseServerClient)
+const mockedNotif = vi.mocked(crearNotificacion)
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000'
+const GRADUATE_EMAIL = 'egresado@fwd.test'
 
 beforeEach(() => {
   vi.clearAllMocks()
   mockedRequireRole.mockResolvedValue({ ok: true, data: 'administrador' })
+  mockedNotif.mockResolvedValue({ ok: true, data: undefined })
   mockedServer.mockResolvedValue({
     auth: {
       getUser: vi
@@ -41,11 +52,37 @@ beforeEach(() => {
   } as never)
 })
 
+// Resultado de una cadena `.eq()` que tolera tanto `.maybeSingle()` (lo que usa
+// el código) como `.single()`, devolviendo el mismo dato. Defensivo ante
+// diferencias de resolución de mocks entre entornos (CI vs local).
+function eqResult(data: unknown) {
+  return {
+    maybeSingle: vi.fn().mockResolvedValue({ data, error: null }),
+    single: vi.fn().mockResolvedValue({ data, error: null }),
+  }
+}
+
+// Mock de `usuarios.select('correo, nombre').eq().maybeSingle()` que usa el
+// envío de correo/notificación de cuenta verificada.
+function usuarioConCorreo() {
+  return {
+    select: vi.fn(() => ({
+      eq: vi.fn(() =>
+        eqResult({ correo: 'persona@example.com', nombre: 'Ana' }),
+      ),
+    })),
+  }
+}
+
 function buildGraduateAdmin(opts: {
   hasConsent?: boolean
   updateRows?: unknown[]
   before?: unknown
+  userEmail?: string | null
+  isFwdGraduate?: boolean
 }) {
+  const correo = opts.userEmail === undefined ? GRADUATE_EMAIL : opts.userEmail
+  const isGraduate = opts.isFwdGraduate ?? true
   const update = vi.fn(() => ({
     eq: vi.fn(() => ({
       select: vi.fn().mockResolvedValue({
@@ -56,19 +93,41 @@ function buildGraduateAdmin(opts: {
   }))
   const insert = vi.fn().mockResolvedValue({ error: null })
   const selectBefore = vi.fn(() => ({
-    eq: vi.fn(() => ({
-      maybeSingle: vi.fn().mockResolvedValue({
-        data: opts.before ?? {
+    eq: vi.fn(() =>
+      eqResult(
+        opts.before ?? {
           estado_verificacion: 'pendiente',
           verificado_at: null,
           verificado_por: null,
         },
-        error: null,
-      }),
-    })),
+      ),
+    ),
   }))
   const client = {
     from: vi.fn((table: string) => {
+      if (table === 'usuarios') {
+        // Soporta .single() (cotejo RF-64 de verificarEgresado, lee `correo`) y
+        // .maybeSingle() (aviso de cuenta verificada, lee correo + nombre).
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() =>
+              eqResult(correo === null ? null : { correo, nombre: 'Ana' }),
+            ),
+          })),
+        }
+      }
+      if (table === 'egresados_fwd_oficial') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: isGraduate ? { correo: GRADUATE_EMAIL } : null,
+                error: null,
+              }),
+            })),
+          })),
+        }
+      }
       if (table === 'consentimientos') {
         return {
           select: vi.fn(() => ({
@@ -133,21 +192,24 @@ function buildCompanyAdmin(opts: { updateRows?: unknown[]; before?: unknown }) {
   }))
   const insert = vi.fn().mockResolvedValue({ error: null })
   const selectBefore = vi.fn(() => ({
-    eq: vi.fn(() => ({
-      maybeSingle: vi.fn().mockResolvedValue({
-        data: opts.before ?? {
+    eq: vi.fn(() =>
+      eqResult(
+        opts.before ?? {
           estado_verificacion: 'pendiente',
           verificado_at: null,
           verificado_por: null,
+          id_usuario: 'u-emp-1',
         },
-        error: null,
-      }),
-    })),
+      ),
+    ),
   }))
   const client = {
     from: vi.fn((table: string) => {
       if (table === 'auditoria') {
         return { insert }
+      }
+      if (table === 'usuarios') {
+        return usuarioConCorreo()
       }
       return { select: selectBefore, update }
     }),
@@ -201,6 +263,31 @@ describe('verificarEgresado', () => {
       }),
     )
   })
+
+  it('al verificar, notifica al egresado (cuenta_verificada)', async () => {
+    buildGraduateAdmin({ hasConsent: true })
+    await verificarEgresado(VALID_UUID)
+    expect(mockedNotif).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipoEvento: 'cuenta_verificada',
+        params: { rol: 'egresado' },
+      }),
+    )
+  })
+
+  it('devuelve user_not_found si el usuario no tiene correo', async () => {
+    const admin = buildGraduateAdmin({ userEmail: null })
+    const result = await verificarEgresado(VALID_UUID)
+    expect(result).toEqual({ ok: false, error: 'user_not_found' })
+    expect(admin.update).not.toHaveBeenCalled()
+  })
+
+  it('devuelve egresado_no_encontrado si el correo no está en la base FWD', async () => {
+    const admin = buildGraduateAdmin({ isFwdGraduate: false })
+    const result = await verificarEgresado(VALID_UUID)
+    expect(result).toEqual({ ok: false, error: 'egresado_no_encontrado' })
+    expect(admin.update).not.toHaveBeenCalled()
+  })
 })
 
 describe('rechazarEgresado', () => {
@@ -209,6 +296,12 @@ describe('rechazarEgresado', () => {
     const result = await rechazarEgresado(VALID_UUID)
     expect(result).toEqual({ ok: true, data: undefined })
     expect(admin.update).toHaveBeenCalledTimes(1)
+  })
+
+  it('no notifica al rechazar', async () => {
+    buildGraduateAdmin({ hasConsent: false })
+    await rechazarEgresado(VALID_UUID)
+    expect(mockedNotif).not.toHaveBeenCalled()
   })
 })
 
@@ -229,6 +322,17 @@ describe('verificarEmpresa', () => {
     buildCompanyAdmin({ updateRows: [] })
     const result = await verificarEmpresa(VALID_UUID)
     expect(result).toEqual({ ok: false, error: 'empresa_no_encontrada' })
+  })
+
+  it('al verificar, notifica al empresario (cuenta_verificada)', async () => {
+    buildCompanyAdmin({})
+    await verificarEmpresa(VALID_UUID)
+    expect(mockedNotif).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipoEvento: 'cuenta_verificada',
+        params: { rol: 'empresario' },
+      }),
+    )
   })
 })
 

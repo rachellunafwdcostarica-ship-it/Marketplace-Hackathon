@@ -26,15 +26,12 @@ function isPublicAuthPage(pathname: string): boolean {
   )
 }
 
-function isEmpresarioSetupPath(pathname: string): boolean {
-  return /^\/(es|en)\/onboarding\/empresario(\/|$)/.test(pathname)
+function isVerifyEmailPath(pathname: string): boolean {
+  return /^\/(es|en)\/verify-email(\/|$)/.test(pathname)
 }
 
 function isOnboardingPath(pathname: string): boolean {
-  return (
-    /^\/(es|en)\/onboarding(\/|$)/.test(pathname) &&
-    !isEmpresarioSetupPath(pathname)
-  )
+  return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
 }
 
 function isPendingApprovalPath(pathname: string): boolean {
@@ -122,19 +119,25 @@ export async function middleware(request: NextRequest) {
   }
 
   // A partir de aquí: usuario autenticado.
-  // Se cachea el estado de cuenta para reutilizarlo en los casos B-E
-  // sin duplicar la llamada a Supabase.
-  let cachedAccountStatus: string | null = null
 
-  // GATE DE ESTADO DE CUENTA: suspensión, desactivación y cuenta pendiente.
-  // Se evalúa para rutas protegidas, páginas públicas de auth, onboarding
-  // y la propia página de espera.
+  // GATE DE CONFIRMACIÓN DE CORREO (RF-02): sin el correo confirmado, la cuenta
+  // queda 'pendiente' y no puede entrar a nada salvo la pantalla de
+  // verificación. La fuente de verdad es el objeto de sesión (sin RPC extra).
+  if (!user.email_confirmed_at && !isVerifyEmailPath(pathname)) {
+    return NextResponse.redirect(
+      new URL(`/${locale}/verify-email`, request.url),
+    )
+  }
+
+  // GATE DE ESTADO DE CUENTA: bloqueo duro por suspensión (RF-65) o
+  // desactivación por un admin (is_active = false). Cierra la sesión y rebota a
+  // /login. (La cuenta 'pendiente' = correo sin confirmar ya la atrapó el gate
+  // de arriba.)
   if (
     isProtected(pathname) ||
     isPublicAuthPage(pathname) ||
     isOnboardingPath(pathname) ||
-    isPendingApprovalPath(pathname) ||
-    isEmpresarioSetupPath(pathname)
+    isPendingApprovalPath(pathname)
   ) {
     const [{ data: accountStatus }, { data: usuarioRow }] = await Promise.all([
       supabase.rpc('get_my_account_status'),
@@ -145,10 +148,6 @@ export async function middleware(request: NextRequest) {
         .maybeSingle(),
     ])
 
-    cachedAccountStatus = accountStatus ?? null
-
-    // Bloqueo duro: cuenta suspendida (RF-65) o desactivada por un admin
-    // (is_active = false). Ambos cierran sesión y rebotan a /login.
     let blockReason: 'suspended' | 'deactivated' | null = null
     if (
       accountStatus === 'suspendida' ||
@@ -177,16 +176,6 @@ export async function middleware(request: NextRequest) {
       })
       return redirect
     }
-
-    // Bloqueo blando: cuenta pendiente de aprobación por el admin.
-    // No cierra la sesión — el usuario solo no puede acceder al sistema.
-    // /pending-approval y /onboarding siguen siendo accesibles para que el
-    // usuario pueda ver su estado y completar el onboarding si todavía no lo hizo.
-    if (accountStatus === 'pendiente' && isProtected(pathname)) {
-      return NextResponse.redirect(
-        new URL(`/${locale}/pending-approval`, request.url),
-      )
-    }
   }
 
   // CASO B: Ruta protegida
@@ -212,20 +201,14 @@ export async function middleware(request: NextRequest) {
     return intlResponse
   }
 
-  // CASO C: Página pública de auth (login, register, etc.) con usuario autenticado.
-  // Si ya tiene rol y la cuenta está activa → home del rol.
-  // Si ya tiene rol pero la cuenta está pendiente → pending-approval (no al home).
-  // Si no tiene rol → onboarding (todavía no eligió).
+  // CASO C: Página pública de auth con usuario (ya confirmado). Con rol → home;
+  // sin rol → onboarding. La pantalla de "en revisión" la maneja el gate del
+  // layout / la página /pending-approval.
   if (isPublicAuthPage(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
     const role = normalizeRole(roleRaw)
 
     if (role) {
-      if (cachedAccountStatus !== 'activa') {
-        return NextResponse.redirect(
-          new URL(`/${locale}/pending-approval`, request.url),
-        )
-      }
       return NextResponse.redirect(
         new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
       )
@@ -234,66 +217,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url))
   }
 
-  // CASO D: /onboarding con usuario autenticado.
-  // Sin rol → onboarding normal (deja pasar para elegir rol y ver el formulario).
-  // Con rol + activa → home del rol.
-  // Con rol + pendiente:
-  //   - empresario → formulario de perfil (puede que no lo haya completado aún)
-  //   - egresado   → pending-approval (solo espera verificación)
+  // CASO D: /onboarding. Sin rol → dejar elegir rol y completar el perfil
+  // (Camino B / OAuth, formulario único por rol). Con rol → home (el gate del
+  // layout lo lleva a "en revisión" si todavía no está verificado).
   if (isOnboardingPath(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
     const role = normalizeRole(roleRaw)
 
     if (role) {
-      if (cachedAccountStatus === 'activa') {
-        return NextResponse.redirect(
-          new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
-        )
-      }
-      if (role === 'empresario') {
-        return NextResponse.redirect(
-          new URL(`/${locale}/onboarding/empresario`, request.url),
-        )
-      }
       return NextResponse.redirect(
-        new URL(`/${locale}/pending-approval`, request.url),
+        new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
       )
     }
     // Sin rol → onboarding normal
     return intlResponse
   }
 
-  // CASO E: /pending-approval con usuario autenticado.
-  // Si la cuenta ya está activa y tiene rol → rebotar al home (ya fue aprobado).
-  // Cualquier otro estado → dejar pasar (es la pantalla de espera).
+  // CASO E: /pending-approval. Dejar renderizar; la propia página redirige al
+  // panel si el perfil ya está verificado (evita el rebote por estado_cuenta,
+  // que ahora pasa a 'activa' apenas se confirma el correo).
   if (isPendingApprovalPath(pathname)) {
-    if (cachedAccountStatus === 'activa') {
-      const { data: roleRaw } = await supabase.rpc('get_my_role')
-      const role = normalizeRole(roleRaw)
-      if (role) {
-        return NextResponse.redirect(
-          new URL(`/${locale}${ROLE_HOME[role]}`, request.url),
-        )
-      }
-    }
-    return intlResponse
-  }
-
-  // CASO F: /onboarding/empresario — formulario de perfil antes de pending-approval.
-  // Accesible aunque la cuenta esté pendiente: es el paso previo a la aprobación.
-  // Si aún no hay rol en BD (recién creado, trigger pendiente), la página se
-  // encarga de asignarlo usando el metadata — no rebotar a /onboarding.
-  // Las verificaciones de suspensión/desactivación ya se evaluaron en el gate.
-  if (isEmpresarioSetupPath(pathname)) {
-    const { data: roleRaw } = await supabase.rpc('get_my_role')
-    const role = normalizeRole(roleRaw)
-    if (role && role !== 'empresario') {
-      // Tiene un rol distinto a empresario → su pantalla de espera
-      return NextResponse.redirect(
-        new URL(`/${locale}/pending-approval`, request.url),
-      )
-    }
-    // Sin rol (page lo asigna) o ya es empresario → dejar pasar
     return intlResponse
   }
 

@@ -8,7 +8,11 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireRole } from '@/lib/auth/guards'
 
 const ProjectIdSchema = z.string().uuid()
-const MotivoSchema = z.string().trim().min(5, 'El motivo debe tener al menos 5 caracteres').max(500)
+const MotivoSchema = z
+  .string()
+  .trim()
+  .min(5, 'El motivo debe tener al menos 5 caracteres')
+  .max(500)
 
 /**
  * Cancela un proyecto desde el panel de admin (por moderación). Solo cancela
@@ -88,9 +92,11 @@ export async function cancelProjectAsAdmin(
   // Enviar correo de notificación al empresario
   if (empresario?.correo) {
     try {
-      const { createGmailTransport, getGmailFrom } = await import('@/lib/email/gmail')
-      const { projectCancelledHtml, projectCancelledSubject } = await import('@/lib/email/templates/project-cancelled')
-      
+      const { createGmailTransport, getGmailFrom } =
+        await import('@/lib/email/gmail')
+      const { projectCancelledHtml, projectCancelledSubject } =
+        await import('@/lib/email/templates/project-cancelled')
+
       const transport = createGmailTransport()
       await transport.sendMail({
         from: getGmailFrom(),
@@ -103,10 +109,13 @@ export async function cancelProjectAsAdmin(
         }),
       })
     } catch (e) {
-      logger.error('cancelProjectAsAdmin: fallo al enviar correo al empresario', {
-        error: e instanceof Error ? e.message : String(e),
-        projectId,
-      })
+      logger.error(
+        'cancelProjectAsAdmin: fallo al enviar correo al empresario',
+        {
+          error: e instanceof Error ? e.message : String(e),
+          projectId,
+        },
+      )
     }
   }
 
