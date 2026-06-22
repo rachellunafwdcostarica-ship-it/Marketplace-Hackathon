@@ -92,7 +92,12 @@ export function StrikeActions({
   }
 
   const handleRestore = async () => {
-    if (!confirm('¿Estás seguro de que quieres permitir el acceso a este usuario y resetear sus strikes?')) return
+    if (
+      !confirm(
+        '¿Estás seguro de que quieres permitir el acceso a este usuario y resetear sus strikes?',
+      )
+    )
+      return
     setLoading(true)
     const result = await restoreAccess(userId)
     setLoading(false)
@@ -156,7 +161,7 @@ export function StrikeActions({
     return (
       <Button
         size="sm"
-        onClick={() => handleOpen('restore' as any)}
+        onClick={() => handleRestore()}
         disabled={loading}
         className="flex items-center gap-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
         title="Permitir el acceso a este usuario"

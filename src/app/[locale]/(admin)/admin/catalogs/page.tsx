@@ -1,12 +1,10 @@
-import { getTranslations } from 'next-intl/server'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { AdminCatalogsClient } from '@/components/features/admin/AdminCatalogsClient'
 import { getCatalogs } from '@/lib/admin/catalog-actions'
 
 export default async function AdminCatalogsPage() {
-  const t = await getTranslations('Admin')
   const result = await getCatalogs()
-  
+
   const tecnologias = result.ok ? result.data.tecnologias : []
   const categorias = result.ok ? result.data.categorias : []
 
@@ -19,7 +17,10 @@ export default async function AdminCatalogsPage() {
       />
 
       <div className="mt-8">
-        <AdminCatalogsClient initialTecnologias={tecnologias} initialCategorias={categorias} />
+        <AdminCatalogsClient
+          initialTecnologias={tecnologias}
+          initialCategorias={categorias}
+        />
       </div>
     </div>
   )

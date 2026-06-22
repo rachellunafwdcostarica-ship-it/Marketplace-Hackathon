@@ -15,14 +15,22 @@ import {
 export function AdminReportsInterface() {
   const [fechaInicio, setFechaInicio] = useState('')
   const [fechaFin, setFechaFin] = useState('')
-  const [loading, setLoading] = useState<'usuarios' | 'proyectos' | 'auditoria' | null>(null)
+  const [loading, setLoading] = useState<
+    'usuarios' | 'proyectos' | 'auditoria' | null
+  >(null)
 
-  const handleDownload = async (tipo: 'usuarios' | 'proyectos' | 'auditoria') => {
+  const handleDownload = async (
+    tipo: 'usuarios' | 'proyectos' | 'auditoria',
+  ) => {
     setLoading(tipo)
     try {
       const filters = {
-        fechaInicio: fechaInicio ? new Date(fechaInicio).toISOString() : undefined,
-        fechaFin: fechaFin ? new Date(fechaFin + 'T23:59:59.999Z').toISOString() : undefined,
+        fechaInicio: fechaInicio
+          ? new Date(fechaInicio).toISOString()
+          : undefined,
+        fechaFin: fechaFin
+          ? new Date(fechaFin + 'T23:59:59.999Z').toISOString()
+          : undefined,
       }
 
       let result
@@ -35,7 +43,9 @@ export function AdminReportsInterface() {
       }
 
       if (result.ok) {
-        const blob = new Blob([result.data], { type: 'text/csv;charset=utf-8;' })
+        const blob = new Blob([result.data], {
+          type: 'text/csv;charset=utf-8;',
+        })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
@@ -48,7 +58,7 @@ export function AdminReportsInterface() {
       } else {
         toast.error(`Error al generar el reporte: ${result.error}`)
       }
-    } catch (error) {
+    } catch {
       toast.error('Ocurrió un error inesperado al procesar la descarga.')
     } finally {
       setLoading(null)
@@ -58,7 +68,9 @@ export function AdminReportsInterface() {
   return (
     <div className="space-y-8">
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold text-ink-strong">Filtros de Reporte</h3>
+        <h3 className="mb-4 text-lg font-semibold text-ink-strong">
+          Filtros de Reporte
+        </h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="fechaInicio">Fecha de Inicio (Opcional)</Label>
@@ -89,7 +101,8 @@ export function AdminReportsInterface() {
           </div>
           <h4 className="mb-2 font-heading text-lg font-bold">Usuarios</h4>
           <p className="mb-6 text-sm text-ink-muted">
-            Exporta el listado completo de usuarios registrados, incluyendo su rol, estado y fecha de registro.
+            Exporta el listado completo de usuarios registrados, incluyendo su
+            rol, estado y fecha de registro.
           </p>
           <Button
             className="w-full mt-auto"
@@ -108,7 +121,8 @@ export function AdminReportsInterface() {
           </div>
           <h4 className="mb-2 font-heading text-lg font-bold">Proyectos</h4>
           <p className="mb-6 text-sm text-ink-muted">
-            Exporta el historial de proyectos, su modalidad, presupuesto y estado actual.
+            Exporta el historial de proyectos, su modalidad, presupuesto y
+            estado actual.
           </p>
           <Button
             className="w-full mt-auto"
@@ -127,7 +141,8 @@ export function AdminReportsInterface() {
           </div>
           <h4 className="mb-2 font-heading text-lg font-bold">Actividad</h4>
           <p className="mb-6 text-sm text-ink-muted">
-            Exporta el log de auditoría del sistema para revisar acciones administrativas y cambios de estado.
+            Exporta el log de auditoría del sistema para revisar acciones
+            administrativas y cambios de estado.
           </p>
           <Button
             className="w-full mt-auto"

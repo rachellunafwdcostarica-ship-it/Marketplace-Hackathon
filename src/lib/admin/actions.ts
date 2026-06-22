@@ -167,16 +167,20 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
   }
 
   // Verificar en la base de egresados FWD oficial
+  // @ts-expect-error - Tabla local pendiente de regeneración de tipos en database.ts
   const { data: fwdRecord, error: fwdError } = await adminClient
-    .from('egresados_fwd_oficial' as any)
+    .from('egresados_fwd_oficial')
     .select('correo')
     .eq('correo', usuario.correo)
     .maybeSingle()
 
   if (fwdError) {
-    logger.error('verificarEgresado: fallo al consultar egresados_fwd_oficial', {
-      error: fwdError.message,
-    })
+    logger.error(
+      'verificarEgresado: fallo al consultar egresados_fwd_oficial',
+      {
+        error: fwdError.message,
+      },
+    )
     return err('database_error')
   }
 

@@ -7,7 +7,11 @@ import { logger } from '@/lib/logger'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 
-const CatalogNameSchema = z.string().trim().min(2, 'El nombre debe tener al menos 2 caracteres').max(100)
+const CatalogNameSchema = z
+  .string()
+  .trim()
+  .min(2, 'El nombre debe tener al menos 2 caracteres')
+  .max(100)
 
 type CatalogType = 'tecnologias' | 'categorias'
 
@@ -24,15 +28,19 @@ export async function createCatalogItem(
   if (!authResult.ok) return authResult
 
   const adminClient = createSupabaseAdminClient()
-  
+
   const table = type === 'tecnologias' ? 'tecnologias' : 'categorias'
-  
+
   const { error } = await adminClient
-    .from(table as any)
+    .from(table)
     .insert({ nombre: parsedName.data, is_active: true })
 
   if (error) {
-    logger.error('createCatalogItem failed', { error: error.message, type, name })
+    logger.error('createCatalogItem failed', {
+      error: error.message,
+      type,
+      name,
+    })
     return err(error.message)
   }
 
@@ -43,7 +51,7 @@ export async function createCatalogItem(
 export async function toggleCatalogItemStatus(
   type: CatalogType,
   id: string,
-  newStatus: boolean
+  newStatus: boolean,
 ): Promise<Result<void>> {
   const parsedId = z.string().uuid().safeParse(id)
   if (!parsedId.success) return err('invalid_id')
@@ -52,17 +60,22 @@ export async function toggleCatalogItemStatus(
   if (!authResult.ok) return authResult
 
   const adminClient = createSupabaseAdminClient()
-  
+
   const table = type === 'tecnologias' ? 'tecnologias' : 'categorias'
   const idColumn = type === 'tecnologias' ? 'id_tecnologia' : 'id_categoria'
 
   const { error } = await adminClient
-    .from(table as any)
+    .from(table)
     .update({ is_active: newStatus })
     .eq(idColumn, parsedId.data)
 
   if (error) {
-    logger.error('toggleCatalogItemStatus failed', { error: error.message, type, id, newStatus })
+    logger.error('toggleCatalogItemStatus failed', {
+      error: error.message,
+      type,
+      id,
+      newStatus,
+    })
     return err(error.message)
   }
 
@@ -75,22 +88,22 @@ export async function getCatalogs() {
   if (!authResult.ok) return err(authResult.error)
 
   const adminClient = createSupabaseAdminClient()
-  
+
   const [techRes, catRes] = await Promise.all([
     adminClient.from('tecnologias').select('*').order('nombre'),
-    adminClient.from('categorias').select('*').order('nombre')
+    adminClient.from('categorias').select('*').order('nombre'),
   ])
 
   if (techRes.error || catRes.error) {
-    logger.error('getCatalogs failed', { 
-      techError: techRes.error?.message, 
-      catError: catRes.error?.message 
+    logger.error('getCatalogs failed', {
+      techError: techRes.error?.message,
+      catError: catRes.error?.message,
     })
     return err('db_error')
   }
 
   return ok({
     tecnologias: techRes.data,
-    categorias: catRes.data
+    categorias: catRes.data,
   })
 }
