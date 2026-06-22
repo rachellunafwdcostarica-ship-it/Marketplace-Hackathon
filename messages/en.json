@@ -1081,6 +1081,19 @@
     "accepted": "Accepted",
     "rejected": "Rejected"
   },
+  "CompanyDashboardCharts": {
+    "chartApplicationsTitle": "Talent Attraction",
+    "chartApplicationsDesc": "Applications received per published project",
+    "chartApplicationsEmpty": "Not enough data yet",
+    "chartTechTitle": "Tech Stack",
+    "chartTechDesc": "Top 5 most requested languages and tools",
+    "chartTechEmpty": "You haven't defined your stack yet",
+    "chartStatusTitle": "Overview",
+    "chartStatusDesc": "Your portfolio distribution",
+    "chartStatusEmpty": "No active projects",
+    "applicantsCount": "{count, plural, one {# applicant} other {# applicants}}",
+    "projectsCount": "{count, plural, one {# project} other {# projects}}"
+  },
   "Onboarding": {
     "subtitle": "Choose how you want to use FWD Talent to continue.",
     "loading": "Saving...",

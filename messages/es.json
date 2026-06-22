@@ -1082,6 +1082,19 @@
     "accepted": "Aceptada",
     "rejected": "Rechazada"
   },
+  "CompanyDashboardCharts": {
+    "chartApplicationsTitle": "Atracción de Talento",
+    "chartApplicationsDesc": "Volumen de postulaciones por proyecto publicado",
+    "chartApplicationsEmpty": "Aún no hay datos suficientes",
+    "chartTechTitle": "Stack Tecnológico",
+    "chartTechDesc": "Top 5 de lenguajes y herramientas más requeridos",
+    "chartTechEmpty": "Aún no has definido tu stack",
+    "chartStatusTitle": "Estado General",
+    "chartStatusDesc": "Distribución de tu portafolio",
+    "chartStatusEmpty": "No hay proyectos activos",
+    "applicantsCount": "{count, plural, one {# postulante} other {# postulantes}}",
+    "projectsCount": "{count, plural, one {# proyecto} other {# proyectos}}"
+  },
   "Onboarding": {
     "subtitle": "Elegí cómo querés usar FWD Talent para continuar.",
     "loading": "Guardando...",
