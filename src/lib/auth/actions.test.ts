@@ -16,7 +16,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServerClient: vi.fn(),
 }))
 
-import { signInWithPassword } from './actions'
+import { signInWithPassword, signUpWithPassword } from './actions'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
@@ -207,5 +207,38 @@ describe('signInWithPassword', () => {
     // Sin usuario conocido no tiene sentido llamar el RPC (el correo no existe en usuarios).
     expect(admin.rpc).not.toHaveBeenCalled()
     expect(admin.usuariosUpdate).not.toHaveBeenCalled()
+  })
+})
+
+describe('signUpWithPassword', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('rechaza input inválido sin tocar Supabase', async () => {
+    const result = await signUpWithPassword({
+      role: 'egresado',
+      email: 'no-es-email',
+      password: '123',
+      fullName: 'X',
+      tituloFwd: 'frontend',
+    })
+
+    expect(result).toEqual({ ok: false, error: 'invalid_input' })
+    expect(mockedAdmin).not.toHaveBeenCalled()
+  })
+
+  it('bloquea al egresado con correo fuera de la allowlist antes de crear nada', async () => {
+    const result = await signUpWithPassword({
+      role: 'egresado',
+      email: 'random@gmail.com',
+      password: 'una-clave-larga',
+      fullName: 'Egresado Prueba',
+      tituloFwd: 'fullstack',
+    })
+
+    expect(result).toEqual({ ok: false, error: 'email_not_allowed' })
+    // El gate corre antes del pwned-check y de cualquier llamada a Supabase.
+    expect(mockedAdmin).not.toHaveBeenCalled()
   })
 })

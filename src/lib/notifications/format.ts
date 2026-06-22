@@ -30,6 +30,15 @@ const TIPOS_CONOCIDOS: ReadonlySet<string> = new Set<TipoNotificacion>(
 )
 
 /**
+ * Tipos que usan plantilla i18n estática (sin interpolación de params).
+ * resolveNotificationContent devuelve kind:'i18n' con values:{} para estos
+ * tipos incluso cuando no se pasan params, evitando el fallback en español.
+ */
+const TIPOS_I18N_ESTATICOS: ReadonlySet<string> = new Set<TipoNotificacion>([
+  'cuenta_verificada',
+])
+
+/**
  * Tipos cuyo contenido ya tiene plantilla i18n (clave `content.<tipo>`).
  * Crece a medida que cada evento se migra a almacenamiento i18n-first
  * (tipo + parámetros) en lugar de texto plano en la columna `mensaje`.
@@ -38,6 +47,7 @@ const TIPOS_CON_PLANTILLA: ReadonlySet<string> = new Set<TipoNotificacion>([
   'proyecto_modificado',
   'strike_recibido',
   'cuenta_suspendida',
+  'cuenta_verificada',
   'participacion_contratada',
   'participacion_no_seleccionada',
   'participacion_en_revision',
@@ -79,9 +89,9 @@ export type NotificationContent =
 /**
  * Decide cómo renderizar el cuerpo de una notificación.
  *
- * - Con `params` y un tipo que tiene plantilla → se traduce en el cliente con
- *   la clave `content.<tipo>` y los parámetros (RF-47 bilingüe).
- * - En cualquier otro caso → se muestra el `mensaje` guardado tal cual.
+ * - Tipo en TIPOS_I18N_ESTATICOS → clave i18n con values:{} (sin params).
+ * - Con `params` y un tipo que tiene plantilla → clave i18n con los params.
+ * - En cualquier otro caso → texto crudo guardado en `mensaje` (fallback).
  */
 export function resolveNotificationContent(input: {
   tipo: string
@@ -89,6 +99,9 @@ export function resolveNotificationContent(input: {
   params?: Record<string, string> | null
 }): NotificationContent {
   const { tipo, mensaje, params } = input
+  if (TIPOS_I18N_ESTATICOS.has(tipo)) {
+    return { kind: 'i18n', key: `content.${tipo}`, values: {} }
+  }
   const hasParams = params != null && Object.keys(params).length > 0
   if (hasParams && TIPOS_CON_PLANTILLA.has(tipo)) {
     return { kind: 'i18n', key: `content.${tipo}`, values: params }

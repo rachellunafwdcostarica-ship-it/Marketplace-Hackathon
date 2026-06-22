@@ -16,6 +16,75 @@ import {
   PLAZO_MIN_KEY,
   PLAZO_MAX_KEY,
 } from '@/lib/admin/config-validation'
+import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
+import {
+  accountVerifiedHtml,
+  accountVerifiedSubject,
+} from '@/lib/email/templates/account-verified'
+import { crearNotificacion } from '@/lib/notifications/create'
+
+/**
+ * Avisa al usuario que su perfil fue verificado (RF-64 egresado / RF-17
+ * empresa): correo por Gmail + notificación in-app `cuenta_verificada`. Ambos
+ * best-effort — un fallo se registra pero no aborta la verificación. No es una
+ * server action (no se exporta): la usan internamente las funciones de
+ * verificación.
+ */
+async function notificarCuentaVerificada(
+  adminClient: ReturnType<typeof createSupabaseAdminClient>,
+  idUsuario: string,
+  rol: 'egresado' | 'empresario',
+): Promise<void> {
+  const { data: usuario } = await adminClient
+    .from('usuarios')
+    .select('correo, nombre')
+    .eq('id_usuario', idUsuario)
+    .maybeSingle()
+  if (!usuario?.correo) return
+
+  const reqHeaders = await headers()
+  const host =
+    reqHeaders.get('x-forwarded-host') ??
+    reqHeaders.get('host') ??
+    'localhost:3000'
+  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+  const loginUrl = `${proto}://${host}/login`
+
+  try {
+    const transport = createGmailTransport()
+    await transport.sendMail({
+      from: getGmailFrom(),
+      to: usuario.correo,
+      subject: accountVerifiedSubject(),
+      html: accountVerifiedHtml({
+        nombre: usuario.nombre ?? '',
+        rol,
+        loginUrl,
+      }),
+    })
+  } catch (e) {
+    logger.error('notificarCuentaVerificada: fallo al enviar correo', {
+      error: e instanceof Error ? e.message : String(e),
+      idUsuario,
+    })
+  }
+
+  const notif = await crearNotificacion({
+    idUsuario,
+    tipoEvento: 'cuenta_verificada',
+    mensaje:
+      rol === 'empresario'
+        ? 'Tu empresa fue verificada. Ya podés publicar proyectos.'
+        : 'Tu egreso fue verificado. Ya podés postular a proyectos.',
+    params: { rol },
+  })
+  if (!notif.ok) {
+    logger.error('notificarCuentaVerificada: fallo al notificar', {
+      error: notif.error,
+      idUsuario,
+    })
+  }
+}
 
 /**
  * Mueve `estudiantes.estado_verificacion` (RF-64). Productor del campo que la
@@ -134,13 +203,68 @@ async function setGraduateVerification(
     })
   }
 
+  // RF-46/RF-47: al verificar, avisar al egresado (correo + notificación in-app).
+  if (estado === 'verificado') {
+    await notificarCuentaVerificada(adminClient, parsed.data, 'egresado')
+  }
+
   revalidatePath('/admin/validations', 'page')
   return ok(undefined)
 }
 
 /** Verifica a un egresado (estado_verificacion → 'verificado'). Solo admin. */
 export async function verificarEgresado(userId: string): Promise<Result<void>> {
-  return setGraduateVerification(userId, 'verificado')
+  const parsed = z.string().uuid().safeParse(userId)
+  if (!parsed.success) {
+    return err('invalid_user_id')
+  }
+
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) {
+    return authResult
+  }
+
+  const adminClient = createSupabaseAdminClient()
+
+  const { data: usuario, error: fetchError } = await adminClient
+    .from('usuarios')
+    .select('correo')
+    .eq('id_usuario', parsed.data)
+    .single()
+
+  if (fetchError || !usuario?.correo) {
+    logger.error('verificarEgresado: fallo al obtener correo del usuario', {
+      error: fetchError?.message,
+      userId,
+    })
+    return err('user_not_found')
+  }
+
+  // Casting a 'any' temporalmente porque egresados_fwd_oficial
+  // no está en los tipos autogenerados.
+  const { data: fwdRecord, error: fwdError } = await adminClient
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .from('egresados_fwd_oficial' as any)
+    .select('correo')
+    .eq('correo', usuario.correo)
+    .maybeSingle()
+
+  if (fwdError) {
+    logger.error(
+      'verificarEgresado: fallo al consultar egresados_fwd_oficial',
+      {
+        error: fwdError.message,
+      },
+    )
+    return err('database_error')
+  }
+
+  if (!fwdRecord) {
+    // Si no está en la tabla, se rechaza la verificación
+    return err('egresado_no_encontrado')
+  }
+
+  return setGraduateVerification(parsed.data, 'verificado')
 }
 
 /** Rechaza a un egresado (estado_verificacion → 'rechazado'). Solo admin. */
@@ -327,6 +451,24 @@ async function setCompanyVerification(
       error: auditError.message,
       idEmpresario,
     })
+  }
+
+  // RF-46/RF-47: al verificar, avisar al empresario (correo + notificación
+  // in-app). setCompanyVerification recibe id_empresario, así que se resuelve el
+  // id_usuario destinatario.
+  if (estado === 'verificado') {
+    const { data: empresario } = await adminClient
+      .from('empresarios')
+      .select('id_usuario')
+      .eq('id_empresario', parsed.data)
+      .maybeSingle()
+    if (empresario?.id_usuario) {
+      await notificarCuentaVerificada(
+        adminClient,
+        empresario.id_usuario,
+        'empresario',
+      )
+    }
   }
 
   revalidatePath('/admin/validations', 'page')

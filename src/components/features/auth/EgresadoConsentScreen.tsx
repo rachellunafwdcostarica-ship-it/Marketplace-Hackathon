@@ -6,19 +6,26 @@ import { useTranslations } from 'next-intl'
 import { ArrowRight, Database } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
 import { AuthCard } from '@/components/features/auth/AuthCard'
-import { assignRole } from '@/lib/auth/actions'
-import { registrarConsentimientoCotejo } from '@/lib/auth/actions'
+import { completarOnboarding } from '@/lib/auth/actions'
+
+type TituloFwd = 'frontend' | 'backend' | 'fullstack' | ''
 
 export function EgresadoConsentScreen() {
   const tO = useTranslations('Onboarding')
   const router = useRouter()
 
+  const [tituloFwd, setTituloFwd] = useState<TituloFwd>('')
   const [consentFWD, setConsentFWD] = useState(false)
   const [consentTerminos, setConsentTerminos] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleContinue = async () => {
+    if (tituloFwd === '') {
+      toast.error(tO('tituloFwdRequired'))
+      return
+    }
     if (!consentFWD) {
       toast.error(tO('consentRequired'))
       return
@@ -29,24 +36,27 @@ export function EgresadoConsentScreen() {
     }
 
     setLoading(true)
-
-    const consentResult = await registrarConsentimientoCotejo()
-    if (!consentResult.ok) {
-      setLoading(false)
-      toast.error(tO('errorGeneric'))
-      return
-    }
-
-    const roleResult = await assignRole({ role: 'egresado' })
+    const result = await completarOnboarding({
+      role: 'egresado',
+      tituloFwd,
+      aceptaTerminos: true,
+      aceptaCotejo: true,
+    })
     setLoading(false)
 
-    if (roleResult.ok || roleResult.error === 'role_already_assigned') {
+    if (result.ok) {
       router.push('/pending-approval')
       return
     }
-
+    if (result.error === 'email_not_allowed') {
+      toast.error(tO('emailNotAllowed'))
+      return
+    }
     toast.error(tO('errorGeneric'))
   }
+
+  const selectClass =
+    'w-full h-12 rounded-xl border border-border bg-surface-sunken/50 px-3 text-sm text-ink focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] cursor-pointer'
 
   return (
     <AuthCard>
@@ -67,7 +77,29 @@ export function EgresadoConsentScreen() {
           </p>
         </div>
 
-        <div className="space-y-3 pt-2">
+        <div className="space-y-1.5">
+          <Label
+            htmlFor="tituloFwd"
+            className="text-xs font-bold text-ink uppercase tracking-wider"
+          >
+            {tO('labelTituloFwd')}
+          </Label>
+          <select
+            id="tituloFwd"
+            value={tituloFwd}
+            onChange={(e) => setTituloFwd(e.target.value as TituloFwd)}
+            className={selectClass}
+          >
+            <option value="" disabled>
+              {tO('tituloFwdPlaceholder')}
+            </option>
+            <option value="frontend">{tO('tituloFrontend')}</option>
+            <option value="backend">{tO('tituloBackend')}</option>
+            <option value="fullstack">{tO('tituloFullstack')}</option>
+          </select>
+        </div>
+
+        <div className="space-y-3 pt-1">
           <label className="flex cursor-pointer items-start gap-2.5 rounded-xl border border-border/80 bg-muted/20 p-3">
             <input
               type="checkbox"

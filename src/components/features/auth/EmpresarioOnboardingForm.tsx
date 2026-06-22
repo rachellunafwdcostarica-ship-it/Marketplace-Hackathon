@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { AuthCard } from '@/components/features/auth/AuthCard'
 import { AuthHeader } from '@/components/features/auth/AuthHeader'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { saveEmpresarioProfile } from '@/lib/auth/actions'
+import { completarOnboarding } from '@/lib/auth/actions'
 import { CountryRegionFields } from '@/components/features/geo/CountryRegionFields'
 import type { ComboboxOption } from '@/components/ui/combobox'
 
@@ -76,6 +76,13 @@ export function EmpresarioOnboardingForm({
           .string()
           .min(2, tO('errorNombreEmpresa'))
           .max(150, tO('errorNombreEmpresaMax')),
+        cedula: z.string().min(1, tO('errorCedula')).max(50, tO('errorCedula')),
+        sitio_web: z
+          .string()
+          .url(tO('errorSitioWeb'))
+          .max(200, tO('errorSitioWeb'))
+          .or(z.literal(''))
+          .optional(),
         tipo_empresario: z.enum(['empresa_formal', 'emprendedor'], {
           message: tO('errorTipoEmpresario'),
         }),
@@ -143,17 +150,23 @@ export function EmpresarioOnboardingForm({
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true)
-    const result = await saveEmpresarioProfile({
+    const result = await completarOnboarding({
+      role: 'empresario',
+      tipoEmpresario: data.tipo_empresario,
+      nombreEmpresa: data.nombre_empresa,
+      cedula: data.cedula,
+      ...(data.sitio_web ? { sitioWeb: data.sitio_web } : {}),
       nombre: data.nombre,
-      primer_apellido: data.primer_apellido,
-      segundo_apellido: data.segundo_apellido,
-      fecha_nacimiento: data.fecha_nacimiento,
-      foto_perfil_url: fotoUrl,
-      nombre_empresa: data.nombre_empresa,
-      tipo_empresario: data.tipo_empresario,
+      primerApellido: data.primer_apellido,
+      ...(data.segundo_apellido
+        ? { segundoApellido: data.segundo_apellido }
+        : {}),
+      fechaNacimiento: data.fecha_nacimiento,
+      ...(fotoUrl ? { fotoPerfilUrl: fotoUrl } : {}),
       pais: data.pais,
-      ciudad: data.ciudad,
-      alcance_operativo: data.alcance_operativo,
+      region: data.ciudad,
+      alcanceOperativo: data.alcance_operativo,
+      aceptaTerminos: true,
     })
     setLoading(false)
 
@@ -174,6 +187,8 @@ export function EmpresarioOnboardingForm({
       'segundo_apellido',
       'fecha_nacimiento',
       'nombre_empresa',
+      'cedula',
+      'sitio_web',
       'tipo_empresario',
       'pais',
       'ciudad',
@@ -360,6 +375,32 @@ export function EmpresarioOnboardingForm({
               />
               {errors.nombre_empresa && (
                 <p className={errorClass}>{errors.nombre_empresa.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className={labelClass}>{tO('labelCedula')}</Label>
+              <Input
+                {...register('cedula')}
+                type="text"
+                placeholder={tO('labelCedula')}
+                className={errors.cedula ? inputErrorClass : inputClass}
+              />
+              {errors.cedula && (
+                <p className={errorClass}>{errors.cedula.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className={labelClass}>{tO('labelSitioWeb')}</Label>
+              <Input
+                {...register('sitio_web')}
+                type="url"
+                placeholder="https://"
+                className={errors.sitio_web ? inputErrorClass : inputClass}
+              />
+              {errors.sitio_web && (
+                <p className={errorClass}>{errors.sitio_web.message}</p>
               )}
             </div>
 

@@ -147,9 +147,12 @@ export function EntregablesClient({
       const ext = file.name.split('.').pop() ?? 'bin'
       const path = `${contratacion.id_contratacion}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('entregables')
-        .upload(path, file)
+      const { error: uploadError } = await Promise.race([
+        supabase.storage.from('entregables').upload(path, file),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('upload_timeout')), 20_000),
+        ),
+      ])
 
       if (uploadError) {
         toast.error(tEgresado('uploadError'))
@@ -164,6 +167,7 @@ export function EntregablesClient({
       })
 
       if (!result.ok) {
+        await supabase.storage.from('entregables').remove([path])
         toast.error(tEgresado('uploadError'))
         return
       }
