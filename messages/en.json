@@ -1278,11 +1278,15 @@
     "editSkill": "Edit Skill",
     "noSkills": "No skills registered yet",
     "skillName": "Skill name",
+    "selectSkillPlaceholder": "Select a skill...",
     "skillLevel": "Level",
     "levelBasic": "Basic",
     "levelIntermediate": "Intermediate",
     "levelAdvanced": "Advanced",
-    "saveSkill": "Save Skill"
+    "saveSkill": "Save Skill",
+    "cropImageTitle": "Crop image",
+    "cropImageDesc": "Adjust your image to look perfect.",
+    "cropAndUpload": "Crop and Upload"
   },
   "EgresadoMensajes": {
     "title": "My Messages",
