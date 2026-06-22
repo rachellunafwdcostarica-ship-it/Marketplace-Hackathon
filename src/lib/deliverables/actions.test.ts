@@ -256,7 +256,7 @@ describe('responderEntregable', () => {
     if (!result.ok) expect(result.error).toBe('entregable_not_found')
   })
 
-  it('retorna estado_invalido si el entregable no está en estado enviado', async () => {
+  it('retorna estado_invalido si el entregable está aprobado', async () => {
     mockedServer.mockResolvedValue(
       withAuth((table) => {
         if (table === 'entregables') {
@@ -267,6 +267,34 @@ describe('responderEntregable', () => {
                   data: {
                     id_entregable: ENTR_UUID,
                     estado: 'aprobado',
+                    id_contratacion: CONT_UUID,
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        return {}
+      }) as never,
+    )
+
+    const result = await responderEntregable(validInput)
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('estado_invalido')
+  })
+
+  it('retorna estado_invalido si el entregable está con_cambios', async () => {
+    mockedServer.mockResolvedValue(
+      withAuth((table) => {
+        if (table === 'entregables') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    id_entregable: ENTR_UUID,
+                    estado: 'con_cambios',
                     id_contratacion: CONT_UUID,
                   },
                   error: null,
@@ -295,6 +323,100 @@ describe('responderEntregable', () => {
                   data: {
                     id_entregable: ENTR_UUID,
                     estado: 'enviado',
+                    id_contratacion: CONT_UUID,
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+            update: vi.fn(() => ({
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            })),
+          }
+        }
+        if (table === 'contrataciones') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_participacion: PART_UUID },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        if (table === 'participaciones') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_proyecto: PROJ_UUID, id_estudiante: STUD_UUID },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        if (table === 'estudiantes') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_usuario: USER_ID },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        if (table === 'empresarios') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_empresario: 'emp-1' },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        if (table === 'proyectos') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn().mockReturnThis(),
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id_proyecto: PROJ_UUID, titulo: 'Proyecto Test' },
+                error: null,
+              }),
+            })),
+          }
+        }
+        if (table === 'comentarios_entregables') {
+          return {
+            insert: vi.fn().mockResolvedValue({ error: null }),
+          }
+        }
+        return {}
+      }) as never,
+    )
+
+    const result = await responderEntregable(validInput)
+    expect(result.ok).toBe(true)
+  })
+
+  it('aprueba el entregable cuando estado es en_revision (RF-41)', async () => {
+    mockedServer.mockResolvedValue(
+      withAuth((table) => {
+        if (table === 'entregables') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    id_entregable: ENTR_UUID,
+                    estado: 'en_revision',
                     id_contratacion: CONT_UUID,
                   },
                   error: null,
