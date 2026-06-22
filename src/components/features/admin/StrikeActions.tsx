@@ -27,6 +27,7 @@ import {
   addStrike,
   removeStrike,
   resetStrikes,
+  restoreAccess,
 } from '@/lib/admin/strike-actions'
 import type { Database } from '@/types/database'
 
@@ -37,6 +38,7 @@ interface StrikeActionsProps {
   userName: string
   cantidadStrikes: number
   isSelf: boolean
+  isExpelled?: boolean
 }
 
 type ActionType = 'add' | 'remove' | 'reset'
@@ -64,6 +66,7 @@ export function StrikeActions({
   userName,
   cantidadStrikes,
   isSelf,
+  isExpelled = false,
 }: StrikeActionsProps) {
   const t = useTranslations('Admin')
   const tCommon = useTranslations('Common')
@@ -78,10 +81,27 @@ export function StrikeActions({
     return <span className="text-xs text-muted-foreground">{t('selfRow')}</span>
   }
 
-  const handleOpen = (action: ActionType) => {
+  const handleOpen = (action: ActionType | 'restore') => {
+    if (action === 'restore') {
+      handleRestore()
+      return
+    }
     setMotivoEnum('otro')
     setDescripcion('')
-    setOpenAction(action)
+    setOpenAction(action as ActionType)
+  }
+
+  const handleRestore = async () => {
+    if (!confirm('¿Estás seguro de que quieres permitir el acceso a este usuario y resetear sus strikes?')) return
+    setLoading(true)
+    const result = await restoreAccess(userId)
+    setLoading(false)
+    if (result.ok) {
+      toast.success('El acceso ha sido restaurado correctamente.')
+      router.refresh()
+    } else {
+      toast.error('Ocurrió un error al intentar restaurar el acceso.')
+    }
   }
 
   const handleClose = () => {
@@ -132,9 +152,24 @@ export function StrikeActions({
     openAction === 'reset' && descripcion.trim().length < 5
   const isConfirmDisabled = loading || isResetDisabled
 
+  if (isExpelled) {
+    return (
+      <Button
+        size="sm"
+        onClick={() => handleOpen('restore' as any)}
+        disabled={loading}
+        className="flex items-center gap-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+        title="Permitir el acceso a este usuario"
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+        <span className="hidden sm:inline">Permitir acceso</span>
+      </Button>
+    )
+  }
+
   return (
     <>
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2">
         {/* Añadir strike */}
         <Button
           size="sm"
