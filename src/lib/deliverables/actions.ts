@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
+import { crearNotificacion } from '@/lib/notifications/create'
 
 const SubirEntregableSchema = z.object({
   idContratacion: z.string().uuid(),
@@ -145,7 +146,7 @@ export async function responderEntregable(
 
   const { data: participacion, error: partErr } = await supabase
     .from('participaciones')
-    .select('id_proyecto')
+    .select('id_proyecto, id_estudiante')
     .eq('id_participacion', contratacion.id_participacion)
     .maybeSingle()
   if (partErr || !participacion) return err('unauthorized')
@@ -159,11 +160,17 @@ export async function responderEntregable(
 
   const { data: proyectoOwned, error: proyErr } = await supabase
     .from('proyectos')
-    .select('id_proyecto')
+    .select('id_proyecto, titulo')
     .eq('id_proyecto', participacion.id_proyecto)
     .eq('id_empresario', empresario.id_empresario)
     .maybeSingle()
   if (proyErr || !proyectoOwned) return err('unauthorized')
+
+  const { data: estudianteNotif } = await supabase
+    .from('estudiantes')
+    .select('id_usuario')
+    .eq('id_estudiante', participacion.id_estudiante)
+    .maybeSingle()
 
   // Aprobar el entregable FINAL cierra el ciclo (RF-41): un RPC atómico aprueba
   // el entregable y finaliza proyecto/contratación/participación en una sola
@@ -189,6 +196,20 @@ export async function responderEntregable(
     revalidatePath(
       `/egresado/projects/${participacion.id_proyecto}/entregables`,
     )
+    if (estudianteNotif?.id_usuario) {
+      const notifResult = await crearNotificacion({
+        idUsuario: estudianteNotif.id_usuario,
+        tipoEvento: 'entregable_aprobado',
+        params: { titulo: proyectoOwned.titulo },
+        urlDestino: `/egresado/projects/${participacion.id_proyecto}/entregables`,
+        mensaje: `Tu entregable final del proyecto "${proyectoOwned.titulo}" fue aprobado. El proyecto está finalizado.`,
+      })
+      if (!notifResult.ok) {
+        logger.error('responderEntregable: notificacion aprobado fallida', {
+          error: notifResult.error,
+        })
+      }
+    }
     return ok({ finalizado: true })
   }
 
@@ -215,5 +236,27 @@ export async function responderEntregable(
 
   revalidatePath(`/empresario/proyecto/${participacion.id_proyecto}`)
   revalidatePath(`/egresado/projects/${participacion.id_proyecto}/entregables`)
+  if (estudianteNotif?.id_usuario) {
+    const tipoEvento =
+      parsed.data.decision === 'aprobado'
+        ? ('entregable_aprobado' as const)
+        : ('entregable_rechazado' as const)
+    const mensaje =
+      parsed.data.decision === 'aprobado'
+        ? `Tu entregable del proyecto "${proyectoOwned.titulo}" fue aprobado.`
+        : `El empresario solicitó cambios en tu entregable de "${proyectoOwned.titulo}".`
+    const notifResult = await crearNotificacion({
+      idUsuario: estudianteNotif.id_usuario,
+      tipoEvento,
+      params: { titulo: proyectoOwned.titulo },
+      urlDestino: `/egresado/projects/${participacion.id_proyecto}/entregables`,
+      mensaje,
+    })
+    if (!notifResult.ok) {
+      logger.error('responderEntregable: notificacion fallida', {
+        error: notifResult.error,
+      })
+    }
+  }
   return ok({ finalizado: false })
 }

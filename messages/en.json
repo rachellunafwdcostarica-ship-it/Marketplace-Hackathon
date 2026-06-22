@@ -1143,7 +1143,9 @@
       "participacion_contratada": "Congratulations! The company picked you for \"{titulo}\". They'll be in touch soon.",
       "participacion_no_seleccionada": "Your proposal for \"{titulo}\" wasn't selected this time. Thanks for applying — new opportunities are on the way.",
       "postulacion_recibida": "You have a new application for \"{titulo}\".",
-      "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon."
+      "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon.",
+      "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
+      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\"."
     }
   },
   "EmpresaPerfil": {
