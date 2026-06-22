@@ -26,17 +26,14 @@ export function buildAdjudicacionNotificaciones(input: {
 }): NotificacionInput[] {
   const { titulo, urlProyecto, afectados } = input
   return afectados.map((afectado) => {
-    const esGanador = afectado.estado === 'contratada'
-    const tipoEvento: TipoNotificacion = esGanador
-      ? 'participacion_contratada'
-      : 'participacion_no_seleccionada'
-    const mensaje = esGanador
-      ? `¡Felicitaciones! La empresa te eligió para "${titulo}". Pronto se pondrán en contacto.`
-      : `Tu propuesta para "${titulo}" no fue seleccionada en esta ocasión. Gracias por postularte; pronto habrá nuevas oportunidades.`
+    const tipoEvento: TipoNotificacion =
+      afectado.estado === 'contratada'
+        ? 'participacion_contratada'
+        : 'participacion_no_seleccionada'
     return {
       idUsuario: afectado.idUsuario,
       tipoEvento,
-      mensaje,
+      mensaje: `content.${tipoEvento}`,
       params: { titulo },
       urlDestino: urlProyecto,
     }
