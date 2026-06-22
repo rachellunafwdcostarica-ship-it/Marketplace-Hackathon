@@ -86,6 +86,7 @@ beforeEach(() => {
 
 describe('postularse', () => {
   it('retorna invalid_input si el input no cumple el schema', async () => {
+    // @ts-expect-error Intentional invalid input to test Zod validation
     const result = await postularse({
       id_proyecto: 'no-es-uuid',
       planteamiento_solucion: 'corto',

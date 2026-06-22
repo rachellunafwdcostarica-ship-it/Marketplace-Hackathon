@@ -60,11 +60,9 @@ function createApplySchema(
     documentacionTecnica:
       typeof window === 'undefined'
         ? zod.any()
-        : zod
-            .any()
-            .refine((files) => files && files.length > 0, {
-              message: tCommon('required'),
-            }),
+        : zod.any().refine((files) => files && files.length > 0, {
+            message: tCommon('required'),
+          }),
   })
 }
 
@@ -367,9 +365,9 @@ export function ApplyProjectClient({
                 <p className="text-xs text-muted-foreground">
                   {tEgresado('technicalDocUrlHelp')}
                 </p>
-                {errors.documentacionTecnica && (
+                {errors.documentacionTecnica?.message && (
                   <p className="text-xs font-semibold text-destructive">
-                    {errors.documentacionTecnica.message}
+                    {String(errors.documentacionTecnica.message)}
                   </p>
                 )}
               </div>
