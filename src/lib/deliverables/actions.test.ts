@@ -20,6 +20,7 @@ const CONT_UUID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const ENTR_UUID = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const PROJ_UUID = 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const PART_UUID = 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+const STUD_UUID = 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const USER_ID = 'usr-1'
 
 const validSubirInput = {
@@ -322,7 +323,19 @@ describe('responderEntregable', () => {
             select: vi.fn(() => ({
               eq: vi.fn(() => ({
                 maybeSingle: vi.fn().mockResolvedValue({
-                  data: { id_proyecto: PROJ_UUID },
+                  data: { id_proyecto: PROJ_UUID, id_estudiante: STUD_UUID },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        if (table === 'estudiantes') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: { id_usuario: USER_ID },
                   error: null,
                 }),
               })),
