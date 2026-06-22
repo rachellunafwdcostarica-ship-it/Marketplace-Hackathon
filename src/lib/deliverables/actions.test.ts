@@ -23,13 +23,42 @@ const PART_UUID = 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const STUD_UUID = 'e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const USER_ID = 'usr-1'
 
-const validSubirInput = {
-  idContratacion: CONT_UUID,
-  archivoPath: 'uploads/entregable.pdf',
-  idProyecto: PROJ_UUID,
+function makeFile(name = 'entregable.pdf') {
+  return new File(['contenido del entregable'], name, {
+    type: 'application/pdf',
+  })
 }
 
-function withAuth(fromImpl: (table: string) => unknown) {
+// El upload ahora viaja por FormData a la server action; armamos un FormData
+// válido por defecto y dejamos sobreescribir cada campo (o quitar el archivo).
+function makeSubirFormData(overrides?: {
+  idContratacion?: string
+  idProyecto?: string
+  file?: File | null
+}): FormData {
+  const formData = new FormData()
+  const file = overrides && 'file' in overrides ? overrides.file : makeFile()
+  if (file) formData.append('file', file)
+  formData.append('idContratacion', overrides?.idContratacion ?? CONT_UUID)
+  formData.append('idProyecto', overrides?.idProyecto ?? PROJ_UUID)
+  return formData
+}
+
+// Mock del Storage: por defecto upload/remove resuelven sin error; se le puede
+// inyectar un error de upload para probar el path `storage_error`.
+function makeStorage(uploadError: unknown = null) {
+  return {
+    from: vi.fn(() => ({
+      upload: vi.fn().mockResolvedValue({ error: uploadError }),
+      remove: vi.fn().mockResolvedValue({ error: null }),
+    })),
+  }
+}
+
+function withAuth(
+  fromImpl: (table: string) => unknown,
+  storage: unknown = makeStorage(),
+) {
   return {
     auth: {
       getUser: vi.fn().mockResolvedValue({
@@ -38,6 +67,7 @@ function withAuth(fromImpl: (table: string) => unknown) {
       }),
     },
     from: vi.fn(fromImpl),
+    storage,
   }
 }
 
@@ -50,7 +80,29 @@ function withNoAuth() {
       }),
     },
     from: vi.fn(),
+    storage: makeStorage(),
   }
+}
+
+// fromImpl reutilizable: tabla `entregables` con version base 0 e insert OK.
+function entregablesInsertOk(table: string): unknown {
+  if (table === 'entregables') {
+    return {
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          order: vi.fn(() => ({
+            limit: vi.fn(() => ({
+              maybeSingle: vi
+                .fn()
+                .mockResolvedValue({ data: null, error: null }),
+            })),
+          })),
+        })),
+      })),
+      insert: vi.fn().mockResolvedValue({ error: null }),
+    }
+  }
+  return {}
 }
 
 beforeEach(() => {
@@ -64,44 +116,39 @@ beforeEach(() => {
 
 describe('subirHito', () => {
   it('retorna invalid_input si el UUID de contratación es inválido', async () => {
-    const result = await subirHito({
-      ...validSubirInput,
-      idContratacion: 'no-uuid',
-    })
+    const result = await subirHito(
+      makeSubirFormData({ idContratacion: 'no-uuid' }),
+    )
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('invalid_input')
+  })
+
+  it('retorna invalid_input si falta el archivo', async () => {
+    const result = await subirHito(makeSubirFormData({ file: null }))
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('invalid_input')
   })
 
   it('propaga error si el rol no es egresado', async () => {
     mockedRequireRole.mockResolvedValue({ ok: false, error: 'forbidden' })
-    const result = await subirHito(validSubirInput)
+    const result = await subirHito(makeSubirFormData())
     expect(result.ok).toBe(false)
   })
 
-  it('registra el hito parcial exitosamente', async () => {
+  it('retorna storage_error si falla el upload al storage', async () => {
     mockedServer.mockResolvedValue(
-      withAuth((table) => {
-        if (table === 'entregables') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                order: vi.fn(() => ({
-                  limit: vi.fn(() => ({
-                    maybeSingle: vi
-                      .fn()
-                      .mockResolvedValue({ data: null, error: null }),
-                  })),
-                })),
-              })),
-            })),
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          }
-        }
-        return {}
-      }) as never,
+      withAuth(entregablesInsertOk, makeStorage({ message: 'boom' })) as never,
     )
 
-    const result = await subirHito(validSubirInput)
+    const result = await subirHito(makeSubirFormData())
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('storage_error')
+  })
+
+  it('registra el hito parcial exitosamente', async () => {
+    mockedServer.mockResolvedValue(withAuth(entregablesInsertOk) as never)
+
+    const result = await subirHito(makeSubirFormData())
     expect(result.ok).toBe(true)
   })
 
@@ -129,7 +176,7 @@ describe('subirHito', () => {
       }) as never,
     )
 
-    const result = await subirHito(validSubirInput)
+    const result = await subirHito(makeSubirFormData())
     expect(result.ok).toBe(true)
   })
 
@@ -158,7 +205,7 @@ describe('subirHito', () => {
       }) as never,
     )
 
-    const result = await subirHito(validSubirInput)
+    const result = await subirHito(makeSubirFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('database_error')
   })
@@ -169,39 +216,16 @@ describe('subirHito', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('subirEntregableFinal', () => {
-  it('retorna invalid_input si el archivoPath está vacío', async () => {
-    const result = await subirEntregableFinal({
-      ...validSubirInput,
-      archivoPath: '',
-    })
+  it('retorna invalid_input si falta el archivo', async () => {
+    const result = await subirEntregableFinal(makeSubirFormData({ file: null }))
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('invalid_input')
   })
 
   it('registra el entregable final exitosamente', async () => {
-    mockedServer.mockResolvedValue(
-      withAuth((table) => {
-        if (table === 'entregables') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                order: vi.fn(() => ({
-                  limit: vi.fn(() => ({
-                    maybeSingle: vi
-                      .fn()
-                      .mockResolvedValue({ data: null, error: null }),
-                  })),
-                })),
-              })),
-            })),
-            insert: vi.fn().mockResolvedValue({ error: null }),
-          }
-        }
-        return {}
-      }) as never,
-    )
+    mockedServer.mockResolvedValue(withAuth(entregablesInsertOk) as never)
 
-    const result = await subirEntregableFinal(validSubirInput)
+    const result = await subirEntregableFinal(makeSubirFormData())
     expect(result.ok).toBe(true)
   })
 })

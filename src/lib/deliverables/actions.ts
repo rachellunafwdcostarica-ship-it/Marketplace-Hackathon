@@ -9,10 +9,18 @@ import { revalidatePath } from 'next/cache'
 import { crearNotificacion } from '@/lib/notifications/create'
 import { DEFAULT_LOCALE } from '@/i18n/config'
 
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50 MB; coincide con el límite del bucket
+const ENTREGABLES_BUCKET = 'entregables'
+
 const SubirEntregableSchema = z.object({
   idContratacion: z.string().uuid(),
-  archivoPath: z.string().min(1).max(150),
   idProyecto: z.string().uuid(),
+  file: z
+    .instanceof(File)
+    .refine((archivo) => archivo.size > 0, { message: 'archivo_vacio' })
+    .refine((archivo) => archivo.size <= MAX_FILE_SIZE_BYTES, {
+      message: 'archivo_muy_grande',
+    }),
 })
 
 type SubirInput = z.infer<typeof SubirEntregableSchema>
@@ -28,9 +36,29 @@ async function registrarEntregable(
 
   const supabase = await createSupabaseServerClient()
 
+  // El upload corre en el SERVIDOR a propósito: el cliente browser de Supabase
+  // se cuelga al resolver la sesión y nunca emite el request del Storage. Con el
+  // cliente de servidor la sesión sale de las cookies y la RLS del bucket aplica
+  // igual (la carpeta es el id_contratacion del estudiante).
+  const ext = input.file.name.split('.').pop()?.toLowerCase() || 'bin'
+  const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  const archivoPath = `${input.idContratacion}/${uniqueSuffix}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(ENTREGABLES_BUCKET)
+    .upload(archivoPath, input.file)
+
+  if (uploadError) {
+    logger.error(`registrarEntregable (${tipo}) storage upload failed`, {
+      error: uploadError.message,
+    })
+    return err('storage_error')
+  }
+
   // La versión se calcula como max(version)+1 por contratación. El constraint
   // UNIQUE(id_contratacion, version) garantiza la secuencia; si dos subidas casi
-  // simultáneas chocan (23505), recalculamos y reintentamos una vez.
+  // simultáneas chocan (23505), recalculamos y reintentamos una vez. Si el insert
+  // falla en firme, borramos el archivo recién subido para no dejar huérfanos.
   for (let attempt = 1; attempt <= MAX_VERSION_ATTEMPTS; attempt++) {
     const { data: maxVerData } = await supabase
       .from('entregables')
@@ -45,7 +73,7 @@ async function registrarEntregable(
     const { error: insertError } = await supabase.from('entregables').insert({
       id_contratacion: input.idContratacion,
       tipo_entregable: tipo,
-      archivo_url: input.archivoPath,
+      archivo_url: archivoPath,
       version,
       estado: 'enviado',
     })
@@ -59,6 +87,7 @@ async function registrarEntregable(
       continue
     }
 
+    await supabase.storage.from(ENTREGABLES_BUCKET).remove([archivoPath])
     logger.error(`registrarEntregable (${tipo}) failed`, {
       error: insertError.message,
     })
@@ -67,27 +96,36 @@ async function registrarEntregable(
     )
   }
 
+  await supabase.storage.from(ENTREGABLES_BUCKET).remove([archivoPath])
   return err('version_conflict')
 }
 
 /**
- * Registra un hito parcial (RF-40). El upload al storage ya ocurrió
- * en el cliente; este action solo inserta la fila en `entregables`.
+ * Registra un hito parcial (RF-40). Recibe el archivo por `FormData`, lo sube al
+ * Storage desde el servidor y crea la fila en `entregables`.
  */
-export async function subirHito(input: SubirInput): Promise<Result<void>> {
-  const parsed = SubirEntregableSchema.safeParse(input)
+export async function subirHito(formData: FormData): Promise<Result<void>> {
+  const parsed = SubirEntregableSchema.safeParse({
+    idContratacion: formData.get('idContratacion'),
+    idProyecto: formData.get('idProyecto'),
+    file: formData.get('file'),
+  })
   if (!parsed.success) return err('invalid_input')
   return registrarEntregable(parsed.data, 'parcial')
 }
 
 /**
- * Registra el entregable final (RF-41). Mismo patrón que subirHito
- * pero con tipo_entregable='final'.
+ * Registra el entregable final (RF-41). Mismo patrón que subirHito pero con
+ * tipo_entregable='final'.
  */
 export async function subirEntregableFinal(
-  input: SubirInput,
+  formData: FormData,
 ): Promise<Result<void>> {
-  const parsed = SubirEntregableSchema.safeParse(input)
+  const parsed = SubirEntregableSchema.safeParse({
+    idContratacion: formData.get('idContratacion'),
+    idProyecto: formData.get('idProyecto'),
+    file: formData.get('file'),
+  })
   if (!parsed.success) return err('invalid_input')
   return registrarEntregable(parsed.data, 'final')
 }
