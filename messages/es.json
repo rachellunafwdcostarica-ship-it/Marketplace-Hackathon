@@ -1200,7 +1200,8 @@
     "projectsPublished": "{count, plural, one {# proyecto publicado} other {# proyectos publicados}}",
     "cancelar": "Cancelar",
     "supportMinCharsInfo": "caracteres mínimo",
-    "contratacionesDesc": "Revisá el listado de los estudiantes que has contratado para tus proyectos."
+    "contratacionesDesc": "Revisá el listado de los estudiantes que has contratado para tus proyectos.",
+    "viewEntregables": "Ver entregables"
   },
   "CompanyPostulations": {
     "title": "Gestión de Postulaciones",

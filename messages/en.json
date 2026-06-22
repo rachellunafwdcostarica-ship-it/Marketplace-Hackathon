@@ -1200,7 +1200,8 @@
     "projectsPublished": "{count, plural, one {# published project} other {# published projects}}",
     "cancelar": "Cancel",
     "supportMinCharsInfo": "characters minimum",
-    "contratacionesDesc": "Review the list of students you have hired for your projects."
+    "contratacionesDesc": "Review the list of students you have hired for your projects.",
+    "viewEntregables": "View deliverables"
   },
   "CompanyPostulations": {
     "title": "Applications Management",
