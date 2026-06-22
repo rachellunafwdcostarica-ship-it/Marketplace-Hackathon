@@ -27,6 +27,7 @@ export interface ConversacionItem {
 
 interface AccesoMensajes {
   puedeEnviar: boolean
+  estaVerificado: boolean
   idUsuarioContraparte: string
   urlContraparteBase: string
 }
@@ -50,7 +51,7 @@ async function resolveAccesoMensajes(
   // Camino 1: el usuario es empresario dueño del proyecto
   const { data: empresario, error: empError } = await admin
     .from('empresarios')
-    .select('id_empresario')
+    .select('id_empresario, estado_verificacion')
     .eq('id_usuario', idUsuario)
     .maybeSingle()
 
@@ -110,6 +111,7 @@ async function resolveAccesoMensajes(
 
     return ok({
       puedeEnviar: part.estado === 'contratada',
+      estaVerificado: empresario.estado_verificacion === 'verificado',
       idUsuarioContraparte: estudianteData.id_usuario,
       urlContraparteBase: '/egresado/mensajes',
     })
@@ -118,7 +120,7 @@ async function resolveAccesoMensajes(
   // Camino 2: el usuario es egresado con participacion en el proyecto
   const { data: estudianteProfile, error: estProfileError } = await admin
     .from('estudiantes')
-    .select('id_estudiante')
+    .select('id_estudiante, estado_verificacion')
     .eq('id_usuario', idUsuario)
     .maybeSingle()
 
@@ -180,6 +182,7 @@ async function resolveAccesoMensajes(
 
   return ok({
     puedeEnviar: part.estado === 'contratada',
+    estaVerificado: estudianteProfile.estado_verificacion === 'verificado',
     idUsuarioContraparte: empData.id_usuario,
     urlContraparteBase: '/empresario/mensajes',
   })
@@ -238,6 +241,7 @@ export async function enviarMensaje(
 
   const acceso = await resolveAccesoMensajes(parsed.data.idProyecto, user.id)
   if (!acceso.ok) return err(acceso.error)
+  if (!acceso.data.estaVerificado) return err('cuenta_no_verificada')
   if (!acceso.data.puedeEnviar) return err('proyecto_finalizado')
 
   const admin = createSupabaseAdminClient()
