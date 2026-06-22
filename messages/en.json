@@ -762,6 +762,17 @@
     "responderCommentPlaceholder": "Describe the required changes...",
     "responderSuccess": "Response sent.",
     "responderError": "Could not send the response.",
+    "comentariosLabel": "Comment history",
+    "sinComentarios": "No comments yet.",
+    "tipoComentario_aprobacion": "Approved",
+    "tipoComentario_revision_solicitada": "Changes requested",
+    "tipoComentario_aclaracion": "Comment",
+    "tipoComentario_rechazo": "Rejected",
+    "agregarComentarioPlaceholder": "Write a comment or clarification about this deliverable...",
+    "agregarComentarioBtn": "Comment",
+    "comentandoBtn": "Commenting...",
+    "comentarExitoso": "Comment registered.",
+    "comentarError": "Could not register the comment.",
     "editDescriptionAction": "Edit description",
     "editDescriptionTitle": "Edit the project description",
     "editDescriptionDesc": "The AI will review your change before publishing it. If accepted, applicants will be notified by email and in-app.",
@@ -1200,7 +1211,8 @@
     "projectsPublished": "{count, plural, one {# published project} other {# published projects}}",
     "cancelar": "Cancel",
     "supportMinCharsInfo": "characters minimum",
-    "contratacionesDesc": "Review the list of students you have hired for your projects."
+    "contratacionesDesc": "Review the list of students you have hired for your projects.",
+    "viewEntregables": "View deliverables"
   },
   "CompanyPostulations": {
     "title": "Applications Management",
