@@ -1200,7 +1200,8 @@
       "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
       "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
       "participacion_en_revision": "The company is reviewing your proposal for \"{titulo}\".",
-      "cuenta_verificada": "{rol, select, empresario {Your company was verified. You can now post projects.} other {Your graduation was verified. You can now apply to projects.}}"
+      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
+      "cuenta_verificada": "Your account has been activated. You can now explore projects and apply."
     }
   },
   "EmpresaPerfil": {

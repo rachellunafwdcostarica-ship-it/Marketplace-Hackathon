@@ -144,6 +144,30 @@ function buildGraduateAdmin(opts: {
           })),
         }
       }
+      if (table === 'usuarios') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: { correo: 'test@example.com' },
+                error: null,
+              }),
+            })),
+          })),
+        }
+      }
+      if (table === 'egresados_fwd_oficial') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { correo: 'test@example.com' },
+                error: null,
+              }),
+            })),
+          })),
+        }
+      }
       if (table === 'auditoria') {
         return { insert }
       }

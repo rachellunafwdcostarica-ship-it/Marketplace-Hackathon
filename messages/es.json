@@ -1200,7 +1200,8 @@
       "entregable_aprobado": "Tu entregable del proyecto \"{titulo}\" fue aprobado.",
       "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\".",
       "participacion_en_revision": "La empresa está revisando tu propuesta para \"{titulo}\".",
-      "cuenta_verificada": "{rol, select, empresario {Tu empresa fue verificada. Ya podés publicar proyectos.} other {Tu egreso fue verificado. Ya podés postular a proyectos.}}"
+      "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\".",
+      "cuenta_verificada": "Tu cuenta ha sido activada. Ya puedes explorar proyectos y postularte."
     }
   },
   "EmpresaPerfil": {

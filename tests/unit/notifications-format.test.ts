@@ -107,6 +107,15 @@ describe('resolveNotificationContent', () => {
     ).toEqual({ kind: 'raw', text: 'Tienes un mensaje nuevo' })
   })
 
+  it('usa clave i18n estática para cuenta_verificada sin params', () => {
+    expect(
+      resolveNotificationContent({
+        tipo: 'cuenta_verificada',
+        mensaje: 'content.cuenta_verificada',
+      }),
+    ).toEqual({ kind: 'i18n', key: 'content.cuenta_verificada', values: {} })
+  })
+
   it('usa clave i18n para plazo_vence con params.titulo (RF-33)', () => {
     expect(
       resolveNotificationContent({

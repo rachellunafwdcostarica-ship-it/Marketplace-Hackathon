@@ -32,6 +32,8 @@ import { getCurrentUser } from './dal'
 import { checkPwnedPassword } from './check-pwned-password'
 import { evaluateAdminManagement } from '@/lib/admin/admin-management'
 import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
+import { crearNotificacion } from '@/lib/notifications/create'
+import { DEFAULT_LOCALE } from '@/i18n/config'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
   return getUserRole()
@@ -283,6 +285,91 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
   if (error) {
     logger.error('reactivarUsuario failed', { error: error.message, userId })
     return err(error.message)
+  }
+
+  // Notificación in-app: el usuario la ve al primer login. Best-effort.
+  if (rolRaw !== 'administrador') {
+    const rolParaNotif: 'egresado' | 'empresario' =
+      rolRaw === 'empresario' ? 'empresario' : 'egresado'
+    await crearNotificacion({
+      idUsuario: parsed.data,
+      tipoEvento: 'cuenta_verificada',
+      mensaje: 'content.cuenta_verificada',
+      urlDestino: `/${DEFAULT_LOCALE}${ROLE_HOME[rolParaNotif]}`,
+    })
+  }
+
+  // Enviar correo de aprobación (solo egresado/empresario: la plantilla es
+  // específica de esos roles). Los admins se activan con su flujo de invitación.
+  if (usuario?.correo && rolRaw !== 'administrador') {
+    const reqHeaders = await headers()
+    const host =
+      reqHeaders.get('x-forwarded-host') ??
+      reqHeaders.get('host') ??
+      'localhost:3000'
+    const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+    const baseUrl = `${proto}://${host}`
+
+    const rol: 'egresado' | 'empresario' =
+      rolRaw === 'empresario' ? 'empresario' : 'egresado'
+
+    // Generar magic link de acceso directo hacia /auth/confirm (verifyOtp con
+    // token_hash). Si falla, se usa el login estático como fallback.
+    let accessUrl = `${baseUrl}/login`
+    let isMagicLink = false
+    const { data: linkData, error: linkError } =
+      await adminClient.auth.admin.generateLink({
+        type: 'magiclink',
+        email: usuario.correo,
+      })
+
+    if (linkError) {
+      logger.error('approveUser: fallo al generar magic link', {
+        error: linkError.message,
+        userId,
+      })
+    } else {
+      const tokenHash = linkData.properties?.hashed_token
+      const otpType = linkData.properties?.verification_type
+      if (tokenHash && otpType) {
+        const params = new URLSearchParams({
+          token_hash: tokenHash,
+          type: otpType,
+          next: ROLE_HOME[rol],
+        })
+        accessUrl = `${baseUrl}/auth/confirm?${params.toString()}`
+        isMagicLink = true
+      } else {
+        logger.error('approveUser: el magic link no incluye token_hash', {
+          userId,
+        })
+      }
+    }
+
+    let emailError: Error | null = null
+    try {
+      const transport = createGmailTransport()
+      await transport.sendMail({
+        from: getGmailFrom(),
+        to: usuario.correo,
+        subject: accountApprovedSubject(),
+        html: accountApprovedHtml({
+          nombre: usuario.nombre ?? 'Usuario',
+          rol,
+          accessUrl,
+          isMagicLink,
+        }),
+      })
+    } catch (e) {
+      emailError = e instanceof Error ? e : new Error(String(e))
+    }
+
+    if (emailError) {
+      logger.error('approveUser: fallo al enviar correo de aprobación', {
+        error: emailError.message,
+        userId,
+      })
+    }
   }
 
   if (rolRaw === 'administrador') {
