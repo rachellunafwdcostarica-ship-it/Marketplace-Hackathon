@@ -273,7 +273,6 @@
     "contractFinished": "Finished",
     "contractPaused": "Paused",
     "contractCancelled": "Cancelled",
-    "viewDeliverables": "View deliverables",
     "contractStart": "Start",
     "contractEnd": "Estimated end",
     "statsTitle": "Activity Summary",
@@ -1200,7 +1199,6 @@
       "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
       "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
       "participacion_en_revision": "The company is reviewing your proposal for \"{titulo}\".",
-      "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
       "cuenta_verificada": "Your account has been activated. You can now explore projects and apply."
     }
   },
