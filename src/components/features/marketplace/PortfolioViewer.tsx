@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -23,6 +23,8 @@ interface PortfolioViewerProps {
 export function PortfolioViewer({ profile }: PortfolioViewerProps) {
   const t = useTranslations('Portfolio')
 
+  const locale = useLocale()
+
   const {
     firstName,
     lastName1,
@@ -31,6 +33,10 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
     profilePhoto,
     portafolio_visible_publicamente: visibilityPublic,
     descripcion: portfolioBio,
+    paisIsoResidencia,
+    regionResidencia,
+    paisNombre,
+    regionNombre,
     skills,
     projects,
   } = profile
@@ -131,6 +137,22 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
             </div>
           )}
         </div>
+
+        {/* === Ubicación === */}
+        {(paisNombre || regionNombre) && (
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-primary/20"></div>
+              <div className="text-sm font-semibold tracking-wider text-muted-foreground font-display uppercase">
+                {t('locationLabel')}
+              </div>
+              <div className="h-px flex-1 bg-primary/20"></div>
+            </div>
+            <p className="text-sm text-foreground leading-relaxed">
+              {[regionNombre, paisNombre].filter(Boolean).join(', ')}
+            </p>
+          </div>
+        )}
 
         {/* === Proyectos === */}
         <div className="space-y-4 pt-2">
