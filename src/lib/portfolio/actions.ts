@@ -1,6 +1,7 @@
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
@@ -520,7 +521,8 @@ export async function getPublicStudentProfile(
       return err('unauthorized')
     }
 
-    const { data: estudiante, error } = await supabase
+    const adminClient = await createSupabaseAdminClient()
+    const { data: estudiante, error } = await adminClient
       .from('estudiantes')
       .select(
         `

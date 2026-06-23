@@ -259,6 +259,13 @@
   },
   "Egresado": {
     "dashboard": "Panel Egresado",
+    "matchWithProject": "Match con el Proyecto",
+    "matchingTechs": "Habilidades en común",
+    "matchingLocation": "Ubicación en común",
+    "matchWithStudent": "Match de {firstName} {lastName} con el Proyecto: {score} pts",
+    "matchTitle": "Match de {firstName} {lastName}",
+    "sameCountryAndRegion": "Mismo país y región",
+    "sameCountry": "Mismo país",
     "rateCompanyTitle": "Calificar a la Empresa",
     "rateCompanyDesc": "Compartí tu experiencia trabajando con esta empresa",
     "rateCompanySuccess": "¡Calificación enviada con éxito!",
@@ -1440,6 +1447,8 @@
     "subtitle": "Revisá las postulaciones de todos tus proyectos en un solo lugar."
   },
   "Portfolio": {
+    "commonTechnologies": "Tecnologías en común",
+    "projectDemo": "Ver demo",
     "title": "Mi Portafolio Profesional",
     "description": "Gestiona los proyectos de tu portafolio para mostrar tu experiencia, habilidades y proyectos completados a las empresas reclutadoras.",
     "managerTitle": "Proyectos del Portafolio",

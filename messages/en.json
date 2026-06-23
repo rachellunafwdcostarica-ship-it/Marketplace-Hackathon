@@ -260,6 +260,13 @@
   },
   "Egresado": {
     "dashboard": "Graduate Dashboard",
+    "matchWithProject": "Project Match",
+    "matchingTechs": "Skills in common",
+    "matchingLocation": "Location in common",
+    "matchWithStudent": "Match of {firstName} {lastName} with Project: {score} pts",
+    "matchTitle": "Match of {firstName} {lastName}",
+    "sameCountryAndRegion": "Same country and region",
+    "sameCountry": "Same country",
     "rateCompanyTitle": "Rate the Company",
     "rateCompanyDesc": "Share your experience working with this employer",
     "rateCompanySuccess": "Rating submitted successfully!",
@@ -1440,6 +1447,8 @@
     "subtitle": "Review the applications across all your projects in one place."
   },
   "Portfolio": {
+    "commonTechnologies": "Technologies in common",
+    "projectDemo": "View demo",
     "title": "My Professional Portfolio",
     "description": "Manage your portfolio projects to showcase your experience, skills, and completed projects to recruiting companies.",
     "managerTitle": "Portfolio Projects",
