@@ -1431,6 +1431,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      actualizar_url_participacion: {
+        Args: { p_id_participacion: string; p_url: string | null }
+        Returns: undefined
+      }
       adjudicar_participacion: {
         Args: { p_id_participacion: string; p_id_proyecto: string }
         Returns: undefined

@@ -36,11 +36,13 @@ interface NavLink {
 interface NavbarProps {
   heroMode?: boolean
   hideLogoOnDesktop?: boolean
+  hideLinksFor?: string
 }
 
 export function Navbar({
   heroMode = false,
   hideLogoOnDesktop = false,
+  hideLinksFor,
 }: NavbarProps) {
   const t = useTranslations('Nav')
   const locale = useLocale()
@@ -140,8 +142,8 @@ export function Navbar({
     ],
   }
 
-  const navLinks = role ? navLinksByRole[role] : []
-  const activeRole = role ? roleConfig[role] : null
+  const navLinks = hideLinksFor === role ? [] : navLinksByRole[role]
+  const activeRole = roleConfig[role]
 
   const renderIcon = (iconName: string, className = 'w-4 h-4') => {
     switch (iconName) {

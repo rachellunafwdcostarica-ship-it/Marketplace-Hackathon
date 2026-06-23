@@ -24,7 +24,12 @@ vi.mock('@/lib/logger', () => ({
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-import { subirHito, subirEntregableFinal, responderEntregable } from './actions'
+import {
+  subirHito,
+  subirEntregableFinal,
+  responderEntregable,
+  actualizarUrlProyecto,
+} from './actions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import {
   requireVerifiedEgresado,
@@ -539,6 +544,94 @@ describe('responderEntregable', () => {
     )
 
     const result = await responderEntregable(validInput)
+    expect(result.ok).toBe(true)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// actualizarUrlProyecto
+// ─────────────────────────────────────────────────────────────────────────────
+
+function withRpc(rpcError: unknown = null) {
+  return {
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: USER_ID } },
+        error: null,
+      }),
+    },
+    from: vi.fn(),
+    storage: makeStorage(),
+    rpc: vi.fn().mockResolvedValue({ error: rpcError }),
+  }
+}
+
+describe('actualizarUrlProyecto', () => {
+  it('retorna invalid_input si el UUID de participación es inválido', async () => {
+    const result = await actualizarUrlProyecto({
+      idParticipacion: 'no-es-uuid',
+      url: 'https://github.com/repo',
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('invalid_input')
+  })
+
+  it('retorna invalid_input si la URL no tiene formato válido', async () => {
+    const result = await actualizarUrlProyecto({
+      idParticipacion: PART_UUID,
+      url: 'no-es-url',
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('invalid_input')
+  })
+
+  it('retorna invalid_input si la URL supera 150 caracteres', async () => {
+    const result = await actualizarUrlProyecto({
+      idParticipacion: PART_UUID,
+      url: 'https://example.com/' + 'a'.repeat(135),
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('invalid_input')
+  })
+
+  it('propaga error si el rol no es egresado', async () => {
+    mockedVerifiedEgresado.mockResolvedValue({
+      ok: false,
+      error: 'forbidden',
+    })
+    const result = await actualizarUrlProyecto({
+      idParticipacion: PART_UUID,
+      url: 'https://github.com/repo',
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('forbidden')
+  })
+
+  it('retorna database_error si el RPC falla', async () => {
+    mockedServer.mockResolvedValue(withRpc({ message: 'rpc error' }) as never)
+    const result = await actualizarUrlProyecto({
+      idParticipacion: PART_UUID,
+      url: 'https://github.com/repo',
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('database_error')
+  })
+
+  it('actualiza la URL exitosamente', async () => {
+    mockedServer.mockResolvedValue(withRpc() as never)
+    const result = await actualizarUrlProyecto({
+      idParticipacion: PART_UUID,
+      url: 'https://github.com/repo',
+    })
+    expect(result.ok).toBe(true)
+  })
+
+  it('acepta url nula para limpiar el enlace', async () => {
+    mockedServer.mockResolvedValue(withRpc() as never)
+    const result = await actualizarUrlProyecto({
+      idParticipacion: PART_UUID,
+      url: null,
+    })
     expect(result.ok).toBe(true)
   })
 })

@@ -466,3 +466,154 @@ export async function uploadAndSaveProfilePhoto(
     return err(errorMsg)
   }
 }
+
+/**
+ * Obtiene el perfil de un estudiante por su id_estudiante para vista pública o empresarial.
+ * RF-12: Verifica que sea público o que el empresario tenga una postulación de este estudiante.
+ */
+export async function getPublicStudentProfile(
+  id_estudiante: string,
+): Promise<Result<StudentProfileView | null>> {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return err('unauthorized')
+    }
+
+    const { data: estudiante, error } = await supabase
+      .from('estudiantes')
+      .select(
+        `
+        id_estudiante, 
+        id_usuario, 
+        descripcion, 
+        portafolio_visible_publicamente, 
+        titulo_fwd, 
+        usuarios!estudiantes_id_usuario_fkey(nombre, apellido_1, apellido_2, foto_perfil),
+        habilidades_tecnicas(nivel, id_tecnologia, tecnologias(nombre)),
+        proyectos_portafolio(id_portafolio, titulo, descripcion, url_repositorio, url_demo, fecha, portafolio_tecnologias(tecnologias(nombre)))
+        `,
+      )
+      .eq('id_estudiante', id_estudiante)
+      .maybeSingle()
+
+    if (error) {
+      logger.error('getPublicStudentProfile: fallo al leer base de datos', {
+        error: error.message,
+      })
+      return err(error.message)
+    }
+
+    if (!estudiante) {
+      return ok(null)
+    }
+
+    // Verificar permisos RF-12
+    if (!estudiante.portafolio_visible_publicamente) {
+      const { data: empresario } = await supabase
+        .from('empresarios')
+        .select('id_empresario')
+        .eq('id_usuario', user.id)
+        .maybeSingle()
+
+      if (!empresario) return err('unauthorized_private_portfolio')
+
+      const { data: participacion } = await supabase
+        .from('participaciones')
+        .select('id_participacion, proyectos!inner(id_empresario)')
+        .eq('id_estudiante', id_estudiante)
+        .eq('proyectos.id_empresario', empresario.id_empresario)
+        .limit(1)
+        .maybeSingle()
+
+      if (!participacion) {
+        return err('unauthorized_private_portfolio')
+      }
+    }
+
+    const userInfo = estudiante.usuarios
+    const rawSkills = estudiante.habilidades_tecnicas ?? []
+    const skillsList = rawSkills.map((h) => ({
+      id: h.id_tecnologia,
+      name: h.tecnologias?.nombre ?? 'Desconocida',
+      level: h.nivel,
+    }))
+
+    const rawProjects = estudiante.proyectos_portafolio ?? []
+    const projectsList: PortfolioProject[] = rawProjects.map((p) => {
+      const techNames = (p.portafolio_tecnologias || [])
+        .map((pt) => pt.tecnologias?.nombre)
+        .filter(Boolean)
+      const proj: PortfolioProject = {
+        id: p.id_portafolio,
+        title: p.titulo,
+        description: p.descripcion ?? '',
+        technologies: techNames as string[],
+        completionDate: p.fecha ?? '',
+      }
+      if (p.url_repositorio) proj.repositoryUrl = p.url_repositorio
+      if (p.url_demo) proj.demoUrl = p.url_demo
+      return proj
+    })
+
+    const profile: StudentProfileView = {
+      id_estudiante: estudiante.id_estudiante,
+      id_usuario: estudiante.id_usuario,
+      descripcion: estudiante.descripcion ?? '',
+      portafolio_visible_publicamente:
+        estudiante.portafolio_visible_publicamente,
+      firstName: userInfo?.nombre ?? '',
+      lastName1: userInfo?.apellido_1 ?? '',
+      lastName2: userInfo?.apellido_2 ?? '',
+      profilePhoto: userInfo?.foto_perfil ?? '',
+      tituloFwd: estudiante.titulo_fwd ?? '',
+      skills: skillsList,
+      projects: projectsList,
+    }
+
+    return ok(profile)
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : 'unexpected_error'
+    logger.error('getPublicStudentProfile: error inesperado', {
+      error: errorMsg,
+    })
+    return err(errorMsg)
+  }
+}
+
+/**
+ * Helper to fetch the profile using the participacion id when the client only has that ID available.
+ */
+export async function getPublicStudentProfileByParticipacion(
+  id_participacion: string,
+): Promise<Result<StudentProfileView | null>> {
+  try {
+    const supabase = await createSupabaseServerClient()
+    const { data: participacion, error } = await supabase
+      .from('participaciones')
+      .select('id_estudiante')
+      .eq('id_participacion', id_participacion)
+      .maybeSingle()
+
+    if (error) {
+      logger.error('getPublicStudentProfileByParticipacion: database error', {
+        error: error.message,
+      })
+      return err(error.message)
+    }
+
+    if (!participacion) {
+      return err('not_found')
+    }
+
+    return getPublicStudentProfile(participacion.id_estudiante)
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : 'unexpected_error'
+    return err(errorMsg)
+  }
+}

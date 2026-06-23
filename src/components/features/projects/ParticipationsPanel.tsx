@@ -473,14 +473,28 @@ function ParticipationCard({
               </div>
             </div>
           </div>
-          <span
-            className={cn(
-              'text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0',
-              ESTADO_STYLE[participacion.estado],
-            )}
-          >
-            {t(`pstatus_${participacion.estado}`)}
-          </span>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <span
+              className={cn(
+                'text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0',
+                ESTADO_STYLE[participacion.estado],
+              )}
+            >
+              {t(`pstatus_${participacion.estado}`)}
+            </span>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs border-primary/20 text-primary hover:bg-primary/10"
+            >
+              <Link
+                href={`/empresario/portafolio-egresado/${participacion.idParticipacion}`}
+              >
+                {t('viewProfile', { defaultValue: 'Ver Perfil' })}
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {sealed ? (
