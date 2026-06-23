@@ -72,6 +72,7 @@
     "ctaFindProjects": "Buscar Proyectos",
     "ctaPublishProject": "Publicar un Proyecto",
     "ctaGoToPanel": "Ir a mi panel",
+    "ctaCompleteOnboarding": "Completar registro",
     "egresadoTitle": "Para Egresados",
     "egresadoDesc": "El trampolín perfecto para tu carrera profesional en tecnología.",
     "egresadoBenefit1": "Proyectos reales pagados para construir tu portafolio.",
@@ -1259,6 +1260,7 @@
       "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\".",
       "entregable_enviado": "El egresado envió un entregable para tu proyecto \"{titulo}\".",
       "participacion_en_revision": "La empresa está revisando tu propuesta para \"{titulo}\".",
+      "mensaje_nuevo": "Tienes un mensaje nuevo.",
       "cuenta_verificada": "Tu cuenta ha sido activada. Ya puedes explorar proyectos y postularte."
     }
   },

@@ -72,6 +72,7 @@
     "ctaFindProjects": "Find Projects",
     "ctaPublishProject": "Publish a Project",
     "ctaGoToPanel": "Go to my panel",
+    "ctaCompleteOnboarding": "Complete registration",
     "egresadoTitle": "For Graduates",
     "egresadoDesc": "The perfect springboard for your professional tech career.",
     "egresadoBenefit1": "Paid real-world projects to build your portfolio.",
@@ -1258,6 +1259,7 @@
       "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
       "entregable_enviado": "The graduate submitted a deliverable for your project \"{titulo}\".",
       "participacion_en_revision": "The company is reviewing your proposal for \"{titulo}\".",
+      "mensaje_nuevo": "You have a new message.",
       "cuenta_verificada": "Your account has been activated. You can now explore projects and apply."
     }
   },

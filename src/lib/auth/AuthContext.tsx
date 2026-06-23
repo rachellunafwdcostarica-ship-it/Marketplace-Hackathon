@@ -18,7 +18,7 @@ export const FWD_STORAGE_KEYS = {
 
 interface AuthContextType {
   currentUser: User | null
-  userRole: UserRole
+  userRole: UserRole | null
   setUserRole: (role: UserRole) => void
   resetAuth: () => void
 }
@@ -33,20 +33,22 @@ export function AuthProvider({
   initialRole?: UserRole | null
 }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [userRole, setUserRoleState] = useState<UserRole>(
-    initialRole ?? 'egresado',
-  )
-
-  useEffect(() => {
-    const stored = normalizeRole(localStorage.getItem(FWD_STORAGE_KEYS.ROLE))
-    if (stored) setUserRoleState(stored)
-  }, [])
+  const [userRole, setUserRoleState] = useState<UserRole | null>(initialRole)
 
   // Rol autoritativo provisto por el servidor (layout raíz). Se re-afirma
   // cuando cambia entre navegaciones para ganar sobre el valor en memoria o el
   // almacenado localmente, de modo que el rol real del servidor siempre prime.
+  // Si el servidor devuelve null (sin rol), se limpia el caché local para no
+  // pintar la UI de egresado/empresario a un usuario sin onboarding.
   useEffect(() => {
-    if (initialRole) setUserRoleState(initialRole)
+    setUserRoleState(initialRole)
+    if (initialRole === null) {
+      localStorage.removeItem(FWD_STORAGE_KEYS.ROLE)
+      if (typeof window !== 'undefined') {
+        document.cookie =
+          'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      }
+    }
   }, [initialRole])
 
   useEffect(() => {
@@ -60,7 +62,12 @@ export function AuthProvider({
       if (user) {
         const { data: roleRaw } = await supabase.rpc('get_my_role')
         const role = normalizeRole(roleRaw)
-        if (role) setUserRoleState(role)
+        setUserRoleState(role)
+        if (!role) {
+          localStorage.removeItem(FWD_STORAGE_KEYS.ROLE)
+        }
+      } else {
+        setUserRoleState(null)
       }
     })
 
@@ -70,6 +77,7 @@ export function AuthProvider({
   }, [])
 
   useEffect(() => {
+    if (!userRole) return
     localStorage.setItem(FWD_STORAGE_KEYS.ROLE, userRole)
     if (typeof window !== 'undefined') {
       document.cookie = `fwd_role=${userRole}; path=/; max-age=31536000; SameSite=Lax`
@@ -91,7 +99,7 @@ export function AuthProvider({
           'fwd_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       }
       setCurrentUser(null)
-      setUserRoleState('egresado')
+      setUserRoleState(null)
     })
   }
 

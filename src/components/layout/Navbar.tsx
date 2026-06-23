@@ -142,8 +142,8 @@ export function Navbar({
     ],
   }
 
-  const navLinks = hideLinksFor === role ? [] : navLinksByRole[role]
-  const activeRole = roleConfig[role]
+  const navLinks = !role || hideLinksFor === role ? [] : navLinksByRole[role]
+  const activeRole = role ? roleConfig[role] : null
 
   const renderIcon = (iconName: string, className = 'w-4 h-4') => {
     switch (iconName) {
@@ -236,18 +236,20 @@ export function Navbar({
 
           <div className="hidden md:flex items-center space-x-3">
             {/* Rol activo mostrado estáticamente sin opción a cambio */}
-            <div
-              className={`flex items-center gap-2 border-r pr-3 mr-1 transition-colors duration-500 ${isHero ? 'border-white/30' : 'border-border/80'}`}
-            >
+            {activeRole && (
               <div
-                className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold select-none transition-all duration-500 ${isHero ? 'bg-white/15 border border-white/25 text-white drop-shadow-sm' : 'bg-muted/30 border border-border/50 text-foreground'}`}
+                className={`flex items-center gap-2 border-r pr-3 mr-1 transition-colors duration-500 ${isHero ? 'border-white/30' : 'border-border/80'}`}
               >
-                <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
-                />
-                <span>{activeRole.label}</span>
+                <div
+                  className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold select-none transition-all duration-500 ${isHero ? 'bg-white/15 border border-white/25 text-white drop-shadow-sm' : 'bg-muted/30 border border-border/50 text-foreground'}`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${activeRole.dot}`}
+                  />
+                  <span>{activeRole.label}</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Notification Bell */}
             <NotificationBell isHero={isHero} className="shrink-0" />
@@ -404,15 +406,19 @@ export function Navbar({
             </div>
 
             <div className="border-t border-border/80 pt-3 space-y-1.5 px-3">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                {t('activeRole')}
-              </span>
-              <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
-                <span
-                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${activeRole.dot}`}
-                />
-                <span>{activeRole.label}</span>
-              </div>
+              {activeRole && (
+                <>
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    {t('activeRole')}
+                  </span>
+                  <div className="flex items-center gap-2 bg-muted/40 border border-border/50 rounded-xl px-3 py-2 text-sm font-bold text-foreground w-max select-none">
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 ${activeRole.dot}`}
+                    />
+                    <span>{activeRole.label}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

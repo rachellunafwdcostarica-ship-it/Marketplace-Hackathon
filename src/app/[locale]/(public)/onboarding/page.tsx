@@ -5,6 +5,14 @@ import { EgresadoConsentScreen } from '@/components/features/auth/EgresadoConsen
 import { EmpresarioOnboardingForm } from '@/components/features/auth/EmpresarioOnboardingForm'
 import { getCountryOptions } from '@/lib/geo/catalog'
 
+function safeOnboardingRole(
+  raw: string | undefined,
+): 'egresado' | 'empresario' | null {
+  if (raw === 'egresado') return 'egresado'
+  if (raw === 'empresario' || raw === 'empresa') return 'empresario'
+  return null
+}
+
 /**
  * Onboarding unificado (Camino B / OAuth). El usuario llega con sesión y correo
  * confirmado por el proveedor, pero sin rol ni perfil. Según el rol elegido en
@@ -15,15 +23,22 @@ import { getCountryOptions } from '@/lib/geo/catalog'
  */
 export default async function OnboardingPage() {
   const supabase = await createSupabaseServerClient()
+  const locale = await getLocale()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect(`/${locale}/login`)
 
-  const metaRole = user.user_metadata?.role as string | undefined
+  const metaRole = safeOnboardingRole(
+    user.user_metadata?.role as string | undefined,
+  )
 
-  if (metaRole === 'empresario' || metaRole === 'empresa') {
-    const locale = await getLocale()
+  if (!metaRole) {
+    await supabase.auth.signOut()
+    redirect(`/${locale}/register?error=missing_role`)
+  }
+
+  if (metaRole === 'empresario') {
     const countries = getCountryOptions(locale).map((country) => ({
       value: country.code,
       label: country.name,
