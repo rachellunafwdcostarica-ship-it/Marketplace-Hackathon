@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
   ArrowRight,
@@ -87,6 +87,7 @@ export function ProjectWizard({
 }: ProjectWizardProps) {
   const t = useTranslations('ProjectPublish')
   const tCommon = useTranslations('Common')
+  const locale = useLocale()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [armando, setArmando] = useState(false)
@@ -136,7 +137,7 @@ export function ProjectWizard({
       // en el primer ingreso al chat (historial vacío). Reacciona al contexto.
       if (historial.length === 0) {
         setKickoffLoading(true)
-        const kr = await sendChatMessage(conversationId)
+        const kr = await sendChatMessage(conversationId, undefined, locale)
         setKickoffLoading(false)
         if (kr.ok) {
           setHistorial(kr.data.historial)
@@ -161,7 +162,7 @@ export function ProjectWizard({
 
   const onArmarPropuesta = async () => {
     setArmando(true)
-    const result = await generateProposal(conversationId)
+    const result = await generateProposal(conversationId, locale)
     setArmando(false)
 
     if (!result.ok) {

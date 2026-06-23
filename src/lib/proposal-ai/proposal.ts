@@ -1,6 +1,6 @@
 'use server'
 
-import { getLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
@@ -27,6 +27,7 @@ export type ProposalOutcome =
  */
 export async function generateProposal(
   conversationId: string,
+  localeParam?: string,
 ): Promise<Result<ProposalOutcome>> {
   try {
     const supabase = await createSupabaseServerClient()
@@ -88,7 +89,7 @@ export async function generateProposal(
     const logistica = parseLogistica(conv.logistica)
     const historial = parseHistorial(conv.historial)
     const provider = getAiProvider()
-    const locale = await getLocale()
+    const locale = localeParam === 'en' ? 'en' : 'es'
 
     let ajustes: string[] = []
     let ultimasRazones: string[] = []
@@ -220,7 +221,7 @@ export async function generateProposal(
     // en el chat (errolpendiente §5.1: tope de reintentos → explicar).
     const detalles = ajustes.length > 0 ? ajustes : ultimasRazones
     // Mensaje de chat visible al empresario → i18n (en su idioma, no hardcoded).
-    const t = await getTranslations('ProjectPublish')
+    const t = await getTranslations({ locale, namespace: 'ProjectPublish' })
     const mensajeRechazo =
       detalles.length > 0
         ? t('agentRejection.withDetails', { detalles: detalles.join('\n- ') })
