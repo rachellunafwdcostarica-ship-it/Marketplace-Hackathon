@@ -152,12 +152,14 @@ export function EntregablesEmpresario({
   const handleConfirmDecision = async () => {
     if (!pendingDecision) return
     const { id, tipo } = pendingDecision
-    if (tipo === 'con_cambios' && pendingComment.trim() === '') return
     setSubmittingId(id)
+    const comentario =
+      pendingComment.trim() ||
+      (tipo === 'con_cambios' ? t('cambiosDefaultComment') : undefined)
     const res = await responderEntregable({
       idEntregable: id,
       decision: tipo,
-      ...(pendingComment.trim() ? { comentario: pendingComment.trim() } : {}),
+      ...(comentario ? { comentario } : {}),
     })
     setSubmittingId(null)
     if (res.ok) {
@@ -303,18 +305,16 @@ export function EntregablesEmpresario({
             </DialogDescription>
           </DialogHeader>
 
-          <Textarea
-            value={pendingComment}
-            onChange={(ev) => setPendingComment(ev.target.value)}
-            placeholder={
-              isAprobando
-                ? t('aprobarCommentPlaceholder')
-                : t('responderCommentPlaceholder')
-            }
-            rows={3}
-            disabled={isSubmitting}
-            className="bg-card/50 border-border text-sm resize-none"
-          />
+          {isAprobando && (
+            <Textarea
+              value={pendingComment}
+              onChange={(ev) => setPendingComment(ev.target.value)}
+              placeholder={t('aprobarCommentPlaceholder')}
+              rows={3}
+              disabled={isSubmitting}
+              className="bg-card/50 border-border text-sm resize-none"
+            />
+          )}
 
           <DialogFooter>
             <Button
@@ -335,9 +335,7 @@ export function EntregablesEmpresario({
               type="button"
               size="sm"
               variant={isAprobando ? 'accent' : 'warning'}
-              disabled={
-                isSubmitting || (!isAprobando && pendingComment.trim() === '')
-              }
+              disabled={isSubmitting}
               onClick={() => void handleConfirmDecision()}
               className="font-semibold"
             >

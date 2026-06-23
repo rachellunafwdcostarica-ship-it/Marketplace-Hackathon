@@ -803,6 +803,7 @@
     "cambiosDialogTitle": "Suggest changes",
     "cambiosDialogDesc": "Describe the changes the graduate must make. This message will be sent with the notification.",
     "cambiosConfirmBtn": "Send suggestion",
+    "cambiosDefaultComment": "The employer has requested changes to this deliverable.",
     "responderSuccess": "Response sent.",
     "responderError": "Could not send the response.",
     "comentariosLabel": "Comment history",
