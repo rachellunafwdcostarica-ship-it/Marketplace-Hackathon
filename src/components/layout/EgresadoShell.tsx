@@ -9,8 +9,8 @@ interface EgresadoShellProps {
 
 export function EgresadoShell({ children }: EgresadoShellProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-canvas overflow-hidden">
-      <Navbar hideLinksFor="egresado" />
+    <div className="flex h-screen flex-col bg-canvas overflow-hidden">
+      <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <SidebarEgresado />
         <main className="flex-1 overflow-y-auto">{children}</main>
