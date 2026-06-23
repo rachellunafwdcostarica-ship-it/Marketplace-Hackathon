@@ -37,16 +37,16 @@ function EstadoBadge({ estado }: { estado: 'contratada' | 'finalizada' }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold',
+        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
         isActivo
-          ? 'bg-accent/15 text-accent'
-          : 'bg-muted text-muted-foreground',
+          ? 'text-[#2eac68]' // Green text for active
+          : 'text-muted-foreground',
       )}
     >
       <span
         className={cn(
           'w-1.5 h-1.5 rounded-full',
-          isActivo ? 'bg-accent animate-pulse' : 'bg-muted-foreground/50',
+          isActivo ? 'bg-[#2eac68]' : 'bg-muted-foreground/50',
         )}
       />
       {isActivo ? t('estadoActivo') : t('estadoFinalizado')}
@@ -63,26 +63,46 @@ function ConversacionRow({
   isActive: boolean
   onSelect: () => void
 }) {
+  const initials = conv.nombreContraparte.substring(0, 2).toUpperCase()
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        'w-full text-left px-4 py-3.5 border-l-2 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]',
+        'w-full text-left px-4 py-4 transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] flex gap-3 items-center',
         isActive
-          ? 'border-l-primary bg-primary/8 text-foreground'
-          : 'border-l-transparent hover:bg-muted/40 text-foreground',
+          ? 'border-l-[6px] border-primary bg-white shadow-sm'
+          : 'border-l-[6px] border-transparent hover:bg-muted/40 bg-transparent',
       )}
     >
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <p className="text-sm font-semibold leading-snug line-clamp-1 flex-1">
+      <div className="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+        {initials}
+      </div>
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <div className="flex items-center justify-between">
+          <p
+            className={cn(
+              'text-sm font-bold truncate',
+              isActive ? 'text-primary' : 'text-ink-strong',
+            )}
+          >
+            {conv.nombreContraparte}
+          </p>
+          <span className="text-[10px] text-ink-muted">Ayer</span>
+        </div>
+        <p className="text-sm font-semibold text-ink-strong leading-tight line-clamp-2">
           {conv.tituloProyecto}
         </p>
-        <EstadoBadge estado={conv.estado} />
+        <div className="mt-1 flex items-center justify-between">
+          <EstadoBadge estado={conv.estado} />
+          {/* Badge de mensajes no leídos (mocked logic for active view just to show style) */}
+          {isActive && (
+            <span className="flex w-5 h-5 bg-primary text-white rounded-full items-center justify-center text-[10px] font-bold">
+              2
+            </span>
+          )}
+        </div>
       </div>
-      <p className="text-xs text-muted-foreground truncate">
-        {conv.nombreContraparte}
-      </p>
     </button>
   )
 }
@@ -90,35 +110,39 @@ function ConversacionRow({
 function ChatBubble({
   mensaje,
   isMine,
+  initials,
 }: {
   mensaje: Mensaje
   isMine: boolean
+  initials: string
 }) {
+  const avatarText = isMine ? 'Me' : initials
   return (
     <div
       className={cn(
-        'flex gap-2 max-w-[78%]',
+        'flex gap-3 max-w-[75%]',
         isMine ? 'ml-auto flex-row-reverse' : 'mr-auto',
       )}
     >
+      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs mt-auto">
+        {avatarText}
+      </div>
       <div
         className={cn(
-          'px-4 py-2.5 rounded-2xl text-sm leading-relaxed break-words',
+          'px-4 py-3 rounded-2xl text-sm leading-relaxed break-words shadow-sm',
           isMine
-            ? 'bg-primary text-primary-foreground rounded-br-sm'
-            : 'bg-muted text-foreground rounded-bl-sm',
+            ? 'bg-[#00b2be] text-white rounded-br-sm' // Teal/Primary color from mockup
+            : 'bg-white border border-border/60 text-ink-strong rounded-bl-sm',
         )}
       >
         <p>{mensaje.contenido}</p>
         <p
           className={cn(
-            'text-[10px] mt-1',
-            isMine
-              ? 'text-primary-foreground/60 text-right'
-              : 'text-muted-foreground',
+            'text-[10px] mt-1 text-right',
+            isMine ? 'text-white/80' : 'text-ink-muted',
           )}
         >
-          {formatHora(mensaje.fechaEnvio)}
+          {formatHora(mensaje.fechaEnvio)} {isMine && '✓'}
         </p>
       </div>
     </div>
@@ -237,17 +261,20 @@ export function EgresadoMensajesClient({
             </div>
           ) : (
             <div
-              className="flex border border-border/60 rounded-2xl overflow-hidden bg-card/20"
-              style={{ height: 'calc(100vh - 280px)', minHeight: '560px' }}
+              className="flex border-t border-border mt-2 bg-canvas/30"
+              style={{ height: 'calc(100vh - 220px)', minHeight: '560px' }}
             >
               {/* Panel izquierdo — lista de conversaciones */}
-              <div className="w-72 shrink-0 border-r border-border/60 flex flex-col bg-card/30">
-                <div className="px-4 py-3.5 border-b border-border/40">
-                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              <div className="w-[320px] shrink-0 border-r border-border flex flex-col bg-canvas/50">
+                <div className="px-6 py-4 border-b border-border/60 flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-primary">
                     {t('proyectoLabel')}
                   </p>
+                  <span className="bg-sky-100 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+                    {conversaciones.length}
+                  </span>
                 </div>
-                <div className="flex-1 overflow-y-auto divide-y divide-border/40">
+                <div className="flex-1 overflow-y-auto divide-y divide-transparent">
                   {conversaciones.map((conv) => (
                     <ConversacionRow
                       key={conv.idProyecto}
@@ -275,16 +302,21 @@ export function EgresadoMensajesClient({
               ) : (
                 <div className="flex-1 flex flex-col min-w-0">
                   {/* Header del chat */}
-                  <div className="px-5 py-3.5 border-b border-border/40 flex items-center gap-3 bg-card/10">
+                  <div className="px-6 py-4 border-b border-border flex items-center gap-4 bg-white/50 backdrop-blur-md sticky top-0 z-10">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                      {selectedConv.nombreContraparte
+                        .substring(0, 2)
+                        .toUpperCase()}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <p className="font-semibold text-sm text-foreground truncate">
-                          {selectedConv.tituloProyecto}
+                      <div className="flex items-center gap-3">
+                        <p className="font-bold text-lg text-ink-strong truncate">
+                          {selectedConv.nombreContraparte}
                         </p>
                         <EstadoBadge estado={selectedConv.estado} />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                        {t('empresaLabel')}: {selectedConv.nombreContraparte}
+                      <p className="text-sm text-ink-muted truncate">
+                        {selectedConv.tituloProyecto}
                       </p>
                     </div>
                   </div>
@@ -303,6 +335,9 @@ export function EgresadoMensajesClient({
                           key={msg.idMensaje}
                           mensaje={msg}
                           isMine={msg.idRemitente === currentUserId}
+                          initials={selectedConv.nombreContraparte
+                            .substring(0, 2)
+                            .toUpperCase()}
                         />
                       ))
                     )}
