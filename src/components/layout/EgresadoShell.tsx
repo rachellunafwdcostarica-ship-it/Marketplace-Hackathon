@@ -13,11 +13,10 @@ export function EgresadoShell({ children }: EgresadoShellProps) {
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <SidebarEgresado />
-        <main className="flex-1 overflow-y-auto">{children}</main>
-      </div>
-      {/* Ocultamos el Footer global en layouts con sidebar si es necesario, o lo metemos en el main */}
-      <div className="hidden">
-        <Footer />
+        <main className="flex-1 overflow-y-auto flex flex-col relative min-h-0">
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </main>
       </div>
     </div>
   )

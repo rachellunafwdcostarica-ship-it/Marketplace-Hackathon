@@ -55,6 +55,14 @@ function withAuth(fromImpl: (table: string) => unknown) {
       }),
     },
     from: vi.fn(fromImpl),
+    storage: {
+      from: vi.fn(() => ({
+        upload: vi
+          .fn()
+          .mockResolvedValue({ data: { path: 'subido' }, error: null }),
+        remove: vi.fn().mockResolvedValue({ data: [], error: null }),
+      })),
+    },
   }
 }
 
@@ -70,13 +78,32 @@ function withNoAuth() {
   }
 }
 
-const validInput = {
-  id_proyecto: PROJ_UUID,
-  planteamiento_solucion:
-    'Esta es mi propuesta de solución detallada para el proyecto.',
-  prototipo_enlaces: ['https://github.com/test/prototype'],
-  carta_postulacion: 'Carta de presentación del egresado.',
-  documentacion_tecnica: `https://supabase.co/storage/v1/object/public/documentacion_tecnica/${PROJ_UUID}/${USER_ID}/file.pdf`,
+// postularse recibe FormData: el documento técnico viaja como File y los enlaces
+// como JSON. Los overrides permiten romper un campo puntual para los casos de error.
+function buildFormData(overrides: Record<string, string> = {}): FormData {
+  const fd = new FormData()
+  fd.append('id_proyecto', overrides.id_proyecto ?? PROJ_UUID)
+  fd.append(
+    'planteamiento_solucion',
+    overrides.planteamiento_solucion ??
+      'Esta es mi propuesta de solución detallada para el proyecto.',
+  )
+  fd.append(
+    'carta_postulacion',
+    overrides.carta_postulacion ?? 'Carta de presentación del egresado.',
+  )
+  fd.append(
+    'prototipo_enlaces',
+    overrides.prototipo_enlaces ??
+      JSON.stringify(['https://github.com/test/prototype']),
+  )
+  fd.append(
+    'file',
+    new File(['contenido del documento'], 'propuesta.pdf', {
+      type: 'application/pdf',
+    }),
+  )
+  return fd
 }
 
 beforeEach(() => {
@@ -94,26 +121,27 @@ beforeEach(() => {
 
 describe('postularse', () => {
   it('retorna invalid_input si el input no cumple el schema', async () => {
-    // @ts-expect-error Intentional invalid input to test Zod validation
-    const result = await postularse({
-      id_proyecto: 'no-es-uuid',
-      planteamiento_solucion: 'corto',
-      prototipo_enlaces: [],
-    })
+    const result = await postularse(
+      buildFormData({
+        id_proyecto: 'no-es-uuid',
+        planteamiento_solucion: 'corto',
+        prototipo_enlaces: JSON.stringify([]),
+      }),
+    )
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('invalid_input')
   })
 
   it('propaga error si el rol no es egresado', async () => {
     mockedRequireRole.mockResolvedValue({ ok: false, error: 'forbidden' })
-    const result = await postularse(validInput)
+    const result = await postularse(buildFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('forbidden')
   })
 
   it('retorna unauthenticated si no hay usuario', async () => {
     mockedServer.mockResolvedValue(withNoAuth() as never)
-    const result = await postularse(validInput)
+    const result = await postularse(buildFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('unauthenticated')
   })
@@ -137,7 +165,7 @@ describe('postularse', () => {
       }) as never,
     )
 
-    const result = await postularse(validInput)
+    const result = await postularse(buildFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('estudiante_not_found')
   })
@@ -164,7 +192,7 @@ describe('postularse', () => {
       }) as never,
     )
 
-    const result = await postularse(validInput)
+    const result = await postularse(buildFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('cuenta_no_verificada')
   })
@@ -203,7 +231,7 @@ describe('postularse', () => {
       }) as never,
     )
 
-    const result = await postularse(validInput)
+    const result = await postularse(buildFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('proyecto_not_found')
   })
@@ -246,7 +274,7 @@ describe('postularse', () => {
       }) as never,
     )
 
-    const result = await postularse(validInput)
+    const result = await postularse(buildFormData())
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('proyecto_cerrado')
   })
@@ -294,7 +322,7 @@ describe('postularse', () => {
       }) as never,
     )
 
-    const result = await postularse(validInput)
+    const result = await postularse(buildFormData())
     expect(result.ok).toBe(true)
   })
 })
