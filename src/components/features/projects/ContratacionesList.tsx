@@ -122,7 +122,7 @@ export function ContratacionesList({
                   apellidos={item.estudianteApellidos}
                 />
               )}
-              <div className="flex flex-col min-w-0">
+              <div className="flex flex-col min-w-0 flex-1">
                 <h4 className="font-bold text-base text-foreground truncate">
                   {item.estudianteNombre} {item.estudianteApellidos}
                 </h4>
@@ -135,6 +135,18 @@ export function ContratacionesList({
                   </Badge>
                 </div>
               </div>
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="shrink-0 h-8 border-primary/20 text-primary hover:bg-primary/10"
+              >
+                <Link
+                  href={`/empresario/portafolio-egresado/${item.idParticipacion}`}
+                >
+                  {tEmpresa('viewProfile', { defaultValue: 'Ver Perfil' })}
+                </Link>
+              </Button>
             </div>
 
             <div className="flex flex-col gap-3">

@@ -696,6 +696,8 @@
   },
   "ProjectDetail": {
     "backToDashboard": "Back to dashboard",
+    "viewProfile": "View Profile",
+    "backToParticipations": "Back to applications",
     "projectInfoTitle": "Project information",
     "manageTitle": "Management",
     "advanceTo": "Mark as {state}",
@@ -1226,6 +1228,7 @@
     }
   },
   "EmpresaPerfil": {
+    "viewProfile": "View Profile",
     "editProfile": "Edit Profile",
     "sidebarHeader": "My Company",
     "tabProfile": "Company Profile",

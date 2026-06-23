@@ -697,6 +697,8 @@
   },
   "ProjectDetail": {
     "backToDashboard": "Volver al panel",
+    "viewProfile": "Ver Perfil",
+    "backToParticipations": "Volver a postulaciones",
     "projectInfoTitle": "Información del proyecto",
     "manageTitle": "Administración",
     "advanceTo": "Marcar como {state}",
@@ -1227,6 +1229,7 @@
     }
   },
   "EmpresaPerfil": {
+    "viewProfile": "Ver Perfil",
     "editProfile": "Editar Perfil",
     "sidebarHeader": "Mi Empresa",
     "tabProfile": "Perfil de Empresa",
