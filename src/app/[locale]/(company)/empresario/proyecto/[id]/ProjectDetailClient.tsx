@@ -502,7 +502,7 @@ export function ProjectDetailClient({
       </Dialog>
 
       <Dialog open={editOpen} onOpenChange={(open) => !open && cerrarEdit()}>
-        <DialogContent className="sm:max-w-lg border border-border">
+        <DialogContent className="sm:max-w-lg border border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold font-heading">
               {t('editDescriptionTitle')}
