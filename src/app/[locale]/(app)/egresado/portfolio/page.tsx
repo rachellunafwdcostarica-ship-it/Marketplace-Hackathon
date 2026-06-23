@@ -4,11 +4,32 @@ import { getStudentProfile } from '@/lib/portfolio/actions'
 import { EgresadoShell } from '@/components/layout/EgresadoShell'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 
-export default async function PortfolioPage() {
+import { getCountryOptions, getSubdivisions } from '@/lib/geo/catalog'
+
+export default async function PortfolioPage({
+  params,
+}: {
+  params: { locale: string }
+}) {
   const t = await getTranslations('Portfolio')
 
   const profileResult = await getStudentProfile()
   const initialProfile = profileResult.ok ? profileResult.data : null
+
+  // Resolve locale instead of using params directly because Next.js 15 requires awaiting params
+  // Or we can just use getLocale() from next-intl/server
+  const locale = await params.locale
+
+  const countries = getCountryOptions(locale).map((country) => ({
+    value: country.code,
+    label: country.name,
+  }))
+  const initialRegions = initialProfile?.paisIsoResidencia
+    ? getSubdivisions(initialProfile.paisIsoResidencia).map((sub) => ({
+        value: sub.code,
+        label: sub.name,
+      }))
+    : []
 
   return (
     <EgresadoShell>
@@ -21,7 +42,11 @@ export default async function PortfolioPage() {
           />
 
           <div className="mt-8">
-            <PortfolioManager initialProfile={initialProfile} />
+            <PortfolioManager
+              initialProfile={initialProfile}
+              countries={countries}
+              initialRegions={initialRegions}
+            />
           </div>
         </main>
       </div>
