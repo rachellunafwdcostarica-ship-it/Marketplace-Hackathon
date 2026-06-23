@@ -270,7 +270,9 @@ async function registrarEdicionYNotificar(params: {
 
   const { data: filas, error: ofError } = await admin
     .from('participaciones')
-    .select('estado, estudiantes(usuarios(id_usuario, correo, nombre))')
+    .select(
+      'estado, estudiantes(usuarios!estudiantes_id_usuario_fkey(id_usuario, correo, nombre))',
+    )
     .eq('id_proyecto', idProyecto)
     .in('estado', [...ESTADOS_OFERENTE_ACTIVO])
   if (ofError) {
