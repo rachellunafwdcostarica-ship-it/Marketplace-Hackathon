@@ -73,27 +73,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/${locale}${next}`)
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   // Cookie como fuente primaria (garantizada a través del redirect OAuth),
   // URL param como respaldo por si el navegador bloqueó la cookie.
   const cookieRole = safeRole(cookieStore.get('pending-oauth-role')?.value)
   const oauthRole = cookieRole ?? safeRole(searchParams.get('role'))
 
-  if (oauthRole) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const existingMetaRole = user.user_metadata?.role as string | undefined
-      if (!existingMetaRole) {
-        const admin = createSupabaseAdminClient()
-        await admin.auth.admin.updateUserById(user.id, {
-          user_metadata: {
-            ...user.user_metadata,
-            role: oauthRole,
-          },
-        })
-      }
+  if (user && oauthRole) {
+    const existingMetaRole = user.user_metadata?.role as string | undefined
+    if (!existingMetaRole) {
+      const admin = createSupabaseAdminClient()
+      await admin.auth.admin.updateUserById(user.id, {
+        user_metadata: {
+          ...user.user_metadata,
+          role: oauthRole,
+        },
+      })
     }
   }
 
@@ -109,6 +107,20 @@ export async function GET(request: NextRequest) {
         ? `${origin}/${locale}/pending-approval`
         : `${origin}/${locale}${ROLE_HOME[role]}`
   } else {
+    const metadataRole = safeRole(
+      user?.user_metadata?.role as string | undefined,
+    )
+    const selectedRole = oauthRole ?? metadataRole
+
+    if (!selectedRole) {
+      await supabase.auth.signOut()
+      const response = NextResponse.redirect(
+        `${origin}/${locale}/register?error=missing_role`,
+      )
+      response.cookies.set('pending-oauth-role', '', { path: '/', maxAge: 0 })
+      return response
+    }
+
     // Usuario nuevo: onboarding unificado. La página ramifica por el rol elegido
     // (user_metadata.role, fijado arriba) entre el form de egresado y el de
     // empresario.
