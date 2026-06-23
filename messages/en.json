@@ -1374,6 +1374,21 @@
     "proyectoLabel": "Project",
     "empresaLabel": "Company"
   },
+  "Ranking": {
+    "snippetTitle": "Talent Ranking",
+    "snippetSubtitle": "Featured graduates of the month",
+    "viewAll": "View All",
+    "pageTitle": "Talent Ranking by Reputation.",
+    "pageDescription": "Discover the highest-rated graduates based on their technical contributions and professional skills.",
+    "filterCategory": "Category",
+    "filterTech": "Technology",
+    "clearFilters": "Clear Filters",
+    "showingCount": "Showing {count} talents",
+    "sortByReputation": "Sort by Reputation",
+    "reputation": "Reputation",
+    "viewProfile": "View Profile",
+    "emptyState": "No graduates found matching the selected filters."
+  },
   "CompanyMensajes": {
     "title": "Messages Hub",
     "description": "Connect with the graduates hired for your projects.",
