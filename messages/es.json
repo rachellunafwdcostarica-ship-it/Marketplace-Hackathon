@@ -48,6 +48,7 @@
     "settings": "Ajustes del sistema",
     "moderation": "Moderación",
     "support": "Soporte",
+    "reports": "Reportes",
     "adminRegister": "Registro de admin",
     "messages": "Mensajes",
     "myContracts": "Mis Contrataciones"
@@ -1148,7 +1149,11 @@
     "reportGenerating": "Generando...",
     "reportDownloadSuccess": "Reporte de {entity} descargado con éxito.",
     "reportDownloadError": "Error al generar el reporte: {error}",
-    "reportDownloadUnexpected": "Ocurrió un error inesperado al procesar la descarga."
+    "reportDownloadUnexpected": "Ocurrió un error inesperado al procesar la descarga.",
+    "reportProjectsTitle": "Proyectos publicados",
+    "reportColTitle": "Título",
+    "reportColCompany": "Empresa",
+    "reportColPublished": "Publicación"
   },
   "Errors": {
     "forbidden": "Acceso no autorizado",

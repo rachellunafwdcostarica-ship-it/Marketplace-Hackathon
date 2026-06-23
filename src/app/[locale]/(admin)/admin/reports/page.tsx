@@ -7,6 +7,11 @@ import {
   GraduationCap,
   Building2,
   ShieldAlert,
+  Briefcase,
+  FolderOpen,
+  PlayCircle,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import {
@@ -14,6 +19,7 @@ import {
   type StatItem,
 } from '@/components/features/DashboardStats'
 import { AdminReportsInterface } from '@/components/features/admin/AdminReportsInterface'
+import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -25,10 +31,13 @@ import {
 } from '@/components/ui/table'
 import {
   getUserStats,
+  getProjectStats,
   listUsers,
+  listAllProjectsForAdmin,
   MAX_USERS_PER_QUERY,
   type AdminAccountStatus,
   type AdminUserStats,
+  type AdminProjectStats,
 } from '@/lib/admin/queries'
 
 const EMPTY_USER_STATS: AdminUserStats = {
@@ -41,66 +50,124 @@ const EMPTY_USER_STATS: AdminUserStats = {
   administradores: 0,
 }
 
+const EMPTY_PROJECT_STATS: AdminProjectStats = {
+  total: 0,
+  borrador: 0,
+  abierto: 0,
+  en_recepcion: 0,
+  adjudicado: 0,
+  en_desarrollo: 0,
+  finalizado: 0,
+  cancelado: 0,
+}
+
 export default async function AdminReportsPage() {
   const t = await getTranslations('Admin')
+  const tBoard = await getTranslations('ProjectsBoard')
   const locale = await getLocale()
 
-  const [statsResult, usersResult] = await Promise.all([
-    getUserStats(),
-    listUsers(),
-  ])
-  const stats = statsResult.ok ? statsResult.data : EMPTY_USER_STATS
+  const [userStatsResult, usersResult, projectStatsResult, projectsResult] =
+    await Promise.all([
+      getUserStats(),
+      listUsers(),
+      getProjectStats(),
+      listAllProjectsForAdmin(),
+    ])
+
+  const userStats = userStatsResult.ok ? userStatsResult.data : EMPTY_USER_STATS
   const users = usersResult.ok ? usersResult.data : []
+  const projectStats = projectStatsResult.ok
+    ? projectStatsResult.data
+    : EMPTY_PROJECT_STATS
+  const projects = projectsResult.ok ? projectsResult.data : []
 
   const userCards: StatItem[] = [
     {
       title: t('statTotalUsers'),
-      value: stats.total,
+      value: userStats.total,
       icon: Users,
       description: t('statTotalUsersDesc'),
       colorClass: 'text-primary bg-primary/10',
     },
     {
       title: t('statPendingUsers'),
-      value: stats.pendientes,
+      value: userStats.pendientes,
       icon: UserCheck,
       description: t('statPendingUsersDesc'),
       colorClass: 'text-warning bg-warning/10',
     },
     {
       title: t('statActiveUsers'),
-      value: stats.activas,
+      value: userStats.activas,
       icon: ShieldCheck,
       description: t('statActiveUsersDesc'),
       colorClass: 'text-accent bg-accent/10',
     },
     {
       title: t('statInactiveUsers'),
-      value: stats.desactivadas,
+      value: userStats.desactivadas,
       icon: Power,
       description: t('statInactiveUsersDesc'),
       colorClass: 'text-destructive bg-destructive/10',
     },
     {
       title: t('statGraduates'),
-      value: stats.egresados,
+      value: userStats.egresados,
       icon: GraduationCap,
       description: t('statGraduatesDesc'),
       colorClass: 'text-secondary bg-secondary/10',
     },
     {
       title: t('statCompanyUsers'),
-      value: stats.empresarios,
+      value: userStats.empresarios,
       icon: Building2,
       description: t('statCompanyUsersDesc'),
       colorClass: 'text-magenta bg-magenta/10',
     },
     {
       title: t('statAdmins'),
-      value: stats.administradores,
+      value: userStats.administradores,
       icon: ShieldAlert,
       description: t('statAdminsDesc'),
       colorClass: 'text-highlight bg-highlight/10',
+    },
+  ]
+
+  const projectCards: StatItem[] = [
+    {
+      title: t('statTotalProjects'),
+      value: projectStats.total,
+      icon: Briefcase,
+      description: t('statTotalProjectsDesc'),
+      colorClass: 'text-primary bg-primary/10',
+    },
+    {
+      title: t('statOpenProjects'),
+      value: projectStats.abierto,
+      icon: FolderOpen,
+      description: t('statOpenProjectsDesc'),
+      colorClass: 'text-accent bg-accent/10',
+    },
+    {
+      title: t('statActiveProjects'),
+      value: projectStats.en_desarrollo,
+      icon: PlayCircle,
+      description: t('statActiveProjectsDesc'),
+      colorClass: 'text-secondary bg-secondary/10',
+    },
+    {
+      title: t('statFinishedProjects'),
+      value: projectStats.finalizado,
+      icon: CheckCircle2,
+      description: t('statFinishedProjectsDesc'),
+      colorClass: 'text-highlight bg-highlight/10',
+    },
+    {
+      title: t('statCancelledProjects'),
+      value: projectStats.cancelado,
+      icon: AlertTriangle,
+      description: t('statCancelledProjectsDesc'),
+      colorClass: 'text-destructive bg-destructive/10',
     },
   ]
 
@@ -129,6 +196,13 @@ export default async function AdminReportsPage() {
         return t('roleNone')
     }
   }
+
+  const formatDate = (value: string): string =>
+    new Date(value).toLocaleDateString(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
@@ -186,11 +260,7 @@ export default async function AdminReportsPage() {
                     )}
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-xs text-ink-muted">
-                    {new Date(user.fecha_registro).toLocaleDateString(locale, {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                    {formatDate(user.fecha_registro)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -200,6 +270,66 @@ export default async function AdminReportsPage() {
 
         {users.length >= MAX_USERS_PER_QUERY && (
           <p className="text-xs text-ink-muted">{t('usersLimitWarning')}</p>
+        )}
+      </section>
+
+      {/* ── Proyectos: métricas + tabla en pantalla ── */}
+      <section className="space-y-6 border-t border-border/40 pt-8">
+        <h2 className="font-heading text-xl font-bold text-foreground">
+          {t('reportProjectsTitle')}
+        </h2>
+
+        <DashboardStats stats={projectCards} className="xl:grid-cols-5" />
+
+        {projects.length === 0 ? (
+          <EmptyState
+            title={t('noProjects')}
+            description={t('noProjectsDesc')}
+            icon={Briefcase}
+          />
+        ) : (
+          <>
+            <p className="text-xs text-ink-muted">
+              {t('projectsCount', { count: projects.length })}
+            </p>
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('reportColTitle')}</TableHead>
+                    <TableHead>{t('reportColCompany')}</TableHead>
+                    <TableHead>{t('colStatus')}</TableHead>
+                    <TableHead>{t('reportColPublished')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {projects.map((project) => (
+                    <TableRow key={project.id_proyecto}>
+                      <TableCell className="font-semibold text-ink-strong">
+                        {project.titulo}
+                      </TableCell>
+                      <TableCell className="text-ink-muted">
+                        {project.nombre_empresa ?? t('companyUnknown')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className="rounded-full px-2 text-[10px] font-semibold"
+                        >
+                          {tBoard(`status_${project.estado}`)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-xs text-ink-muted">
+                        {project.fecha_publicacion
+                          ? formatDate(project.fecha_publicacion)
+                          : t('notPublished')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
         )}
       </section>
 
