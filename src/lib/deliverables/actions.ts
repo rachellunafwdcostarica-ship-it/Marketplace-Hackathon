@@ -190,48 +190,37 @@ export async function subirEntregableFinal(
   return registrarEntregable(parsed.data, 'final')
 }
 
-const ComentarEgresadoSchema = z.object({
-  idEntregable: z.string().uuid(),
-  idProyecto: z.string().uuid(),
-  contenido: z.string().trim().min(1).max(1000),
+const ActualizarUrlSchema = z.object({
+  idParticipacion: z.string().uuid(),
+  url: z.string().url().max(150).nullable(),
 })
 
 /**
- * El egresado agrega un mensaje al hilo de seguimiento de un entregable propio
- * (RF-44, lado egresado). Puede llevar un link, que la UI vuelve clickeable. La
- * RLS de comentarios_entregables ya autoriza al estudiante a comentar sus
- * propios entregables; reusamos tipo_comentario='aclaracion' y el autor se
- * distingue por id_autor.
+ * Actualiza el enlace del proyecto (url_repositorio_proyecto) en la
+ * participacion del egresado. Delega en el RPC SECURITY DEFINER que valida
+ * propiedad y restringe la escritura a esa columna especifica.
  */
-export async function comentarEntregableEgresado(
-  input: z.infer<typeof ComentarEgresadoSchema>,
+export async function actualizarUrlProyecto(
+  input: z.infer<typeof ActualizarUrlSchema>,
 ): Promise<Result<void>> {
-  const parsed = ComentarEgresadoSchema.safeParse(input)
+  const parsed = ActualizarUrlSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
 
   const roleResult = await requireRole('egresado')
   if (!roleResult.ok) return roleResult
 
   const supabase = await createSupabaseServerClient()
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) return err('unauthenticated')
 
-  const { error: insertErr } = await supabase
-    .from('comentarios_entregables')
-    .insert({
-      id_entregable: parsed.data.idEntregable,
-      id_autor: userData.user.id,
-      contenido: parsed.data.contenido,
-      tipo_comentario: 'aclaracion',
-    })
-  if (insertErr) {
-    logger.error('comentarEntregableEgresado: insert failed', {
-      error: insertErr.message,
-    })
+  const { error } = await supabase.rpc('actualizar_url_participacion', {
+    p_id_participacion: parsed.data.idParticipacion,
+    p_url: parsed.data.url,
+  })
+
+  if (error) {
+    logger.error('actualizarUrlProyecto: rpc failed', { error: error.message })
     return err('database_error')
   }
 
-  revalidatePath(`/egresado/projects/${parsed.data.idProyecto}/entregables`)
   return ok(undefined)
 }
 
