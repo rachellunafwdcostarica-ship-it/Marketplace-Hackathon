@@ -1,6 +1,5 @@
 'use server'
 
-import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
@@ -20,6 +19,7 @@ const MENSAJE_MAX = 2000
 export async function sendChatMessage(
   conversationId: string,
   text?: string,
+  locale?: string,
 ): Promise<Result<{ historial: HistorialEntry[]; completo: boolean }>> {
   try {
     const texto = (text ?? '').trim()
@@ -106,7 +106,7 @@ export async function sendChatMessage(
       contextoInicial,
       logistica: parseLogistica(conv.logistica),
       historial: historialConUsuario,
-      locale: await getLocale(),
+      locale: locale === 'en' ? 'en' : 'es',
     })
 
     const historialFinal: HistorialEntry[] = [

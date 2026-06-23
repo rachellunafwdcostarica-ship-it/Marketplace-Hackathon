@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
   ArrowLeft,
@@ -106,6 +106,8 @@ export function ProjectDetailClient({
     ajustes: string[]
   } | null>(null)
 
+  const locale = useLocale()
+
   const forwardStates = getProjectForwardStates(project.estadoEfectivo)
   const cancelable = isCancelable(project.estado)
   const descriptionEditable =
@@ -176,10 +178,13 @@ export function ProjectDetailClient({
     if (value.length === 0) return
     setEditing(true)
     setEditRejection(null)
-    const res = await editProjectDescription({
-      idProyecto: project.id,
-      descripcion: value,
-    })
+    const res = await editProjectDescription(
+      {
+        idProyecto: project.id,
+        descripcion: value,
+      },
+      locale,
+    )
     setEditing(false)
     if (!res.ok) {
       const code = KNOWN_EDIT_ERRORS.has(res.error) ? res.error : 'generic'
@@ -497,7 +502,7 @@ export function ProjectDetailClient({
       </Dialog>
 
       <Dialog open={editOpen} onOpenChange={(open) => !open && cerrarEdit()}>
-        <DialogContent className="sm:max-w-lg border border-border">
+        <DialogContent className="sm:max-w-lg border border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold font-heading">
               {t('editDescriptionTitle')}

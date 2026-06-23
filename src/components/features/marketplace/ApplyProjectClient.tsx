@@ -24,7 +24,6 @@ import { postularse } from '@/lib/applications/actions'
 const MAX_CARTA_LEN = 2800
 const MIN_PLANTEAMIENTO_LEN = 30
 const MAX_ENLACE_LEN = 500
-const MAX_DOC_URL_LEN = 300
 const MAX_ENLACES_EXTRA = 3
 
 type ApplyFormValues = zod.infer<ReturnType<typeof createApplySchema>>
