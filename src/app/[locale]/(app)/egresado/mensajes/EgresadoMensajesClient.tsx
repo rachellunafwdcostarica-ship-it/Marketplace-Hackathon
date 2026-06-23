@@ -38,15 +38,13 @@ function EstadoBadge({ estado }: { estado: 'contratada' | 'finalizada' }) {
     <span
       className={cn(
         'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
-        isActivo
-          ? 'text-[#2eac68]' // Green text for active
-          : 'text-muted-foreground',
+        isActivo ? 'text-success' : 'text-muted-foreground',
       )}
     >
       <span
         className={cn(
           'w-1.5 h-1.5 rounded-full',
-          isActivo ? 'bg-[#2eac68]' : 'bg-muted-foreground/50',
+          isActivo ? 'bg-success' : 'bg-muted-foreground/50',
         )}
       />
       {isActivo ? t('estadoActivo') : t('estadoFinalizado')}
@@ -63,6 +61,7 @@ function ConversacionRow({
   isActive: boolean
   onSelect: () => void
 }) {
+  const t = useTranslations('EgresadoMensajes')
   const initials = conv.nombreContraparte.substring(0, 2).toUpperCase()
   return (
     <button
@@ -88,7 +87,9 @@ function ConversacionRow({
           >
             {conv.nombreContraparte}
           </p>
-          <span className="text-[10px] text-ink-muted">Ayer</span>
+          <span className="text-[10px] text-ink-muted">
+            {t('relativeDateYesterday')}
+          </span>
         </div>
         <p className="text-sm font-semibold text-ink-strong leading-tight line-clamp-2">
           {conv.tituloProyecto}
@@ -131,7 +132,7 @@ function ChatBubble({
         className={cn(
           'px-4 py-3 rounded-2xl text-sm leading-relaxed break-words shadow-sm',
           isMine
-            ? 'bg-[#00b2be] text-white rounded-br-sm' // Teal/Primary color from mockup
+            ? 'bg-accent text-white rounded-br-sm'
             : 'bg-white border border-border/60 text-ink-strong rounded-bl-sm',
         )}
       >

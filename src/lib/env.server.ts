@@ -6,6 +6,9 @@ const serverEnvSchema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   GMAIL_USER: z.string().email().optional(),
   GMAIL_APP_PASSWORD: z.string().min(1).optional(),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
+  CLOUDINARY_API_KEY: z.string().min(1).optional(),
+  CLOUDINARY_API_SECRET: z.string().min(1).optional(),
 })
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>
@@ -18,6 +21,9 @@ export function parseServerEnv(
     RESEND_API_KEY: source['RESEND_API_KEY'],
     GMAIL_USER: source['GMAIL_USER'],
     GMAIL_APP_PASSWORD: source['GMAIL_APP_PASSWORD'],
+    CLOUDINARY_CLOUD_NAME: source['CLOUDINARY_CLOUD_NAME'],
+    CLOUDINARY_API_KEY: source['CLOUDINARY_API_KEY'],
+    CLOUDINARY_API_SECRET: source['CLOUDINARY_API_SECRET'],
   })
   if (!parsed.success) {
     const issues = parsed.error.issues

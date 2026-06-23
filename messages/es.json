@@ -51,7 +51,11 @@
     "reports": "Reportes",
     "adminRegister": "Registro de admin",
     "messages": "Mensajes",
-    "myContracts": "Mis Contrataciones"
+    "myContracts": "Mis Contrataciones",
+    "menuSection": "Menú",
+    "accountSection": "Cuenta",
+    "toggleSidebar": "Alternar barra lateral",
+    "help": "Ayuda"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -1480,7 +1484,8 @@
     "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
     "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
     "proyectoLabel": "Proyecto",
-    "empresaLabel": "Empresa"
+    "empresaLabel": "Empresa",
+    "relativeDateYesterday": "Ayer"
   },
   "Ranking": {
     "snippetTitle": "Ranking de Talento",

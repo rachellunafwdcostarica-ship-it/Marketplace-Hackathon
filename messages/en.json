@@ -51,7 +51,11 @@
     "reports": "Reports",
     "adminRegister": "Admin registration",
     "messages": "Messages",
-    "myContracts": "My Contracts"
+    "myContracts": "My Contracts",
+    "menuSection": "Menu",
+    "accountSection": "Account",
+    "toggleSidebar": "Toggle sidebar",
+    "help": "Help"
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
@@ -1479,7 +1483,8 @@
     "errorCarga": "Could not load messages. Please try again.",
     "errorEnvio": "Could not send the message. Please try again.",
     "proyectoLabel": "Project",
-    "empresaLabel": "Company"
+    "empresaLabel": "Company",
+    "relativeDateYesterday": "Yesterday"
   },
   "Ranking": {
     "snippetTitle": "Talent Ranking",

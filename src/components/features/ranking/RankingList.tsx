@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -191,9 +192,11 @@ export function RankingList({
 
                 <div className="flex items-center gap-4 flex-1 w-full md:w-auto">
                   {talent.fotoPerfil ? (
-                    <img
+                    <Image
                       src={talent.fotoPerfil}
                       alt={talent.nombreCompleto}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 rounded-full border border-border object-cover"
                     />
                   ) : (

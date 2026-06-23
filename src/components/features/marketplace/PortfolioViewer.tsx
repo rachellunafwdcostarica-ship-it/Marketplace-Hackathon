@@ -196,7 +196,7 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
                             <div className="flex items-center gap-2 pl-1">
                               <DialogClose asChild>
                                 <button
-                                  className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                  className="w-3 h-3 rounded-full bg-magenta hover:bg-magenta/80 focus:outline-none"
                                   aria-label="Cerrar modal"
                                 />
                               </DialogClose>
@@ -204,7 +204,7 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
                                 href={proj.demoUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                className="w-3 h-3 rounded-full bg-success hover:bg-success/80 focus:outline-none"
                                 aria-label="Abrir en otra ventana"
                               />
                             </div>

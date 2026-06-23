@@ -51,8 +51,8 @@ export function SidebarEgresado() {
   ]
 
   const accountLinks = [
-    { href: '/egresado/configuracion', label: 'Configuración', icon: Settings },
-    { href: '/egresado/ayuda', label: 'Ayuda', icon: HelpCircle },
+    { href: '/egresado/configuracion', label: t('settings'), icon: Settings },
+    { href: '/egresado/ayuda', label: t('help'), icon: HelpCircle },
   ]
 
   return (
@@ -99,7 +99,7 @@ export function SidebarEgresado() {
             {!isCollapsed && (
               <div className="px-6 mb-2">
                 <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-white/50">
-                  Menú
+                  {t('menuSection')}
                 </span>
               </div>
             )}
@@ -152,7 +152,7 @@ export function SidebarEgresado() {
             {!isCollapsed && (
               <div className="px-6 mb-2">
                 <span className="text-[10px] font-heading font-bold uppercase tracking-wider text-white/50">
-                  Cuenta
+                  {t('accountSection')}
                 </span>
               </div>
             )}
@@ -201,7 +201,7 @@ export function SidebarEgresado() {
         role="button"
         aria-expanded={!isCollapsed}
         aria-controls="sidebar"
-        aria-label="Alternar barra lateral"
+        aria-label={t('toggleSidebar')}
       >
         {isCollapsed ? (
           <ChevronRight className="h-3.5 w-3.5 text-white" />
