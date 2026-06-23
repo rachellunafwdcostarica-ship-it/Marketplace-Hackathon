@@ -29,7 +29,11 @@ const TIMEOUT_MS = 60_000
 const MAX_TOKENS_CONVERSAR = 1000
 const MAX_TOKENS_GENERAR = 4000
 const MAX_TOKENS_VALIDAR = 800
-const TEMPERATURE = 0.4
+// Temperatura baja: prioriza consistencia entre corridas sobre variedad. La
+// evaluación del agente es manual y se juzga por reproducibilidad (3 corridas
+// aceptables por caso); con 0.4 el comportamiento oscilaba lo suficiente como
+// para no poder distinguir una mejora real del azar del muestreo.
+const TEMPERATURE = 0.2
 // Reintentos ante respuestas vacías/inválidas del modelo de razonamiento
 // (gpt-oss a veces "termina" sin emitir content ni reasoning). Aplica a las tres
 // llamadas; NO cambia el nivel de razonamiento, solo da más oportunidades de
@@ -89,13 +93,13 @@ FORMATO de la descripción: texto PLANO, en prosa. PROHIBIDO Markdown — sin ta
 Desarrollá BIEN dos apartados (los más importantes):
 "Problema y contexto" (varias oraciones): qué hace el negocio, qué duele hoy y cómo lo resuelven, por qué importa y para quién es — con los DATOS CONCRETOS que dio el empresario (rubro, situación, números si los dio), nunca relleno.
 "Objetivo y alcance": qué tiene que lograr el sistema, los resultados esperados, y el alcance concreto (las funciones o módulos principales que incluye, y qué NO).
-"Supuestos y exclusiones": cerrá la descripción con este apartado, en ${idioma}. En 1–3 oraciones hacé EXPLÍCITOS los supuestos materiales que tomaste y qué queda FUERA del alcance (ej.: si el cobro queda en efectivo fuera del sistema, decílo; si no integrás el canal actual como WhatsApp, decílo). Solo declarás decisiones que YA tomaste; no inventes alcance nuevo.
+"Supuestos y exclusiones": cerrá la descripción con este apartado, en ${idioma}. REGLA CLAVE: acá solo van (a) supuestos materiales reales sobre lo que el empresario pidió y (b) lo que el empresario decidió EXPLÍCITAMENTE dejar afuera (ej.: dijo que los pagos los maneja él, o que cobra solo en efectivo). NO inventes exclusiones de temas que el empresario NUNCA tocó —integraciones, canales de mensajería, controles de acceso u otras funciones que nadie nombró—: si el empresario no dijo nada de un tema, ese tema no aparece en la propuesta, ni para incluirlo ni para excluirlo. En 1–3 oraciones, sin inventar alcance nuevo.
 
 Si el empresario aportó detalle útil (entidades o datos que maneja, roles o tipos de usuario, módulos, fases, reglas clave), MENCIONALO EN PROSA, integrado en las oraciones — NO lo reproduzcas como tabla ni lista cruda, y NO inventes lo que no dio. Si indicó qué queda FUERA de alcance, decilo en una oración.
 
 Si la descripción sirve para cualquier proyecto, está mal.
 
-NO INVENTES: no agregues requisitos, modelo de datos, reglas ni endpoints que el empresario no haya dado. Lo único que proponés por tu cuenta son las tecnologías y las categorías (del catálogo); todo lo demás se basa en lo que el empresario aportó.
+NO INVENTES: no agregues requisitos, modelo de datos, reglas ni endpoints que el empresario no haya dado. INCLUÍ como funcionalidad del sistema solo lo que el empresario pidió o aceptó (lo que sugeriste vos y él no tomó, no se incluye). Podés aclarar como fuera de alcance algo que el empresario decidió dejar afuera. Pero NO menciones —ni para incluir ni para excluir— ningún tema que el empresario nunca tocó: si nadie habló de un canal, una integración o un control, no lo nombres. Lo único que proponés por tu cuenta son las tecnologías y las categorías (del catálogo); todo lo demás se basa en lo que el empresario aportó.
 
 Reglas de los campos estructurados:
 - Elegí "categorias" y "tecnologias" SOLO de los catálogos provistos abajo, usando el nombre EXACTO del catálogo. Al menos una de cada una.
