@@ -41,21 +41,25 @@ export default async function PortafolioEgresadoPage({
 
   return (
     <CompanyShell>
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+      <div className="flex-1 w-full flex flex-col lg:flex-row">
         <SidebarEmpresaNuevo />
-        <main className="flex-1 space-y-6 max-w-4xl mx-auto w-full pb-8 lg:self-start">
-          <div>
-            <BackButton label={t('backToParticipations')} />
+        <div className="flex-1 w-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="space-y-6 max-w-4xl mx-auto w-full pb-8 lg:self-start">
+              <div>
+                <BackButton label={t('backToParticipations')} />
+              </div>
+              <PortfolioViewer profile={profileResult.data} />
+              {isFinalizado && contratacionConRating && (
+                <EmpresarioRatingCard
+                  idEstudiante={contratacionConRating.id_estudiante}
+                  idContratacion={contratacionConRating.id_contratacion}
+                  existingRating={contratacionConRating.existingRating}
+                />
+              )}
+            </main>
           </div>
-          <PortfolioViewer profile={profileResult.data} />
-          {isFinalizado && contratacionConRating && (
-            <EmpresarioRatingCard
-              idEstudiante={contratacionConRating.id_estudiante}
-              idContratacion={contratacionConRating.id_contratacion}
-              existingRating={contratacionConRating.existingRating}
-            />
-          )}
-        </main>
+        </div>
       </div>
     </CompanyShell>
   )

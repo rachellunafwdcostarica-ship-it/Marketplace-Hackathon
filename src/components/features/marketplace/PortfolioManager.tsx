@@ -270,12 +270,7 @@ export function PortfolioManager({
   }, [])
 
   useEffect(() => {
-    if (initialProfile) {
-      const fullName =
-        `${initialProfile.firstName} ${initialProfile.lastName1} ${initialProfile.lastName2}`.trim()
-      console.log('User Full Name:', fullName)
-      console.log('User ID:', initialProfile.id_usuario)
-    }
+    // No-op for analytics/tracking (retained structure)
   }, [initialProfile])
 
   const bioSchema = React.useMemo(() => {
@@ -566,7 +561,7 @@ export function PortfolioManager({
                           </Button>
                         </DialogClose>
                         <Button
-                          className="bg-[#0066cc] hover:bg-[#005bb5] text-white px-6"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6"
                           onClick={() => {
                             fileInputRef.current?.click()
                             setIsPhotoModalOpen(false)
@@ -858,7 +853,7 @@ export function PortfolioManager({
                                   <div className="flex items-center gap-2 pl-1">
                                     <DialogClose asChild>
                                       <button
-                                        className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                        className="w-3 h-3 rounded-full bg-magenta hover:bg-magenta/80 focus:outline-none"
                                         aria-label="Cerrar modal"
                                       />
                                     </DialogClose>
@@ -866,7 +861,7 @@ export function PortfolioManager({
                                       href={proj.demoUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                      className="w-3 h-3 rounded-full bg-success hover:bg-success/80 focus:outline-none"
                                       aria-label="Abrir en otra ventana"
                                     />
                                   </div>
@@ -979,7 +974,7 @@ export function PortfolioManager({
                             <div className="flex items-center gap-2 pl-1">
                               <DialogClose asChild>
                                 <button
-                                  className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                  className="w-3 h-3 rounded-full bg-magenta hover:bg-magenta/80 focus:outline-none"
                                   aria-label="Cerrar modal"
                                 />
                               </DialogClose>
@@ -987,7 +982,7 @@ export function PortfolioManager({
                                 href={project.demoUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                className="w-3 h-3 rounded-full bg-success hover:bg-success/80 focus:outline-none"
                                 aria-label="Abrir en otra ventana"
                               />
                             </div>

@@ -1,15 +1,17 @@
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
+import { serverEnv } from '@/lib/env.server'
 import type { Database } from '@/types/database'
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
-  api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '',
+  cloud_name: serverEnv.CLOUDINARY_CLOUD_NAME ?? '',
+  api_key: serverEnv.CLOUDINARY_API_KEY ?? '',
+  api_secret: serverEnv.CLOUDINARY_API_SECRET ?? '',
 })
 import type { StudentSkill, PortfolioProject } from '@/types'
 
@@ -475,17 +477,18 @@ export async function getPublicStudentProfile(
   id_estudiante: string,
 ): Promise<Result<StudentProfileView | null>> {
   try {
-    const supabase = await createSupabaseServerClient()
+    const supabaseUser = await createSupabaseServerClient()
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await supabaseUser.auth.getUser()
 
     if (authError || !user) {
       return err('unauthorized')
     }
 
-    const { data: estudiante, error } = await supabase
+    const supabaseAdmin = createSupabaseAdminClient()
+    const { data: estudiante, error } = await supabaseAdmin
       .from('estudiantes')
       .select(
         `
@@ -515,7 +518,7 @@ export async function getPublicStudentProfile(
 
     // Verificar permisos RF-12
     if (!estudiante.portafolio_visible_publicamente) {
-      const { data: empresario } = await supabase
+      const { data: empresario } = await supabaseAdmin
         .from('empresarios')
         .select('id_empresario')
         .eq('id_usuario', user.id)
@@ -523,7 +526,7 @@ export async function getPublicStudentProfile(
 
       if (!empresario) return err('unauthorized_private_portfolio')
 
-      const { data: participacion } = await supabase
+      const { data: participacion } = await supabaseAdmin
         .from('participaciones')
         .select('id_participacion, proyectos!inner(id_empresario)')
         .eq('id_estudiante', id_estudiante)

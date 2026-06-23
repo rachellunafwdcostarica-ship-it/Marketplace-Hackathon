@@ -38,7 +38,7 @@ export function CompanyPerfilClient({
 
   return (
     <CompanyShell>
-      <div className="relative flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+      <div className="relative flex-1 w-full flex flex-col lg:flex-row">
         {/* Watermark de marca (decorativo, sin datos) */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <div className="absolute -bottom-24 -left-24 w-96 h-96 opacity-[0.04] blur-[1px]">
@@ -48,7 +48,7 @@ export function CompanyPerfilClient({
 
         <SidebarEmpresaNuevo />
 
-        <main className="relative z-10 flex-1 space-y-8">
+        <main className="relative z-10 flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           <CompanyProfileBanner company={company} />
 
           <div

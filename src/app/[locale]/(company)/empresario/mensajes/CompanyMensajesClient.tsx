@@ -80,7 +80,14 @@ function ConversacionRow({
         <p className="text-sm font-semibold leading-snug line-clamp-1 flex-1">
           {conv.tituloProyecto}
         </p>
-        <EstadoBadge estado={conv.estado} />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {conv.noLeidos > 0 && (
+            <span className="flex min-w-5 h-5 px-1.5 bg-primary text-white rounded-full items-center justify-center text-[10px] font-bold">
+              {conv.noLeidos}
+            </span>
+          )}
+          <EstadoBadge estado={conv.estado} />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground truncate">
         {conv.nombreContraparte}
@@ -159,6 +166,11 @@ export function CompanyMensajesClient({
   const t = useTranslations('CompanyMensajes')
   const scrollEndRef = useRef<HTMLDivElement>(null)
 
+  const [convs, setConvs] = useState<ConversacionItem[]>(() =>
+    conversaciones.map((c) =>
+      c.idProyecto === initialProjectId ? { ...c, noLeidos: 0 } : c,
+    ),
+  )
   const [selectedConv, setSelectedConv] = useState<ConversacionItem | null>(
     () =>
       initialProjectId
@@ -177,12 +189,25 @@ export function CompanyMensajesClient({
   const [input, setInput] = useState('')
 
   useEffect(() => {
+    setConvs(
+      conversaciones.map((c) =>
+        c.idProyecto === selectedConv?.idProyecto ? { ...c, noLeidos: 0 } : c,
+      ),
+    )
+  }, [conversaciones, selectedConv])
+
+  useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensajes])
 
   const handleSelectConv = async (conv: ConversacionItem) => {
     if (selectedConv?.idProyecto === conv.idProyecto) return
     setSelectedConv(conv)
+    setConvs((prev) =>
+      prev.map((c) =>
+        c.idProyecto === conv.idProyecto ? { ...c, noLeidos: 0 } : c,
+      ),
+    )
     setMensajes([])
     setIsLoadingMensajes(true)
 
@@ -229,10 +254,10 @@ export function CompanyMensajesClient({
 
   return (
     <CompanyShell>
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+      <div className="flex-1 w-full flex flex-col lg:flex-row">
         <SidebarEmpresaNuevo />
 
-        <main className="flex-1 flex flex-col gap-6 min-w-0">
+        <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6 min-w-0">
           <PageTitle title={t('title')} description={t('description')} />
 
           {conversaciones.length === 0 ? (
@@ -260,7 +285,7 @@ export function CompanyMensajesClient({
                   </p>
                 </div>
                 <div className="flex-1 overflow-y-auto divide-y divide-border/40">
-                  {conversaciones.map((conv) => (
+                  {convs.map((conv) => (
                     <ConversacionRow
                       key={conv.idProyecto}
                       conv={conv}
