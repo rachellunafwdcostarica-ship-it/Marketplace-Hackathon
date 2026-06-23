@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Download, Users, Briefcase, Activity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,16 +13,15 @@ import {
   exportAuditoriaCSV,
 } from '@/lib/admin/report-actions'
 
+type ReportTipo = 'usuarios' | 'proyectos' | 'auditoria'
+
 export function AdminReportsInterface() {
+  const t = useTranslations('Admin')
   const [fechaInicio, setFechaInicio] = useState('')
   const [fechaFin, setFechaFin] = useState('')
-  const [loading, setLoading] = useState<
-    'usuarios' | 'proyectos' | 'auditoria' | null
-  >(null)
+  const [loading, setLoading] = useState<ReportTipo | null>(null)
 
-  const handleDownload = async (
-    tipo: 'usuarios' | 'proyectos' | 'auditoria',
-  ) => {
+  const handleDownload = async (tipo: ReportTipo) => {
     setLoading(tipo)
     try {
       const filters: { fechaInicio?: string; fechaFin?: string } = {}
@@ -43,19 +43,26 @@ export function AdminReportsInterface() {
           type: 'text/csv;charset=utf-8;',
         })
         const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `reporte_${tipo}_${new Date().toISOString().split('T')[0]}.csv`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = `reporte_${tipo}_${new Date().toISOString().split('T')[0]}.csv`
+        document.body.appendChild(anchor)
+        anchor.click()
+        document.body.removeChild(anchor)
         URL.revokeObjectURL(url)
-        toast.success(`Reporte de ${tipo} descargado con éxito.`)
+
+        const entityLabel =
+          tipo === 'usuarios'
+            ? t('reportCardUsers')
+            : tipo === 'proyectos'
+              ? t('reportCardProjects')
+              : t('reportCardActivity')
+        toast.success(t('reportDownloadSuccess', { entity: entityLabel }))
       } else {
-        toast.error(`Error al generar el reporte: ${result.error}`)
+        toast.error(t('reportDownloadError', { error: result.error }))
       }
     } catch {
-      toast.error('Ocurrió un error inesperado al procesar la descarga.')
+      toast.error(t('reportDownloadUnexpected'))
     } finally {
       setLoading(null)
     }
@@ -63,13 +70,13 @@ export function AdminReportsInterface() {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
         <h3 className="mb-4 text-lg font-semibold text-ink-strong">
-          Filtros de Reporte
+          {t('reportFiltersTitle')}
         </h3>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="fechaInicio">Fecha de Inicio (Opcional)</Label>
+            <Label htmlFor="fechaInicio">{t('reportDateFrom')}</Label>
             <Input
               id="fechaInicio"
               type="date"
@@ -78,7 +85,7 @@ export function AdminReportsInterface() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="fechaFin">Fecha de Fin (Opcional)</Label>
+            <Label htmlFor="fechaFin">{t('reportDateTo')}</Label>
             <Input
               id="fechaFin"
               type="date"
@@ -91,61 +98,70 @@ export function AdminReportsInterface() {
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Tarjeta Usuarios */}
-        <div className="flex flex-col items-center rounded-2xl border border-gray-100 bg-surface p-6 shadow-soft text-center hover:-translate-y-0.5 transition-transform duration-fast">
+        <div className="flex flex-col items-center rounded-2xl border border-border bg-surface p-6 text-center shadow-soft transition-transform duration-fast hover:-translate-y-0.5">
           <div className="mb-4 rounded-full bg-primary/10 p-3 text-primary">
             <Users className="h-6 w-6" />
           </div>
-          <h4 className="mb-2 font-heading text-lg font-bold">Usuarios</h4>
+          <h4 className="mb-2 font-heading text-lg font-bold">
+            {t('reportCardUsers')}
+          </h4>
           <p className="mb-6 text-sm text-ink-muted">
-            Exporta el listado completo de usuarios registrados, incluyendo su
-            rol, estado y fecha de registro.
+            {t('reportCardUsersDesc')}
           </p>
           <Button
-            className="w-full mt-auto"
+            className="mt-auto w-full"
             disabled={loading !== null}
             onClick={() => handleDownload('usuarios')}
           >
-            {loading === 'usuarios' ? 'Generando...' : 'Descargar CSV'}
+            {loading === 'usuarios'
+              ? t('reportGenerating')
+              : t('reportDownloadCsv')}
             <Download className="ml-2 h-4 w-4" />
           </Button>
         </div>
 
         {/* Tarjeta Proyectos */}
-        <div className="flex flex-col items-center rounded-2xl border border-gray-100 bg-surface p-6 shadow-soft text-center hover:-translate-y-0.5 transition-transform duration-fast">
+        <div className="flex flex-col items-center rounded-2xl border border-border bg-surface p-6 text-center shadow-soft transition-transform duration-fast hover:-translate-y-0.5">
           <div className="mb-4 rounded-full bg-secondary/10 p-3 text-secondary">
             <Briefcase className="h-6 w-6" />
           </div>
-          <h4 className="mb-2 font-heading text-lg font-bold">Proyectos</h4>
+          <h4 className="mb-2 font-heading text-lg font-bold">
+            {t('reportCardProjects')}
+          </h4>
           <p className="mb-6 text-sm text-ink-muted">
-            Exporta el historial de proyectos, su modalidad, presupuesto y
-            estado actual.
+            {t('reportCardProjectsDesc')}
           </p>
           <Button
-            className="w-full mt-auto"
+            className="mt-auto w-full"
             disabled={loading !== null}
             onClick={() => handleDownload('proyectos')}
           >
-            {loading === 'proyectos' ? 'Generando...' : 'Descargar CSV'}
+            {loading === 'proyectos'
+              ? t('reportGenerating')
+              : t('reportDownloadCsv')}
             <Download className="ml-2 h-4 w-4" />
           </Button>
         </div>
 
-        {/* Tarjeta Auditoría */}
-        <div className="flex flex-col items-center rounded-2xl border border-gray-100 bg-surface p-6 shadow-soft text-center hover:-translate-y-0.5 transition-transform duration-fast">
+        {/* Tarjeta Actividad */}
+        <div className="flex flex-col items-center rounded-2xl border border-border bg-surface p-6 text-center shadow-soft transition-transform duration-fast hover:-translate-y-0.5">
           <div className="mb-4 rounded-full bg-accent/10 p-3 text-accent">
             <Activity className="h-6 w-6" />
           </div>
-          <h4 className="mb-2 font-heading text-lg font-bold">Actividad</h4>
+          <h4 className="mb-2 font-heading text-lg font-bold">
+            {t('reportCardActivity')}
+          </h4>
           <p className="mb-6 text-sm text-ink-muted">
-            Exporta el log de auditoría del sistema para revisar acciones
-            administrativas y cambios de estado.
+            {t('reportCardActivityDesc')}
           </p>
           <Button
-            className="w-full mt-auto"
+            className="mt-auto w-full"
             disabled={loading !== null}
             onClick={() => handleDownload('auditoria')}
           >
-            {loading === 'auditoria' ? 'Generando...' : 'Descargar CSV'}
+            {loading === 'auditoria'
+              ? t('reportGenerating')
+              : t('reportDownloadCsv')}
             <Download className="ml-2 h-4 w-4" />
           </Button>
         </div>

@@ -3,16 +3,30 @@
 import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth/guards'
+import {
+  requireVerifiedEgresado,
+  requireVerifiedEmpresario,
+} from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { crearNotificacion } from '@/lib/notifications/create'
 import { DEFAULT_LOCALE } from '@/i18n/config'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { buildEntregableEnviadoNotificacion } from './entregable-notificacion-logic'
+import { createHash } from 'node:crypto'
+
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50 MB; coincide con el límite del bucket
+const ENTREGABLES_BUCKET = 'entregables'
 
 const SubirEntregableSchema = z.object({
   idContratacion: z.string().uuid(),
-  archivoPath: z.string().min(1).max(150),
   idProyecto: z.string().uuid(),
+  file: z
+    .instanceof(File)
+    .refine((archivo) => archivo.size > 0, { message: 'archivo_vacio' })
+    .refine((archivo) => archivo.size <= MAX_FILE_SIZE_BYTES, {
+      message: 'archivo_muy_grande',
+    }),
 })
 
 type SubirInput = z.infer<typeof SubirEntregableSchema>
@@ -23,14 +37,53 @@ async function registrarEntregable(
   input: SubirInput,
   tipo: 'parcial' | 'final',
 ): Promise<Result<void>> {
-  const roleResult = await requireRole('egresado')
-  if (!roleResult.ok) return roleResult
+  // Validación de verificación ANTES de tocar el Storage: si el egresado no está
+  // verificado, cortamos acá para no subir un archivo huérfano (la policy de
+  // Storage de 'entregables' no exige verificación por sí sola).
+  const verified = await requireVerifiedEgresado()
+  if (!verified.ok) return verified
 
   const supabase = await createSupabaseServerClient()
 
+  // Dedup por contenido: hash sha-256 del archivo. No se permite subir dos veces
+  // el mismo archivo en la contratación. Un archivo corregido (con_cambios) tiene
+  // bytes distintos → hash distinto → pasa. El chequeo previo evita subir al
+  // Storage en vano; el índice único parcial es el backstop ante carreras.
+  const fileBuffer = Buffer.from(await input.file.arrayBuffer())
+  const archivoHash = createHash('sha256').update(fileBuffer).digest('hex')
+
+  const { data: duplicado } = await supabase
+    .from('entregables')
+    .select('id_entregable')
+    .eq('id_contratacion', input.idContratacion)
+    .eq('archivo_hash', archivoHash)
+    .limit(1)
+    .maybeSingle()
+  if (duplicado) return err('archivo_duplicado')
+
+  // El upload corre en el SERVIDOR a propósito: el cliente browser de Supabase
+  // se cuelga al resolver la sesión y nunca emite el request del Storage. Con el
+  // cliente de servidor la sesión sale de las cookies y la RLS del bucket aplica
+  // igual (la carpeta es el id_contratacion del estudiante).
+  const ext = input.file.name.split('.').pop()?.toLowerCase() || 'bin'
+  const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  const archivoPath = `${input.idContratacion}/${uniqueSuffix}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from(ENTREGABLES_BUCKET)
+    .upload(archivoPath, input.file)
+
+  if (uploadError) {
+    logger.error(`registrarEntregable (${tipo}) storage upload failed`, {
+      error: uploadError.message,
+    })
+    return err('storage_error')
+  }
+
   // La versión se calcula como max(version)+1 por contratación. El constraint
   // UNIQUE(id_contratacion, version) garantiza la secuencia; si dos subidas casi
-  // simultáneas chocan (23505), recalculamos y reintentamos una vez.
+  // simultáneas chocan (23505), recalculamos y reintentamos una vez. Si el insert
+  // falla en firme, borramos el archivo recién subido para no dejar huérfanos.
   for (let attempt = 1; attempt <= MAX_VERSION_ATTEMPTS; attempt++) {
     const { data: maxVerData } = await supabase
       .from('entregables')
@@ -45,20 +98,62 @@ async function registrarEntregable(
     const { error: insertError } = await supabase.from('entregables').insert({
       id_contratacion: input.idContratacion,
       tipo_entregable: tipo,
-      archivo_url: input.archivoPath,
+      archivo_url: archivoPath,
+      archivo_hash: archivoHash,
       version,
       estado: 'enviado',
     })
 
     if (!insertError) {
       revalidatePath(`/egresado/projects/${input.idProyecto}/entregables`)
+      try {
+        const adminClient = createSupabaseAdminClient()
+        const { data: proyecto } = await adminClient
+          .from('proyectos')
+          .select('titulo, id_empresario')
+          .eq('id_proyecto', input.idProyecto)
+          .maybeSingle()
+        if (proyecto) {
+          const { data: empresario } = await adminClient
+            .from('empresarios')
+            .select('id_usuario')
+            .eq('id_empresario', proyecto.id_empresario)
+            .maybeSingle()
+          if (empresario?.id_usuario) {
+            const notifResult = await crearNotificacion(
+              buildEntregableEnviadoNotificacion({
+                idUsuarioEmpresario: empresario.id_usuario,
+                tituloProyecto: proyecto.titulo,
+                idProyecto: input.idProyecto,
+              }),
+            )
+            if (!notifResult.ok) {
+              logger.error('registrarEntregable: notificacion fallida', {
+                error: notifResult.error,
+              })
+            }
+          }
+        }
+      } catch (e) {
+        logger.error('registrarEntregable: error al notificar empresario', {
+          error: e instanceof Error ? e.message : String(e),
+        })
+      }
       return ok(undefined)
     }
 
-    if (insertError.code === '23505' && attempt < MAX_VERSION_ATTEMPTS) {
-      continue
+    if (insertError.code === '23505') {
+      // Choque del índice (id_contratacion, archivo_hash) = archivo duplicado en
+      // carrera: no reintentar, devolver duplicado.
+      if (insertError.message.includes('entregables_contratacion_hash_uniq')) {
+        await supabase.storage.from(ENTREGABLES_BUCKET).remove([archivoPath])
+        return err('archivo_duplicado')
+      }
+      // Choque de versión: recalcular y reintentar una vez.
+      if (attempt < MAX_VERSION_ATTEMPTS) continue
     }
 
+    await supabase.storage.from(ENTREGABLES_BUCKET).remove([archivoPath])
     logger.error(`registrarEntregable (${tipo}) failed`, {
       error: insertError.message,
     })
@@ -67,29 +162,72 @@ async function registrarEntregable(
     )
   }
 
+  await supabase.storage.from(ENTREGABLES_BUCKET).remove([archivoPath])
   return err('version_conflict')
 }
 
 /**
- * Registra un hito parcial (RF-40). El upload al storage ya ocurrió
- * en el cliente; este action solo inserta la fila en `entregables`.
+ * Registra un hito parcial (RF-40). Recibe el archivo por `FormData`, lo sube al
+ * Storage desde el servidor y crea la fila en `entregables`.
  */
-export async function subirHito(input: SubirInput): Promise<Result<void>> {
-  const parsed = SubirEntregableSchema.safeParse(input)
+export async function subirHito(formData: FormData): Promise<Result<void>> {
+  const parsed = SubirEntregableSchema.safeParse({
+    idContratacion: formData.get('idContratacion'),
+    idProyecto: formData.get('idProyecto'),
+    file: formData.get('file'),
+  })
   if (!parsed.success) return err('invalid_input')
   return registrarEntregable(parsed.data, 'parcial')
 }
 
 /**
- * Registra el entregable final (RF-41). Mismo patrón que subirHito
- * pero con tipo_entregable='final'.
+ * Registra el entregable final (RF-41). Mismo patrón que subirHito pero con
+ * tipo_entregable='final'.
  */
 export async function subirEntregableFinal(
-  input: SubirInput,
+  formData: FormData,
 ): Promise<Result<void>> {
-  const parsed = SubirEntregableSchema.safeParse(input)
+  const parsed = SubirEntregableSchema.safeParse({
+    idContratacion: formData.get('idContratacion'),
+    idProyecto: formData.get('idProyecto'),
+    file: formData.get('file'),
+  })
   if (!parsed.success) return err('invalid_input')
   return registrarEntregable(parsed.data, 'final')
+}
+
+const ActualizarUrlSchema = z.object({
+  idParticipacion: z.string().uuid(),
+  url: z.string().url().max(150).nullable(),
+})
+
+/**
+ * Actualiza el enlace del proyecto (url_repositorio_proyecto) en la
+ * participacion del egresado. Delega en el RPC SECURITY DEFINER que valida
+ * propiedad y restringe la escritura a esa columna especifica.
+ */
+export async function actualizarUrlProyecto(
+  input: z.infer<typeof ActualizarUrlSchema>,
+): Promise<Result<void>> {
+  const parsed = ActualizarUrlSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const verified = await requireVerifiedEgresado()
+  if (!verified.ok) return verified
+
+  const supabase = await createSupabaseServerClient()
+
+  const { error } = await supabase.rpc('actualizar_url_participacion', {
+    p_id_participacion: parsed.data.idParticipacion,
+    p_url: parsed.data.url,
+  })
+
+  if (error) {
+    logger.error('actualizarUrlProyecto: rpc failed', { error: error.message })
+    return err('database_error')
+  }
+
+  return ok(undefined)
 }
 
 const ResponderEntregableSchema = z
@@ -120,9 +258,10 @@ export async function responderEntregable(
   const parsed = ResponderEntregableSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
 
+  const verified = await requireVerifiedEmpresario()
+  if (!verified.ok) return verified
+
   const supabase = await createSupabaseServerClient()
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) return err('unauthenticated')
 
   const { data: entregable, error: entErr } = await supabase
     .from('entregables')
@@ -153,18 +292,11 @@ export async function responderEntregable(
     .maybeSingle()
   if (partErr || !participacion) return err('unauthorized')
 
-  const { data: empresario, error: empErr } = await supabase
-    .from('empresarios')
-    .select('id_empresario')
-    .eq('id_usuario', userData.user.id)
-    .maybeSingle()
-  if (empErr || !empresario) return err('unauthorized')
-
   const { data: proyectoOwned, error: proyErr } = await supabase
     .from('proyectos')
     .select('id_proyecto, titulo')
     .eq('id_proyecto', participacion.id_proyecto)
-    .eq('id_empresario', empresario.id_empresario)
+    .eq('id_empresario', verified.data.id_empresario)
     .maybeSingle()
   if (proyErr || !proyectoOwned) return err('unauthorized')
 
@@ -202,7 +334,7 @@ export async function responderEntregable(
       .from('comentarios_entregables')
       .insert({
         id_entregable: parsed.data.idEntregable,
-        id_autor: userData.user.id,
+        id_autor: verified.data.id_usuario,
         contenido: parsed.data.comentario ?? '',
         tipo_comentario: 'aprobacion',
       })
@@ -255,7 +387,7 @@ export async function responderEntregable(
     .from('comentarios_entregables')
     .insert({
       id_entregable: parsed.data.idEntregable,
-      id_autor: userData.user.id,
+      id_autor: verified.data.id_usuario,
       contenido: parsed.data.comentario ?? '',
       tipo_comentario:
         parsed.data.decision === 'aprobado'
@@ -308,9 +440,10 @@ export async function comentarEntregable(
   const parsed = ComentarEntregableSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
 
+  const verified = await requireVerifiedEmpresario()
+  if (!verified.ok) return verified
+
   const supabase = await createSupabaseServerClient()
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) return err('unauthenticated')
 
   const { data: entregable, error: entErr } = await supabase
     .from('entregables')
@@ -333,18 +466,11 @@ export async function comentarEntregable(
     .maybeSingle()
   if (partErr || !participacion) return err('unauthorized')
 
-  const { data: empresario, error: empErr } = await supabase
-    .from('empresarios')
-    .select('id_empresario')
-    .eq('id_usuario', userData.user.id)
-    .maybeSingle()
-  if (empErr || !empresario) return err('unauthorized')
-
   const { data: proyectoOwned, error: proyErr } = await supabase
     .from('proyectos')
     .select('id_proyecto')
     .eq('id_proyecto', participacion.id_proyecto)
-    .eq('id_empresario', empresario.id_empresario)
+    .eq('id_empresario', verified.data.id_empresario)
     .maybeSingle()
   if (proyErr || !proyectoOwned) return err('unauthorized')
 
@@ -352,7 +478,7 @@ export async function comentarEntregable(
     .from('comentarios_entregables')
     .insert({
       id_entregable: parsed.data.idEntregable,
-      id_autor: userData.user.id,
+      id_autor: verified.data.id_usuario,
       contenido: parsed.data.contenido,
       tipo_comentario: 'aclaracion',
     })

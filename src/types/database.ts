@@ -340,6 +340,21 @@ export type Database = {
           },
         ]
       }
+      egresados_fwd_oficial: {
+        Row: {
+          correo: string
+          fecha_agregado: string
+        }
+        Insert: {
+          correo: string
+          fecha_agregado?: string
+        }
+        Update: {
+          correo?: string
+          fecha_agregado?: string
+        }
+        Relationships: []
+      }
       empresarios: {
         Row: {
           alcance_operativo: Database['public']['Enums']['alcance_enum'] | null
@@ -417,6 +432,7 @@ export type Database = {
       }
       entregables: {
         Row: {
+          archivo_hash: string | null
           archivo_url: string | null
           cargado_at: string
           comentario_empresario: string | null
@@ -428,6 +444,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          archivo_hash?: string | null
           archivo_url?: string | null
           cargado_at?: string
           comentario_empresario?: string | null
@@ -439,6 +456,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          archivo_hash?: string | null
           archivo_url?: string | null
           cargado_at?: string
           comentario_empresario?: string | null
@@ -776,6 +794,7 @@ export type Database = {
           motivo_retiro: string | null
           no_seleccionada_at: string | null
           planteamiento_solucion: string
+          plazo_aviso_enviado_at: string | null
           prototipo_enlaces: string[]
           retirada_at: string | null
           revision_iniciada_at: string | null
@@ -797,6 +816,7 @@ export type Database = {
           motivo_retiro?: string | null
           no_seleccionada_at?: string | null
           planteamiento_solucion: string
+          plazo_aviso_enviado_at?: string | null
           prototipo_enlaces: string[]
           retirada_at?: string | null
           revision_iniciada_at?: string | null
@@ -818,6 +838,7 @@ export type Database = {
           motivo_retiro?: string | null
           no_seleccionada_at?: string | null
           planteamiento_solucion?: string
+          plazo_aviso_enviado_at?: string | null
           prototipo_enlaces?: string[]
           retirada_at?: string | null
           revision_iniciada_at?: string | null
@@ -1410,6 +1431,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      actualizar_url_participacion: {
+        Args: { p_id_participacion: string; p_url: string | null }
+        Returns: undefined
+      }
       adjudicar_participacion: {
         Args: { p_id_participacion: string; p_id_proyecto: string }
         Returns: undefined
@@ -1556,6 +1581,7 @@ export type Database = {
         | 'participacion_en_revision'
         | 'entregable_aprobado'
         | 'entregable_rechazado'
+        | 'entregable_enviado'
         | 'evaluacion_recibida'
         | 'cuenta_verificada'
         | 'cuenta_suspendida'
@@ -1780,6 +1806,7 @@ export const Constants = {
         'participacion_en_revision',
         'entregable_aprobado',
         'entregable_rechazado',
+        'entregable_enviado',
         'evaluacion_recibida',
         'cuenta_verificada',
         'cuenta_suspendida',

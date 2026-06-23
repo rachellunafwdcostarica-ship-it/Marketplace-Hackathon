@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Card,
   CardContent,
@@ -22,6 +23,7 @@ import {
   PieChart,
   Pie,
   Legend,
+  type TooltipContentProps,
 } from 'recharts'
 import { PieChart as PieChartIcon } from 'lucide-react'
 
@@ -30,23 +32,57 @@ interface DashboardChartsProps {
   countsByProject: Record<string, number>
 }
 
+interface StatusDatum {
+  name: string
+  value: number
+  color: string
+}
+
+// Estado de proyecto -> token de color FWD (mismo criterio que
+// PublishedProjectsBoard, la otra superficie del empresario). Se usan variables
+// CSS porque Recharts pinta SVG con valores de color, no con clases Tailwind.
+const STATUS_COLOR_TOKENS: Record<string, string> = {
+  abierto: 'var(--accent)',
+  en_recepcion: 'var(--primary)',
+  en_evaluacion: 'var(--warning)',
+  adjudicado: 'var(--secondary)',
+  en_desarrollo: 'var(--primary)',
+  finalizado: 'var(--color-foreground)',
+  cancelado: 'var(--destructive)',
+  borrador: 'var(--color-muted-foreground)',
+}
+const STATUS_COLOR_FALLBACK = 'var(--color-muted-foreground)'
+
+const CHART_GRID_COLOR = 'var(--color-border)'
+const CHART_AXIS_TEXT_COLOR = 'var(--color-muted-foreground)'
+const CHART_AXIS_TEXT_STRONG_COLOR = 'var(--color-foreground)'
+const CHART_CURSOR_COLOR = 'var(--color-muted)'
+
+const PROJECT_TITLE_MAX_LENGTH = 22
+
 export function DashboardCharts({
   projects,
   countsByProject,
 }: DashboardChartsProps) {
+  const t = useTranslations('CompanyDashboardCharts')
+  const tStatus = useTranslations('ProjectsBoard')
+
   if (projects.length === 0) return null
 
-  // 1. Postulaciones por Proyecto
+  // 1. Postulaciones por proyecto
   const postulationsData = projects.map((p) => ({
-    name: p.titulo.length > 22 ? p.titulo.substring(0, 22) + '...' : p.titulo,
+    name:
+      p.titulo.length > PROJECT_TITLE_MAX_LENGTH
+        ? p.titulo.substring(0, PROJECT_TITLE_MAX_LENGTH) + '...'
+        : p.titulo,
     postulaciones: countsByProject[p.id] || 0,
   }))
 
   // 2. Tecnologías más solicitadas
   const techCounts: Record<string, number> = {}
   projects.forEach((p) => {
-    p.tecnologias.forEach((t) => {
-      techCounts[t] = (techCounts[t] || 0) + 1
+    p.tecnologias.forEach((tech) => {
+      techCounts[tech] = (techCounts[tech] || 0) + 1
     })
   })
 
@@ -55,54 +91,35 @@ export function DashboardCharts({
     .sort((a, b) => b.proyectos - a.proyectos)
     .slice(0, 5)
 
-  // 3. Distribución de Estados
+  // 3. Distribución de estados
   const statusCounts: Record<string, number> = {}
   projects.forEach((p) => {
     statusCounts[p.estadoEfectivo] = (statusCounts[p.estadoEfectivo] || 0) + 1
   })
 
-  const statusMap: Record<string, { label: string; color: string }> = {
-    abierto: { label: 'Recepción', color: '#3b82f6' },
-    en_evaluacion: { label: 'Evaluación', color: '#eab308' },
-    adjudicado: { label: 'Adjudicado', color: '#f97316' },
-    en_desarrollo: { label: 'En Desarrollo', color: '#a855f7' },
-    finalizado: { label: 'Finalizado', color: '#22c55e' },
-    cancelado: { label: 'Cancelado', color: '#ef4444' },
-    borrador: { label: 'Borrador', color: '#9ca3af' },
-  }
-
-  const statusData = Object.entries(statusCounts).map(([estado, count]) => ({
-    name: statusMap[estado]?.label || estado,
-    value: count,
-    color: statusMap[estado]?.color || '#cbd5e1',
-  }))
-
-  interface CustomTooltipProps {
-    active?: boolean
-    payload?: Array<{
-      value: number
-      payload: {
-        name: string
-        value: number
-        color?: string
-      }
-    }>
-    label?: string
-  }
+  const statusData: StatusDatum[] = Object.entries(statusCounts).map(
+    ([estado, count]) => ({
+      name: tStatus(`status_${estado}`),
+      value: count,
+      color: STATUS_COLOR_TOKENS[estado] ?? STATUS_COLOR_FALLBACK,
+    }),
+  )
 
   // Custom Tooltip para Postulaciones
   const CustomTooltipPostulaciones = ({
     active,
     payload,
     label,
-  }: CustomTooltipProps) => {
-    if (active && payload && payload.length && payload[0]) {
+  }: Partial<TooltipContentProps>) => {
+    const entry = payload?.[0]
+    if (active && entry) {
+      const count = typeof entry.value === 'number' ? entry.value : 0
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-4 animate-in fade-in zoom-in-95 duration-200">
           <p className="font-semibold text-foreground text-sm mb-1">{label}</p>
-          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold">
+          <div className="flex items-center gap-2 text-primary font-bold">
             <TrendingUp className="w-4 h-4" />
-            <span>{payload[0].value} postulantes</span>
+            <span>{t('applicantsCount', { count })}</span>
           </div>
         </div>
       )
@@ -115,19 +132,18 @@ export function DashboardCharts({
     active,
     payload,
     label,
-  }: CustomTooltipProps) => {
-    if (active && payload && payload.length && payload[0]) {
+  }: Partial<TooltipContentProps>) => {
+    const entry = payload?.[0]
+    if (active && entry) {
+      const count = typeof entry.value === 'number' ? entry.value : 0
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-4 animate-in fade-in zoom-in-95 duration-200">
           <p className="font-semibold text-foreground text-sm mb-1 uppercase tracking-wider">
             {label}
           </p>
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-bold">
+          <div className="flex items-center gap-2 text-secondary font-bold">
             <Cpu className="w-4 h-4" />
-            <span>
-              {payload[0].value}{' '}
-              {payload[0].value === 1 ? 'proyecto' : 'proyectos'}
-            </span>
+            <span>{t('projectsCount', { count })}</span>
           </div>
         </div>
       )
@@ -136,19 +152,23 @@ export function DashboardCharts({
   }
 
   // Custom Tooltip para Estados (Pie Chart)
-  const CustomTooltipPie = ({ active, payload }: CustomTooltipProps) => {
-    if (active && payload && payload.length && payload[0]) {
-      const data = payload[0].payload
+  const CustomTooltipPie = ({
+    active,
+    payload,
+  }: Partial<TooltipContentProps>) => {
+    const entry = payload?.[0]
+    if (active && entry) {
+      const datum = entry.payload as StatusDatum
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border/60 shadow-xl rounded-xl p-3 animate-in fade-in zoom-in-95 duration-200 flex items-center gap-3">
           <div
             className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: data.color }}
+            style={{ backgroundColor: datum.color }}
           />
           <div>
-            <p className="font-bold text-foreground text-sm">{data.name}</p>
+            <p className="font-bold text-foreground text-sm">{datum.name}</p>
             <p className="text-muted-foreground text-xs font-medium">
-              {data.value} {data.value === 1 ? 'proyecto' : 'proyectos'}
+              {t('projectsCount', { count: datum.value })}
             </p>
           </div>
         </div>
@@ -163,15 +183,15 @@ export function DashboardCharts({
       <Card className="border-border/40 shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col bg-gradient-to-b from-card to-muted/10 rounded-2xl">
         <CardHeader className="pb-6 pt-7 px-7 border-b border-border/30 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg shadow-inner">
-              <BarChartIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-primary/10 rounded-lg shadow-inner">
+              <BarChartIcon className="w-5 h-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                Atracción de Talento
+                {t('chartApplicationsTitle')}
               </CardTitle>
               <CardDescription className="pt-1.5 text-xs font-medium text-muted-foreground/80">
-                Volumen de postulaciones por proyecto publicado
+                {t('chartApplicationsDesc')}
               </CardDescription>
             </div>
           </div>
@@ -192,32 +212,48 @@ export function DashboardCharts({
                     x2="0"
                     y2="1"
                   >
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
-                    <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.7} />
+                    <stop
+                      offset="0%"
+                      stopColor="var(--primary)"
+                      stopOpacity={1}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="var(--primary)"
+                      stopOpacity={0.55}
+                    />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="#e5e7eb"
+                  stroke={CHART_GRID_COLOR}
                   strokeOpacity={0.4}
                 />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 500 }}
+                  tick={{
+                    fontSize: 11,
+                    fill: CHART_AXIS_TEXT_COLOR,
+                    fontWeight: 500,
+                  }}
                   tickLine={false}
-                  axisLine={{ stroke: '#e5e7eb', strokeWidth: 1.5 }}
+                  axisLine={{ stroke: CHART_GRID_COLOR, strokeWidth: 1.5 }}
                   dy={10}
                 />
                 <YAxis
-                  tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 500 }}
+                  tick={{
+                    fontSize: 12,
+                    fill: CHART_AXIS_TEXT_COLOR,
+                    fontWeight: 500,
+                  }}
                   tickLine={false}
                   axisLine={false}
                   allowDecimals={false}
                   dx={-10}
                 />
                 <Tooltip
-                  cursor={{ fill: '#f3f4f6', opacity: 0.4 }}
+                  cursor={{ fill: CHART_CURSOR_COLOR, opacity: 0.4 }}
                   content={<CustomTooltipPostulaciones />}
                 />
                 <Bar
@@ -239,7 +275,7 @@ export function DashboardCharts({
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
               <BarChartIcon className="w-12 h-12 mb-3 opacity-20" />
               <p className="text-sm font-medium">
-                Aún no hay datos suficientes
+                {t('chartApplicationsEmpty')}
               </p>
             </div>
           )}
@@ -250,15 +286,15 @@ export function DashboardCharts({
       <Card className="border-border/40 shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col bg-gradient-to-b from-card to-muted/10 rounded-2xl">
         <CardHeader className="pb-6 pt-7 px-7 border-b border-border/30 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-violet-100 dark:bg-violet-900/40 rounded-lg shadow-inner">
-              <Code2 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            <div className="p-2 bg-secondary/10 rounded-lg shadow-inner">
+              <Code2 className="w-5 h-5 text-secondary" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                Stack Tecnológico
+                {t('chartTechTitle')}
               </CardTitle>
               <CardDescription className="pt-1.5 text-xs font-medium text-muted-foreground/80">
-                Top 5 de lenguajes y herramientas más requeridos
+                {t('chartTechDesc')}
               </CardDescription>
             </div>
           </div>
@@ -274,35 +310,51 @@ export function DashboardCharts({
               >
                 <defs>
                   <linearGradient id="colorTech" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#6d28d9" stopOpacity={1} />
+                    <stop
+                      offset="0%"
+                      stopColor="var(--secondary)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="var(--secondary)"
+                      stopOpacity={1}
+                    />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   horizontal={false}
-                  stroke="#e5e7eb"
+                  stroke={CHART_GRID_COLOR}
                   strokeOpacity={0.4}
                 />
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 500 }}
+                  tick={{
+                    fontSize: 12,
+                    fill: CHART_AXIS_TEXT_COLOR,
+                    fontWeight: 500,
+                  }}
                   tickLine={false}
-                  axisLine={{ stroke: '#e5e7eb', strokeWidth: 1.5 }}
+                  axisLine={{ stroke: CHART_GRID_COLOR, strokeWidth: 1.5 }}
                   allowDecimals={false}
                   dy={10}
                 />
                 <YAxis
                   dataKey="name"
                   type="category"
-                  tick={{ fontSize: 11, fill: '#374151', fontWeight: 700 }}
+                  tick={{
+                    fontSize: 11,
+                    fill: CHART_AXIS_TEXT_STRONG_COLOR,
+                    fontWeight: 700,
+                  }}
                   tickLine={false}
                   axisLine={false}
                   width={85}
                   dx={-5}
                 />
                 <Tooltip
-                  cursor={{ fill: '#f3f4f6', opacity: 0.4 }}
+                  cursor={{ fill: CHART_CURSOR_COLOR, opacity: 0.4 }}
                   content={<CustomTooltipTech />}
                 />
                 <Bar
@@ -320,9 +372,7 @@ export function DashboardCharts({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
               <Code2 className="w-12 h-12 mb-3 opacity-20" />
-              <p className="text-sm font-medium">
-                Aún no has definido tu stack
-              </p>
+              <p className="text-sm font-medium">{t('chartTechEmpty')}</p>
             </div>
           )}
         </CardContent>
@@ -332,15 +382,15 @@ export function DashboardCharts({
       <Card className="border-border/40 shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col bg-gradient-to-b from-card to-muted/10 rounded-2xl lg:col-span-1">
         <CardHeader className="pb-6 pt-7 px-7 border-b border-border/30 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg shadow-inner">
-              <PieChartIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-2 bg-accent/10 rounded-lg shadow-inner">
+              <PieChartIcon className="w-5 h-5 text-accent" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                Estado General
+                {t('chartStatusTitle')}
               </CardTitle>
               <CardDescription className="pt-1.5 text-xs font-medium text-muted-foreground/80">
-                Distribución de tu portafolio
+                {t('chartStatusDesc')}
               </CardDescription>
             </div>
           </div>
@@ -379,7 +429,7 @@ export function DashboardCharts({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
               <PieChartIcon className="w-12 h-12 mb-3 opacity-20" />
-              <p className="text-sm font-medium">No hay proyectos activos</p>
+              <p className="text-sm font-medium">{t('chartStatusEmpty')}</p>
             </div>
           )}
         </CardContent>

@@ -240,11 +240,9 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
     return err('user_not_found')
   }
 
-  // Casting a 'any' temporalmente porque egresados_fwd_oficial
-  // no está en los tipos autogenerados.
+  // RNF-38: cotejo del correo contra la base oficial de egresados FWD.
   const { data: fwdRecord, error: fwdError } = await adminClient
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .from('egresados_fwd_oficial' as any)
+    .from('egresados_fwd_oficial')
     .select('correo')
     .eq('correo', usuario.correo)
     .maybeSingle()

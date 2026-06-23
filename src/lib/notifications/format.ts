@@ -18,6 +18,7 @@ const TONE_BY_TIPO: Record<TipoNotificacion, NotificationTone> = {
   participacion_en_revision: 'primary',
   entregable_aprobado: 'accent',
   entregable_rechazado: 'magenta',
+  entregable_enviado: 'primary',
   evaluacion_recibida: 'primary',
   cuenta_verificada: 'accent',
   cuenta_suspendida: 'magenta',
@@ -36,6 +37,7 @@ const TIPOS_CONOCIDOS: ReadonlySet<string> = new Set<TipoNotificacion>(
  */
 const TIPOS_I18N_ESTATICOS: ReadonlySet<string> = new Set<TipoNotificacion>([
   'cuenta_verificada',
+  'mensaje_nuevo',
 ])
 
 /**
@@ -55,6 +57,7 @@ const TIPOS_CON_PLANTILLA: ReadonlySet<string> = new Set<TipoNotificacion>([
   'plazo_vence',
   'entregable_aprobado',
   'entregable_rechazado',
+  'entregable_enviado',
 ])
 
 /**

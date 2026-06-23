@@ -1,6 +1,7 @@
 'use server'
 
 import { z } from 'zod'
+import { headers } from 'next/headers'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth/dal'
 import { ok, err, type Result } from '@/lib/result'
@@ -9,6 +10,11 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { crearNotificaciones } from '@/lib/notifications/create'
 import { DEFAULT_LOCALE } from '@/i18n/config'
 import type { Database } from '@/types/database'
+import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
+import {
+  participacionContratadaHtml,
+  participacionContratadaSubject,
+} from '@/lib/email/templates/participacion-contratada'
 import {
   PARTICIPACION_ACTION_TARGET,
   canAdvanceProject,
@@ -452,7 +458,9 @@ export async function adjudicarParticipacion(
 
 interface ParticipacionAfectadaRaw {
   estado: AfectadoAdjudicacion['estado']
-  estudiantes: { usuarios: { id_usuario: string } | null } | null
+  estudiantes: {
+    usuarios: { id_usuario: string; correo: string; nombre: string } | null
+  } | null
 }
 
 /**
@@ -481,7 +489,9 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
 
     const { data: filas, error: filasError } = await admin
       .from('participaciones')
-      .select('estado, estudiantes(usuarios(id_usuario))')
+      .select(
+        'estado, estudiantes(usuarios!estudiantes_id_usuario_fkey(id_usuario, correo, nombre))',
+      )
       .eq('id_proyecto', idProyecto)
       .in('estado', ['contratada', 'no_seleccionada'])
     if (filasError) {
@@ -492,9 +502,9 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
       return
     }
 
-    const afectados: AfectadoAdjudicacion[] = (
-      (filas ?? []) as unknown as ParticipacionAfectadaRaw[]
-    )
+    const filasRaw = (filas ?? []) as unknown as ParticipacionAfectadaRaw[]
+
+    const afectados: AfectadoAdjudicacion[] = filasRaw
       .map((fila) => {
         const idUsuario = fila.estudiantes?.usuarios?.id_usuario
         return idUsuario ? { idUsuario, estado: fila.estado } : null
@@ -515,10 +525,70 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
         error: result.error,
       })
     }
+
+    // Correo al ganador (RF-46): solo a la participación contratada. Best-effort
+    // y separado del in-app; si Gmail no está configurado o falla, se loguea y no
+    // rompe (la adjudicación y el aviso in-app ya ocurrieron).
+    const ganador = filasRaw.find((fila) => fila.estado === 'contratada')
+      ?.estudiantes?.usuarios
+    if (ganador?.correo) {
+      const baseUrl = await resolveBaseUrl()
+      await enviarEmailAdjudicacion({
+        nombre: ganador.nombre,
+        correo: ganador.correo,
+        tituloProyecto: proyecto.titulo,
+        urlProyecto: `${baseUrl}${urlProyecto}`,
+      })
+    }
   } catch (e) {
     logger.error('notificarAdjudicacion: excepción inesperada', {
       idProyecto,
       error: String(e),
+    })
+  }
+}
+
+/** baseUrl del request para el link del correo (mismo criterio que edit-description). */
+async function resolveBaseUrl(): Promise<string> {
+  const reqHeaders = await headers()
+  const host =
+    reqHeaders.get('x-forwarded-host') ??
+    reqHeaders.get('host') ??
+    'localhost:3000'
+  const proto = reqHeaders.get('x-forwarded-proto') ?? 'https'
+  return `${proto}://${host}`
+}
+
+/** Envía el correo "fuiste seleccionado" al ganador (RF-46). Best-effort. */
+async function enviarEmailAdjudicacion(params: {
+  nombre: string
+  correo: string
+  tituloProyecto: string
+  urlProyecto: string
+}): Promise<void> {
+  let transport: ReturnType<typeof createGmailTransport>
+  try {
+    transport = createGmailTransport()
+  } catch (e) {
+    logger.error('notificarAdjudicacion: Gmail no configurado', {
+      error: e instanceof Error ? e.message : String(e),
+    })
+    return
+  }
+  try {
+    await transport.sendMail({
+      from: getGmailFrom(),
+      to: params.correo,
+      subject: participacionContratadaSubject(params.tituloProyecto),
+      html: participacionContratadaHtml({
+        nombre: params.nombre,
+        tituloProyecto: params.tituloProyecto,
+        urlProyecto: params.urlProyecto,
+      }),
+    })
+  } catch (e) {
+    logger.error('notificarAdjudicacion: fallo al enviar email al ganador', {
+      error: e instanceof Error ? e.message : String(e),
     })
   }
 }
@@ -555,7 +625,7 @@ async function notificarParticipacionEnRevision(
 
     const { data: fila, error: filaError } = await admin
       .from('participaciones')
-      .select('estudiantes(usuarios(id_usuario))')
+      .select('estudiantes(id_usuario)')
       .eq('id_participacion', idParticipacion)
       .maybeSingle()
     if (filaError || !fila) {
@@ -571,9 +641,9 @@ async function notificarParticipacionEnRevision(
 
     const idUsuario = (
       fila as unknown as {
-        estudiantes: { usuarios: { id_usuario: string } | null } | null
+        estudiantes: { id_usuario: string } | null
       }
-    ).estudiantes?.usuarios?.id_usuario
+    ).estudiantes?.id_usuario
     if (!idUsuario) {
       logger.error(
         'notificarParticipacionEnRevision: participacion sin usuario',
@@ -641,7 +711,7 @@ async function notificarRechazoParticipacion(
 
     const { data: fila, error: filaError } = await admin
       .from('participaciones')
-      .select('estudiantes(usuarios(id_usuario))')
+      .select('estudiantes(id_usuario)')
       .eq('id_participacion', idParticipacion)
       .maybeSingle()
     if (filaError || !fila) {
@@ -657,9 +727,9 @@ async function notificarRechazoParticipacion(
 
     const idUsuario = (
       fila as unknown as {
-        estudiantes: { usuarios: { id_usuario: string } | null } | null
+        estudiantes: { id_usuario: string } | null
       }
-    ).estudiantes?.usuarios?.id_usuario
+    ).estudiantes?.id_usuario
     if (!idUsuario) {
       logger.error('notificarRechazoParticipacion: participación sin usuario', {
         idParticipacion,

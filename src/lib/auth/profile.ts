@@ -53,6 +53,49 @@ export async function crearPerfilUsuario(
     return err('role_not_found')
   }
 
+  let perfilCreado:
+    | { table: 'estudiantes'; idField: 'id_usuario'; id: string }
+    | { table: 'empresarios'; idField: 'id_usuario'; id: string }
+    | null = null
+
+  if (datos.role === 'egresado') {
+    const { error: estudianteError } = await admin.from('estudiantes').insert({
+      id_usuario: userId,
+      titulo_fwd: datos.tituloFwd,
+    })
+    if (estudianteError) {
+      logger.error('crearPerfilUsuario: fallo al crear estudiante', {
+        error: estudianteError.message,
+      })
+      return err(estudianteError.message)
+    }
+    perfilCreado = { table: 'estudiantes', idField: 'id_usuario', id: userId }
+  } else {
+    const empresarioInsert: Database['public']['Tables']['empresarios']['Insert'] =
+      {
+        id_usuario: userId,
+        tipo_empresario: datos.tipoEmpresario,
+        nombre_empresa: datos.nombreEmpresa,
+        cedula: datos.cedula,
+        sitio_web: datos.sitioWeb ? datos.sitioWeb : null,
+      }
+    if (opcionales?.paisIso) empresarioInsert.pais_iso_sede = opcionales.paisIso
+    if (opcionales?.region) empresarioInsert.region_sede = opcionales.region
+    if (opcionales?.alcanceOperativo)
+      empresarioInsert.alcance_operativo = opcionales.alcanceOperativo
+
+    const { error: empresarioError } = await admin
+      .from('empresarios')
+      .insert(empresarioInsert)
+    if (empresarioError) {
+      logger.error('crearPerfilUsuario: fallo al crear empresario', {
+        error: empresarioError.message,
+      })
+      return err(empresarioError.message)
+    }
+    perfilCreado = { table: 'empresarios', idField: 'id_usuario', id: userId }
+  }
+
   const usuarioUpdate: Database['public']['Tables']['usuarios']['Update'] = {
     id_rol: rol.id_rol,
   }
@@ -74,44 +117,20 @@ export async function crearPerfilUsuario(
     logger.error('crearPerfilUsuario: fallo al asignar rol', {
       error: usuarioError.message,
     })
+    if (perfilCreado) {
+      const { error: rollbackError } = await admin
+        .from(perfilCreado.table)
+        .delete()
+        .eq(perfilCreado.idField, perfilCreado.id)
+      if (rollbackError) {
+        logger.error('crearPerfilUsuario: fallo al revertir perfil parcial', {
+          error: rollbackError.message,
+          table: perfilCreado.table,
+          userId,
+        })
+      }
+    }
     return err(usuarioError.message)
-  }
-
-  if (datos.role === 'egresado') {
-    const { error: estudianteError } = await admin.from('estudiantes').insert({
-      id_usuario: userId,
-      titulo_fwd: datos.tituloFwd,
-    })
-    if (estudianteError) {
-      logger.error('crearPerfilUsuario: fallo al crear estudiante', {
-        error: estudianteError.message,
-      })
-      return err(estudianteError.message)
-    }
-    return ok(undefined)
-  }
-
-  const empresarioInsert: Database['public']['Tables']['empresarios']['Insert'] =
-    {
-      id_usuario: userId,
-      tipo_empresario: datos.tipoEmpresario,
-      nombre_empresa: datos.nombreEmpresa,
-      cedula: datos.cedula,
-      sitio_web: datos.sitioWeb ? datos.sitioWeb : null,
-    }
-  if (opcionales?.paisIso) empresarioInsert.pais_iso_sede = opcionales.paisIso
-  if (opcionales?.region) empresarioInsert.region_sede = opcionales.region
-  if (opcionales?.alcanceOperativo)
-    empresarioInsert.alcance_operativo = opcionales.alcanceOperativo
-
-  const { error: empresarioError } = await admin
-    .from('empresarios')
-    .insert(empresarioInsert)
-  if (empresarioError) {
-    logger.error('crearPerfilUsuario: fallo al crear empresario', {
-      error: empresarioError.message,
-    })
-    return err(empresarioError.message)
   }
 
   return ok(undefined)

@@ -248,6 +248,53 @@ describe('publishProject', () => {
     if (!result.ok) expect(result.error).toBe('plazo')
   })
 
+  it('retorna invalid_input si la propuesta no trae área de negocio (RF-20)', async () => {
+    const propuestaSinArea = {
+      ...validPropuesta,
+      idArea: null,
+      areaNombre: null,
+    }
+
+    mockedServer.mockResolvedValue(
+      withAuth((table) => {
+        if (table === 'empresarios') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                maybeSingle: vi.fn().mockResolvedValue({
+                  data: {
+                    id_empresario: 'emp-1',
+                    estado_verificacion: 'verificado',
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        if (table === 'conversaciones_ia') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn().mockReturnThis(),
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: {
+                  propuesta_generada: propuestaSinArea,
+                  logistica: validLogistica,
+                },
+                error: null,
+              }),
+            })),
+          }
+        }
+        return {}
+      }) as never,
+    )
+
+    const result = await publishProject(CONV_ID)
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('invalid_input')
+  })
+
   it('retorna error mapeado si el RPC falla', async () => {
     mockedServer.mockResolvedValue(
       withAuth(

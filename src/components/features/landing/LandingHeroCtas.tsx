@@ -30,12 +30,30 @@ const SECONDARY_CTA_BY_ROLE: Record<UserRole, HeroCta | null> = {
 
 /**
  * Botones del hero de la landing, adaptados al rol de la sesión actual.
- * La landing no es pública (el middleware rebota a anónimos), así que siempre
- * hay un rol válido en el contexto de autenticación.
+ * Sin rol asignado → CTA al onboarding (defensa en profundidad; el middleware
+ * ya redirige, pero evita enlaces rotos si el cliente adelanta el render).
  */
 export function LandingHeroCtas() {
   const t = useTranslations('Landing')
   const { userRole } = useAuth()
+
+  if (!userRole) {
+    return (
+      <div className="flex flex-wrap gap-4 pt-2">
+        <Link
+          href="/onboarding"
+          className="shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-semibold px-6 py-3.5 rounded-lg text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer"
+          style={{
+            background: 'var(--primary)',
+            color: 'var(--primary-foreground)',
+          }}
+        >
+          {t('ctaCompleteOnboarding')}
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
+    )
+  }
 
   const primary = PRIMARY_CTA_BY_ROLE[userRole]
   const secondary = SECONDARY_CTA_BY_ROLE[userRole]

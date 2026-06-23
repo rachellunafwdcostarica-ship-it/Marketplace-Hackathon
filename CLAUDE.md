@@ -72,6 +72,8 @@ Agent: Hola,detecté archivos marcados con cambios. quiero saber si ya estas pre
 Agent: git add.
 Agent: git commit -m "feat: Se agregan las variables globales del sistema."
 Agent: He terminado de revisar los cambios y he realizado el commit.
+Agent: realizar test:coverage 
+agent: preguntar si haces el push o si esperas algo más 
 
 ## migraciones supabase
 A la hora de realizar migracioes, no se enviaran directamente. Tendrás que comunicarte con el dueño de la base de datos [Samir] y pedirle que te de permiso para enviar las migraciones y hacer pruebas locales. una vez que te de permiso, puedes hacer las migraciones y pruebas locales. luego tendras que comunicarte de nuevo con [Samir] y pedirle que te de permiso para enviar las migraciones a la base de datos remota. no hagas push directo al dev. Solo después de que Samir apruebe, haras el push al dev. Asimismo, no haras migraciones a la base de datos local sin antes haber hecho las pruebas locales y recibido la aprobacion de Samir. 

@@ -11,6 +11,8 @@ import { CompanyShell } from '@/components/layout/CompanyShell'
 import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
 import { Briefcase, Users, Plus, UserCheck } from 'lucide-react'
 import type { PublishedProject } from '@/lib/projects/dashboard'
+import { RankingSnippet } from '@/components/features/ranking/RankingSnippet'
+import { TalentRankingItem } from '@/lib/ranking/actions'
 
 // Charts solo en cliente: Recharts mide el contenedor con ResizeObserver, que en
 // SSR no tiene layout y emite "width(-1)/height(-1)". Con ssr:false no se renderiza
@@ -30,6 +32,8 @@ interface CompanyDashboardClientProps {
     hired: number
     countsByProject: Record<string, number>
   }
+  topTalents?: TalentRankingItem[]
+  locale: string
 }
 
 /**
@@ -39,6 +43,8 @@ interface CompanyDashboardClientProps {
 export function CompanyDashboardClient({
   initialProjects,
   participationStats,
+  topTalents = [],
+  locale,
 }: CompanyDashboardClientProps) {
   const tEmpresa = useTranslations('Empresa')
   const tAccount = useTranslations('Account')
@@ -104,6 +110,11 @@ export function CompanyDashboardClient({
                 )}
               </div>
             }
+          />
+
+          <RankingSnippet
+            topTalents={topTalents}
+            rankingUrl={`/${locale}/empresario/ranking`}
           />
 
           <DashboardStats stats={stats} />

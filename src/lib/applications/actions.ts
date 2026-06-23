@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth/guards'
+import { requireRole, requireVerifiedEgresado } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { validateApplicationWithAI } from '@/lib/ai-filtro-ofertas/openrouter-validation'
@@ -13,6 +13,7 @@ import { DEFAULT_LOCALE } from '@/i18n/config'
 import { buildPostulacionNotificacion } from './postulacion-notificacion-logic'
 
 const MIN_PLANTEAMIENTO_LEN = 30
+const MIN_CARTA_LEN = 30
 const MAX_CARTA_LEN = 2800
 const MIN_PROTOTIPO_ENLACES = 1
 const MAX_PROTOTIPO_ENLACES = 4
@@ -26,8 +27,8 @@ const PostularseSchema = z.object({
     .array(z.string().url().max(MAX_ENLACE_LEN))
     .min(MIN_PROTOTIPO_ENLACES)
     .max(MAX_PROTOTIPO_ENLACES),
-  carta_postulacion: z.string().max(MAX_CARTA_LEN).optional(),
-  documentacion_tecnica: z.string().url().max(MAX_DOC_URL_LEN).optional(),
+  carta_postulacion: z.string().min(MIN_CARTA_LEN).max(MAX_CARTA_LEN),
+  documentacion_tecnica: z.string().url().max(MAX_DOC_URL_LEN),
 })
 
 const RetirarSchema = z.object({
@@ -93,6 +94,11 @@ export async function postularse(
     return err('plazo_vencido')
   }
 
+  const expectedPath = `${parsed.data.id_proyecto}/${userData.user.id}`
+  if (!parsed.data.documentacion_tecnica.includes(expectedPath)) {
+    return err('url_invalida')
+  }
+
   // Validación de IA antes de insertar
   const aiValidation = await validateApplicationWithAI({
     projectTitle: proyecto.titulo || 'Proyecto FWD',
@@ -115,10 +121,10 @@ export async function postularse(
     id_proyecto: parsed.data.id_proyecto,
     id_estudiante: estudiante.id_estudiante,
     estado: 'enviada',
-    carta_postulacion: parsed.data.carta_postulacion ?? null,
+    carta_postulacion: parsed.data.carta_postulacion,
     planteamiento_solucion: parsed.data.planteamiento_solucion,
     prototipo_enlaces: parsed.data.prototipo_enlaces,
-    documentacion_tecnica: parsed.data.documentacion_tecnica ?? null,
+    documentacion_tecnica: parsed.data.documentacion_tecnica,
   })
 
   if (insertError) {
@@ -210,32 +216,17 @@ export async function retirarPostulacion(
     return err('invalid_input')
   }
 
-  const roleResult = await requireRole('egresado')
-  if (!roleResult.ok) {
-    return roleResult
-  }
+  const verified = await requireVerifiedEgresado()
+  if (!verified.ok) return verified
 
   const supabase = await createSupabaseServerClient()
-
-  // Obtener el usuario actual
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) return err('unauthenticated')
-
-  // Obtener id_estudiante
-  const { data: estudiante, error: estError } = await supabase
-    .from('estudiantes')
-    .select('id_estudiante')
-    .eq('id_usuario', userData.user.id)
-    .single()
-
-  if (estError || !estudiante) return err('estudiante_not_found')
 
   // Buscar la participación y asegurar que le pertenece y su estado permite retiro
   const { data: participacion, error: partError } = await supabase
     .from('participaciones')
-    .select('id_participacion, estado')
+    .select('id_participacion, estado, id_proyecto')
     .eq('id_participacion', parsed.data.id_participacion)
-    .eq('id_estudiante', estudiante.id_estudiante)
+    .eq('id_estudiante', verified.data.id_estudiante)
     .single()
 
   if (partError || !participacion) {
@@ -248,6 +239,23 @@ export async function retirarPostulacion(
     )
   ) {
     return err('estado_invalido_retiro')
+  }
+
+  // RF-31: solo se puede retirar si el plazo NO ha vencido. Una vez cerrada la
+  // ventana de ofertas, la oferta queda firme para la revisión del empresario.
+  // Espejo de la verificación de `postularse`.
+  const { data: proyecto, error: proyectoError } = await supabase
+    .from('proyectos')
+    .select('fecha_cierre')
+    .eq('id_proyecto', participacion.id_proyecto)
+    .single()
+
+  if (proyectoError || !proyecto) {
+    return err('proyecto_not_found')
+  }
+
+  if (proyecto.fecha_cierre && new Date(proyecto.fecha_cierre) < new Date()) {
+    return err('plazo_vencido')
   }
 
   // Actualizar a retirada

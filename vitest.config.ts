@@ -15,6 +15,8 @@ export default defineConfig({
         'src/lib/utils/age.ts',
         'src/lib/auth/roles.ts',
         'src/lib/auth/guards.ts',
+        'src/lib/auth/egresado-allowlist.ts',
+        'src/lib/auth/schemas.ts',
         'src/lib/admin/config-validation.ts',
         'src/lib/projects/project-detail-logic.ts',
         'src/lib/projects/schemas.ts',

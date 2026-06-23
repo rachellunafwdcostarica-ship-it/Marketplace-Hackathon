@@ -2,14 +2,20 @@ import { describe, it, expect } from 'vitest'
 import {
   canAdvanceProject,
   canOpenParticipacion,
+  compareParticipacionesBy,
   computeEstadoEfectivoProyecto,
   computeEstadoParticipacionEfectivo,
   getParticipacionActions,
   getProjectForwardStates,
   isParticipacionActionAllowed,
+  isParticipacionEnPanel,
   isParticipacionSealed,
-  matchesParticipacionFilter,
+  matchesPanelSeleccion,
+  PANEL_FILTER_DETALLE,
+  PANEL_FILTER_POSTULACIONES,
   PARTICIPACION_ACTION_TARGET,
+  type EstadoParticipacion,
+  type ParticipacionOrdenable,
 } from '@/lib/projects/project-detail-logic'
 
 describe('computeEstadoEfectivoProyecto', () => {
@@ -185,64 +191,99 @@ describe('estado efectivo de participación (derivado)', () => {
   })
 })
 
-describe('filtros de participación', () => {
-  const sinEntrega = { estado: 'enviada' as const, fechaEntregaPrototipo: null }
-  const conEntrega = {
-    estado: 'enviada' as const,
-    fechaEntregaPrototipo: '2026-06-10T00:00:00Z',
+describe('panel de participaciones: universo por contexto', () => {
+  it('detalle incluye los 7 estados', () => {
+    for (const estado of [
+      'enviada',
+      'en_revision',
+      'contratada',
+      'no_seleccionada',
+      'retirada',
+      'finalizada',
+      'cancelada',
+    ] as const) {
+      expect(isParticipacionEnPanel(estado, PANEL_FILTER_DETALLE)).toBe(true)
+    }
+  })
+
+  it('postulaciones excluye finalizada y cancelada del universo', () => {
+    expect(
+      isParticipacionEnPanel('finalizada', PANEL_FILTER_POSTULACIONES),
+    ).toBe(false)
+    expect(
+      isParticipacionEnPanel('cancelada', PANEL_FILTER_POSTULACIONES),
+    ).toBe(false)
+    for (const estado of [
+      'enviada',
+      'en_revision',
+      'contratada',
+      'no_seleccionada',
+      'retirada',
+    ] as const) {
+      expect(isParticipacionEnPanel(estado, PANEL_FILTER_POSTULACIONES)).toBe(
+        true,
+      )
+    }
+  })
+})
+
+describe('panel de participaciones: selección multiselección', () => {
+  it('selección vacía deja pasar cualquier estado', () => {
+    const vacia = new Set<EstadoParticipacion>()
+    expect(matchesPanelSeleccion('enviada', vacia)).toBe(true)
+    expect(matchesPanelSeleccion('contratada', vacia)).toBe(true)
+  })
+
+  it('con selección, solo pasan los estados marcados (OR)', () => {
+    const seleccion = new Set<EstadoParticipacion>(['enviada', 'contratada'])
+    expect(matchesPanelSeleccion('enviada', seleccion)).toBe(true)
+    expect(matchesPanelSeleccion('contratada', seleccion)).toBe(true)
+    expect(matchesPanelSeleccion('retirada', seleccion)).toBe(false)
+  })
+})
+
+describe('panel de participaciones: orden', () => {
+  const base = {
+    estudianteNombre: 'Ana',
+    estudianteApellidos: 'Lopez',
+    fechaPostulacion: '2026-06-10T00:00:00Z',
+  }
+  const ana: ParticipacionOrdenable = { ...base }
+  const bruno: ParticipacionOrdenable = {
+    estudianteNombre: 'Bruno',
+    estudianteApellidos: 'Diaz',
+    fechaPostulacion: '2026-06-12T00:00:00Z',
   }
 
-  it('todos siempre pasa', () => {
-    expect(matchesParticipacionFilter(sinEntrega, 'todos')).toBe(true)
+  it('ordena por fecha ascendente y descendente', () => {
+    expect(
+      compareParticipacionesBy(ana, bruno, 'fecha_postulacion', 'asc'),
+    ).toBeLessThan(0)
+    expect(
+      compareParticipacionesBy(ana, bruno, 'fecha_postulacion', 'desc'),
+    ).toBeGreaterThan(0)
   })
 
-  it('con_entregas exige fecha de entrega de prototipo', () => {
-    expect(matchesParticipacionFilter(conEntrega, 'con_entregas')).toBe(true)
-    expect(matchesParticipacionFilter(sinEntrega, 'con_entregas')).toBe(false)
+  it('ordena por nombre de participante insensible a mayúsculas', () => {
+    expect(
+      compareParticipacionesBy(ana, bruno, 'nombre_participante', 'asc'),
+    ).toBeLessThan(0)
   })
 
-  it('revisadas incluye en_revision, no_seleccionada y contratada', () => {
-    for (const estado of [
-      'en_revision',
-      'no_seleccionada',
-      'contratada',
-    ] as const) {
-      expect(
-        matchesParticipacionFilter(
-          { estado, fechaEntregaPrototipo: null },
-          'revisadas',
-        ),
-      ).toBe(true)
+  it('ordena por nombre de proyecto y tolera proyecto ausente', () => {
+    const conProyecto: ParticipacionOrdenable = {
+      ...base,
+      proyecto: { titulo: 'Zeta' },
     }
+    const sinProyecto: ParticipacionOrdenable = { ...base }
+    // El que no tiene proyecto ('') va antes en orden ascendente.
     expect(
-      matchesParticipacionFilter(
-        { estado: 'enviada', fechaEntregaPrototipo: null },
-        'revisadas',
+      compareParticipacionesBy(
+        sinProyecto,
+        conProyecto,
+        'nombre_proyecto',
+        'asc',
       ),
-    ).toBe(false)
-  })
-
-  it('contratados incluye contratada y finalizada', () => {
-    expect(
-      matchesParticipacionFilter(
-        { estado: 'finalizada', fechaEntregaPrototipo: null },
-        'contratados',
-      ),
-    ).toBe(true)
-  })
-
-  it('rechazados es solo no_seleccionada', () => {
-    expect(
-      matchesParticipacionFilter(
-        { estado: 'no_seleccionada', fechaEntregaPrototipo: null },
-        'rechazados',
-      ),
-    ).toBe(true)
-    expect(
-      matchesParticipacionFilter(
-        { estado: 'retirada', fechaEntregaPrototipo: null },
-        'rechazados',
-      ),
-    ).toBe(false)
+    ).toBeLessThan(0)
   })
 })

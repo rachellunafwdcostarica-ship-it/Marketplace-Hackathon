@@ -61,6 +61,7 @@ const INPUT_VALIDO = {
     'Desarrollaré la plataforma usando Next.js y Supabase, integrando pagos con Stripe.',
   prototipo_enlaces: ['https://figma.com/mi-prototipo'],
   carta_postulacion: 'Tengo experiencia en proyectos similares de e-commerce.',
+  documentacion_tecnica: `https://supabase.co/storage/v1/object/public/documentacion_tecnica/${ID_PROYECTO}/usr-xyz/file.pdf`,
 }
 
 const PROYECTO_ABIERTO = {
@@ -140,6 +141,7 @@ describe('postularse — server action de postulaciones', () => {
   })
 
   it('retorna invalid_input si los parámetros no pasan la validación de Zod', async () => {
+    // @ts-expect-error Intentional invalid input to test Zod validation
     const res = await postularse({
       id_proyecto: 'no-es-uuid',
       planteamiento_solucion: 'corto',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { Send, Sparkles, User, Wand2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -86,6 +86,7 @@ export function ProjectChat({
   armando,
 }: ProjectChatProps) {
   const t = useTranslations('ProjectPublish')
+  const locale = useLocale()
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -95,7 +96,7 @@ export function ProjectChat({
     const limpio = text.trim()
     if (limpio.length === 0 || ocupado) return
     setLoading(true)
-    const result = await sendChatMessage(conversationId, limpio)
+    const result = await sendChatMessage(conversationId, limpio, locale)
     setLoading(false)
     if (result.ok) {
       onHistorialChange(result.data.historial)

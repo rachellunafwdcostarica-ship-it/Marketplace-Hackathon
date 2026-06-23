@@ -2,7 +2,6 @@
 
 import { z } from 'zod'
 import { headers } from 'next/headers'
-import { getLocale } from 'next-intl/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { ok, err, type Result } from '@/lib/result'
@@ -62,6 +61,7 @@ const PROYECTO_EDIT_SELECT =
 
 export async function editProjectDescription(
   input: z.infer<typeof EditDescriptionSchema>,
+  localeParam?: string,
 ): Promise<Result<EditDescriptionOutcome>> {
   try {
     const parsed = EditDescriptionSchema.safeParse(input)
@@ -123,7 +123,7 @@ export async function editProjectDescription(
       .map((pt) => pt.tecnologias?.nombre)
       .filter((nombre): nombre is string => Boolean(nombre))
 
-    const locale = await getLocale()
+    const locale = localeParam === 'en' ? 'en' : 'es'
     const propuesta = buildPropuestaParaValidar(
       {
         titulo: proyecto.titulo,
@@ -140,7 +140,11 @@ export async function editProjectDescription(
     let validacion
     try {
       const provider = getAiProvider()
-      validacion = await provider.validarPropuesta(propuesta, locale)
+      validacion = await provider.validarPropuesta(
+        propuesta,
+        proyecto.titulo,
+        locale,
+      )
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'error_desconocido'
       if (msg === 'AI_NOT_CONFIGURED') return err('ai_not_configured')
@@ -266,7 +270,9 @@ async function registrarEdicionYNotificar(params: {
 
   const { data: filas, error: ofError } = await admin
     .from('participaciones')
-    .select('estado, estudiantes(usuarios(id_usuario, correo, nombre))')
+    .select(
+      'estado, estudiantes(usuarios!estudiantes_id_usuario_fkey(id_usuario, correo, nombre))',
+    )
     .eq('id_proyecto', idProyecto)
     .in('estado', [...ESTADOS_OFERENTE_ACTIVO])
   if (ofError) {
