@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { crearNotificacion } from '@/lib/notifications/create'
 import { DEFAULT_LOCALE } from '@/i18n/config'
+import { createHash } from 'node:crypto'
 
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50 MB; coincide con el límite del bucket
 const ENTREGABLES_BUCKET = 'entregables'
@@ -35,6 +36,22 @@ async function registrarEntregable(
   if (!roleResult.ok) return roleResult
 
   const supabase = await createSupabaseServerClient()
+
+  // Dedup por contenido: hash sha-256 del archivo. No se permite subir dos veces
+  // el mismo archivo en la contratación. Un archivo corregido (con_cambios) tiene
+  // bytes distintos → hash distinto → pasa. El chequeo previo evita subir al
+  // Storage en vano; el índice único parcial es el backstop ante carreras.
+  const fileBuffer = Buffer.from(await input.file.arrayBuffer())
+  const archivoHash = createHash('sha256').update(fileBuffer).digest('hex')
+
+  const { data: duplicado } = await supabase
+    .from('entregables')
+    .select('id_entregable')
+    .eq('id_contratacion', input.idContratacion)
+    .eq('archivo_hash', archivoHash)
+    .limit(1)
+    .maybeSingle()
+  if (duplicado) return err('archivo_duplicado')
 
   // El upload corre en el SERVIDOR a propósito: el cliente browser de Supabase
   // se cuelga al resolver la sesión y nunca emite el request del Storage. Con el
@@ -74,6 +91,7 @@ async function registrarEntregable(
       id_contratacion: input.idContratacion,
       tipo_entregable: tipo,
       archivo_url: archivoPath,
+      archivo_hash: archivoHash,
       version,
       estado: 'enviado',
     })
@@ -83,8 +101,15 @@ async function registrarEntregable(
       return ok(undefined)
     }
 
-    if (insertError.code === '23505' && attempt < MAX_VERSION_ATTEMPTS) {
-      continue
+    if (insertError.code === '23505') {
+      // Choque del índice (id_contratacion, archivo_hash) = archivo duplicado en
+      // carrera: no reintentar, devolver duplicado.
+      if (insertError.message.includes('entregables_contratacion_hash_uniq')) {
+        await supabase.storage.from(ENTREGABLES_BUCKET).remove([archivoPath])
+        return err('archivo_duplicado')
+      }
+      // Choque de versión: recalcular y reintentar una vez.
+      if (attempt < MAX_VERSION_ATTEMPTS) continue
     }
 
     await supabase.storage.from(ENTREGABLES_BUCKET).remove([archivoPath])
@@ -128,6 +153,51 @@ export async function subirEntregableFinal(
   })
   if (!parsed.success) return err('invalid_input')
   return registrarEntregable(parsed.data, 'final')
+}
+
+const ComentarEgresadoSchema = z.object({
+  idEntregable: z.string().uuid(),
+  idProyecto: z.string().uuid(),
+  contenido: z.string().trim().min(1).max(1000),
+})
+
+/**
+ * El egresado agrega un mensaje al hilo de seguimiento de un entregable propio
+ * (RF-44, lado egresado). Puede llevar un link, que la UI vuelve clickeable. La
+ * RLS de comentarios_entregables ya autoriza al estudiante a comentar sus
+ * propios entregables; reusamos tipo_comentario='aclaracion' y el autor se
+ * distingue por id_autor.
+ */
+export async function comentarEntregableEgresado(
+  input: z.infer<typeof ComentarEgresadoSchema>,
+): Promise<Result<void>> {
+  const parsed = ComentarEgresadoSchema.safeParse(input)
+  if (!parsed.success) return err('invalid_input')
+
+  const roleResult = await requireRole('egresado')
+  if (!roleResult.ok) return roleResult
+
+  const supabase = await createSupabaseServerClient()
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData.user) return err('unauthenticated')
+
+  const { error: insertErr } = await supabase
+    .from('comentarios_entregables')
+    .insert({
+      id_entregable: parsed.data.idEntregable,
+      id_autor: userData.user.id,
+      contenido: parsed.data.contenido,
+      tipo_comentario: 'aclaracion',
+    })
+  if (insertErr) {
+    logger.error('comentarEntregableEgresado: insert failed', {
+      error: insertErr.message,
+    })
+    return err('database_error')
+  }
+
+  revalidatePath(`/egresado/projects/${parsed.data.idProyecto}/entregables`)
+  return ok(undefined)
 }
 
 const ResponderEntregableSchema = z

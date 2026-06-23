@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { SignInSchema, OnboardingSchema } from './schemas'
+import {
+  SignInSchema,
+  OnboardingSchema,
+  SignUpSchema,
+  tieneAlMenos18,
+} from './schemas'
 
 describe('SignInSchema', () => {
   it('acepta credenciales válidas', () => {
@@ -148,5 +153,110 @@ describe('OnboardingSchema — empresario', () => {
       OnboardingSchema.safeParse({ ...valido, fechaNacimiento: '2020-01-01' })
         .success,
     ).toBe(false)
+  })
+})
+
+describe('SignUpSchema — egresado', () => {
+  const valido = {
+    role: 'egresado' as const,
+    email: 'fwd+test@gmail.com',
+    password: 'contraseña12',
+    fullName: 'María López',
+    tituloFwd: 'frontend' as const,
+  }
+
+  it('acepta un egresado válido', () => {
+    expect(SignUpSchema.safeParse(valido).success).toBe(true)
+  })
+
+  it('normaliza el email a minúsculas', () => {
+    const result = SignUpSchema.safeParse({ ...valido, email: 'FWD@GMAIL.COM' })
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.email).toBe('fwd@gmail.com')
+  })
+
+  it('rechaza contraseña menor de 8 caracteres', () => {
+    expect(
+      SignUpSchema.safeParse({ ...valido, password: 'corta' }).success,
+    ).toBe(false)
+  })
+
+  it('rechaza fullName con menos de 2 caracteres', () => {
+    expect(SignUpSchema.safeParse({ ...valido, fullName: 'A' }).success).toBe(
+      false,
+    )
+  })
+
+  it('rechaza tituloFwd fuera del enum', () => {
+    expect(
+      SignUpSchema.safeParse({ ...valido, tituloFwd: 'devops' }).success,
+    ).toBe(false)
+  })
+})
+
+describe('SignUpSchema — empresario', () => {
+  const valido = {
+    role: 'empresario' as const,
+    email: 'empresa@dominio.com',
+    password: 'contraseña12',
+    fullName: 'Juan Pérez',
+    tipoEmpresario: 'empresa_formal' as const,
+    nombreEmpresa: 'Tech Solutions SA',
+    cedula: '3-101-123456',
+  }
+
+  it('acepta un empresario válido', () => {
+    expect(SignUpSchema.safeParse(valido).success).toBe(true)
+  })
+
+  it('acepta sitioWeb como URL válida o cadena vacía', () => {
+    expect(
+      SignUpSchema.safeParse({ ...valido, sitioWeb: 'https://empresa.com' })
+        .success,
+    ).toBe(true)
+    expect(SignUpSchema.safeParse({ ...valido, sitioWeb: '' }).success).toBe(
+      true,
+    )
+  })
+
+  it('rechaza cedula vacía (RF-17)', () => {
+    expect(SignUpSchema.safeParse({ ...valido, cedula: '' }).success).toBe(
+      false,
+    )
+  })
+
+  it('rechaza nombreEmpresa con menos de 2 caracteres', () => {
+    expect(
+      SignUpSchema.safeParse({ ...valido, nombreEmpresa: 'A' }).success,
+    ).toBe(false)
+  })
+
+  it('rechaza tipoEmpresario fuera del enum', () => {
+    expect(
+      SignUpSchema.safeParse({ ...valido, tipoEmpresario: 'freelance' })
+        .success,
+    ).toBe(false)
+  })
+})
+
+describe('tieneAlMenos18', () => {
+  it('acepta a un adulto mayor de 18 años', () => {
+    expect(tieneAlMenos18('1990-01-01')).toBe(true)
+  })
+
+  it('rechaza a un menor de edad', () => {
+    expect(tieneAlMenos18('2020-01-01')).toBe(false)
+  })
+
+  it('acepta a quien ya cumplió 18 el 1 de enero de este año', () => {
+    // Nacido el 1 de enero de hace 18 años: age===18, m>0 en feb-dic; m===0,d===1 en ene 1.
+    const año = new Date().getFullYear() - 18
+    expect(tieneAlMenos18(`${año}-01-01`)).toBe(true)
+  })
+
+  it('rechaza a quien cumple 18 el próximo año', () => {
+    // Nacido el 1 de enero de hace 17 años: age===17, devuelve false hasta 2038.
+    const año = new Date().getFullYear() - 17
+    expect(tieneAlMenos18(`${año}-01-01`)).toBe(false)
   })
 })

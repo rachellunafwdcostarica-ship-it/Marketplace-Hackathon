@@ -197,7 +197,9 @@ export function ContratacionesList({
                 variant="default"
                 className="w-full gap-2 text-xs font-semibold h-8 bg-accent hover:bg-accent/90 text-accent-foreground"
               >
-                <Link href={`/empresario/proyecto/${item.proyecto.id}`}>
+                <Link
+                  href={`/empresario/proyecto/${item.proyecto.id}/entregables`}
+                >
                   <FileCheck2 className="w-4 h-4" />
                   {tEmpresa('viewEntregables')}
                 </Link>

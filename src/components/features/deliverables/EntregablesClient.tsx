@@ -17,6 +17,7 @@ import {
   FileText,
   Star,
   Loader2,
+  Send,
 } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
@@ -24,7 +25,11 @@ import { Footer } from '@/components/layout/Footer'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { subirHito, subirEntregableFinal } from '@/lib/deliverables/actions'
+import {
+  subirHito,
+  subirEntregableFinal,
+  comentarEntregableEgresado,
+} from '@/lib/deliverables/actions'
 import { rateCompany } from '@/lib/company/ratings'
 import { logger } from '@/lib/logger'
 import type {
@@ -106,6 +111,93 @@ function DetailField({
   )
 }
 
+const URL_SPLIT = /(https?:\/\/[^\s]+)/g
+
+/** Renderiza texto plano volviendo clickeable cualquier URL http(s). */
+function LinkifiedText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(URL_SPLIT).map((part, i) =>
+        /^https?:\/\//.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline underline-offset-2 break-all hover:text-primary/80"
+          >
+            {part}
+          </a>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  )
+}
+
+/** Caja para que el egresado escriba un mensaje o pegue un link en el hilo. */
+function ThreadComposer({
+  idEntregable,
+  projectId,
+  onSent,
+}: {
+  idEntregable: string
+  projectId: string
+  onSent: () => void
+}) {
+  const tEgresado = useTranslations('Egresado')
+  const [value, setValue] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const handleSend = async () => {
+    const contenido = value.trim()
+    if (!contenido) return
+    setSending(true)
+    const res = await comentarEntregableEgresado({
+      idEntregable,
+      idProyecto: projectId,
+      contenido,
+    })
+    setSending(false)
+    if (res.ok) {
+      setValue('')
+      onSent()
+    } else {
+      toast.error(tEgresado('replyError'))
+    }
+  }
+
+  return (
+    <div className="flex items-end gap-2">
+      <textarea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={tEgresado('replyPlaceholder')}
+        rows={1}
+        maxLength={1000}
+        disabled={sending}
+        className="flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:opacity-50"
+      />
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={sending || value.trim().length === 0}
+        onClick={handleSend}
+        className="font-semibold shrink-0"
+        aria-label={tEgresado('replySend')}
+      >
+        {sending ? (
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        ) : (
+          <Send className="w-3.5 h-3.5" />
+        )}
+      </Button>
+    </div>
+  )
+}
+
 export function EntregablesClient({
   projectId,
   projectTitle,
@@ -156,7 +248,11 @@ export function EntregablesClient({
           tipo,
           error: result.error,
         })
-        toast.error(tEgresado('uploadError'))
+        toast.error(
+          result.error === 'archivo_duplicado'
+            ? tEgresado('uploadDuplicate')
+            : tEgresado('uploadError'),
+        )
         return
       }
 
@@ -408,17 +504,56 @@ export function EntregablesClient({
                         {tEgresado('uploadedAtLabel')}{' '}
                         {new Date(e.cargado_at).toLocaleDateString()}
                       </p>
-                      {e.comentario_empresario && (
-                        <div className="flex items-start gap-2 rounded-md bg-warning/5 border border-warning/20 px-3 py-2 mt-1">
-                          <MessageSquare className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                          <p className="text-xs text-foreground/80">
-                            <span className="font-semibold text-warning mr-1">
-                              {tEgresado('empresarioComment')}:
-                            </span>
-                            {e.comentario_empresario}
+                      <div className="mt-1 space-y-2">
+                        <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          {tEgresado('threadTitle')}
+                        </p>
+                        {e.comentarios.length === 0 ? (
+                          <p className="text-xs text-muted-foreground/70">
+                            {tEgresado('threadEmpty')}
                           </p>
-                        </div>
-                      )}
+                        ) : (
+                          <ul className="space-y-2">
+                            {e.comentarios.map((c) => (
+                              <li
+                                key={c.id_comentario_entregable}
+                                className={`flex flex-col gap-1 rounded-md px-3 py-2 ${
+                                  c.es_mio
+                                    ? 'bg-primary/5 border border-primary/15'
+                                    : 'bg-warning/5 border border-warning/20'
+                                }`}
+                              >
+                                <div className="flex items-center gap-1.5 text-xs">
+                                  <span
+                                    className={`font-bold ${
+                                      c.es_mio ? 'text-primary' : 'text-warning'
+                                    }`}
+                                  >
+                                    {c.es_mio
+                                      ? tEgresado('authorYou')
+                                      : tEgresado('authorCompany')}
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {new Date(c.comentado_at).toLocaleString()}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-foreground/85 whitespace-pre-wrap break-words">
+                                  <LinkifiedText text={c.contenido} />
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {contratacion.estado_periodo !== 'finalizado' &&
+                          contratacion.estado_periodo !== 'cancelado' && (
+                            <ThreadComposer
+                              idEntregable={e.id_entregable}
+                              projectId={projectId}
+                              onSent={() => router.refresh()}
+                            />
+                          )}
+                      </div>
                     </li>
                   )
                 })}
