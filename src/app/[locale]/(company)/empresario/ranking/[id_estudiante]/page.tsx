@@ -5,7 +5,7 @@ import { CompanyShell } from '@/components/layout/CompanyShell'
 import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
 import { BackButton } from '@/components/features/shared'
 import { PortfolioViewer } from '@/components/features/marketplace/PortfolioViewer'
-import { ReportUserButton } from '@/components/features/moderation/ReportUserButton'
+import { ReportButton } from '@/components/features/moderation/ReportButton'
 
 interface EmpresaRankingProfileProps {
   params: Promise<{ id_estudiante: string }>
@@ -30,7 +30,9 @@ export default async function EmpresaRankingProfilePage({
         <main className="flex-1 space-y-6 max-w-4xl mx-auto w-full">
           <div className="flex items-center justify-between gap-3">
             <BackButton label={t('back')} />
-            <ReportUserButton idReportado={profileResult.data.id_usuario} />
+            <ReportButton
+              target={{ tipo: 'usuario', id: profileResult.data.id_usuario }}
+            />
           </div>
           <PortfolioViewer profile={profileResult.data} />
         </main>

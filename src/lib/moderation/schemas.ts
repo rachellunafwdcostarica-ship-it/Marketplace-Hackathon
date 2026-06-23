@@ -20,12 +20,39 @@ export const RESOLUCION_DECISIONS = [
   'descartado',
 ] as const
 
-export const CrearReporteUsuarioSchema = z.object({
-  idReportado: z.string().uuid(),
+// Los 5 objetivos polimórficos de una denuncia (RF-69).
+export const TARGET_TIPOS = [
+  'usuario',
+  'proyecto',
+  'mensaje',
+  'entregable',
+  'portafolio',
+] as const
+export type TargetTipo = (typeof TARGET_TIPOS)[number]
+
+type PolymorphicColumn =
+  | 'id_reportado'
+  | 'id_proyecto'
+  | 'id_mensaje'
+  | 'id_entregable'
+  | 'id_portafolio'
+
+// targetTipo → columna polimórfica en reportes_moderacion.
+export const TARGET_TIPO_TO_COLUMN: Record<TargetTipo, PolymorphicColumn> = {
+  usuario: 'id_reportado',
+  proyecto: 'id_proyecto',
+  mensaje: 'id_mensaje',
+  entregable: 'id_entregable',
+  portafolio: 'id_portafolio',
+}
+
+export const CrearReporteSchema = z.object({
+  targetTipo: z.enum(TARGET_TIPOS),
+  targetId: z.string().uuid(),
   tipoReporte: z.enum(TIPO_REPORTE_VALUES),
   descripcion: z.string().trim().min(10).max(1000),
 })
-export type CrearReporteUsuarioInput = z.input<typeof CrearReporteUsuarioSchema>
+export type CrearReporteInput = z.input<typeof CrearReporteSchema>
 
 export const ResolverReporteSchema = z.object({
   idReporte: z.string().uuid(),
@@ -35,6 +62,12 @@ export const ResolverReporteSchema = z.object({
 })
 export type ResolverReporteInput = z.input<typeof ResolverReporteSchema>
 
+export interface ReportTarget {
+  tipo: TargetTipo
+  id: string
+  nombre: string
+}
+
 export interface AdminReportQueueItem {
   id_reporte: string
   tipo_reporte: TipoReporte
@@ -43,8 +76,7 @@ export interface AdminReportQueueItem {
   reportado_at: string
   id_reportante: string
   reportante_nombre: string
-  id_reportado: string | null
-  reportado_nombre: string | null
+  target: ReportTarget | null
 }
 
 // tipo_reporte → motivo de strike, cuando la denuncia procede y se sanciona.

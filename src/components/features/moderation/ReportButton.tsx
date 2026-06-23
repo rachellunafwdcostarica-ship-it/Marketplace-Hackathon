@@ -22,22 +22,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { crearReporteUsuario } from '@/lib/moderation/report-actions'
-import { TIPO_REPORTE_VALUES, type TipoReporte } from '@/lib/moderation/schemas'
+import { crearReporte } from '@/lib/moderation/report-actions'
+import {
+  TIPO_REPORTE_VALUES,
+  type TipoReporte,
+  type TargetTipo,
+} from '@/lib/moderation/schemas'
 
 const MIN_DESC = 10
 const MAX_DESC = 1000
 
-interface ReportUserButtonProps {
-  idReportado: string
+interface ReportButtonProps {
+  target: { tipo: TargetTipo; id: string }
 }
 
 /**
- * RF-69 — Botón "Reportar usuario" + diálogo de denuncia. Cualquier usuario
- * autenticado puede reportar a otro por conducta o contenido. El intento de
- * auto-reporte lo bloquea el server action.
+ * RF-69 — Botón "Reportar" + diálogo de denuncia, genérico para cualquier
+ * objetivo (usuario, proyecto, mensaje, entregable, portafolio). El auto-reporte
+ * de un usuario lo bloquea el server action.
  */
-export function ReportUserButton({ idReportado }: ReportUserButtonProps) {
+export function ReportButton({ target }: ReportButtonProps) {
   const t = useTranslations('Admin')
   const tCommon = useTranslations('Common')
 
@@ -52,8 +56,9 @@ export function ReportUserButton({ idReportado }: ReportUserButtonProps) {
 
   const handleSubmit = async () => {
     setLoading(true)
-    const result = await crearReporteUsuario({
-      idReportado,
+    const result = await crearReporte({
+      targetTipo: target.tipo,
+      targetId: target.id,
       tipoReporte: tipo,
       descripcion: descripcion.trim(),
     })
@@ -89,10 +94,10 @@ export function ReportUserButton({ idReportado }: ReportUserButtonProps) {
         <DialogContent className="border border-border sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-heading text-xl font-bold">
-              {t('reportUserTitle')}
+              {t('reportTitle')}
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm text-muted-foreground">
-              {t('reportUserDesc')}
+              {t('reportDesc')}
             </DialogDescription>
           </DialogHeader>
 
