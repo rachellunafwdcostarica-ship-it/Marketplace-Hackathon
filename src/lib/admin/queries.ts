@@ -215,7 +215,7 @@ export interface AdminUserListItem {
 
 export const MAX_STRIKES_LIMIT = 3
 
-const MAX_USERS_PER_QUERY = 100
+export const MAX_USERS_PER_QUERY = 100
 
 const ListUsersFiltersSchema = z.object({
   search: z.string().trim().min(1).max(120).optional(),
