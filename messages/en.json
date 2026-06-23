@@ -1548,6 +1548,7 @@
     "showingCount": "Showing {count} talents",
     "sortByReputation": "Sort by Reputation",
     "reputation": "Reputation",
+    "noReputation": "No reputation yet",
     "viewProfile": "View Profile",
     "emptyState": "No graduates found matching the selected filters."
   },
