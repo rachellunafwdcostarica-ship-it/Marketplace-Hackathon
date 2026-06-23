@@ -452,7 +452,7 @@ export async function adjudicarParticipacion(
 
 interface ParticipacionAfectadaRaw {
   estado: AfectadoAdjudicacion['estado']
-  estudiantes: { usuarios: { id_usuario: string } | null } | null
+  estudiantes: { id_usuario: string } | null
 }
 
 /**
@@ -481,7 +481,7 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
 
     const { data: filas, error: filasError } = await admin
       .from('participaciones')
-      .select('estado, estudiantes(usuarios(id_usuario))')
+      .select('estado, estudiantes(id_usuario)')
       .eq('id_proyecto', idProyecto)
       .in('estado', ['contratada', 'no_seleccionada'])
     if (filasError) {
@@ -496,7 +496,7 @@ async function notificarAdjudicacion(idProyecto: string): Promise<void> {
       (filas ?? []) as unknown as ParticipacionAfectadaRaw[]
     )
       .map((fila) => {
-        const idUsuario = fila.estudiantes?.usuarios?.id_usuario
+        const idUsuario = fila.estudiantes?.id_usuario
         return idUsuario ? { idUsuario, estado: fila.estado } : null
       })
       .filter((afectado): afectado is AfectadoAdjudicacion => afectado !== null)
@@ -555,7 +555,7 @@ async function notificarParticipacionEnRevision(
 
     const { data: fila, error: filaError } = await admin
       .from('participaciones')
-      .select('estudiantes(usuarios(id_usuario))')
+      .select('estudiantes(id_usuario)')
       .eq('id_participacion', idParticipacion)
       .maybeSingle()
     if (filaError || !fila) {
@@ -571,9 +571,9 @@ async function notificarParticipacionEnRevision(
 
     const idUsuario = (
       fila as unknown as {
-        estudiantes: { usuarios: { id_usuario: string } | null } | null
+        estudiantes: { id_usuario: string } | null
       }
-    ).estudiantes?.usuarios?.id_usuario
+    ).estudiantes?.id_usuario
     if (!idUsuario) {
       logger.error(
         'notificarParticipacionEnRevision: participacion sin usuario',
@@ -641,7 +641,7 @@ async function notificarRechazoParticipacion(
 
     const { data: fila, error: filaError } = await admin
       .from('participaciones')
-      .select('estudiantes(usuarios(id_usuario))')
+      .select('estudiantes(id_usuario)')
       .eq('id_participacion', idParticipacion)
       .maybeSingle()
     if (filaError || !fila) {
@@ -657,9 +657,9 @@ async function notificarRechazoParticipacion(
 
     const idUsuario = (
       fila as unknown as {
-        estudiantes: { usuarios: { id_usuario: string } | null } | null
+        estudiantes: { id_usuario: string } | null
       }
-    ).estudiantes?.usuarios?.id_usuario
+    ).estudiantes?.id_usuario
     if (!idUsuario) {
       logger.error('notificarRechazoParticipacion: participación sin usuario', {
         idParticipacion,
