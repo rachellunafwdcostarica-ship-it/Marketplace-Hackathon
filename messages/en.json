@@ -390,7 +390,18 @@
     "estadoEnviado": "Submitted",
     "estadoEnRevision": "Under review",
     "estadoAprobado": "Approved",
-    "estadoConCambios": "Changes requested"
+    "estadoConCambios": "Changes requested",
+    "receivedRatingTitle": "Your Rating",
+    "receivedRatingDesc": "This is the evaluation the company gave your work",
+    "receivedRatingNone": "The company has not rated you yet",
+    "replyLabel": "Your reply",
+    "replyPlaceholder": "Write your reply to this rating...",
+    "replySubmit": "Reply",
+    "replySubmitting": "Sending...",
+    "replySuccess": "Reply sent successfully",
+    "replyError": "Could not send the reply",
+    "alreadyReplied": "Your reply",
+    "viewCompanyProfile": "View company profile"
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",
@@ -841,7 +852,15 @@
       "ai_failed": "The AI couldn't review the change. Please try again.",
       "ai_not_configured": "AI review isn't available right now.",
       "invalid_input": "Please check the description and try again."
-    }
+    },
+    "rateEgresadoTitle": "Rate the Graduate",
+    "rateEgresadoDesc": "Share your experience working with this professional",
+    "rateEgresadoSuccess": "Rating submitted successfully",
+    "rateEgresadoRatingLabel": "Score",
+    "rateEgresadoCommentLabel": "Comment (optional)",
+    "rateEgresadoCommentPlaceholder": "Share your experience working with this graduate...",
+    "rateEgresadoSubmit": "Submit rating",
+    "rateEgresadoAlreadyRated": "You have already rated this graduate"
   },
   "Admin": {
     "dashboard": "Admin Dashboard",
@@ -1400,5 +1419,14 @@
     "errorEnvio": "Could not send the message. Please try again.",
     "proyectoLabel": "Project",
     "egresadoLabel": "Graduate"
+  },
+  "EgresadoEmpresa": {
+    "pageTitle": "Company Profile",
+    "sector": "Sector",
+    "descripcion": "Description",
+    "noDesc": "No description available.",
+    "backToContracts": "Back to my contracts",
+    "tipoEmpresa": "Formal company",
+    "tipoEmprendedor": "Individual entrepreneur"
   }
 }
