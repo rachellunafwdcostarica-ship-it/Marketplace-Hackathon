@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { ExternalLink, GitBranch, Globe, Lock } from 'lucide-react'
 import type { StudentProfileView } from '@/lib/portfolio/actions'
+import { ReportButton } from '@/components/features/moderation/ReportButton'
 
 interface PortfolioViewerProps {
   profile: StudentProfileView
@@ -151,13 +152,19 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
                   key={proj.id}
                   className="space-y-1 pl-2 border-l-2 border-primary/20"
                 >
-                  <div className="font-semibold text-sm text-foreground flex items-center justify-between">
+                  <div className="font-semibold text-sm text-foreground flex items-center justify-between gap-2">
                     <span>{proj.title}</span>
-                    {proj.completionDate && (
-                      <span className="text-xs text-muted-foreground font-normal">
-                        ({new Date(proj.completionDate).toLocaleDateString()})
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                      {proj.completionDate && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          ({new Date(proj.completionDate).toLocaleDateString()})
+                        </span>
+                      )}
+                      <ReportButton
+                        target={{ tipo: 'portafolio', id: proj.id }}
+                        iconOnly
+                      />
+                    </span>
                   </div>
                   {proj.description && (
                     <p className="text-xs text-muted-foreground line-clamp-2">

@@ -212,6 +212,30 @@ export async function listarColaReportes(): Promise<
     }
   }
 
+  const portafolioIds = [
+    ...new Set(
+      rows
+        .map((r) => r.id_portafolio)
+        .filter((id): id is string => id !== null),
+    ),
+  ]
+  const portafolioTituloById = new Map<string, string>()
+  if (portafolioIds.length > 0) {
+    const { data: entradas, error: portError } = await adminClient
+      .from('proyectos_portafolio')
+      .select('id_portafolio, titulo')
+      .in('id_portafolio', portafolioIds)
+    if (portError) {
+      logger.error('listarColaReportes: fallo al leer portafolio', {
+        error: portError.message,
+      })
+      return err(portError.message)
+    }
+    for (const p of entradas ?? []) {
+      portafolioTituloById.set(p.id_portafolio, p.titulo)
+    }
+  }
+
   const items: AdminReportQueueItem[] = rows.map((r) => {
     let target: ReportTarget | null = null
     if (r.id_reportado !== null) {
@@ -242,7 +266,7 @@ export async function listarColaReportes(): Promise<
       target = {
         tipo: 'portafolio',
         id: r.id_portafolio,
-        nombre: r.id_portafolio,
+        nombre: portafolioTituloById.get(r.id_portafolio) ?? '',
       }
     }
 
