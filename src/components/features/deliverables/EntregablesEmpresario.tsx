@@ -27,8 +27,10 @@ import {
   getSignedUrlEntregable,
   type ComentarioEntregable,
   type EntregableEmpresario,
+  type ContratacionParaCalificacion,
 } from '@/lib/deliverables/queries'
 import { responderEntregable } from '@/lib/deliverables/actions'
+import { EmpresarioRatingCard } from '@/components/features/evaluaciones/EmpresarioRatingCard'
 import type { Result } from '@/lib/result'
 
 const ESTADO_STYLE: Record<string, string> = {
@@ -75,10 +77,14 @@ function ComentariosList({
 
 interface EntregablesEmpresarioProps {
   entregablesResult: Result<EntregableEmpresario[]>
+  contratacionData?: ContratacionParaCalificacion | null
+  existingRating?: { puntuacion: number; comentario: string | null } | null
 }
 
 export function EntregablesEmpresario({
   entregablesResult,
+  contratacionData,
+  existingRating,
 }: EntregablesEmpresarioProps) {
   const t = useTranslations('ProjectDetail')
   const tCommon = useTranslations('Common')
@@ -91,25 +97,6 @@ export function EntregablesEmpresario({
   } | null>(null)
   const [pendingComment, setPendingComment] = useState('')
   const [submittingId, setSubmittingId] = useState<string | null>(null)
-
-  if (!entregablesResult.ok) {
-    return (
-      <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-sm text-foreground">
-        {t('entregablesLoadError')}
-      </div>
-    )
-  }
-
-  const entregables = entregablesResult.data
-
-  if (entregables.length === 0) {
-    return (
-      <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
-        <Package className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
-        {t('noEntregables')}
-      </div>
-    )
-  }
 
   const handleDownload = async (idEntregable: string) => {
     setDownloadingId(idEntregable)
@@ -154,116 +141,133 @@ export function EntregablesEmpresario({
 
   const isAprobando = pendingDecision?.tipo === 'aprobado'
   const isSubmitting = submittingId === pendingDecision?.id
+  const isFinalizado = contratacionData?.estado_periodo === 'finalizado'
+  const entregables = entregablesResult.ok ? entregablesResult.data : []
 
   return (
     <>
-      <div className="space-y-4">
-        {entregables.map((e) => (
-          <Card
-            key={e.id_entregable}
-            className="border border-border/80 bg-card/40"
-          >
-            <CardContent className="p-5 space-y-3">
-              {/* Header: info izquierda / estado + descarga derecha */}
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-0.5">
-                  <p className="font-bold text-foreground text-sm">
-                    {t(`tipoEntregable_${e.tipo_entregable}`)}
-                    {' — '}
-                    {t('versionLabel', { n: e.version })}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {t('uploadedAtLabel')}: {e.cargado_at.slice(0, 10)}
-                  </p>
+      {isFinalizado && contratacionData && (
+        <EmpresarioRatingCard
+          idEstudiante={contratacionData.id_estudiante}
+          idContratacion={contratacionData.id_contratacion}
+          existingRating={existingRating ?? null}
+        />
+      )}
+
+      {!entregablesResult.ok ? (
+        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-sm text-foreground">
+          {t('entregablesLoadError')}
+        </div>
+      ) : entregables.length === 0 ? (
+        <div className="p-8 border border-dashed border-border rounded-xl text-center text-muted-foreground bg-card/20">
+          <Package className="w-8 h-8 mx-auto mb-2 text-muted-foreground/60" />
+          {t('noEntregables')}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {entregables.map((e) => (
+            <Card
+              key={e.id_entregable}
+              className="border border-border/80 bg-card/40"
+            >
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-0.5">
+                    <p className="font-bold text-foreground text-sm">
+                      {t(`tipoEntregable_${e.tipo_entregable}`)}
+                      {' — '}
+                      {t('versionLabel', { n: e.version })}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t('uploadedAtLabel')}: {e.cargado_at.slice(0, 10)}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <span
+                      className={cn(
+                        'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                        ESTADO_STYLE[e.estado] ??
+                          'bg-muted text-muted-foreground border-border',
+                      )}
+                    >
+                      {t(`estadoEntregable_${e.estado}`)}
+                    </span>
+
+                    {e.archivo_url && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={downloadingId === e.id_entregable}
+                        onClick={() => void handleDownload(e.id_entregable)}
+                        className="font-semibold h-7 text-xs gap-1"
+                      >
+                        {downloadingId === e.id_entregable ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <Download className="w-3 h-3" />
+                        )}
+                        {downloadingId === e.id_entregable
+                          ? t('downloading')
+                          : t('downloadBtn')}
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span
-                    className={cn(
-                      'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                      ESTADO_STYLE[e.estado] ??
-                        'bg-muted text-muted-foreground border-border',
-                    )}
-                  >
-                    {t(`estadoEntregable_${e.estado}`)}
-                  </span>
+                <div className="space-y-2 border-t border-border/40 pt-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    {t('comentariosLabel')}
+                  </p>
+                  <ComentariosList comentarios={e.comentarios} t={t} />
+                </div>
 
-                  {e.archivo_url && (
+                {(e.estado === 'enviado' || e.estado === 'en_revision') && (
+                  <div className="flex flex-wrap gap-2 pt-1 border-t border-border/40">
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
-                      disabled={downloadingId === e.id_entregable}
-                      onClick={() => void handleDownload(e.id_entregable)}
-                      className="font-semibold h-7 text-xs gap-1"
+                      variant="accent"
+                      disabled={submittingId === e.id_entregable}
+                      onClick={() => {
+                        setPendingDecision({
+                          id: e.id_entregable,
+                          tipo: 'aprobado',
+                        })
+                        setPendingComment('')
+                      }}
+                      className="font-semibold"
                     >
-                      {downloadingId === e.id_entregable ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Download className="w-3 h-3" />
-                      )}
-                      {downloadingId === e.id_entregable
-                        ? t('downloading')
-                        : t('downloadBtn')}
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {t('aprobarBtn')}
                     </Button>
-                  )}
-                </div>
-              </div>
 
-              {/* Historial de comentarios */}
-              <div className="space-y-2 border-t border-border/40 pt-3">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  {t('comentariosLabel')}
-                </p>
-                <ComentariosList comentarios={e.comentarios} t={t} />
-              </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="warning"
+                      disabled={submittingId === e.id_entregable}
+                      onClick={() => {
+                        setPendingDecision({
+                          id: e.id_entregable,
+                          tipo: 'con_cambios',
+                        })
+                        setPendingComment('')
+                      }}
+                      className="font-semibold"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      {t('solicitarCambiosBtn')}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-              {/* Botones de decisión: solo cuando el entregable lo permite */}
-              {(e.estado === 'enviado' || e.estado === 'en_revision') && (
-                <div className="flex flex-wrap gap-2 pt-1 border-t border-border/40">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="accent"
-                    disabled={submittingId === e.id_entregable}
-                    onClick={() => {
-                      setPendingDecision({
-                        id: e.id_entregable,
-                        tipo: 'aprobado',
-                      })
-                      setPendingComment('')
-                    }}
-                    className="font-semibold"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    {t('aprobarBtn')}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="warning"
-                    disabled={submittingId === e.id_entregable}
-                    onClick={() => {
-                      setPendingDecision({
-                        id: e.id_entregable,
-                        tipo: 'con_cambios',
-                      })
-                      setPendingComment('')
-                    }}
-                    className="font-semibold"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    {t('solicitarCambiosBtn')}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Modal de confirmación — se abre al presionar Aprobar o Sugerir cambio */}
       <Dialog
         open={pendingDecision !== null}
         onOpenChange={(open) => {

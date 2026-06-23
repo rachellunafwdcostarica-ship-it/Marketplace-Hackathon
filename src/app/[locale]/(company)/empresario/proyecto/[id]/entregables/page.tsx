@@ -7,9 +7,13 @@ import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { EntregablesEmpresario } from '@/components/features/deliverables/EntregablesEmpresario'
 import { getMyPublishedProjects } from '@/lib/projects/dashboard'
-import { getEntregablesDeProyecto } from '@/lib/deliverables/queries'
+import {
+  getEntregablesDeProyecto,
+  getContratacionDelProyecto,
+} from '@/lib/deliverables/queries'
 import { getProjectParticipations } from '@/lib/projects/project-detail'
 import { isCompanyProfileComplete } from '@/lib/company/actions'
+import { getEgresadoRatingForContract } from '@/lib/evaluaciones/actions'
 
 interface ProjectEntregablesPageProps {
   params: Promise<{ id: string }>
@@ -41,13 +45,23 @@ export default async function ProjectEntregablesPage({
     notFound()
   }
 
-  const [entregablesResult, participationsResult] = await Promise.all([
-    getEntregablesDeProyecto(id),
-    getProjectParticipations(id),
-  ])
+  const [entregablesResult, participationsResult, contratacionResult] =
+    await Promise.all([
+      getEntregablesDeProyecto(id),
+      getProjectParticipations(id),
+      getContratacionDelProyecto(id),
+    ])
 
-  // Identidad del egresado contratado para encabezar la página. El RPC ya
-  // reimpone que el llamante sea el empresario dueño del proyecto.
+  const contratacionData = contratacionResult.ok
+    ? contratacionResult.data
+    : null
+
+  const existingRating = contratacionData?.id_contratacion
+    ? await getEgresadoRatingForContract(contratacionData.id_contratacion).then(
+        (r) => (r.ok ? r.data : null),
+      )
+    : null
+
   const contratado = participationsResult.ok
     ? participationsResult.data.find(
         (p) => p.estado === 'contratada' || p.estado === 'finalizada',
@@ -81,7 +95,11 @@ export default async function ProjectEntregablesPage({
             dotColor="text-accent"
           />
 
-          <EntregablesEmpresario entregablesResult={entregablesResult} />
+          <EntregablesEmpresario
+            entregablesResult={entregablesResult}
+            contratacionData={contratacionData}
+            existingRating={existingRating}
+          />
         </main>
       </div>
     </CompanyShell>

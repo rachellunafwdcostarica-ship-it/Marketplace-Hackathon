@@ -4,6 +4,7 @@ import {
 } from '@/lib/deliverables/queries'
 import { getMarketplaceProjectById } from '@/lib/projects/marketplace'
 import { getCompanyRatingForContract } from '@/lib/company/ratings'
+import { getReceivedRatingFromEmpresa } from '@/lib/evaluaciones/actions'
 import { EntregablesClient } from '@/components/features/deliverables/EntregablesClient'
 import { notFound, redirect } from 'next/navigation'
 
@@ -27,12 +28,18 @@ export default async function EntregablesPage({ params }: PageProps) {
 
   const contratacion = contratacionResult.data
 
-  const [entregablesResult, ratingResult] = await Promise.all([
-    getMisEntregables(contratacion.id_contratacion),
-    getCompanyRatingForContract(contratacion.id_contratacion),
-  ])
+  const [entregablesResult, ratingResult, receivedRatingResult] =
+    await Promise.all([
+      getMisEntregables(contratacion.id_contratacion),
+      getCompanyRatingForContract(contratacion.id_contratacion),
+      getReceivedRatingFromEmpresa(contratacion.id_contratacion),
+    ])
+
   const entregables = entregablesResult.ok ? entregablesResult.data : []
   const existingRating = ratingResult.ok ? ratingResult.data : null
+  const receivedRating = receivedRatingResult.ok
+    ? receivedRatingResult.data
+    : null
 
   return (
     <EntregablesClient
@@ -42,6 +49,7 @@ export default async function EntregablesPage({ params }: PageProps) {
       contratacion={contratacion}
       entregablesIniciales={entregables}
       existingRating={existingRating}
+      receivedRating={receivedRating}
     />
   )
 }

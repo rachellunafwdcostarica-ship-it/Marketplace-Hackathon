@@ -392,7 +392,18 @@
     "estadoEnRevision": "En revisión",
     "estadoAprobado": "Aprobado",
     "estadoConCambios": "Requiere cambios",
-    "viewDeliverables": "Ver entregables"
+    "viewDeliverables": "Ver entregables",
+    "receivedRatingTitle": "Tu Calificación",
+    "receivedRatingDesc": "Esta es la evaluación que la empresa hizo de tu trabajo",
+    "receivedRatingNone": "La empresa aún no te ha calificado",
+    "replyLabel": "Tu respuesta",
+    "replyPlaceholder": "Escribe tu respuesta a esta calificación...",
+    "replySubmit": "Responder",
+    "replySubmitting": "Enviando...",
+    "replySuccess": "Respuesta enviada con éxito",
+    "replyError": "No se pudo enviar la respuesta",
+    "alreadyReplied": "Tu respuesta",
+    "viewCompanyProfile": "Ver perfil de la empresa"
   },
   "Validation": {
     "emailInvalid": "Debe ingresar un correo electrónico válido.",
@@ -843,7 +854,15 @@
       "ai_failed": "La IA no pudo revisar el cambio. Probá de nuevo.",
       "ai_not_configured": "La revisión por IA no está disponible en este momento.",
       "invalid_input": "Revisá la descripción e intentá de nuevo."
-    }
+    },
+    "rateEgresadoTitle": "Calificar al Egresado",
+    "rateEgresadoDesc": "Compartí tu experiencia trabajando con este profesional",
+    "rateEgresadoSuccess": "Calificación enviada con éxito",
+    "rateEgresadoRatingLabel": "Puntuación",
+    "rateEgresadoCommentLabel": "Comentario (opcional)",
+    "rateEgresadoCommentPlaceholder": "Compartí tu experiencia trabajando con este egresado...",
+    "rateEgresadoSubmit": "Enviar calificacion",
+    "rateEgresadoAlreadyRated": "Ya calificaste a este egresado"
   },
   "Admin": {
     "dashboard": "Panel Administrador",
@@ -1290,7 +1309,29 @@
     "viewEntregables": "Ver entregables",
     "backToContrataciones": "Volver a Contrataciones",
     "entregablesPageDesc": "Revisá y gestioná los entregables de este proyecto.",
-    "entregablesPageDescEgresado": "Entregables de {nombre} para este proyecto."
+    "entregablesPageDescEgresado": "Entregables de {nombre} para este proyecto.",
+    "postuloEl": "Postuló el",
+    "contratadoPara": "Contratado para",
+    "verMotivacion": "Ver motivación",
+    "verTituloCompleto": "Ver título completo",
+    "tituloProyectoLabel": "Título del Proyecto",
+    "motivacionYSolucion": "Motivación y Solución",
+    "cartaPresentacion": "Carta de Presentación",
+    "planteamientoSolucionLabel": "Planteamiento de Solución",
+    "sinMotivacion": "El estudiante no adjuntó carta de motivación o planteamiento de solución.",
+    "postulacionDe": "Postulación de {nombre}",
+    "estadoEnDesarrollo": "En desarrollo",
+    "estadoFinalizado": "Finalizado",
+    "tituloFrontend": "Frontend",
+    "tituloBackend": "Backend",
+    "tituloFullstack": "Fullstack",
+    "tituloEgresado": "Egresado",
+    "sinContrataciones": "Sin contrataciones",
+    "sinContratacionesDesc": "Aún no has contratado a ningún egresado para tus proyectos.",
+    "filterAll": "Todos",
+    "filterEnDesarrollo": "En desarrollo",
+    "filterFinalizado": "Finalizado",
+    "sinResultadosFiltro": "No hay contrataciones en este estado."
   },
   "CompanyPostulations": {
     "title": "Gestión de Postulaciones",
@@ -1403,5 +1444,14 @@
     "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
     "proyectoLabel": "Proyecto",
     "egresadoLabel": "Egresado"
+  },
+  "EgresadoEmpresa": {
+    "pageTitle": "Perfil de la Empresa",
+    "sector": "Sector",
+    "descripcion": "Descripción",
+    "noDesc": "Sin descripción disponible.",
+    "backToContracts": "Volver a mis contrataciones",
+    "tipoEmpresa": "Empresa formal",
+    "tipoEmprendedor": "Emprendedor individual"
   }
 }

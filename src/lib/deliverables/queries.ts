@@ -394,6 +394,7 @@ export interface ContratacionResumen {
   id_proyecto: string
   titulo_proyecto: string
   estado_proyecto: string
+  id_empresario: string
 }
 
 export interface ContratacionParaCalificacion {
@@ -548,6 +549,7 @@ export async function getMisContrataciones(): Promise<
         id_proyecto: part.id_proyecto,
         titulo_proyecto: proyecto.titulo,
         estado_proyecto: proyecto.estado as string,
+        id_empresario: proyecto.id_empresario,
       } satisfies ContratacionResumen
     })
     .filter((c): c is NonNullable<typeof c> => c !== null)
