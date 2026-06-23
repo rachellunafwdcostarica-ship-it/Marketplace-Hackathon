@@ -242,7 +242,6 @@ export async function verificarEgresado(userId: string): Promise<Result<void>> {
 
   // RNF-38: cotejo del correo contra la base oficial de egresados FWD.
   const { data: fwdRecord, error: fwdError } = await adminClient
-    // @ts-expect-error - Tabla local pendiente de regeneración de tipos en database.ts
     .from('egresados_fwd_oficial')
     .select('correo')
     .eq('correo', usuario.correo)
