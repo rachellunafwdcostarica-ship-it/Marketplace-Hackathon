@@ -229,7 +229,11 @@ export function ProjectDetailClient({
                             setHasRated(true)
                             router.refresh()
                           } else {
-                            toast.error(res.error)
+                            toast.error(
+                              tEgresado(
+                                res.error as Parameters<typeof tEgresado>[0],
+                              ),
+                            )
                           }
                         }}
                         className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs flex items-center gap-1.5"

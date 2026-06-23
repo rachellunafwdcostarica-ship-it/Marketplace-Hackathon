@@ -39,15 +39,13 @@ function EstadoBadge({ estado }: { estado: 'contratada' | 'finalizada' }) {
     <span
       className={cn(
         'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
-        isActivo
-          ? 'text-[#2eac68]' // Green text for active
-          : 'text-muted-foreground',
+        isActivo ? 'text-success' : 'text-muted-foreground',
       )}
     >
       <span
         className={cn(
           'w-1.5 h-1.5 rounded-full',
-          isActivo ? 'bg-[#2eac68]' : 'bg-muted-foreground/50',
+          isActivo ? 'bg-success' : 'bg-muted-foreground/50',
         )}
       />
       {isActivo ? t('estadoActivo') : t('estadoFinalizado')}
@@ -64,6 +62,7 @@ function ConversacionRow({
   isActive: boolean
   onSelect: () => void
 }) {
+  const t = useTranslations('EgresadoMensajes')
   const initials = conv.nombreContraparte.substring(0, 2).toUpperCase()
   return (
     <button
@@ -89,17 +88,19 @@ function ConversacionRow({
           >
             {conv.nombreContraparte}
           </p>
-          <span className="text-[10px] text-ink-muted">Ayer</span>
+          <span className="text-[10px] text-ink-muted">
+            {t('relativeDateYesterday')}
+          </span>
         </div>
         <p className="text-sm font-semibold text-ink-strong leading-tight line-clamp-2">
           {conv.tituloProyecto}
         </p>
         <div className="mt-1 flex items-center justify-between">
           <EstadoBadge estado={conv.estado} />
-          {/* Badge de mensajes no leídos (mocked logic for active view just to show style) */}
-          {isActive && (
-            <span className="flex w-5 h-5 bg-primary text-white rounded-full items-center justify-center text-[10px] font-bold">
-              2
+          {/* Badge de mensajes no leídos */}
+          {conv.noLeidos > 0 && (
+            <span className="flex min-w-5 h-5 px-1.5 bg-primary text-white rounded-full items-center justify-center text-[10px] font-bold">
+              {conv.noLeidos}
             </span>
           )}
         </div>
@@ -132,7 +133,7 @@ function ChatBubble({
         className={cn(
           'px-4 py-3 rounded-2xl text-sm leading-relaxed break-words shadow-sm',
           isMine
-            ? 'bg-[#00b2be] text-white rounded-br-sm' // Teal/Primary color from mockup
+            ? 'bg-accent text-white rounded-br-sm'
             : 'bg-white border border-border/60 text-ink-strong rounded-bl-sm',
         )}
       >
@@ -182,6 +183,11 @@ export function EgresadoMensajesClient({
   const t = useTranslations('EgresadoMensajes')
   const scrollEndRef = useRef<HTMLDivElement>(null)
 
+  const [convs, setConvs] = useState<ConversacionItem[]>(() =>
+    conversaciones.map((c) =>
+      c.idProyecto === initialProjectId ? { ...c, noLeidos: 0 } : c,
+    ),
+  )
   const [selectedConv, setSelectedConv] = useState<ConversacionItem | null>(
     () =>
       initialProjectId
@@ -200,12 +206,25 @@ export function EgresadoMensajesClient({
   const [input, setInput] = useState('')
 
   useEffect(() => {
+    setConvs(
+      conversaciones.map((c) =>
+        c.idProyecto === selectedConv?.idProyecto ? { ...c, noLeidos: 0 } : c,
+      ),
+    )
+  }, [conversaciones, selectedConv])
+
+  useEffect(() => {
     scrollEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensajes])
 
   const handleSelectConv = async (conv: ConversacionItem) => {
     if (selectedConv?.idProyecto === conv.idProyecto) return
     setSelectedConv(conv)
+    setConvs((prev) =>
+      prev.map((c) =>
+        c.idProyecto === conv.idProyecto ? { ...c, noLeidos: 0 } : c,
+      ),
+    )
     setMensajes([])
     setIsLoadingMensajes(true)
 
@@ -284,7 +303,7 @@ export function EgresadoMensajesClient({
                   </span>
                 </div>
                 <div className="flex-1 overflow-y-auto divide-y divide-transparent">
-                  {conversaciones.map((conv) => (
+                  {convs.map((conv) => (
                     <ConversacionRow
                       key={conv.idProyecto}
                       conv={conv}

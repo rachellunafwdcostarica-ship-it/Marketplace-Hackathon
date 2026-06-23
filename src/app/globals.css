@@ -124,6 +124,38 @@
   }
 }
 
+/* ─── FWD Rainbow animations ────────────────────────────────────── */
+/* Uses CSS token variables so they respond to theme changes.        */
+/* Formerly inlined as hex literals in DashboardStats / AdminProjectCharts */
+@keyframes borderRainbow {
+  0%   { border-color: var(--primary);   box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--primary) 6%, transparent),   0 2px 4px -1px color-mix(in oklch, var(--primary) 3%, transparent); }
+  17%  { border-color: var(--secondary); box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--secondary) 6%, transparent), 0 2px 4px -1px color-mix(in oklch, var(--secondary) 3%, transparent); }
+  33%  { border-color: var(--accent);    box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--accent) 6%, transparent),    0 2px 4px -1px color-mix(in oklch, var(--accent) 3%, transparent); }
+  50%  { border-color: var(--highlight); box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--highlight) 6%, transparent), 0 2px 4px -1px color-mix(in oklch, var(--highlight) 3%, transparent); }
+  67%  { border-color: var(--warning);   box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--warning) 6%, transparent),   0 2px 4px -1px color-mix(in oklch, var(--warning) 3%, transparent); }
+  83%  { border-color: var(--magenta);   box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--magenta) 6%, transparent),   0 2px 4px -1px color-mix(in oklch, var(--magenta) 3%, transparent); }
+  100% { border-color: var(--primary);   box-shadow: 0 4px 6px -1px color-mix(in oklch, var(--primary) 6%, transparent),   0 2px 4px -1px color-mix(in oklch, var(--primary) 3%, transparent); }
+}
+
+@keyframes barHoverRainbow {
+  0%   { background-color: var(--primary); }
+  17%  { background-color: var(--secondary); }
+  33%  { background-color: var(--accent); }
+  50%  { background-color: var(--highlight); }
+  67%  { background-color: var(--warning); }
+  83%  { background-color: var(--magenta); }
+  100% { background-color: var(--primary); }
+}
+
+@utility animate-border-rainbow {
+  animation: borderRainbow 12s linear infinite;
+}
+
+@utility animate-bar-hover {
+  animation: barHoverRainbow 2s linear infinite !important;
+}
+
+
 body {
   background: var(--color-background);
   color: var(--color-foreground);

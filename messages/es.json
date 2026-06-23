@@ -51,7 +51,11 @@
     "reports": "Reportes",
     "adminRegister": "Registro de admin",
     "messages": "Mensajes",
-    "myContracts": "Mis Contrataciones"
+    "myContracts": "Mis Contrataciones",
+    "menuSection": "Menú",
+    "accountSection": "Cuenta",
+    "toggleSidebar": "Alternar barra lateral",
+    "help": "Ayuda"
   },
   "Footer": {
     "tagline": "Conectando talento FWD con el mundo.",
@@ -220,7 +224,6 @@
     "loading": "Cargando...",
     "error": "Ha ocurrido un error inesperado.",
     "search": "Buscar",
-    "filters": "Filtros",
     "clearFilters": "Limpiar Filtros",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -263,6 +266,13 @@
     "commentLabel": "Comentario (opcional)",
     "submitRating": "Enviar Calificación",
     "alreadyRated": "Ya calificaste a esta empresa",
+    "invalid_input": "Datos de calificación inválidos.",
+    "unauthenticated": "No has iniciado sesión.",
+    "unauthorized": "No estás autorizado para realizar esta acción.",
+    "contratacion_not_found": "No se encontró la contratación especificada.",
+    "forbidden": "No tienes permiso para calificar esta empresa.",
+    "contratacion_no_finalizada": "Solo puedes calificar a la empresa una vez finalizado el contrato.",
+    "database_error": "Ocurrió un error al guardar la calificación en la base de datos.",
     "dashboardDesc": "Monitorea tus postulaciones y descubre nuevos proyectos recomendados para ti.",
     "marketplace": "Marketplace de Proyectos",
     "marketplaceDesc": "Encuentra y postúlate a proyectos freelance de corta duración que se adapten a tus habilidades.",
@@ -1516,7 +1526,8 @@
     "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
     "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
     "proyectoLabel": "Proyecto",
-    "empresaLabel": "Empresa"
+    "empresaLabel": "Empresa",
+    "relativeDateYesterday": "Ayer"
   },
   "Ranking": {
     "snippetTitle": "Ranking de Talento",
@@ -1526,6 +1537,10 @@
     "pageDescription": "Descubre a los egresados mejor calificados por sus contribuciones técnicas y habilidades profesionales.",
     "filterCategory": "Categoría",
     "filterTech": "Tecnología",
+    "filterTitle": "Filtrar Talentos",
+    "categoryFrontend": "Frontend",
+    "categoryBackend": "Backend",
+    "categoryFullstack": "Fullstack",
     "clearFilters": "Limpiar Filtros",
     "showingCount": "Mostrando {count} talentos",
     "sortByReputation": "Ordenar por Reputación",

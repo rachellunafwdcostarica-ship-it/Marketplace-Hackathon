@@ -11,6 +11,7 @@ import { createAdminNotification } from '@/lib/admin/notification-actions'
 import { crearNotificacion } from '@/lib/notifications/create'
 import { buildStrikeNotificacion } from '@/lib/admin/strike-notificacion-logic'
 import { createGmailTransport, getGmailFrom } from '@/lib/email/gmail'
+import { serverEnv } from '@/lib/env.server'
 import {
   strikeAppliedHtml,
   strikeAppliedSubject,
@@ -162,7 +163,7 @@ export async function addStrike(
 
   // ── Enviar correo de notificación al usuario ───────────────────────────────
   if (usuarioCompleto?.correo) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fwdtalent.com'
+    const baseUrl = serverEnv.NEXT_PUBLIC_APP_URL ?? 'https://fwdtalent.com'
     try {
       const transporter = createGmailTransport()
 
@@ -451,7 +452,7 @@ export async function restoreAccess(userId: string): Promise<Result<void>> {
 
   // Enviar correo de restauración
   if (usuario.correo) {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fwdtalent.com'
+    const baseUrl = serverEnv.NEXT_PUBLIC_APP_URL ?? 'https://fwdtalent.com'
     try {
       const transporter = createGmailTransport()
       await transporter.sendMail({

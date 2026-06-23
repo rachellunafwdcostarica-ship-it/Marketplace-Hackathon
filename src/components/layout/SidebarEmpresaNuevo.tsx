@@ -26,7 +26,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
-  Building2,
 } from 'lucide-react'
 import { useSidebarHidden } from '@/hooks/use-sidebar-hidden'
 import { useAuth } from '@/lib/auth/AuthContext'
@@ -90,13 +89,6 @@ export function SidebarEmpresaNuevo() {
         path.startsWith('/empresario/new-project'),
     },
     {
-      id: 'perfil',
-      href: '/empresario/perfil',
-      label: t('menuPerfil'),
-      icon: Building2,
-      isActive: (path) => path.startsWith('/empresario/perfil'),
-    },
-    {
       id: 'postulaciones',
       href: '/empresario/postulaciones',
       label: t('menuPostulaciones'),
@@ -138,7 +130,7 @@ export function SidebarEmpresaNuevo() {
   return (
     <aside
       id="empresario-sidebar"
-      className="w-full lg:w-64 shrink-0 flex flex-col gap-6 bg-secondary text-white p-4 rounded-3xl border border-white/10 shadow-lg relative overflow-hidden lg:sticky lg:top-20 lg:self-start lg:h-[calc(100vh-7rem)]"
+      className="w-full lg:w-64 shrink-0 flex flex-col gap-6 bg-secondary text-white p-4 lg:p-6 rounded-3xl lg:rounded-none border lg:border-none lg:border-r border-white/10 shadow-lg lg:shadow-none relative overflow-hidden lg:sticky lg:top-20 lg:h-[calc(100vh-5rem)]"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M0 0 L30 30 L0 60 Z M60 0 L30 30 L60 60 Z' fill='%23ffffff' fill-opacity='0.03'/%3E%3C/svg%3E")`,
       }}

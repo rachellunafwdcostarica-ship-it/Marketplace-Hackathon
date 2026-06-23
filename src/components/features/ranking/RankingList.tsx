@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -74,9 +75,9 @@ export function RankingList({
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-border p-6">
+      <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
         <h3 className="text-xs font-semibold text-primary uppercase tracking-wider mb-4">
-          Filtrar Talentos
+          {t('filterTitle')}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
@@ -90,9 +91,9 @@ export function RankingList({
               onChange={(e) => handleFilterChange('categoria', e.target.value)}
             >
               <option value="">{t('filterCategory')}...</option>
-              <option value="frontend">Frontend</option>
-              <option value="backend">Backend</option>
-              <option value="fullstack">Fullstack</option>
+              <option value="frontend">{t('categoryFrontend')}</option>
+              <option value="backend">{t('categoryBackend')}</option>
+              <option value="fullstack">{t('categoryFullstack')}</option>
             </select>
           </div>
 
@@ -163,7 +164,7 @@ export function RankingList({
       {/* List */}
       <div className="space-y-4">
         {topTalents.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-border">
+          <div className="text-center py-12 bg-surface rounded-xl border border-border">
             <p className="text-muted-foreground">{t('emptyState')}</p>
           </div>
         ) : (
@@ -183,7 +184,7 @@ export function RankingList({
             return (
               <div
                 key={talent.idEstudiante}
-                className="bg-white rounded-xl shadow-sm border border-border p-6 flex flex-col md:flex-row items-center gap-6 transition-all hover:shadow-md"
+                className="bg-surface rounded-xl shadow-sm border border-border p-6 flex flex-col md:flex-row items-center gap-6 transition-all hover:shadow-md"
               >
                 <div className="flex items-center justify-center w-12 flex-shrink-0 text-highlight font-bold text-xl">
                   {rank.toString().padStart(2, '0')}
@@ -191,9 +192,11 @@ export function RankingList({
 
                 <div className="flex items-center gap-4 flex-1 w-full md:w-auto">
                   {talent.fotoPerfil ? (
-                    <img
+                    <Image
                       src={talent.fotoPerfil}
                       alt={talent.nombreCompleto}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 rounded-full border border-border object-cover"
                     />
                   ) : (
@@ -250,7 +253,7 @@ export function RankingList({
           <button
             onClick={() => handlePageChange(page - 1)}
             disabled={page === 1}
-            className="p-2 border border-border rounded bg-white text-muted-foreground disabled:opacity-50 hover:bg-muted transition-colors"
+            className="p-2 border border-border rounded bg-surface text-muted-foreground disabled:opacity-50 hover:bg-muted transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -262,7 +265,7 @@ export function RankingList({
               className={`w-10 h-10 rounded border text-sm font-medium transition-colors ${
                 page === p
                   ? 'bg-primary border-primary text-primary-foreground'
-                  : 'bg-white border-border text-foreground hover:bg-muted'
+                  : 'bg-surface border-border text-foreground hover:bg-muted'
               }`}
             >
               {p}
@@ -272,7 +275,7 @@ export function RankingList({
           <button
             onClick={() => handlePageChange(page + 1)}
             disabled={page === totalPages}
-            className="p-2 border border-border rounded bg-white text-muted-foreground disabled:opacity-50 hover:bg-muted transition-colors"
+            className="p-2 border border-border rounded bg-surface text-muted-foreground disabled:opacity-50 hover:bg-muted transition-colors"
           >
             <ChevronRight className="w-5 h-5" />
           </button>

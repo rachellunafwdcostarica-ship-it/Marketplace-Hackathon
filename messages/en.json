@@ -51,7 +51,11 @@
     "reports": "Reports",
     "adminRegister": "Admin registration",
     "messages": "Messages",
-    "myContracts": "My Contracts"
+    "myContracts": "My Contracts",
+    "menuSection": "Menu",
+    "accountSection": "Account",
+    "toggleSidebar": "Toggle sidebar",
+    "help": "Help"
   },
   "Footer": {
     "tagline": "Connecting FWD talent with the world.",
@@ -263,6 +267,13 @@
     "commentLabel": "Comment (optional)",
     "submitRating": "Submit Rating",
     "alreadyRated": "You already rated this company",
+    "invalid_input": "Invalid rating data.",
+    "unauthenticated": "You are not logged in.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "contratacion_not_found": "The specified contract was not found.",
+    "forbidden": "You do not have permission to rate this company.",
+    "contratacion_no_finalizada": "You can only rate the company once the contract is finalized.",
+    "database_error": "An error occurred while saving the rating to the database.",
     "dashboardDesc": "Monitor your applications and discover new recommended projects.",
     "marketplace": "Projects Marketplace",
     "marketplaceDesc": "Find and apply to short-term freelance projects that match your skills.",
@@ -1515,7 +1526,8 @@
     "errorCarga": "Could not load messages. Please try again.",
     "errorEnvio": "Could not send the message. Please try again.",
     "proyectoLabel": "Project",
-    "empresaLabel": "Company"
+    "empresaLabel": "Company",
+    "relativeDateYesterday": "Yesterday"
   },
   "Ranking": {
     "snippetTitle": "Talent Ranking",
@@ -1525,6 +1537,10 @@
     "pageDescription": "Discover the highest-rated graduates based on their technical contributions and professional skills.",
     "filterCategory": "Category",
     "filterTech": "Technology",
+    "filterTitle": "Filter Talents",
+    "categoryFrontend": "Frontend",
+    "categoryBackend": "Backend",
+    "categoryFullstack": "Fullstack",
     "clearFilters": "Clear Filters",
     "showingCount": "Showing {count} talents",
     "sortByReputation": "Sort by Reputation",

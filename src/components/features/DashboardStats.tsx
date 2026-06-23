@@ -23,26 +23,12 @@ export function DashboardStats({ stats, className }: DashboardStatsProps) {
         className,
       )}
     >
-      <style>{`
-        @keyframes borderRainbow {
-          0% { border-color: #008fd4; box-shadow: 0 4px 6px -1px rgba(0, 143, 212, 0.06), 0 2px 4px -1px rgba(0, 143, 212, 0.03); }
-          17% { border-color: #662d91; box-shadow: 0 4px 6px -1px rgba(102, 45, 145, 0.06), 0 2px 4px -1px rgba(102, 45, 145, 0.03); }
-          33% { border-color: #20bec6; box-shadow: 0 4px 6px -1px rgba(32, 190, 198, 0.06), 0 2px 4px -1px rgba(32, 190, 198, 0.03); }
-          50% { border-color: #ffcb05; box-shadow: 0 4px 6px -1px rgba(255, 203, 5, 0.06), 0 2px 4px -1px rgba(255, 203, 5, 0.03); }
-          67% { border-color: #f7901e; box-shadow: 0 4px 6px -1px rgba(247, 144, 30, 0.06), 0 2px 4px -1px rgba(247, 144, 30, 0.03); }
-          83% { border-color: #ec008c; box-shadow: 0 4px 6px -1px rgba(236, 0, 140, 0.06), 0 2px 4px -1px rgba(236, 0, 140, 0.03); }
-          100% { border-color: #008fd4; box-shadow: 0 4px 6px -1px rgba(0, 143, 212, 0.06), 0 2px 4px -1px rgba(0, 143, 212, 0.03); }
-        }
-        .animate-border-rainbow {
-          animation: borderRainbow 12s linear infinite;
-        }
-      `}</style>
       {stats.map((stat, index) => {
         const Icon = stat.icon
         return (
           <div
             key={index}
-            className="flex items-center gap-4 rounded-2xl border bg-white p-5 transition-all duration-200 group animate-border-rainbow"
+            className="flex items-center gap-4 rounded-2xl border bg-surface p-5 transition-all duration-200 group animate-border-rainbow"
           >
             {/* Icon box */}
             <div

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { serverEnv } from '@/lib/env.server'
 
 export interface ValidationInput {
   projectTitle: string
@@ -35,8 +36,8 @@ const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 export async function validateApplicationWithAI(
   input: ValidationInput,
 ): Promise<ValidationResult> {
-  const apiKey = process.env.OPENROUTER_FILTRO_OFERTAS_API_KEY
-  const model = process.env.OPENROUTER_FILTRO_OFERTAS_MODEL ?? DEFAULT_MODEL
+  const apiKey = serverEnv.OPENROUTER_FILTRO_OFERTAS_API_KEY
+  const model = serverEnv.OPENROUTER_FILTRO_OFERTAS_MODEL ?? DEFAULT_MODEL
 
   if (!apiKey) {
     logger.warn(

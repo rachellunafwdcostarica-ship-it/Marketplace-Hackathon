@@ -104,22 +104,7 @@ export function Navbar({
         label: t('searchProjects'),
         icon: 'search',
       },
-      {
-        href: '/egresado/applications',
-        label: t('applications'),
-        icon: 'send',
-      },
       { href: '/egresado/portfolio', label: t('portfolio'), icon: 'portfolio' },
-      {
-        href: '/egresado/mensajes',
-        label: t('messages'),
-        icon: 'messages',
-      },
-      {
-        href: '/egresado/contrataciones',
-        label: t('myContracts'),
-        icon: 'contracts',
-      },
     ],
     empresario: [
       { href: '/empresario', label: t('dashboard'), icon: 'dashboard' },

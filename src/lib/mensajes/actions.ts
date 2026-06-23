@@ -23,6 +23,7 @@ export interface ConversacionItem {
   tituloProyecto: string
   nombreContraparte: string
   estado: 'contratada' | 'finalizada'
+  noLeidos: number
 }
 
 interface AccesoMensajes {
@@ -404,6 +405,28 @@ export async function getConversacionesEmpresario(): Promise<
     ]),
   )
 
+  // Obtener mensajes no leídos para estos proyectos
+  const { data: unreadMessages, error: unreadError } = await admin
+    .from('mensajes')
+    .select('id_proyecto')
+    .in('id_proyecto', proyectoIds)
+    .neq('id_remitente', user.id)
+    .eq('leido', false)
+
+  if (unreadError) {
+    logger.error(
+      'getConversacionesEmpresario: fallo al leer mensajes no leídos',
+      {
+        error: unreadError.message,
+      },
+    )
+  }
+
+  const unreadMap = new Map<string, number>()
+  for (const msg of unreadMessages ?? []) {
+    unreadMap.set(msg.id_proyecto, (unreadMap.get(msg.id_proyecto) ?? 0) + 1)
+  }
+
   const conversaciones: ConversacionItem[] = participaciones.flatMap((part) => {
     if (part.estado !== 'contratada' && part.estado !== 'finalizada') return []
     const titulo = proyectoMap.get(part.id_proyecto)
@@ -412,12 +435,14 @@ export async function getConversacionesEmpresario(): Promise<
       ? usuarioMap.get(idUsuarioEst)
       : undefined
     if (!titulo || !nombreContraparte) return []
+    const noLeidos = unreadMap.get(part.id_proyecto) ?? 0
     return [
       {
         idProyecto: part.id_proyecto,
         tituloProyecto: titulo,
         nombreContraparte,
         estado: part.estado,
+        noLeidos,
       },
     ]
   })
@@ -530,6 +555,28 @@ export async function getConversacionesEgresado(): Promise<
     ]),
   )
 
+  // Obtener mensajes no leídos para estos proyectos
+  const { data: unreadMessages, error: unreadError } = await admin
+    .from('mensajes')
+    .select('id_proyecto')
+    .in('id_proyecto', proyectoIds)
+    .neq('id_remitente', user.id)
+    .eq('leido', false)
+
+  if (unreadError) {
+    logger.error(
+      'getConversacionesEgresado: fallo al leer mensajes no leídos',
+      {
+        error: unreadError.message,
+      },
+    )
+  }
+
+  const unreadMap = new Map<string, number>()
+  for (const msg of unreadMessages ?? []) {
+    unreadMap.set(msg.id_proyecto, (unreadMap.get(msg.id_proyecto) ?? 0) + 1)
+  }
+
   const conversaciones: ConversacionItem[] = participaciones.flatMap((part) => {
     if (part.estado !== 'contratada' && part.estado !== 'finalizada') return []
     const proyectoData = proyectoMap.get(part.id_proyecto)
@@ -537,12 +584,14 @@ export async function getConversacionesEgresado(): Promise<
       ? empresarioMap.get(proyectoData.idEmpresario)
       : undefined
     if (!proyectoData || !nombreContraparte) return []
+    const noLeidos = unreadMap.get(part.id_proyecto) ?? 0
     return [
       {
         idProyecto: part.id_proyecto,
         tituloProyecto: proyectoData.titulo,
         nombreContraparte,
         estado: part.estado,
+        noLeidos,
       },
     ]
   })

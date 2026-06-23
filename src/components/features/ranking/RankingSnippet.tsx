@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { TalentRankingItem } from '@/lib/ranking/actions'
@@ -22,7 +23,7 @@ export function RankingSnippet({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-border p-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="bg-surface rounded-xl shadow-sm border border-border p-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-highlight/10 text-highlight rounded-lg">
           <Award className="w-5 h-5" />
@@ -47,9 +48,11 @@ export function RankingSnippet({
             >
               <div className="relative">
                 {talent.fotoPerfil ? (
-                  <img
+                  <Image
                     src={talent.fotoPerfil}
                     alt={talent.nombreCompleto}
+                    width={32}
+                    height={32}
                     className="w-8 h-8 rounded-full border-2 border-background shadow-sm object-cover"
                   />
                 ) : (
