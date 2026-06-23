@@ -95,10 +95,13 @@ export async function publishProject(
     ).trim()
     const descripcion = propuesta.descripcion.trim()
     // Red de seguridad de los NOT NULL antes del INSERT (errolpendiente §1 paso 7).
+    // El área es obligatoria (RF-20): backstop por borradores viejos guardados
+    // antes de exigirla en `generateProposal`.
     if (
       titulo.length === 0 ||
       descripcion.length === 0 ||
-      !logistica.modalidad
+      !logistica.modalidad ||
+      !propuesta.idArea
     ) {
       return err('invalid_input')
     }
