@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { Briefcase, CalendarDays, FileCheck2 } from 'lucide-react'
+import { Briefcase, Building2, CalendarDays, FileCheck2 } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -82,7 +82,7 @@ export function MisContratacionesList({
                   )}
                 </div>
 
-                <div className="mt-auto">
+                <div className="mt-auto flex flex-col gap-2">
                   <Button
                     asChild
                     variant="outline"
@@ -94,6 +94,17 @@ export function MisContratacionesList({
                     >
                       <FileCheck2 className="w-4 h-4" />
                       {tEgresado('viewDeliverables')}
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="w-full font-semibold gap-1.5 text-muted-foreground"
+                  >
+                    <Link href={`/egresado/empresa/${c.id_empresario}`}>
+                      <Building2 className="w-4 h-4" />
+                      {tEgresado('viewCompanyProfile')}
                     </Link>
                   </Button>
                 </div>
