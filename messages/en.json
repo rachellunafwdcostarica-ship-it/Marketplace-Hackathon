@@ -48,6 +48,7 @@
     "settings": "System settings",
     "moderation": "Moderation",
     "support": "Support",
+    "reports": "Reports",
     "adminRegister": "Admin registration",
     "messages": "Messages",
     "myContracts": "My Contracts"
@@ -1147,7 +1148,11 @@
     "reportGenerating": "Generating...",
     "reportDownloadSuccess": "{entity} report downloaded successfully.",
     "reportDownloadError": "Error generating the report: {error}",
-    "reportDownloadUnexpected": "An unexpected error occurred while processing the download."
+    "reportDownloadUnexpected": "An unexpected error occurred while processing the download.",
+    "reportProjectsTitle": "Published projects",
+    "reportColTitle": "Title",
+    "reportColCompany": "Company",
+    "reportColPublished": "Published"
   },
   "Errors": {
     "forbidden": "Access denied",
