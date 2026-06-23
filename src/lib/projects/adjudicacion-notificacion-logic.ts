@@ -30,10 +30,14 @@ export function buildAdjudicacionNotificaciones(input: {
       afectado.estado === 'contratada'
         ? 'participacion_contratada'
         : 'participacion_no_seleccionada'
+    const mensaje =
+      afectado.estado === 'contratada'
+        ? `Fuiste seleccionado para el proyecto "${titulo}".`
+        : `Tu propuesta para "${titulo}" no fue seleccionada.`
     return {
       idUsuario: afectado.idUsuario,
       tipoEvento,
-      mensaje: `content.${tipoEvento}`,
+      mensaje,
       params: { titulo },
       urlDestino: urlProyecto,
     }
