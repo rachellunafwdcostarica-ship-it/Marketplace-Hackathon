@@ -1153,7 +1153,16 @@
     "reportProjectsTitle": "Proyectos publicados",
     "reportColTitle": "Título",
     "reportColCompany": "Empresa",
-    "reportColPublished": "Publicación"
+    "reportColPublished": "Publicación",
+    "reportActivityTitle": "Actividad reciente",
+    "reportColDate": "Fecha",
+    "reportColActor": "Actor",
+    "reportColAction": "Acción",
+    "reportColEntity": "Entidad",
+    "reportAuditSystem": "Sistema",
+    "reportActivityLimit": "Se muestran los eventos más recientes (hasta {limit}).",
+    "reportNoActivity": "No hay actividad registrada",
+    "reportNoActivityDesc": "Las acciones administrativas aparecerán acá."
   },
   "Errors": {
     "forbidden": "Acceso no autorizado",
