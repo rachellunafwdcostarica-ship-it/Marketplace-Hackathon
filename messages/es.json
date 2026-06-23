@@ -1325,7 +1325,11 @@
     "tituloFullstack": "Fullstack",
     "tituloEgresado": "Egresado",
     "sinContrataciones": "Sin contrataciones",
-    "sinContratacionesDesc": "Aún no has contratado a ningún egresado para tus proyectos."
+    "sinContratacionesDesc": "Aún no has contratado a ningún egresado para tus proyectos.",
+    "filterAll": "Todos",
+    "filterEnDesarrollo": "En desarrollo",
+    "filterFinalizado": "Finalizado",
+    "sinResultadosFiltro": "No hay contrataciones en este estado."
   },
   "CompanyPostulations": {
     "title": "Gestión de Postulaciones",

@@ -1324,7 +1324,11 @@
     "tituloFullstack": "Fullstack",
     "tituloEgresado": "Graduate",
     "sinContrataciones": "No hires yet",
-    "sinContratacionesDesc": "You have not hired any graduate for your projects yet."
+    "sinContratacionesDesc": "You have not hired any graduate for your projects yet.",
+    "filterAll": "All",
+    "filterEnDesarrollo": "In progress",
+    "filterFinalizado": "Finalized",
+    "sinResultadosFiltro": "No hires match this filter."
   },
   "CompanyPostulations": {
     "title": "Applications Management",

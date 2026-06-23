@@ -19,6 +19,8 @@ interface ContratacionesListProps {
   contrataciones: ParticipacionConProyecto[]
 }
 
+type FiltroEstado = 'all' | 'contratada' | 'finalizada'
+
 function InitialsAvatar({
   nombre,
   apellidos,
@@ -78,6 +80,7 @@ export function ContratacionesList({
   contrataciones,
 }: ContratacionesListProps) {
   const t = useTranslations('EmpresaPerfil')
+  const [filtro, setFiltro] = React.useState<FiltroEstado>('all')
   const [selectedTitle, setSelectedTitle] = React.useState<string | null>(null)
   const [selectedMotivacion, setSelectedMotivacion] =
     React.useState<ParticipacionConProyecto | null>(null)
@@ -87,6 +90,17 @@ export function ContratacionesList({
     backend: t('tituloBackend'),
     fullstack: t('tituloFullstack'),
   }
+
+  const filtros: { key: FiltroEstado; label: string }[] = [
+    { key: 'all', label: t('filterAll') },
+    { key: 'contratada', label: t('filterEnDesarrollo') },
+    { key: 'finalizada', label: t('filterFinalizado') },
+  ]
+
+  const visibles =
+    filtro === 'all'
+      ? contrataciones
+      : contrataciones.filter((c) => c.estado === filtro)
 
   if (contrataciones.length === 0) {
     return (
@@ -104,111 +118,145 @@ export function ContratacionesList({
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      {contrataciones.map((item) => (
-        <Card
-          key={item.idParticipacion}
-          className="overflow-hidden hover:shadow-md transition-shadow border-border/60"
-        >
-          <CardContent className="p-5 space-y-4">
-            {/* Header: avatar + identidad + estado + reputación */}
-            <div className="flex items-center gap-3">
-              {item.fotoPerfil ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={item.fotoPerfil}
-                  alt={item.estudianteNombre}
-                  className="w-10 h-10 rounded-full object-cover border border-border shrink-0"
-                />
-              ) : (
-                <InitialsAvatar
-                  nombre={item.estudianteNombre}
-                  apellidos={item.estudianteApellidos}
-                />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-bold text-sm text-foreground leading-tight">
-                    {item.estudianteNombre} {item.estudianteApellidos}
-                  </h4>
-                  <Badge
-                    variant="secondary"
-                    className="px-2 py-0 text-[10px] font-bold tracking-wide uppercase bg-primary/10 text-primary border-primary/20"
+      {/* Filtros por estado */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {filtros.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setFiltro(key)}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
+              filtro === key
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                : 'bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+        <span className="ml-auto text-xs text-muted-foreground">
+          {visibles.length} / {contrataciones.length}
+        </span>
+      </div>
+
+      {/* Lista filtrada */}
+      {visibles.length === 0 ? (
+        <div className="p-10 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-center bg-card/20">
+          <Briefcase className="w-8 h-8 text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground">
+            {t('sinResultadosFiltro')}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {visibles.map((item) => (
+            <Card
+              key={item.idParticipacion}
+              className="overflow-hidden hover:shadow-md transition-shadow border-border/60"
+            >
+              <CardContent className="p-5 space-y-4">
+                {/* Header: avatar + identidad + estado + reputación */}
+                <div className="flex items-center gap-3">
+                  {item.fotoPerfil ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.fotoPerfil}
+                      alt={item.estudianteNombre}
+                      className="w-10 h-10 rounded-full object-cover border border-border shrink-0"
+                    />
+                  ) : (
+                    <InitialsAvatar
+                      nombre={item.estudianteNombre}
+                      apellidos={item.estudianteApellidos}
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-bold text-sm text-foreground leading-tight">
+                        {item.estudianteNombre} {item.estudianteApellidos}
+                      </h4>
+                      <Badge
+                        variant="secondary"
+                        className="px-2 py-0 text-[10px] font-bold tracking-wide uppercase bg-primary/10 text-primary border-primary/20"
+                      >
+                        {tituloLabels[item.tituloFwd ?? ''] ??
+                          t('tituloEgresado')}
+                      </Badge>
+                      <EstadoBadge estado={item.estado} />
+                    </div>
+                    <div className="flex items-center gap-3 mt-1">
+                      <ReputacionStars rating={item.reputacion} />
+                      <span className="text-xs text-muted-foreground">
+                        {t('postuloEl')}{' '}
+                        {new Date(item.fechaPostulacion).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Proyecto */}
+                <div className="flex items-center gap-3 bg-muted/40 rounded-xl px-4 py-3 border border-border/40">
+                  <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">
+                      {t('contratadoPara')}
+                    </span>
+                    <span className="text-sm font-semibold text-foreground truncate block">
+                      {item.proyecto.titulo}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTitle(item.proyecto.titulo)}
+                    className="shrink-0 text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:outline-none"
+                    title={t('verTituloCompleto')}
                   >
-                    {tituloLabels[item.tituloFwd ?? ''] ?? t('tituloEgresado')}
-                  </Badge>
-                  <EstadoBadge estado={item.estado} />
+                    <Eye className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex items-center gap-3 mt-1">
-                  <ReputacionStars rating={item.reputacion} />
-                  <span className="text-xs text-muted-foreground">
-                    {t('postuloEl')}{' '}
-                    {new Date(item.fechaPostulacion).toLocaleDateString()}
-                  </span>
+
+                {/* Footer: acciones */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/40">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs border-primary/20 text-primary hover:bg-primary/10 font-semibold"
+                  >
+                    <Link
+                      href={`/empresario/portafolio-egresado/${item.idParticipacion}`}
+                    >
+                      {t('viewProfile')}
+                    </Link>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedMotivacion(item)}
+                    className="h-8 text-xs font-semibold gap-1.5"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    {t('verMotivacion')}
+                  </Button>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="default"
+                    className="h-8 text-xs font-semibold gap-1.5 bg-accent hover:bg-accent/90 text-accent-foreground ml-auto"
+                  >
+                    <Link
+                      href={`/empresario/proyecto/${item.proyecto.id}/entregables`}
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5" />
+                      {t('viewEntregables')}
+                    </Link>
+                  </Button>
                 </div>
-              </div>
-            </div>
-
-            {/* Proyecto */}
-            <div className="flex items-center gap-3 bg-muted/40 rounded-xl px-4 py-3 border border-border/40">
-              <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">
-                  {t('contratadoPara')}
-                </span>
-                <span className="text-sm font-semibold text-foreground truncate block">
-                  {item.proyecto.titulo}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedTitle(item.proyecto.titulo)}
-                className="shrink-0 text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] focus:outline-none"
-                title={t('verTituloCompleto')}
-              >
-                <Eye className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Footer: acciones */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/40">
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="h-8 text-xs border-primary/20 text-primary hover:bg-primary/10 font-semibold"
-              >
-                <Link
-                  href={`/empresario/portafolio-egresado/${item.idParticipacion}`}
-                >
-                  {t('viewProfile')}
-                </Link>
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedMotivacion(item)}
-                className="h-8 text-xs font-semibold gap-1.5"
-              >
-                <FileText className="w-3.5 h-3.5" />
-                {t('verMotivacion')}
-              </Button>
-              <Button
-                asChild
-                size="sm"
-                variant="default"
-                className="h-8 text-xs font-semibold gap-1.5 bg-accent hover:bg-accent/90 text-accent-foreground ml-auto"
-              >
-                <Link
-                  href={`/empresario/proyecto/${item.proyecto.id}/entregables`}
-                >
-                  <FileCheck2 className="w-3.5 h-3.5" />
-                  {t('viewEntregables')}
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Dialog: título completo */}
       <Dialog
