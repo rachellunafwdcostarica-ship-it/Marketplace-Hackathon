@@ -105,12 +105,19 @@ export async function middleware(request: NextRequest) {
 
   // CASO LANDING: usuario autenticado en la raíz localizada (/es, /en).
   // El administrador no usa la landing compartida; se le envía a su panel.
+  // Sin rol asignado → onboarding (Camino B / OAuth incompleto).
   // No se valida aquí is_active ni la sesión: el gate de la ruta protegida
   // /admin revalida sesión, is_active, suspensión y rol tras el redirect.
-  // Egresado y empresario permanecen en la landing (su home configurado).
+  // Egresado y empresario verificados permanecen en la landing (su home).
   if (pathname === `/${locale}`) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
-    if (normalizeRole(roleRaw) === 'administrador') {
+    const role = normalizeRole(roleRaw)
+    if (!role) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/onboarding`, request.url),
+      )
+    }
+    if (role === 'administrador') {
       return NextResponse.redirect(
         new URL(`/${locale}${ROLE_HOME.administrador}`, request.url),
       )
@@ -233,11 +240,28 @@ export async function middleware(request: NextRequest) {
     return intlResponse
   }
 
-  // CASO E: /pending-approval. Dejar renderizar; la propia página redirige al
-  // panel si el perfil ya está verificado (evita el rebote por estado_cuenta,
-  // que ahora pasa a 'activa' apenas se confirma el correo).
+  // CASO E: /pending-approval. Requiere rol (perfil creado); sin rol → onboarding.
+  // La propia página redirige al panel si el perfil ya está verificado.
   if (isPendingApprovalPath(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    if (!normalizeRole(roleRaw)) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/onboarding`, request.url),
+      )
+    }
     return intlResponse
+  }
+
+  // GATE DE ROL (catch-all): rutas no clasificadas (showcase, reset-password,
+  // etc.) exigen rol asignado. Cierra el hueco que dejaba pasar usuarios OAuth
+  // sin completar onboarding fuera de /egresado, /empresario y /admin.
+  if (!isOnboardingPath(pathname) && !isPublicAuthPage(pathname)) {
+    const { data: roleRaw } = await supabase.rpc('get_my_role')
+    if (!normalizeRole(roleRaw)) {
+      return NextResponse.redirect(
+        new URL(`/${locale}/onboarding`, request.url),
+      )
+    }
   }
 
   return intlResponse

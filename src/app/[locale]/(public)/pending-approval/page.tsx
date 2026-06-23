@@ -23,6 +23,15 @@ export default async function PendingApprovalPage() {
   const { data: roleRaw } = await supabase.rpc('get_my_role')
   const role = normalizeRole(roleRaw as string | null)
 
+  if (!user) {
+    redirect('/login')
+  }
+
+  if (!role) {
+    const locale = await getLocale()
+    redirect(`/${locale}/onboarding`)
+  }
+
   // Si el perfil ya está verificado, esta pantalla no aplica → al panel. Esto
   // evita el rebote con el gate del layout (que solo deja entrar a verificados).
   if (user && (role === 'egresado' || role === 'empresario')) {
