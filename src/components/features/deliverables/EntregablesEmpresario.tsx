@@ -31,6 +31,7 @@ import {
 } from '@/lib/deliverables/queries'
 import { responderEntregable } from '@/lib/deliverables/actions'
 import { EmpresarioRatingCard } from '@/components/features/evaluaciones/EmpresarioRatingCard'
+import { ReportButton } from '@/components/features/moderation/ReportButton'
 import type { Result } from '@/lib/result'
 
 const ESTADO_STYLE: Record<string, string> = {
@@ -213,6 +214,9 @@ export function EntregablesEmpresario({
                           : t('downloadBtn')}
                       </Button>
                     )}
+                    <ReportButton
+                      target={{ tipo: 'entregable', id: e.id_entregable }}
+                    />
                   </div>
                 </div>
 

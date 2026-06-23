@@ -185,6 +185,33 @@ export async function listarColaReportes(): Promise<
     }
   }
 
+  const entregableIds = [
+    ...new Set(
+      rows
+        .map((r) => r.id_entregable)
+        .filter((id): id is string => id !== null),
+    ),
+  ]
+  const entregableLabelById = new Map<string, string>()
+  if (entregableIds.length > 0) {
+    const { data: entregables, error: entError } = await adminClient
+      .from('entregables')
+      .select('id_entregable, tipo_entregable, version')
+      .in('id_entregable', entregableIds)
+    if (entError) {
+      logger.error('listarColaReportes: fallo al leer entregables', {
+        error: entError.message,
+      })
+      return err(entError.message)
+    }
+    for (const e of entregables ?? []) {
+      entregableLabelById.set(
+        e.id_entregable,
+        `${e.tipo_entregable} v${e.version}`,
+      )
+    }
+  }
+
   const items: AdminReportQueueItem[] = rows.map((r) => {
     let target: ReportTarget | null = null
     if (r.id_reportado !== null) {
@@ -209,7 +236,7 @@ export async function listarColaReportes(): Promise<
       target = {
         tipo: 'entregable',
         id: r.id_entregable,
-        nombre: r.id_entregable,
+        nombre: entregableLabelById.get(r.id_entregable) ?? '',
       }
     } else if (r.id_portafolio !== null) {
       target = {
