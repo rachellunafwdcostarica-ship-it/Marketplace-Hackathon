@@ -3,48 +3,22 @@ import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 import { routing } from './i18n/routing'
 import { normalizeRole, ROLE_HOME } from '@/lib/auth/roles'
+import {
+  isProtected,
+  isPublicAuthPage,
+  isVerifyEmailPath,
+  isOnboardingPath,
+  isPendingApprovalPath,
+  isRoleExemptPath,
+  getRouteRole,
+} from '@/lib/auth/route-classification'
 import type { Database } from '@/types/database'
 import { env } from '@/lib/env'
 
 const intlMiddleware = createMiddleware(routing)
 
-const PROTECTED_PREFIXES = ['/egresado', '/empresario', '/admin']
-
 function getLocale(pathname: string): string {
   return pathname.startsWith('/en') ? 'en' : 'es'
-}
-
-function isProtected(pathname: string): boolean {
-  return PROTECTED_PREFIXES.some((prefix) =>
-    pathname.match(new RegExp(`^/(es|en)${prefix}`)),
-  )
-}
-
-function isPublicAuthPage(pathname: string): boolean {
-  return /^\/(es|en)\/(login|register|forgot-password|verify-email)(\/|$)/.test(
-    pathname,
-  )
-}
-
-function isVerifyEmailPath(pathname: string): boolean {
-  return /^\/(es|en)\/verify-email(\/|$)/.test(pathname)
-}
-
-function isOnboardingPath(pathname: string): boolean {
-  return /^\/(es|en)\/onboarding(\/|$)/.test(pathname)
-}
-
-function isPendingApprovalPath(pathname: string): boolean {
-  return /^\/(es|en)\/pending-approval(\/|$)/.test(pathname)
-}
-
-function getRouteRole(
-  pathname: string,
-): 'egresado' | 'empresario' | 'administrador' | null {
-  if (/^\/(es|en)\/egresado/.test(pathname)) return 'egresado'
-  if (/^\/(es|en)\/empresario/.test(pathname)) return 'empresario'
-  if (/^\/(es|en)\/admin/.test(pathname)) return 'administrador'
-  return null
 }
 
 export async function middleware(request: NextRequest) {
@@ -252,10 +226,12 @@ export async function middleware(request: NextRequest) {
     return intlResponse
   }
 
-  // GATE DE ROL (catch-all): rutas no clasificadas (showcase, reset-password,
+  // GATE DE ROL (catch-all): rutas no clasificadas (marketplace, dashboard,
   // etc.) exigen rol asignado. Cierra el hueco que dejaba pasar usuarios OAuth
-  // sin completar onboarding fuera de /egresado, /empresario y /admin.
-  if (!isOnboardingPath(pathname) && !isPublicAuthPage(pathname)) {
+  // sin completar onboarding fuera de /egresado, /empresario y /admin. Las
+  // rutas exentas (auth, onboarding, recuperación de contraseña RF-04 y la
+  // página de error 403) quedan fuera del gate vía isRoleExemptPath.
+  if (!isRoleExemptPath(pathname)) {
     const { data: roleRaw } = await supabase.rpc('get_my_role')
     if (!normalizeRole(roleRaw)) {
       return NextResponse.redirect(
