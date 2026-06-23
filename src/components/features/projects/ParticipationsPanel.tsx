@@ -4,12 +4,17 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import {
+  ArrowDown,
+  ArrowDownUp,
+  ArrowUp,
   Briefcase,
+  Check,
   CheckCircle2,
   ChevronDown,
   ExternalLink,
   FileText,
   GitBranch,
+  ListFilter,
   Lock,
   Mail,
   MessageSquare,
@@ -28,6 +33,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Link, useRouter } from '@/i18n/routing'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { cn } from '@/lib/utils/cn'
@@ -39,15 +56,18 @@ import {
 import type { ParticipacionEmpresario } from '@/lib/projects/project-detail'
 import type { Result } from '@/lib/result'
 import {
-  PARTICIPACION_FILTERS,
   canOpenParticipacion,
+  compareParticipacionesBy,
   getParticipacionActions,
+  isParticipacionEnPanel,
   isParticipacionSealed,
-  matchesParticipacionFilter,
+  matchesPanelSeleccion,
   type EstadoEfectivoProyecto,
   type EstadoParticipacion,
+  type PanelFilterConfig,
+  type PanelSortKey,
   type ParticipacionAction,
-  type ParticipacionFilter,
+  type SortDirection,
 } from '@/lib/projects/project-detail-logic'
 
 /**
@@ -61,6 +81,9 @@ export type ParticipacionPanelItem = ParticipacionEmpresario & {
 
 interface ParticipationsPanelProps {
   result: Result<ParticipacionPanelItem[]>
+  /** Config de filtro/orden según la vista: define qué estados se muestran como
+   *  chips y como universo, y qué criterios de orden ofrece. */
+  filterConfig: PanelFilterConfig
   /** ID del proyecto en la vista de detalle. En la vista cross-project cada
    *  item trae `participacion.proyecto.id`. */
   projectId?: string
@@ -86,6 +109,7 @@ interface ConfirmState {
 
 export function ParticipationsPanel({
   result,
+  filterConfig,
   projectId,
   projectEstado,
 }: ParticipationsPanelProps) {
@@ -95,7 +119,13 @@ export function ParticipationsPanel({
   const router = useRouter()
   const { isPending } = useAccountStatus()
 
-  const [filter, setFilter] = useState<ParticipacionFilter>('todos')
+  const [seleccion, setSeleccion] = useState<Set<EstadoParticipacion>>(
+    () => new Set(),
+  )
+  const [sortKey, setSortKey] = useState<PanelSortKey>(
+    () => filterConfig.sorts[0] ?? 'fecha_postulacion',
+  )
+  const [sortDir, setSortDir] = useState<SortDirection>('desc')
   const [confirm, setConfirm] = useState<ConfirmState | null>(null)
   const [openTarget, setOpenTarget] = useState<ParticipacionPanelItem | null>(
     null,
@@ -114,9 +144,31 @@ export function ParticipationsPanel({
     [result],
   )
 
+  const universo = useMemo(
+    () =>
+      participaciones.filter((p) =>
+        isParticipacionEnPanel(p.estado, filterConfig),
+      ),
+    [participaciones, filterConfig],
+  )
+
+  const conteoPorEstado = useMemo(() => {
+    const conteo = new Map<EstadoParticipacion, number>()
+    for (const participacion of universo) {
+      conteo.set(
+        participacion.estado,
+        (conteo.get(participacion.estado) ?? 0) + 1,
+      )
+    }
+    return conteo
+  }, [universo])
+
   const visibles = useMemo(
-    () => participaciones.filter((p) => matchesParticipacionFilter(p, filter)),
-    [participaciones, filter],
+    () =>
+      universo
+        .filter((p) => matchesPanelSeleccion(p.estado, seleccion))
+        .sort((a, b) => compareParticipacionesBy(a, b, sortKey, sortDir)),
+    [universo, seleccion, sortKey, sortDir],
   )
 
   const runAction = async (
@@ -219,18 +271,36 @@ export function ParticipationsPanel({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
-        {PARTICIPACION_FILTERS.map((clave) => (
-          <FilterButton
-            key={clave}
-            active={filter === clave}
-            onClick={() => setFilter(clave)}
-            label={t(`filter_${clave}`)}
-          />
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <EstadoFilter
+          config={filterConfig}
+          seleccion={seleccion}
+          conteoPorEstado={conteoPorEstado}
+          onToggle={(estado) =>
+            setSeleccion((prev) => {
+              const next = new Set(prev)
+              if (next.has(estado)) {
+                next.delete(estado)
+              } else {
+                next.add(estado)
+              }
+              return next
+            })
+          }
+          onClear={() => setSeleccion(new Set())}
+        />
+        <SortControl
+          config={filterConfig}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSortKeyChange={setSortKey}
+          onToggleDir={() =>
+            setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'))
+          }
+        />
       </div>
 
-      {participaciones.length === 0 ? (
+      {universo.length === 0 ? (
         <EmptyState message={t('participationsEmpty')} />
       ) : visibles.length === 0 ? (
         <EmptyState message={t('noParticipationsInFilter')} />
@@ -963,29 +1033,155 @@ function ActionButton({
   )
 }
 
-function FilterButton({
-  active,
-  onClick,
-  label,
-}: {
-  active: boolean
-  onClick: () => void
-  label: string
-}) {
+interface EstadoFilterProps {
+  config: PanelFilterConfig
+  seleccion: ReadonlySet<EstadoParticipacion>
+  conteoPorEstado: ReadonlyMap<EstadoParticipacion, number>
+  onToggle: (estado: EstadoParticipacion) => void
+  onClear: () => void
+}
+
+/** Filtro de estados multiselección (Popover + Command). Selección vacía = todos;
+ *  cada item muestra su conteo. Navegable por teclado vía cmdk. */
+function EstadoFilter({
+  config,
+  seleccion,
+  conteoPorEstado,
+  onToggle,
+  onClear,
+}: EstadoFilterProps) {
+  const t = useTranslations('ProjectDetail')
+  const count = seleccion.size
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'rounded-full border px-3 py-1 text-xs font-semibold transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]',
-        active
-          ? 'border-primary bg-primary/10 text-primary'
-          : 'border-border bg-card/50 text-muted-foreground hover:border-primary/50',
-      )}
-    >
-      {label}
-    </button>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="font-semibold"
+          aria-label={t('filterStateAria')}
+        >
+          <ListFilter className="w-3.5 h-3.5" />
+          {t('filterStateTrigger')}
+          {count > 0 ? (
+            <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1.5 text-[10px] font-bold text-primary">
+              {count}
+            </span>
+          ) : (
+            <span className="ml-1 text-xs font-normal text-muted-foreground">
+              {t('filterStateAll')}
+            </span>
+          )}
+          <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-60 p-2">
+        <div
+          role="group"
+          aria-label={t('filterStateAria')}
+          className="flex flex-col gap-0.5"
+        >
+          {config.estados.map((estado) => {
+            const checked = seleccion.has(estado)
+            return (
+              <button
+                key={estado}
+                type="button"
+                role="checkbox"
+                aria-checked={checked}
+                onClick={() => onToggle(estado)}
+                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+              >
+                <span
+                  className={cn(
+                    'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
+                    checked
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border',
+                  )}
+                >
+                  {checked && <Check className="h-3 w-3" />}
+                </span>
+                <span className="flex-1">{t(`pstatus_${estado}`)}</span>
+                <span className="text-xs text-muted-foreground">
+                  {conteoPorEstado.get(estado) ?? 0}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        {count > 0 && (
+          <div className="mt-1 border-t border-border/60 pt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onClear}
+              className="w-full justify-start text-xs font-semibold text-muted-foreground"
+            >
+              <XCircle className="w-3.5 h-3.5" />
+              {t('filterClear')}
+            </Button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+interface SortControlProps {
+  config: PanelFilterConfig
+  sortKey: PanelSortKey
+  sortDir: SortDirection
+  onSortKeyChange: (key: PanelSortKey) => void
+  onToggleDir: () => void
+}
+
+/** Selector de criterio de orden (Select) + toggle de dirección asc/desc. */
+function SortControl({
+  config,
+  sortKey,
+  sortDir,
+  onSortKeyChange,
+  onToggleDir,
+}: SortControlProps) {
+  const t = useTranslations('ProjectDetail')
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Select
+        value={sortKey}
+        onValueChange={(value) => onSortKeyChange(value as PanelSortKey)}
+      >
+        <SelectTrigger size="sm" className="h-8" aria-label={t('sortAria')}>
+          <ArrowDownUp className="w-3.5 h-3.5" />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {config.sorts.map((clave) => (
+            <SelectItem key={clave} value={clave}>
+              {t(`sort_${clave}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onToggleDir}
+        className="h-8 w-8 p-0"
+        aria-label={sortDir === 'asc' ? t('sortDirAsc') : t('sortDirDesc')}
+      >
+        {sortDir === 'asc' ? (
+          <ArrowUp className="w-3.5 h-3.5" />
+        ) : (
+          <ArrowDown className="w-3.5 h-3.5" />
+        )}
+      </Button>
+    </div>
   )
 }
 

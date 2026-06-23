@@ -156,47 +156,117 @@ export function computeEstadoParticipacionEfectivo(
 }
 
 /**
- * Filtros del panel de participaciones. Son LENTES, no particiones: se solapan
- * a propósito (`rechazados` y `contratados` también caen en `revisadas`).
+ * Configuración del panel de participaciones por contexto (RF-34). El panel es
+ * compartido por la vista de detalle de proyecto y la cross-project de
+ * postulaciones; cada una le pasa su propia config para mostrar SOLO los estados
+ * que le importan y los criterios de orden que tienen sentido ahí (p. ej.
+ * "nombre de proyecto" solo aplica en la vista cross-project).
+ *
+ * `estados` cumple doble función: define los chips visibles Y el universo de
+ * filas que la vista muestra. En postulaciones eso excluye `finalizada` y
+ * `cancelada` incluso sin filtro activo, porque esas ofertas viven en la vista
+ * de Contrataciones.
  */
-export type ParticipacionFilter =
-  | 'todos'
-  | 'con_entregas'
-  | 'revisadas'
-  | 'contratados'
-  | 'rechazados'
+export type PanelSortKey =
+  | 'fecha_postulacion'
+  | 'nombre_proyecto'
+  | 'nombre_participante'
 
-export const PARTICIPACION_FILTERS: ParticipacionFilter[] = [
-  'todos',
-  'con_entregas',
-  'revisadas',
-  'contratados',
-  'rechazados',
-]
+export type SortDirection = 'asc' | 'desc'
 
-export interface ParticipacionFilterable {
-  estado: EstadoParticipacion
-  fechaEntregaPrototipo: string | null
+export interface PanelFilterConfig {
+  estados: readonly EstadoParticipacion[]
+  sorts: readonly PanelSortKey[]
 }
 
-export function matchesParticipacionFilter(
-  fila: ParticipacionFilterable,
-  filtro: ParticipacionFilter,
+export const PANEL_FILTER_DETALLE: PanelFilterConfig = {
+  estados: [
+    'enviada',
+    'en_revision',
+    'contratada',
+    'no_seleccionada',
+    'retirada',
+    'finalizada',
+    'cancelada',
+  ],
+  sorts: ['fecha_postulacion', 'nombre_participante'],
+}
+
+export const PANEL_FILTER_POSTULACIONES: PanelFilterConfig = {
+  estados: [
+    'enviada',
+    'en_revision',
+    'contratada',
+    'no_seleccionada',
+    'retirada',
+  ],
+  sorts: ['fecha_postulacion', 'nombre_proyecto', 'nombre_participante'],
+}
+
+/** Universo de la vista: la fila solo aparece si su estado está en la config. */
+export function isParticipacionEnPanel(
+  estado: EstadoParticipacion,
+  config: PanelFilterConfig,
 ): boolean {
-  switch (filtro) {
-    case 'todos':
-      return true
-    case 'con_entregas':
-      return fila.fechaEntregaPrototipo !== null
-    case 'revisadas':
-      return (
-        fila.estado === 'en_revision' ||
-        fila.estado === 'no_seleccionada' ||
-        fila.estado === 'contratada'
-      )
-    case 'contratados':
-      return fila.estado === 'contratada' || fila.estado === 'finalizada'
-    case 'rechazados':
-      return fila.estado === 'no_seleccionada'
+  return config.estados.includes(estado)
+}
+
+/**
+ * Selección multiselección de chips. Con los chips por estado siendo una
+ * partición exacta, el filtro es pura pertenencia: una selección vacía muestra
+ * todo el universo; si no, la fila pasa si su estado está marcado (OR).
+ */
+export function matchesPanelSeleccion(
+  estado: EstadoParticipacion,
+  seleccion: ReadonlySet<EstadoParticipacion>,
+): boolean {
+  return seleccion.size === 0 || seleccion.has(estado)
+}
+
+/** Shape mínimo ordenable: mantiene el comparador puro y testeable sin atar la
+ *  lógica al tipo completo de la tarjeta. */
+export interface ParticipacionOrdenable {
+  estudianteNombre: string
+  estudianteApellidos: string
+  fechaPostulacion: string
+  proyecto?: { titulo: string }
+}
+
+function getSortValue(
+  fila: ParticipacionOrdenable,
+  clave: PanelSortKey,
+): string {
+  switch (clave) {
+    case 'fecha_postulacion':
+      return fila.fechaPostulacion
+    case 'nombre_proyecto':
+      return fila.proyecto?.titulo ?? ''
+    case 'nombre_participante':
+      return `${fila.estudianteNombre} ${fila.estudianteApellidos}`.trim()
   }
+}
+
+/**
+ * Comparador de participaciones para el orden del panel. Las fechas se comparan
+ * como cadenas ISO (lexicográfico = cronológico); los nombres con `localeCompare`
+ * insensible a mayúsculas y acentos.
+ */
+export function compareParticipacionesBy(
+  a: ParticipacionOrdenable,
+  b: ParticipacionOrdenable,
+  clave: PanelSortKey,
+  direccion: SortDirection,
+): number {
+  const factor = direccion === 'asc' ? 1 : -1
+  const va = getSortValue(a, clave)
+  const vb = getSortValue(b, clave)
+  const base =
+    clave === 'fecha_postulacion'
+      ? va < vb
+        ? -1
+        : va > vb
+          ? 1
+          : 0
+      : va.localeCompare(vb, undefined, { sensitivity: 'base' })
+  return factor * base
 }
