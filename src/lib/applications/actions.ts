@@ -224,7 +224,7 @@ export async function retirarPostulacion(
   // Buscar la participación y asegurar que le pertenece y su estado permite retiro
   const { data: participacion, error: partError } = await supabase
     .from('participaciones')
-    .select('id_participacion, estado')
+    .select('id_participacion, estado, id_proyecto')
     .eq('id_participacion', parsed.data.id_participacion)
     .eq('id_estudiante', verified.data.id_estudiante)
     .single()
@@ -239,6 +239,23 @@ export async function retirarPostulacion(
     )
   ) {
     return err('estado_invalido_retiro')
+  }
+
+  // RF-31: solo se puede retirar si el plazo NO ha vencido. Una vez cerrada la
+  // ventana de ofertas, la oferta queda firme para la revisión del empresario.
+  // Espejo de la verificación de `postularse`.
+  const { data: proyecto, error: proyectoError } = await supabase
+    .from('proyectos')
+    .select('fecha_cierre')
+    .eq('id_proyecto', participacion.id_proyecto)
+    .single()
+
+  if (proyectoError || !proyecto) {
+    return err('proyecto_not_found')
+  }
+
+  if (proyecto.fecha_cierre && new Date(proyecto.fecha_cierre) < new Date()) {
+    return err('plazo_vencido')
   }
 
   // Actualizar a retirada
