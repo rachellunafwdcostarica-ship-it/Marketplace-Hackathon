@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Link } from '@/i18n/routing'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useAccountStatus } from '@/components/features/auth/AccountStatusContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
@@ -30,10 +31,12 @@ type ApplyFormValues = zod.infer<ReturnType<typeof createApplySchema>>
 
 function createApplySchema(
   t: ReturnType<typeof useTranslations<'Validation'>>,
+  tCommon: ReturnType<typeof useTranslations<'Common'>>,
 ) {
   return zod.object({
     coverLetter: zod
       .string()
+      .min(30, { message: t('coverLetterMin') })
       .max(MAX_CARTA_LEN, { message: t('coverLetterMax') }),
     planteamientoSolucion: zod
       .string()
@@ -54,12 +57,12 @@ function createApplySchema(
         }),
       )
       .max(MAX_ENLACES_EXTRA),
-    documentacionTecnica: zod
-      .string()
-      .url({ message: t('linkInvalid') })
-      .max(MAX_DOC_URL_LEN, { message: t('technicalDocMax') })
-      .optional()
-      .or(zod.literal('')),
+    documentacionTecnica:
+      typeof window === 'undefined'
+        ? zod.any()
+        : zod.any().refine((files) => files && files.length > 0, {
+            message: tCommon('required'),
+          }),
   })
 }
 
@@ -85,8 +88,8 @@ export function ApplyProjectClient({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const applySchema = useMemo(
-    () => createApplySchema(tValidation),
-    [tValidation],
+    () => createApplySchema(tValidation, tCommon),
+    [tValidation, tCommon],
   )
 
   const {
@@ -101,7 +104,7 @@ export function ApplyProjectClient({
       planteamientoSolucion: '',
       prototipoUrl: '',
       enlacesExtra: [],
-      documentacionTecnica: '',
+      // documentacionTecnica is uncontrolled for type="file"
     },
   })
 
@@ -114,6 +117,26 @@ export function ApplyProjectClient({
     setIsSubmitting(true)
 
     try {
+      const file = data.documentacionTecnica[0] as File
+      const supabase = createSupabaseBrowserClient()
+      const { data: userData } = await supabase.auth.getUser()
+      if (!userData.user) throw new Error(tEgresado('applyErrorSesion'))
+
+      const filePath = `${projectId}/${userData.user.id}/${Date.now()}_${file.name}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('documentacion_tecnica')
+        .upload(filePath, file)
+
+      if (uploadError)
+        throw new Error('Error al subir el documento: ' + uploadError.message)
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('documentacion_tecnica').getPublicUrl(filePath)
+
+      const docUrl = publicUrl.replace('/public/', '/authenticated/')
+
       const extras = data.enlacesExtra
         .map((enlace) => enlace.value.trim())
         .filter((value) => value.length > 0)
@@ -123,8 +146,8 @@ export function ApplyProjectClient({
         id_proyecto: projectId,
         planteamiento_solucion: data.planteamientoSolucion,
         prototipo_enlaces: prototipoEnlaces,
-        carta_postulacion: data.coverLetter.trim() || undefined,
-        documentacion_tecnica: data.documentacionTecnica?.trim() || undefined,
+        carta_postulacion: data.coverLetter.trim(),
+        documentacion_tecnica: docUrl,
       })
 
       if (!result.ok) {
@@ -303,9 +326,7 @@ export function ApplyProjectClient({
                 >
                   <span>
                     {tEgresado('coverLetter')}{' '}
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {tCommon('optional')}
-                    </span>
+                    <span className="text-magenta">{tCommon('required')}</span>
                   </span>
                   <span className="text-xs font-normal text-muted-foreground">
                     {tCommon('maxCharsLabel', { n: MAX_CARTA_LEN })}
@@ -332,23 +353,21 @@ export function ApplyProjectClient({
                 >
                   <FileText className="w-4 h-4 text-accent" />
                   {tEgresado('technicalDocUrlLabel')}{' '}
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {tCommon('optional')}
-                  </span>
+                  <span className="text-magenta">{tCommon('required')}</span>
                 </Label>
                 <Input
                   id="documentacionTecnica"
-                  type="url"
-                  placeholder="https://..."
+                  type="file"
+                  accept=".pdf,.zip,.rar"
                   className={`bg-card/50 border-border ${errors.documentacionTecnica ? 'border-destructive' : 'focus-visible:ring-primary'}`}
                   {...register('documentacionTecnica')}
                 />
                 <p className="text-xs text-muted-foreground">
                   {tEgresado('technicalDocUrlHelp')}
                 </p>
-                {errors.documentacionTecnica && (
+                {errors.documentacionTecnica?.message && (
                   <p className="text-xs font-semibold text-destructive">
-                    {errors.documentacionTecnica.message}
+                    {String(errors.documentacionTecnica.message)}
                   </p>
                 )}
               </div>

@@ -13,6 +13,7 @@ import { DEFAULT_LOCALE } from '@/i18n/config'
 import { buildPostulacionNotificacion } from './postulacion-notificacion-logic'
 
 const MIN_PLANTEAMIENTO_LEN = 30
+const MIN_CARTA_LEN = 30
 const MAX_CARTA_LEN = 2800
 const MIN_PROTOTIPO_ENLACES = 1
 const MAX_PROTOTIPO_ENLACES = 4
@@ -26,8 +27,8 @@ const PostularseSchema = z.object({
     .array(z.string().url().max(MAX_ENLACE_LEN))
     .min(MIN_PROTOTIPO_ENLACES)
     .max(MAX_PROTOTIPO_ENLACES),
-  carta_postulacion: z.string().max(MAX_CARTA_LEN).optional(),
-  documentacion_tecnica: z.string().url().max(MAX_DOC_URL_LEN).optional(),
+  carta_postulacion: z.string().min(MIN_CARTA_LEN).max(MAX_CARTA_LEN),
+  documentacion_tecnica: z.string().url().max(MAX_DOC_URL_LEN),
 })
 
 const RetirarSchema = z.object({
@@ -93,6 +94,11 @@ export async function postularse(
     return err('plazo_vencido')
   }
 
+  const expectedPath = `${parsed.data.id_proyecto}/${userData.user.id}`
+  if (!parsed.data.documentacion_tecnica.includes(expectedPath)) {
+    return err('url_invalida')
+  }
+
   // Validación de IA antes de insertar
   const aiValidation = await validateApplicationWithAI({
     projectTitle: proyecto.titulo || 'Proyecto FWD',
@@ -115,10 +121,10 @@ export async function postularse(
     id_proyecto: parsed.data.id_proyecto,
     id_estudiante: estudiante.id_estudiante,
     estado: 'enviada',
-    carta_postulacion: parsed.data.carta_postulacion ?? null,
+    carta_postulacion: parsed.data.carta_postulacion,
     planteamiento_solucion: parsed.data.planteamiento_solucion,
     prototipo_enlaces: parsed.data.prototipo_enlaces,
-    documentacion_tecnica: parsed.data.documentacion_tecnica ?? null,
+    documentacion_tecnica: parsed.data.documentacion_tecnica,
   })
 
   if (insertError) {

@@ -394,6 +394,7 @@
     "nameMin": "El nombre debe tener al menos 2 caracteres.",
     "required": "Este campo es obligatorio.",
     "solutionApproachMin": "El planteamiento de solución debe tener al menos 30 caracteres.",
+    "coverLetterMin": "La carta de presentación debe tener al menos 30 caracteres.",
     "coverLetterMax": "La carta de presentación no puede superar los 2800 caracteres.",
     "prototypeRequired": "Debes incluir al menos el enlace del prototipo.",
     "linkInvalid": "Debe ser una URL válida (ej. https://...).",

@@ -383,8 +383,7 @@
     "estadoEnviado": "Submitted",
     "estadoEnRevision": "Under review",
     "estadoAprobado": "Approved",
-    "estadoConCambios": "Changes requested",
-    "viewDeliverables": "View deliverables"
+    "estadoConCambios": "Changes requested"
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",
@@ -394,6 +393,7 @@
     "nameMin": "The name must be at least 2 characters.",
     "required": "This field is required.",
     "solutionApproachMin": "The solution approach must be at least 30 characters.",
+    "coverLetterMin": "The cover letter must be at least 30 characters.",
     "coverLetterMax": "Cover letter cannot exceed 2800 characters.",
     "prototypeRequired": "You must include at least the prototype link.",
     "linkInvalid": "Must be a valid URL (e.g., https://...).",

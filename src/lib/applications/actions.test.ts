@@ -72,6 +72,7 @@ const validInput = {
     'Esta es mi propuesta de solución detallada para el proyecto.',
   prototipo_enlaces: ['https://github.com/test/prototype'],
   carta_postulacion: 'Carta de presentación del egresado.',
+  documentacion_tecnica: `https://supabase.co/storage/v1/object/public/documentacion_tecnica/${PROJ_UUID}/${USER_ID}/file.pdf`,
 }
 
 beforeEach(() => {
@@ -85,6 +86,7 @@ beforeEach(() => {
 
 describe('postularse', () => {
   it('retorna invalid_input si el input no cumple el schema', async () => {
+    // @ts-expect-error Intentional invalid input to test Zod validation
     const result = await postularse({
       id_proyecto: 'no-es-uuid',
       planteamiento_solucion: 'corto',
