@@ -37,8 +37,7 @@ export function RankingSnippet({
 
       <div className="flex items-center gap-4 flex-wrap flex-1 justify-center">
         {topTalents.slice(0, 2).map((talent, index) => {
-          // Hardcode rating visual logic as requested: #1 -> 4.9, #2 -> 4.8 if real reputation is null
-          const displayRating = talent.reputacion ?? (index === 0 ? 4.9 : 4.8)
+          const displayRating = talent.reputacion
 
           return (
             <div
@@ -64,10 +63,16 @@ export function RankingSnippet({
               <span className="text-sm font-medium text-foreground">
                 {talent.nombreCompleto}
               </span>
-              <span className="text-sm font-semibold text-highlight flex items-center gap-1">
-                {displayRating.toFixed(1)}{' '}
-                <Star className="w-3 h-3 fill-current" />
-              </span>
+              {displayRating !== null ? (
+                <span className="text-sm font-semibold text-highlight flex items-center gap-1">
+                  {displayRating.toFixed(1)}{' '}
+                  <Star className="w-3 h-3 fill-current" />
+                </span>
+              ) : (
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                  N/A
+                </span>
+              )}
             </div>
           )
         })}

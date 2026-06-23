@@ -1530,6 +1530,7 @@
     "showingCount": "Mostrando {count} talentos",
     "sortByReputation": "Ordenar por Reputación",
     "reputation": "Reputación",
+    "noReputation": "Sin reputación aún",
     "viewProfile": "Ver Perfil",
     "emptyState": "No se encontraron egresados con los filtros seleccionados."
   },

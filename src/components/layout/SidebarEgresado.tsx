@@ -17,12 +17,8 @@ import {
   ChevronRight,
 } from 'lucide-react'
 
-// Dummy user info for the mockup (should ideally come from context or props)
-const MOCK_USER = {
-  name: 'Jiro',
-  role: 'Estudiante FWD',
-  initials: 'J',
-}
+// Role definition used below
+const ROLE = 'Estudiante FWD'
 
 export function SidebarEgresado() {
   const t = useTranslations('Nav')
@@ -77,31 +73,7 @@ export function SidebarEgresado() {
         )}
       </button>
 
-      {/* Perfil del Usuario */}
-      <div className={cn('p-6 z-10', isCollapsed ? 'items-center px-4' : '')}>
-        <div
-          className={cn(
-            'flex items-center gap-3',
-            isCollapsed ? 'justify-center' : '',
-          )}
-        >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white font-heading font-bold">
-            {MOCK_USER.initials}
-          </div>
-          {!isCollapsed && (
-            <div className="flex flex-col overflow-hidden">
-              <span className="truncate font-heading text-sm font-bold text-white">
-                {MOCK_USER.name}
-              </span>
-              <span className="truncate font-body text-xs text-white/60 font-medium">
-                {MOCK_USER.role}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-4 z-10">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-4 z-10 mt-14">
         {/* Sección Menú */}
         <div className="mb-6">
           {!isCollapsed && (
