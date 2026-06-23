@@ -3,7 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServerClient: vi.fn(),
 }))
-vi.mock('@/lib/auth/guards', () => ({ requireRole: vi.fn() }))
+vi.mock('@/lib/auth/guards', () => ({
+  requireVerifiedEgresado: vi.fn(),
+  requireVerifiedEmpresario: vi.fn(),
+}))
 vi.mock('@/lib/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }))
@@ -11,10 +14,14 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 import { subirHito, subirEntregableFinal, responderEntregable } from './actions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth/guards'
+import {
+  requireVerifiedEgresado,
+  requireVerifiedEmpresario,
+} from '@/lib/auth/guards'
 
 const mockedServer = vi.mocked(createSupabaseServerClient)
-const mockedRequireRole = vi.mocked(requireRole)
+const mockedVerifiedEgresado = vi.mocked(requireVerifiedEgresado)
+const mockedVerifiedEmpresario = vi.mocked(requireVerifiedEmpresario)
 
 const CONT_UUID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const ENTR_UUID = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
@@ -71,19 +78,6 @@ function withAuth(
   }
 }
 
-function withNoAuth() {
-  return {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({
-        data: { user: null },
-        error: { message: 'no auth' },
-      }),
-    },
-    from: vi.fn(),
-    storage: makeStorage(),
-  }
-}
-
 type MockChain = {
   eq: () => MockChain
   order: () => MockChain
@@ -132,7 +126,14 @@ function entregablesFrom(
 
 beforeEach(() => {
   vi.clearAllMocks()
-  mockedRequireRole.mockResolvedValue({ ok: true, data: 'egresado' })
+  mockedVerifiedEgresado.mockResolvedValue({
+    ok: true,
+    data: { id_estudiante: STUD_UUID, id_usuario: USER_ID },
+  })
+  mockedVerifiedEmpresario.mockResolvedValue({
+    ok: true,
+    data: { id_empresario: 'emp-1', id_usuario: USER_ID },
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,10 +155,14 @@ describe('subirHito', () => {
     if (!result.ok) expect(result.error).toBe('invalid_input')
   })
 
-  it('propaga error si el rol no es egresado', async () => {
-    mockedRequireRole.mockResolvedValue({ ok: false, error: 'forbidden' })
+  it('propaga el error del guard si el egresado no está verificado', async () => {
+    mockedVerifiedEgresado.mockResolvedValue({
+      ok: false,
+      error: 'cuenta_no_verificada',
+    })
     const result = await subirHito(makeSubirFormData())
     expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('cuenta_no_verificada')
   })
 
   it('retorna storage_error si falla el upload al storage', async () => {
@@ -248,11 +253,14 @@ describe('responderEntregable', () => {
     if (!result.ok) expect(result.error).toBe('invalid_input')
   })
 
-  it('retorna unauthenticated si no hay usuario', async () => {
-    mockedServer.mockResolvedValue(withNoAuth() as never)
+  it('propaga el error del guard si el empresario no está verificado', async () => {
+    mockedVerifiedEmpresario.mockResolvedValue({
+      ok: false,
+      error: 'not_verified',
+    })
     const result = await responderEntregable(validInput)
     expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.error).toBe('unauthenticated')
+    if (!result.ok) expect(result.error).toBe('not_verified')
   })
 
   it('retorna entregable_not_found si el entregable no existe', async () => {
