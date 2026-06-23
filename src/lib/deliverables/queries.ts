@@ -280,7 +280,7 @@ export async function getSignedUrlEntregable(
 
   const { data: signed, error: signErr } = await supabase.storage
     .from('entregables')
-    .createSignedUrl(entregable.archivo_url, 3600)
+    .createSignedUrl(entregable.archivo_url, 3600, { download: true })
   if (signErr) {
     logger.error('getSignedUrlEntregable: storage error', {
       error: signErr.message,
@@ -396,6 +396,79 @@ export interface ContratacionResumen {
   estado_proyecto: string
 }
 
+export interface ContratacionParaCalificacion {
+  id_contratacion: string
+  id_participacion: string
+  estado_periodo: string
+  id_estudiante: string
+}
+
+/**
+ * Devuelve la contratación activa/finalizada para un proyecto del empresario,
+ * incluyendo el id_estudiante. Usado para mostrar la tarjeta de calificación (RF-49).
+ */
+export async function getContratacionDelProyecto(
+  idProyecto: string,
+): Promise<Result<ContratacionParaCalificacion | null>> {
+  if (!z.string().uuid().safeParse(idProyecto).success)
+    return err('invalid_input')
+
+  const supabase = await createSupabaseServerClient()
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData.user) return err('unauthenticated')
+
+  const { data: empresario, error: empError } = await supabase
+    .from('empresarios')
+    .select('id_empresario')
+    .eq('id_usuario', userData.user.id)
+    .maybeSingle()
+  if (empError || !empresario) return err('unauthorized')
+
+  const { data: proyecto, error: proyError } = await supabase
+    .from('proyectos')
+    .select('id_proyecto')
+    .eq('id_proyecto', idProyecto)
+    .eq('id_empresario', empresario.id_empresario)
+    .maybeSingle()
+  if (proyError || !proyecto) return err('unauthorized')
+
+  const { data: part, error: partError } = await supabase
+    .from('participaciones')
+    .select('id_participacion, id_estudiante')
+    .eq('id_proyecto', idProyecto)
+    .in('estado', ['contratada', 'finalizada'])
+    .maybeSingle()
+
+  if (partError) {
+    logger.error('getContratacionDelProyecto: participacion query failed', {
+      error: partError.message,
+    })
+    return err('database_error')
+  }
+  if (!part) return ok(null)
+
+  const { data: contratacion, error: contError } = await supabase
+    .from('contrataciones')
+    .select('id_contratacion, estado_periodo')
+    .eq('id_participacion', part.id_participacion)
+    .maybeSingle()
+
+  if (contError) {
+    logger.error('getContratacionDelProyecto: contratacion query failed', {
+      error: contError.message,
+    })
+    return err('database_error')
+  }
+  if (!contratacion) return ok(null)
+
+  return ok({
+    id_contratacion: contratacion.id_contratacion,
+    id_participacion: part.id_participacion,
+    estado_periodo: contratacion.estado_periodo,
+    id_estudiante: part.id_estudiante,
+  })
+}
+
 /**
  * Lista todas las contrataciones del egresado autenticado (estado contratada
  * o finalizada) junto con los datos básicos del proyecto. RF-40/41.
@@ -449,7 +522,7 @@ export async function getMisContrataciones(): Promise<
   const idProyectos = participaciones.map((p) => p.id_proyecto)
   const { data: proyectos, error: proyError } = await supabase
     .from('proyectos')
-    .select('id_proyecto, titulo, estado')
+    .select('id_proyecto, titulo, estado, id_empresario')
     .in('id_proyecto', idProyectos)
   if (proyError) {
     logger.error('getMisContrataciones: proyectos query failed', {
