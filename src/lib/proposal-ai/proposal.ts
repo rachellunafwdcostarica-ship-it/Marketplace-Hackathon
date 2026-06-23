@@ -149,7 +149,11 @@ export async function generateProposal(
         continue
       }
 
-      const validacion = await provider.validarPropuesta(raw, locale)
+      const validacion = await provider.validarPropuesta(
+        raw,
+        contextoInicial,
+        locale,
+      )
       if (!validacion.valido) {
         ajustes = validacion.ajustes
         ultimasRazones = validacion.razones
