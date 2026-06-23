@@ -3,7 +3,10 @@
 import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth/guards'
+import {
+  requireVerifiedEgresado,
+  requireVerifiedEmpresario,
+} from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { crearNotificacion } from '@/lib/notifications/create'
@@ -34,8 +37,11 @@ async function registrarEntregable(
   input: SubirInput,
   tipo: 'parcial' | 'final',
 ): Promise<Result<void>> {
-  const roleResult = await requireRole('egresado')
-  if (!roleResult.ok) return roleResult
+  // Validación de verificación ANTES de tocar el Storage: si el egresado no está
+  // verificado, cortamos acá para no subir un archivo huérfano (la policy de
+  // Storage de 'entregables' no exige verificación por sí sola).
+  const verified = await requireVerifiedEgresado()
+  if (!verified.ok) return verified
 
   const supabase = await createSupabaseServerClient()
 
@@ -206,8 +212,8 @@ export async function actualizarUrlProyecto(
   const parsed = ActualizarUrlSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
 
-  const roleResult = await requireRole('egresado')
-  if (!roleResult.ok) return roleResult
+  const verified = await requireVerifiedEgresado()
+  if (!verified.ok) return verified
 
   const supabase = await createSupabaseServerClient()
 
@@ -252,9 +258,10 @@ export async function responderEntregable(
   const parsed = ResponderEntregableSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
 
+  const verified = await requireVerifiedEmpresario()
+  if (!verified.ok) return verified
+
   const supabase = await createSupabaseServerClient()
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) return err('unauthenticated')
 
   const { data: entregable, error: entErr } = await supabase
     .from('entregables')
@@ -285,18 +292,11 @@ export async function responderEntregable(
     .maybeSingle()
   if (partErr || !participacion) return err('unauthorized')
 
-  const { data: empresario, error: empErr } = await supabase
-    .from('empresarios')
-    .select('id_empresario')
-    .eq('id_usuario', userData.user.id)
-    .maybeSingle()
-  if (empErr || !empresario) return err('unauthorized')
-
   const { data: proyectoOwned, error: proyErr } = await supabase
     .from('proyectos')
     .select('id_proyecto, titulo')
     .eq('id_proyecto', participacion.id_proyecto)
-    .eq('id_empresario', empresario.id_empresario)
+    .eq('id_empresario', verified.data.id_empresario)
     .maybeSingle()
   if (proyErr || !proyectoOwned) return err('unauthorized')
 
@@ -334,7 +334,7 @@ export async function responderEntregable(
       .from('comentarios_entregables')
       .insert({
         id_entregable: parsed.data.idEntregable,
-        id_autor: userData.user.id,
+        id_autor: verified.data.id_usuario,
         contenido: parsed.data.comentario ?? '',
         tipo_comentario: 'aprobacion',
       })
@@ -387,7 +387,7 @@ export async function responderEntregable(
     .from('comentarios_entregables')
     .insert({
       id_entregable: parsed.data.idEntregable,
-      id_autor: userData.user.id,
+      id_autor: verified.data.id_usuario,
       contenido: parsed.data.comentario ?? '',
       tipo_comentario:
         parsed.data.decision === 'aprobado'
@@ -440,9 +440,10 @@ export async function comentarEntregable(
   const parsed = ComentarEntregableSchema.safeParse(input)
   if (!parsed.success) return err('invalid_input')
 
+  const verified = await requireVerifiedEmpresario()
+  if (!verified.ok) return verified
+
   const supabase = await createSupabaseServerClient()
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) return err('unauthenticated')
 
   const { data: entregable, error: entErr } = await supabase
     .from('entregables')
@@ -465,18 +466,11 @@ export async function comentarEntregable(
     .maybeSingle()
   if (partErr || !participacion) return err('unauthorized')
 
-  const { data: empresario, error: empErr } = await supabase
-    .from('empresarios')
-    .select('id_empresario')
-    .eq('id_usuario', userData.user.id)
-    .maybeSingle()
-  if (empErr || !empresario) return err('unauthorized')
-
   const { data: proyectoOwned, error: proyErr } = await supabase
     .from('proyectos')
     .select('id_proyecto')
     .eq('id_proyecto', participacion.id_proyecto)
-    .eq('id_empresario', empresario.id_empresario)
+    .eq('id_empresario', verified.data.id_empresario)
     .maybeSingle()
   if (proyErr || !proyectoOwned) return err('unauthorized')
 
@@ -484,7 +478,7 @@ export async function comentarEntregable(
     .from('comentarios_entregables')
     .insert({
       id_entregable: parsed.data.idEntregable,
-      id_autor: userData.user.id,
+      id_autor: verified.data.id_usuario,
       contenido: parsed.data.contenido,
       tipo_comentario: 'aclaracion',
     })
