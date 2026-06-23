@@ -17,7 +17,10 @@ import {
   FileText,
   Star,
   Loader2,
-  Send,
+  X,
+  Link2,
+  Pencil,
+  ExternalLink,
 } from 'lucide-react'
 import { Link } from '@/i18n/routing'
 import { Navbar } from '@/components/layout/Navbar'
@@ -28,7 +31,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
   subirHito,
   subirEntregableFinal,
-  comentarEntregableEgresado,
+  actualizarUrlProyecto,
 } from '@/lib/deliverables/actions'
 import { rateCompany } from '@/lib/company/ratings'
 import { logger } from '@/lib/logger'
@@ -51,21 +54,29 @@ const ESTADO_CONFIG = {
     label: 'estadoEnviado',
     className: 'bg-primary/10 text-primary border border-primary/20',
     icon: Hourglass,
+    accentBg: 'bg-primary',
+    iconColor: 'text-primary',
   },
   en_revision: {
     label: 'estadoEnRevision',
     className: 'bg-warning/10 text-warning border border-warning/20',
     icon: Clock3,
+    accentBg: 'bg-warning',
+    iconColor: 'text-warning',
   },
   aprobado: {
     label: 'estadoAprobado',
     className: 'bg-accent/10 text-accent border border-accent/20',
     icon: CheckCircle2,
+    accentBg: 'bg-accent',
+    iconColor: 'text-accent',
   },
   con_cambios: {
     label: 'estadoConCambios',
     className: 'bg-magenta/10 text-magenta border border-magenta/20',
     icon: AlertCircle,
+    accentBg: 'bg-magenta',
+    iconColor: 'text-magenta',
   },
 } as const
 
@@ -88,6 +99,8 @@ const PERIODO_CONFIG = {
   },
 } as const
 
+const URL_SPLIT = /(https?:\/\/[^\s]+)/g
+
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
@@ -96,24 +109,6 @@ function SectionHeading({ children }: { children: ReactNode }) {
   )
 }
 
-function DetailField({
-  label,
-  children,
-}: {
-  label: string
-  children: ReactNode
-}) {
-  return (
-    <div className="space-y-0.5">
-      <p className="text-xs text-muted-foreground font-medium">{label}</p>
-      <p className="text-sm font-semibold text-foreground">{children}</p>
-    </div>
-  )
-}
-
-const URL_SPLIT = /(https?:\/\/[^\s]+)/g
-
-/** Renderiza texto plano volviendo clickeable cualquier URL http(s). */
 function LinkifiedText({ text }: { text: string }) {
   return (
     <>
@@ -136,68 +131,6 @@ function LinkifiedText({ text }: { text: string }) {
   )
 }
 
-/** Caja para que el egresado escriba un mensaje o pegue un link en el hilo. */
-function ThreadComposer({
-  idEntregable,
-  projectId,
-  onSent,
-}: {
-  idEntregable: string
-  projectId: string
-  onSent: () => void
-}) {
-  const tEgresado = useTranslations('Egresado')
-  const [value, setValue] = useState('')
-  const [sending, setSending] = useState(false)
-
-  const handleSend = async () => {
-    const contenido = value.trim()
-    if (!contenido) return
-    setSending(true)
-    const res = await comentarEntregableEgresado({
-      idEntregable,
-      idProyecto: projectId,
-      contenido,
-    })
-    setSending(false)
-    if (res.ok) {
-      setValue('')
-      onSent()
-    } else {
-      toast.error(tEgresado('replyError'))
-    }
-  }
-
-  return (
-    <div className="flex items-end gap-2">
-      <textarea
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={tEgresado('replyPlaceholder')}
-        rows={1}
-        maxLength={1000}
-        disabled={sending}
-        className="flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:opacity-50"
-      />
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled={sending || value.trim().length === 0}
-        onClick={handleSend}
-        className="font-semibold shrink-0"
-        aria-label={tEgresado('replySend')}
-      >
-        {sending ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        ) : (
-          <Send className="w-3.5 h-3.5" />
-        )}
-      </Button>
-    </div>
-  )
-}
-
 export function EntregablesClient({
   projectId,
   projectTitle,
@@ -212,6 +145,8 @@ export function EntregablesClient({
 
   const [uploadingHito, setUploadingHito] = useState(false)
   const [uploadingFinal, setUploadingFinal] = useState(false)
+  const [selectedHito, setSelectedHito] = useState<File | null>(null)
+  const [selectedFinal, setSelectedFinal] = useState<File | null>(null)
   const [ratingScore, setRatingScore] = useState(
     existingRating?.puntuacion ?? 0,
   )
@@ -221,11 +156,36 @@ export function EntregablesClient({
   const [hoverScore, setHoverScore] = useState(0)
   const [submittingRating, setSubmittingRating] = useState(false)
   const [hasRated, setHasRated] = useState(existingRating !== null)
+  const [urlRepositorio, setUrlRepositorio] = useState(
+    contratacion.url_repositorio_proyecto,
+  )
+  const [editingLink, setEditingLink] = useState(false)
+  const [linkValue, setLinkValue] = useState(
+    contratacion.url_repositorio_proyecto ?? '',
+  )
+  const [savingLink, setSavingLink] = useState(false)
   const hitoRef = useRef<HTMLInputElement>(null)
   const finalRef = useRef<HTMLInputElement>(null)
 
   const periodo =
     PERIODO_CONFIG[contratacion.estado_periodo as keyof typeof PERIODO_CONFIG]
+
+  const handleSaveLink = async () => {
+    const urlTrimmed = linkValue.trim() || null
+    setSavingLink(true)
+    const res = await actualizarUrlProyecto({
+      idParticipacion: contratacion.id_participacion,
+      url: urlTrimmed,
+    })
+    setSavingLink(false)
+    if (res.ok) {
+      setUrlRepositorio(urlTrimmed)
+      setEditingLink(false)
+      toast.success(tEgresado('projectLinkSaveSuccess'))
+    } else {
+      toast.error(tEgresado('projectLinkSaveError'))
+    }
+  }
 
   const handleUpload = async (
     file: File,
@@ -275,377 +235,605 @@ export function EntregablesClient({
     <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <Link
-          href={`/egresado/projects/${projectId}`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {tEgresado('backToProjectDetail')}
-        </Link>
+      <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Cabecera de página: ancho completo */}
+        <div className="space-y-6 mb-8">
+          <Link
+            href={`/egresado/projects/${projectId}`}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-primary transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {tEgresado('backToProjectDetail')}
+          </Link>
 
-        <PageTitle
-          title={projectTitle}
-          description={tEgresado('deliverablesDesc')}
-          dotColor="text-primary"
-        />
+          <PageTitle
+            title={projectTitle}
+            description={tEgresado('deliverablesDesc')}
+            dotColor="text-primary"
+          />
+        </div>
 
-        {/* Contrato info */}
-        <Card className="border border-border/80 bg-card/40">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <SectionHeading>{tEgresado('contratacionInfo')}</SectionHeading>
+        {/* Barra de contrato: slim, full-width, encima del grid */}
+        <Card className="border border-border/60 bg-card/30 mb-6">
+          <CardContent className="px-5 py-3">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               {periodo && (
                 <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${periodo.className}`}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${periodo.className}`}
                 >
                   {tEgresado(periodo.label as Parameters<typeof tEgresado>[0])}
                 </span>
               )}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {contratacion.fecha_inicio && (
-                <DetailField label={tEgresado('contratacionInicio')}>
-                  <span className="flex items-center gap-1">
-                    <CalendarDays className="w-3.5 h-3.5 text-primary" />
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <CalendarDays className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span className="font-medium">
+                    {tEgresado('contratacionInicio')}:
+                  </span>
+                  <span className="font-semibold text-foreground">
                     {contratacion.fecha_inicio.slice(0, 10)}
                   </span>
-                </DetailField>
+                </span>
               )}
               {contratacion.fecha_fin_estimada && (
-                <DetailField label={tEgresado('contratacionFinEstimada')}>
-                  <span className="flex items-center gap-1">
-                    <CalendarDays className="w-3.5 h-3.5 text-secondary" />
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <CalendarDays className="w-3.5 h-3.5 text-secondary shrink-0" />
+                  <span className="font-medium">
+                    {tEgresado('contratacionFinEstimada')}:
+                  </span>
+                  <span className="font-semibold text-foreground">
                     {contratacion.fecha_fin_estimada.slice(0, 10)}
                   </span>
-                </DetailField>
+                </span>
               )}
-              <DetailField label={tEgresado('contratacionEstado')}>
-                {periodo
-                  ? tEgresado(periodo.label as Parameters<typeof tEgresado>[0])
-                  : contratacion.estado_periodo}
-              </DetailField>
+              {urlRepositorio && (
+                <a
+                  href={urlRepositorio}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] max-w-[280px]"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{urlRepositorio}</span>
+                </a>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Calificación de la Empresa: solo con la contratación finalizada,
-            que es lo que exige la RLS evaluaciones_empresarios_insert_estudiante. */}
-        {contratacion.estado_periodo === 'finalizado' && (
-          <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-warning to-highlight" />
-            <CardContent className="p-6 pt-8 space-y-6">
-              <div className="space-y-1 text-left">
-                <h3 className="text-base font-extrabold font-heading text-foreground">
-                  {tEgresado('rateCompanyTitle')}
-                </h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {tEgresado('rateCompanyDesc')}
-                </p>
-              </div>
+        {/* Layout de dos columnas: upload sidebar izquierdo + contenido principal derecho.
+            Sin items-start → stretch por defecto: ambas columnas igualan altura del contenido más alto. */}
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[300px_1fr] lg:gap-6">
+          {/* Columna izquierda: panel de carga, se extiende hasta donde llegue la columna derecha */}
+          <div className="lg:h-full">
+            {contratacion.estado_periodo === 'vigente' ? (
+              <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative lg:h-full">
+                <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-secondary to-accent" />
+                <CardContent className="p-6 pt-8 space-y-6">
+                  <SectionHeading>
+                    {tEgresado('uploadSectionTitle')}
+                  </SectionHeading>
 
-              {hasRated ? (
-                <div className="space-y-4 text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-muted-foreground mr-2">
-                      {tEgresado('ratingLabel')}:
-                    </span>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`w-4 h-4 ${
-                            star <= ratingScore
-                              ? 'text-highlight fill-highlight'
-                              : 'text-muted-foreground/25'
-                          }`}
-                        />
-                      ))}
+                  {/* Zona de hito parcial */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <Upload className="w-3.5 h-3.5 text-primary" />
+                      <p className="text-xs font-semibold text-foreground">
+                        {tEgresado('uploadHito')}
+                      </p>
+                    </div>
+
+                    <label
+                      htmlFor="hito-file"
+                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed min-h-[96px] px-4 py-4 cursor-pointer select-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
+                        uploadingHito
+                          ? 'opacity-50 cursor-not-allowed border-border/40'
+                          : selectedHito
+                            ? 'border-primary/50 bg-primary/5'
+                            : 'border-border/50 hover:border-primary/40 hover:bg-primary/5'
+                      }`}
+                    >
+                      {uploadingHito ? (
+                        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                      ) : selectedHito ? (
+                        <>
+                          <FileText className="w-5 h-5 text-primary" />
+                          <p className="text-[11px] font-medium text-foreground text-center break-all line-clamp-2 px-1">
+                            {selectedHito.name}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-muted-foreground/40" />
+                          <p className="text-xs text-muted-foreground text-center">
+                            {tEgresado('uploadClickToSelect')}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/50">
+                            {tEgresado('uploadMaxSize')}
+                          </p>
+                        </>
+                      )}
+                    </label>
+
+                    <input
+                      id="hito-file"
+                      ref={hitoRef}
+                      type="file"
+                      className="sr-only"
+                      disabled={uploadingHito}
+                      onChange={(e) =>
+                        setSelectedHito(e.target.files?.[0] ?? null)
+                      }
+                    />
+
+                    <div className="flex items-center gap-2">
+                      {selectedHito && !uploadingHito && (
+                        <button
+                          type="button"
+                          className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors duration-[var(--duration-fast)] shrink-0 flex items-center gap-1"
+                          onClick={() => {
+                            setSelectedHito(null)
+                            if (hitoRef.current) hitoRef.current.value = ''
+                          }}
+                        >
+                          <X className="w-3 h-3" />
+                          {tEgresado('uploadRemoveFile')}
+                        </button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingHito || !selectedHito}
+                        className="font-semibold flex-1"
+                        onClick={() => {
+                          if (!selectedHito) return
+                          handleUpload(
+                            selectedHito,
+                            'parcial',
+                            setUploadingHito,
+                            () => {
+                              if (hitoRef.current) hitoRef.current.value = ''
+                              setSelectedHito(null)
+                            },
+                          )
+                        }}
+                      >
+                        {uploadingHito ? (
+                          <span className="flex items-center gap-1.5">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            {tCommon('loading')}
+                          </span>
+                        ) : (
+                          tEgresado('uploadHito')
+                        )}
+                      </Button>
                     </div>
                   </div>
-                  {ratingComment && (
-                    <div className="rounded-lg bg-muted/40 border border-border/60 px-3 py-2 text-xs text-foreground/90">
-                      <span className="font-bold block mb-1 text-muted-foreground uppercase text-[10px]">
-                        {tEgresado('commentLabel')}
-                      </span>
-                      {ratingComment}
+
+                  <div className="border-t border-border/40" />
+
+                  {/* Zona de entregable final */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <FileCheck2 className="w-3.5 h-3.5 text-accent" />
+                      <p className="text-xs font-semibold text-foreground">
+                        {tEgresado('uploadFinal')}
+                      </p>
+                    </div>
+
+                    <label
+                      htmlFor="final-file"
+                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed min-h-[96px] px-4 py-4 cursor-pointer select-none transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)] ${
+                        uploadingFinal
+                          ? 'opacity-50 cursor-not-allowed border-border/40'
+                          : selectedFinal
+                            ? 'border-accent/50 bg-accent/5'
+                            : 'border-border/50 hover:border-accent/40 hover:bg-accent/5'
+                      }`}
+                    >
+                      {uploadingFinal ? (
+                        <Loader2 className="w-5 h-5 text-accent animate-spin" />
+                      ) : selectedFinal ? (
+                        <>
+                          <FileCheck2 className="w-5 h-5 text-accent" />
+                          <p className="text-[11px] font-medium text-foreground text-center break-all line-clamp-2 px-1">
+                            {selectedFinal.name}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <FileCheck2 className="w-5 h-5 text-muted-foreground/40" />
+                          <p className="text-xs text-muted-foreground text-center">
+                            {tEgresado('uploadClickToSelect')}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/50">
+                            {tEgresado('uploadMaxSize')}
+                          </p>
+                        </>
+                      )}
+                    </label>
+
+                    <input
+                      id="final-file"
+                      ref={finalRef}
+                      type="file"
+                      className="sr-only"
+                      disabled={uploadingFinal}
+                      onChange={(e) =>
+                        setSelectedFinal(e.target.files?.[0] ?? null)
+                      }
+                    />
+
+                    <div className="flex items-center gap-2">
+                      {selectedFinal && !uploadingFinal && (
+                        <button
+                          type="button"
+                          className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors duration-[var(--duration-fast)] shrink-0 flex items-center gap-1"
+                          onClick={() => {
+                            setSelectedFinal(null)
+                            if (finalRef.current) finalRef.current.value = ''
+                          }}
+                        >
+                          <X className="w-3 h-3" />
+                          {tEgresado('uploadRemoveFile')}
+                        </button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={uploadingFinal || !selectedFinal}
+                        className="font-semibold flex-1"
+                        onClick={() => {
+                          if (!selectedFinal) return
+                          handleUpload(
+                            selectedFinal,
+                            'final',
+                            setUploadingFinal,
+                            () => {
+                              if (finalRef.current) finalRef.current.value = ''
+                              setSelectedFinal(null)
+                            },
+                          )
+                        }}
+                      >
+                        {uploadingFinal ? (
+                          <span className="flex items-center gap-1.5">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            {tCommon('loading')}
+                          </span>
+                        ) : (
+                          tEgresado('uploadFinal')
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border/40" />
+
+                  {/* Enlace del proyecto */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <Link2 className="w-3.5 h-3.5 text-secondary" />
+                      <p className="text-xs font-semibold text-foreground">
+                        {tEgresado('projectLinkLabel')}
+                      </p>
+                    </div>
+
+                    {editingLink ? (
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="url"
+                          value={linkValue}
+                          onChange={(e) => setLinkValue(e.target.value)}
+                          placeholder={tEgresado('projectLinkPlaceholder')}
+                          maxLength={150}
+                          disabled={savingLink}
+                          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 disabled:opacity-50"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={savingLink}
+                            className="flex-1 font-semibold text-xs"
+                            onClick={handleSaveLink}
+                          >
+                            {savingLink ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              tEgresado('projectLinkSave')
+                            )}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={savingLink}
+                            className="font-semibold text-xs"
+                            onClick={() => {
+                              setLinkValue(urlRepositorio ?? '')
+                              setEditingLink(false)
+                            }}
+                          >
+                            {tEgresado('projectLinkCancel')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {urlRepositorio ? (
+                          <a
+                            href={urlRepositorio}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary underline underline-offset-2 truncate flex-1 hover:text-primary/80 transition-colors duration-[var(--duration-fast)] ease-[var(--ease-out)]"
+                          >
+                            {urlRepositorio}
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/70 flex-1">
+                            {tEgresado('projectLinkEmpty')}
+                          </span>
+                        )}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="shrink-0 h-7 w-7 p-0"
+                          onClick={() => {
+                            setLinkValue(urlRepositorio ?? '')
+                            setEditingLink(true)
+                          }}
+                          aria-label={tEgresado('projectLinkEdit')}
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                {tEgresado('uploadDisabledNotVigente')}
+              </div>
+            )}
+          </div>
+
+          {/* Columna derecha: calificación y lista de entregables */}
+          <div className="space-y-6">
+            {/* Calificación de la Empresa: solo con la contratación finalizada,
+                que es lo que exige la RLS evaluaciones_empresarios_insert_estudiante. */}
+            {contratacion.estado_periodo === 'finalizado' && (
+              <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-warning to-highlight" />
+                <CardContent className="p-6 pt-8 space-y-6">
+                  <div className="space-y-1 text-left">
+                    <h3 className="text-base font-extrabold font-heading text-foreground">
+                      {tEgresado('rateCompanyTitle')}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {tEgresado('rateCompanyDesc')}
+                    </p>
+                  </div>
+
+                  {hasRated ? (
+                    <div className="space-y-4 text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-muted-foreground mr-2">
+                          {tEgresado('ratingLabel')}:
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-4 h-4 ${
+                                star <= ratingScore
+                                  ? 'text-highlight fill-highlight'
+                                  : 'text-muted-foreground/25'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {ratingComment && (
+                        <div className="rounded-lg bg-muted/40 border border-border/60 px-3 py-2 text-xs text-foreground/90">
+                          <span className="font-bold block mb-1 text-muted-foreground uppercase text-[10px]">
+                            {tEgresado('commentLabel')}
+                          </span>
+                          {ratingComment}
+                        </div>
+                      )}
+                      <p className="text-xs text-accent font-semibold">
+                        {tEgresado('alreadyRated')}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 text-left">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-muted-foreground">
+                          {tEgresado('ratingLabel')} *
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              disabled={submittingRating}
+                              onMouseEnter={() => setHoverScore(star)}
+                              onMouseLeave={() => setHoverScore(0)}
+                              onClick={() => setRatingScore(star)}
+                              className="focus:outline-none transition-transform hover:scale-110 cursor-pointer"
+                            >
+                              <Star
+                                className={`w-5 h-5 ${
+                                  star <= (hoverScore || ratingScore)
+                                    ? 'text-highlight fill-highlight'
+                                    : 'text-muted-foreground/30'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label
+                          htmlFor="rating-comment"
+                          className="block text-xs font-bold text-muted-foreground"
+                        >
+                          {tEgresado('commentLabel')}
+                        </label>
+                        <textarea
+                          id="rating-comment"
+                          value={ratingComment}
+                          onChange={(e) => setRatingComment(e.target.value)}
+                          placeholder={tEgresado('rateCompanyDesc')}
+                          disabled={submittingRating}
+                          rows={3}
+                          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          maxLength={1000}
+                        />
+                      </div>
+
+                      <Button
+                        type="button"
+                        disabled={submittingRating || ratingScore === 0}
+                        onClick={async () => {
+                          if (ratingScore === 0) return
+                          setSubmittingRating(true)
+                          const res = await rateCompany({
+                            idEmpresario: companyId,
+                            idContratacion: contratacion.id_contratacion,
+                            puntuacion: ratingScore,
+                            comentario: ratingComment.trim() || undefined,
+                          })
+                          setSubmittingRating(false)
+                          if (res.ok) {
+                            toast.success(tEgresado('rateCompanySuccess'))
+                            setHasRated(true)
+                            router.refresh()
+                          } else {
+                            toast.error(res.error)
+                          }
+                        }}
+                        className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs flex items-center gap-1.5"
+                      >
+                        {submittingRating && (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        )}
+                        {tEgresado('submitRating')}
+                      </Button>
                     </div>
                   )}
-                  <p className="text-xs text-accent font-semibold">
-                    {tEgresado('alreadyRated')}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4 text-left">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-muted-foreground">
-                      {tEgresado('ratingLabel')} *
-                    </span>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          disabled={submittingRating}
-                          onMouseEnter={() => setHoverScore(star)}
-                          onMouseLeave={() => setHoverScore(0)}
-                          onClick={() => setRatingScore(star)}
-                          className="focus:outline-none transition-transform hover:scale-110 cursor-pointer"
-                        >
-                          <Star
-                            className={`w-5 h-5 ${
-                              star <= (hoverScore || ratingScore)
-                                ? 'text-highlight fill-highlight'
-                                : 'text-muted-foreground/30'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label
-                      htmlFor="rating-comment"
-                      className="block text-xs font-bold text-muted-foreground"
-                    >
-                      {tEgresado('commentLabel')}
-                    </label>
-                    <textarea
-                      id="rating-comment"
-                      value={ratingComment}
-                      onChange={(e) => setRatingComment(e.target.value)}
-                      placeholder={tEgresado('rateCompanyDesc')}
-                      disabled={submittingRating}
-                      rows={3}
-                      className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      maxLength={1000}
-                    />
-                  </div>
-
-                  <Button
-                    type="button"
-                    disabled={submittingRating || ratingScore === 0}
-                    onClick={async () => {
-                      if (ratingScore === 0) return
-                      setSubmittingRating(true)
-                      const res = await rateCompany({
-                        idEmpresario: companyId,
-                        idContratacion: contratacion.id_contratacion,
-                        puntuacion: ratingScore,
-                        comentario: ratingComment.trim() || undefined,
-                      })
-                      setSubmittingRating(false)
-                      if (res.ok) {
-                        toast.success(tEgresado('rateCompanySuccess'))
-                        setHasRated(true)
-                        router.refresh()
-                      } else {
-                        toast.error(res.error)
-                      }
-                    }}
-                    className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold text-xs flex items-center gap-1.5"
-                  >
-                    {submittingRating && (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    )}
-                    {tEgresado('submitRating')}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Lista de entregables */}
-        <Card className="border border-border/80 bg-card/40">
-          <CardContent className="p-6 space-y-4">
-            <SectionHeading>{tEgresado('entregablesListTitle')}</SectionHeading>
-
-            {entregablesIniciales.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
-                <FileText className="w-10 h-10 opacity-30" />
-                <p className="text-sm">{tEgresado('noEntregables')}</p>
-              </div>
-            ) : (
-              <ul className="space-y-3">
-                {entregablesIniciales.map((e) => {
-                  const config =
-                    ESTADO_CONFIG[e.estado as keyof typeof ESTADO_CONFIG]
-                  const Icon = config?.icon ?? FileCheck2
-                  return (
-                    <li
-                      key={e.id_entregable}
-                      className="flex flex-col gap-2 rounded-lg border border-border/60 bg-background/60 px-4 py-3"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Icon className="w-4 h-4 shrink-0 text-primary" />
-                          <span className="text-sm font-semibold truncate">
-                            {e.tipo_entregable === 'final'
-                              ? tEgresado('tipoFinal')
-                              : tEgresado('tipoParcial')}
-                          </span>
-                          <span className="text-xs text-muted-foreground font-mono shrink-0">
-                            {tEgresado('versionLabel', { n: e.version })}
-                          </span>
-                        </div>
-                        {config && (
-                          <span
-                            className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${config.className}`}
-                          >
-                            {tEgresado(
-                              config.label as Parameters<typeof tEgresado>[0],
-                            )}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {tEgresado('uploadedAtLabel')}{' '}
-                        {new Date(e.cargado_at).toLocaleDateString()}
-                      </p>
-                      <div className="mt-1 space-y-2">
-                        <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          {tEgresado('threadTitle')}
-                        </p>
-                        {e.comentarios.length === 0 ? (
-                          <p className="text-xs text-muted-foreground/70">
-                            {tEgresado('threadEmpty')}
-                          </p>
-                        ) : (
-                          <ul className="space-y-2">
-                            {e.comentarios.map((c) => (
-                              <li
-                                key={c.id_comentario_entregable}
-                                className={`flex flex-col gap-1 rounded-md px-3 py-2 ${
-                                  c.es_mio
-                                    ? 'bg-primary/5 border border-primary/15'
-                                    : 'bg-warning/5 border border-warning/20'
-                                }`}
-                              >
-                                <div className="flex items-center gap-1.5 text-xs">
-                                  <span
-                                    className={`font-bold ${
-                                      c.es_mio ? 'text-primary' : 'text-warning'
-                                    }`}
-                                  >
-                                    {c.es_mio
-                                      ? tEgresado('authorYou')
-                                      : tEgresado('authorCompany')}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {new Date(c.comentado_at).toLocaleString()}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-foreground/85 whitespace-pre-wrap break-words">
-                                  <LinkifiedText text={c.contenido} />
-                                </p>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        {contratacion.estado_periodo !== 'finalizado' &&
-                          contratacion.estado_periodo !== 'cancelado' && (
-                            <ThreadComposer
-                              idEntregable={e.id_entregable}
-                              projectId={projectId}
-                              onSent={() => router.refresh()}
-                            />
-                          )}
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Upload section — solo visible cuando el contrato está vigente (RF-40/41) */}
-        {contratacion.estado_periodo === 'vigente' ? (
-          <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-primary via-secondary to-accent" />
-            <CardContent className="p-6 pt-8 space-y-6">
-              <SectionHeading>{tEgresado('uploadSectionTitle')}</SectionHeading>
+            {/* Lista de entregables */}
+            <Card className="border border-border/80 bg-card/40">
+              <CardContent className="p-6 space-y-4">
+                <SectionHeading>
+                  {tEgresado('entregablesListTitle')}
+                </SectionHeading>
 
-              {/* Subir hito */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-primary" />
-                  {tEgresado('uploadHito')}
-                </p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <input
-                    ref={hitoRef}
-                    type="file"
-                    className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-muted cursor-pointer"
-                    disabled={uploadingHito}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={uploadingHito}
-                    className="font-semibold"
-                    onClick={() => {
-                      const file = hitoRef.current?.files?.[0]
-                      if (!file) return
-                      handleUpload(file, 'parcial', setUploadingHito, () => {
-                        if (hitoRef.current) hitoRef.current.value = ''
-                      })
-                    }}
-                  >
-                    {uploadingHito
-                      ? tCommon('loading')
-                      : tEgresado('uploadHito')}
-                  </Button>
-                </div>
-              </div>
+                {entregablesIniciales.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+                    <FileText className="w-10 h-10 opacity-30" />
+                    <p className="text-sm">{tEgresado('noEntregables')}</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-3">
+                    {entregablesIniciales.map((e) => {
+                      const config =
+                        ESTADO_CONFIG[e.estado as keyof typeof ESTADO_CONFIG]
+                      const Icon = config?.icon ?? FileCheck2
+                      return (
+                        <li
+                          key={e.id_entregable}
+                          className="relative flex flex-col rounded-xl border border-border/60 bg-background/60 overflow-hidden"
+                        >
+                          {/* Franja de color lateral según estado */}
+                          <div
+                            className={`absolute inset-y-0 left-0 w-[3px] ${config?.accentBg ?? 'bg-muted'}`}
+                          />
 
-              <div className="border-t border-border/40" />
+                          {/* Cabecera del entregable */}
+                          <div className="pl-5 pr-4 pt-3 pb-2 flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Icon
+                                className={`w-4 h-4 shrink-0 ${config?.iconColor ?? 'text-muted-foreground'}`}
+                              />
+                              <span className="text-sm font-semibold text-foreground truncate">
+                                {e.tipo_entregable === 'final'
+                                  ? tEgresado('tipoFinal')
+                                  : tEgresado('tipoParcial')}
+                              </span>
+                              <span className="text-[10px] font-mono bg-muted text-muted-foreground px-1.5 py-0.5 rounded shrink-0">
+                                {tEgresado('versionLabel', { n: e.version })}
+                              </span>
+                            </div>
+                            {config && (
+                              <span
+                                className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${config.className}`}
+                              >
+                                {tEgresado(
+                                  config.label as Parameters<
+                                    typeof tEgresado
+                                  >[0],
+                                )}
+                              </span>
+                            )}
+                          </div>
 
-              {/* Subir entregable final */}
-              <div className="space-y-3">
-                <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <FileCheck2 className="w-4 h-4 text-accent" />
-                  {tEgresado('uploadFinal')}
-                </p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <input
-                    ref={finalRef}
-                    type="file"
-                    className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-border file:text-xs file:font-semibold file:bg-background file:text-foreground hover:file:bg-muted cursor-pointer"
-                    disabled={uploadingFinal}
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={uploadingFinal}
-                    className="font-semibold"
-                    onClick={() => {
-                      const file = finalRef.current?.files?.[0]
-                      if (!file) return
-                      handleUpload(file, 'final', setUploadingFinal, () => {
-                        if (finalRef.current) finalRef.current.value = ''
-                      })
-                    }}
-                  >
-                    {uploadingFinal
-                      ? tCommon('loading')
-                      : tEgresado('uploadFinal')}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            {tEgresado('uploadDisabledNotVigente')}
+                          <p className="pl-5 pr-4 pb-2 text-xs text-muted-foreground">
+                            {tEgresado('uploadedAtLabel')}{' '}
+                            {new Date(e.cargado_at).toLocaleDateString()}
+                          </p>
+
+                          {/* Hilo de comentarios del empresario */}
+                          {e.comentarios.length > 0 && (
+                            <div className="mx-4 mb-3 border-t border-border/40 pt-2.5 space-y-1.5">
+                              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                                <MessageSquare className="w-3 h-3" />
+                                {tEgresado('threadTitle')}
+                              </p>
+                              <ul className="space-y-1.5">
+                                {e.comentarios.map((c) => (
+                                  <li
+                                    key={c.id_comentario_entregable}
+                                    className="rounded-md bg-warning/5 border border-warning/20 px-3 py-2"
+                                  >
+                                    <div className="flex items-center gap-1.5 text-[10px] mb-0.5">
+                                      <span className="font-bold text-warning">
+                                        {tEgresado('authorCompany')}
+                                      </span>
+                                      <span className="text-muted-foreground">
+                                        {new Date(
+                                          c.comentado_at,
+                                        ).toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-foreground/85 whitespace-pre-wrap break-words">
+                                      <LinkifiedText text={c.contenido} />
+                                    </p>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
           </div>
-        )}
+        </div>
       </main>
 
       <Footer />

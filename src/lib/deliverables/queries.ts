@@ -8,9 +8,11 @@ import { logger } from '@/lib/logger'
 
 export interface MiContratacion {
   id_contratacion: string
+  id_participacion: string
   estado_periodo: string
   fecha_inicio: string | null
   fecha_fin_estimada: string | null
+  url_repositorio_proyecto: string | null
 }
 
 export interface ComentarioHilo {
@@ -18,7 +20,6 @@ export interface ComentarioHilo {
   contenido: string
   tipo_comentario: string
   comentado_at: string
-  es_mio: boolean
 }
 
 export interface EntregablePropio {
@@ -59,7 +60,7 @@ export async function getMiContratacion(
 
   const { data: part, error: partError } = await supabase
     .from('participaciones')
-    .select('id_participacion')
+    .select('id_participacion, url_repositorio_proyecto')
     .eq('id_proyecto', idProyecto)
     .eq('id_estudiante', estudiante.id_estudiante)
     .in('estado', ['contratada', 'finalizada'])
@@ -91,9 +92,11 @@ export async function getMiContratacion(
 
   return ok({
     id_contratacion: contratacion.id_contratacion,
+    id_participacion: part.id_participacion,
     estado_periodo: contratacion.estado_periodo,
     fecha_inicio: contratacion.fecha_inicio,
     fecha_fin_estimada: contratacion.fecha_fin_estimada,
+    url_repositorio_proyecto: part.url_repositorio_proyecto,
   })
 }
 
@@ -351,7 +354,7 @@ export async function getMisEntregables(
     .select(
       `id_entregable, tipo_entregable, version, archivo_url, estado, comentario_empresario, cargado_at,
       comentarios_entregables (
-        id_comentario_entregable, id_autor, contenido, tipo_comentario, comentado_at
+        id_comentario_entregable, contenido, tipo_comentario, comentado_at
       )`,
     )
     .eq('id_contratacion', idContratacion)
@@ -362,7 +365,6 @@ export async function getMisEntregables(
     return err('database_error')
   }
 
-  const userId = userData.user.id
   const mapped: EntregablePropio[] = (data ?? []).map((e) => ({
     id_entregable: e.id_entregable,
     tipo_entregable: e.tipo_entregable as 'parcial' | 'final',
@@ -377,7 +379,6 @@ export async function getMisEntregables(
         contenido: c.contenido,
         tipo_comentario: c.tipo_comentario,
         comentado_at: c.comentado_at,
-        es_mio: c.id_autor === userId,
       }))
       .sort((a, b) => a.comentado_at.localeCompare(b.comentado_at)),
   }))
