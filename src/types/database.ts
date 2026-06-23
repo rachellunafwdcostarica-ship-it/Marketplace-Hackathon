@@ -1574,6 +1574,7 @@ export type Database = {
         | 'participacion_en_revision'
         | 'entregable_aprobado'
         | 'entregable_rechazado'
+        | 'entregable_enviado'
         | 'evaluacion_recibida'
         | 'cuenta_verificada'
         | 'cuenta_suspendida'
@@ -1798,6 +1799,7 @@ export const Constants = {
         'participacion_en_revision',
         'entregable_aprobado',
         'entregable_rechazado',
+        'entregable_enviado',
         'evaluacion_recibida',
         'cuenta_verificada',
         'cuenta_suspendida',

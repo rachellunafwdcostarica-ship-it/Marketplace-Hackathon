@@ -1203,6 +1203,7 @@
       "participacion_en_revision": "En revisión",
       "entregable_aprobado": "Entregable aprobado",
       "entregable_rechazado": "Entregable rechazado",
+      "entregable_enviado": "Nuevo entregable",
       "evaluacion_recibida": "Evaluación",
       "cuenta_verificada": "Cuenta verificada",
       "cuenta_suspendida": "Cuenta suspendida",
@@ -1220,6 +1221,7 @@
       "plazo_vence": "La ventana de ofertas de \"{titulo}\" está por cerrar; pronto la empresa tomará una decisión.",
       "entregable_aprobado": "Tu entregable del proyecto \"{titulo}\" fue aprobado.",
       "entregable_rechazado": "El empresario solicitó cambios en tu entregable de \"{titulo}\".",
+      "entregable_enviado": "El egresado envió un entregable para tu proyecto \"{titulo}\".",
       "participacion_en_revision": "La empresa está revisando tu propuesta para \"{titulo}\".",
       "cuenta_verificada": "Tu cuenta ha sido activada. Ya puedes explorar proyectos y postularte."
     }

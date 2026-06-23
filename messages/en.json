@@ -1202,6 +1202,7 @@
       "participacion_en_revision": "Under review",
       "entregable_aprobado": "Deliverable approved",
       "entregable_rechazado": "Deliverable rejected",
+      "entregable_enviado": "New deliverable",
       "evaluacion_recibida": "Review",
       "cuenta_verificada": "Account verified",
       "cuenta_suspendida": "Account suspended",
@@ -1219,6 +1220,7 @@
       "plazo_vence": "The offer window for \"{titulo}\" is about to close; the company will decide soon.",
       "entregable_aprobado": "Your deliverable for \"{titulo}\" was approved.",
       "entregable_rechazado": "The company requested changes on your deliverable for \"{titulo}\".",
+      "entregable_enviado": "The graduate submitted a deliverable for your project \"{titulo}\".",
       "participacion_en_revision": "The company is reviewing your proposal for \"{titulo}\".",
       "cuenta_verificada": "Your account has been activated. You can now explore projects and apply."
     }
