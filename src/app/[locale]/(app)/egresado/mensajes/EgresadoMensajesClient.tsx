@@ -16,6 +16,7 @@ import {
   type Mensaje,
   type ConversacionItem,
 } from '@/lib/mensajes/actions'
+import { ReportButton } from '@/components/features/moderation/ReportButton'
 
 interface Props {
   conversaciones: ConversacionItem[]
@@ -145,6 +146,14 @@ function ChatBubble({
           {formatHora(mensaje.fechaEnvio)} {isMine && '✓'}
         </p>
       </div>
+      {!isMine && (
+        <div className="flex items-center">
+          <ReportButton
+            target={{ tipo: 'mensaje', id: mensaje.idMensaje }}
+            iconOnly
+          />
+        </div>
+      )}
     </div>
   )
 }

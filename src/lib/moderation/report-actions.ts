@@ -20,6 +20,8 @@ import {
   type AdminReportQueueItem,
 } from './schemas'
 
+const MENSAJE_SNIPPET_MAX = 80
+
 /**
  * RF-69 — Cualquier usuario autenticado denuncia un objetivo (usuario, proyecto,
  * mensaje, entregable o portafolio). Inserta con la sesión del usuario (política
@@ -156,6 +158,33 @@ export async function listarColaReportes(): Promise<
     }
   }
 
+  const mensajeIds = [
+    ...new Set(
+      rows.map((r) => r.id_mensaje).filter((id): id is string => id !== null),
+    ),
+  ]
+  const mensajeSnippetById = new Map<string, string>()
+  if (mensajeIds.length > 0) {
+    const { data: mensajes, error: msgError } = await adminClient
+      .from('mensajes')
+      .select('id_mensaje, contenido')
+      .in('id_mensaje', mensajeIds)
+    if (msgError) {
+      logger.error('listarColaReportes: fallo al leer mensajes', {
+        error: msgError.message,
+      })
+      return err(msgError.message)
+    }
+    for (const m of mensajes ?? []) {
+      mensajeSnippetById.set(
+        m.id_mensaje,
+        m.contenido.length > MENSAJE_SNIPPET_MAX
+          ? `${m.contenido.slice(0, MENSAJE_SNIPPET_MAX)}…`
+          : m.contenido,
+      )
+    }
+  }
+
   const items: AdminReportQueueItem[] = rows.map((r) => {
     let target: ReportTarget | null = null
     if (r.id_reportado !== null) {
@@ -171,7 +200,11 @@ export async function listarColaReportes(): Promise<
         nombre: proyectoTituloById.get(r.id_proyecto) ?? '',
       }
     } else if (r.id_mensaje !== null) {
-      target = { tipo: 'mensaje', id: r.id_mensaje, nombre: r.id_mensaje }
+      target = {
+        tipo: 'mensaje',
+        id: r.id_mensaje,
+        nombre: mensajeSnippetById.get(r.id_mensaje) ?? '',
+      }
     } else if (r.id_entregable !== null) {
       target = {
         tipo: 'entregable',
