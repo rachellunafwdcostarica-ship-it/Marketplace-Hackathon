@@ -23,7 +23,7 @@ export function RankingSnippet({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-border p-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="bg-surface rounded-xl shadow-sm border border-border p-4 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-highlight/10 text-highlight rounded-lg">
           <Award className="w-5 h-5" />

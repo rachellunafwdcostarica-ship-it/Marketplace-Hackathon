@@ -9,6 +9,9 @@ const serverEnvSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
   CLOUDINARY_API_KEY: z.string().min(1).optional(),
   CLOUDINARY_API_SECRET: z.string().min(1).optional(),
+  OPENROUTER_FILTRO_OFERTAS_API_KEY: z.string().min(1).optional(),
+  OPENROUTER_FILTRO_OFERTAS_MODEL: z.string().min(1).optional(),
+  NEXT_PUBLIC_APP_URL: z.url().optional(),
 })
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>
@@ -24,6 +27,10 @@ export function parseServerEnv(
     CLOUDINARY_CLOUD_NAME: source['CLOUDINARY_CLOUD_NAME'],
     CLOUDINARY_API_KEY: source['CLOUDINARY_API_KEY'],
     CLOUDINARY_API_SECRET: source['CLOUDINARY_API_SECRET'],
+    OPENROUTER_FILTRO_OFERTAS_API_KEY:
+      source['OPENROUTER_FILTRO_OFERTAS_API_KEY'],
+    OPENROUTER_FILTRO_OFERTAS_MODEL: source['OPENROUTER_FILTRO_OFERTAS_MODEL'],
+    NEXT_PUBLIC_APP_URL: source['NEXT_PUBLIC_APP_URL'],
   })
   if (!parsed.success) {
     const issues = parsed.error.issues
