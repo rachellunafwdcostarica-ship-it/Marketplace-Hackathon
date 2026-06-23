@@ -100,11 +100,11 @@ describe('resolveNotificationContent', () => {
   it('cae al mensaje crudo si el tipo aun no tiene plantilla, aunque haya params', () => {
     expect(
       resolveNotificationContent({
-        tipo: 'mensaje_nuevo',
-        mensaje: 'Tienes un mensaje nuevo',
+        tipo: 'evaluacion_recibida',
+        mensaje: 'Recibiste una evaluacion',
         params: { de: 'Ana' },
       }),
-    ).toEqual({ kind: 'raw', text: 'Tienes un mensaje nuevo' })
+    ).toEqual({ kind: 'raw', text: 'Recibiste una evaluacion' })
   })
 
   it('usa clave i18n estática para cuenta_verificada sin params', () => {
@@ -114,6 +114,16 @@ describe('resolveNotificationContent', () => {
         mensaje: 'content.cuenta_verificada',
       }),
     ).toEqual({ kind: 'i18n', key: 'content.cuenta_verificada', values: {} })
+  })
+
+  it('usa clave i18n estática para mensaje_nuevo (RF-45) ignorando params y mensaje', () => {
+    expect(
+      resolveNotificationContent({
+        tipo: 'mensaje_nuevo',
+        mensaje: 'Tienes un mensaje nuevo',
+        params: { idProyecto: 'abc' },
+      }),
+    ).toEqual({ kind: 'i18n', key: 'content.mensaje_nuevo', values: {} })
   })
 
   it('usa clave i18n para plazo_vence con params.titulo (RF-33)', () => {
