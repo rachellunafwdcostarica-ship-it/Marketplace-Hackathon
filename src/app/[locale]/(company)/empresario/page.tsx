@@ -3,6 +3,7 @@ import { getLocale } from 'next-intl/server'
 import { getMyPublishedProjects } from '@/lib/projects/dashboard'
 import { getEmpresarioParticipationStats } from '@/lib/projects/project-detail'
 import { isCompanyProfileComplete } from '@/lib/company/actions'
+import { getTalentRanking } from '@/lib/ranking/actions'
 import { CompanyDashboardClient } from './CompanyDashboardClient'
 
 /**
@@ -19,9 +20,10 @@ export default async function CompanyDashboardPage() {
     redirect(`/${locale}/empresario/formulario-empresa`)
   }
 
-  const [projectsResult, statsResult] = await Promise.all([
+  const [projectsResult, statsResult, rankingResult] = await Promise.all([
     getMyPublishedProjects(),
     getEmpresarioParticipationStats(),
+    getTalentRanking({ page: 1, pageSize: 2 }),
   ])
 
   return (
@@ -32,6 +34,8 @@ export default async function CompanyDashboardPage() {
           ? statsResult.data
           : { total: 0, hired: 0, countsByProject: {} }
       }
+      topTalents={rankingResult.ok ? rankingResult.data.items : []}
+      locale={locale}
     />
   )
 }

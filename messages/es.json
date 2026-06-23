@@ -1426,6 +1426,21 @@
     "proyectoLabel": "Proyecto",
     "empresaLabel": "Empresa"
   },
+  "Ranking": {
+    "snippetTitle": "Ranking de Talento",
+    "snippetSubtitle": "Egresados destacados del mes",
+    "viewAll": "Ver Todos",
+    "pageTitle": "Ranking de Talento por Reputación.",
+    "pageDescription": "Descubre a los egresados mejor calificados por sus contribuciones técnicas y habilidades profesionales.",
+    "filterCategory": "Categoría",
+    "filterTech": "Tecnología",
+    "clearFilters": "Limpiar Filtros",
+    "showingCount": "Mostrando {count} talentos",
+    "sortByReputation": "Ordenar por Reputación",
+    "reputation": "Reputación",
+    "viewProfile": "Ver Perfil",
+    "emptyState": "No se encontraron egresados con los filtros seleccionados."
+  },
   "CompanyMensajes": {
     "title": "Centro de Mensajes",
     "description": "Conéctate con los egresados adjudicados en tus proyectos.",
