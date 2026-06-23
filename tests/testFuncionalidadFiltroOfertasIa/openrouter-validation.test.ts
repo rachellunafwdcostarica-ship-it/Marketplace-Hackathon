@@ -9,6 +9,17 @@ vi.mock('@/lib/logger', () => ({
   },
 }))
 
+vi.mock('@/lib/env.server', () => ({
+  serverEnv: {
+    get OPENROUTER_FILTRO_OFERTAS_API_KEY() {
+      return process.env.OPENROUTER_FILTRO_OFERTAS_API_KEY
+    },
+    get OPENROUTER_FILTRO_OFERTAS_MODEL() {
+      return process.env.OPENROUTER_FILTRO_OFERTAS_MODEL
+    },
+  },
+}))
+
 const BASE_INPUT = {
   projectTitle: 'Plataforma de delivery de comida',
   projectDescription:

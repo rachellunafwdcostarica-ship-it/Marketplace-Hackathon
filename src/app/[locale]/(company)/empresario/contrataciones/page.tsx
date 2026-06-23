@@ -33,10 +33,10 @@ export default async function CompanyContratacionesPage() {
 
   return (
     <CompanyShell>
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+      <div className="flex-1 w-full flex flex-col lg:flex-row">
         <SidebarEmpresaNuevo />
 
-        <main className="flex-1 space-y-8">
+        <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           <PageTitle
             title={t('menuContrataciones')}
             description={t('contratacionesDesc')}

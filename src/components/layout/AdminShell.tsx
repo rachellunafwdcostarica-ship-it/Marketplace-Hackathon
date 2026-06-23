@@ -70,7 +70,7 @@ export function AdminShell({
   }
 
   return (
-    <div className="flex min-h-screen" style={{ background: '#f5f6fa' }}>
+    <div className="flex min-h-screen bg-canvas">
       {/* ── Desktop Sidebar ── */}
       {!isSidebarHidden && (
         <SidebarAdmin
@@ -106,7 +106,7 @@ export function AdminShell({
         {/* ── Top Header Bar (White / very light gray) ── */}
         <header
           className="sticky top-0 z-30 flex h-[52px] items-center gap-3 px-5 border-b border-gray-100 shadow-sm"
-          style={{ background: '#ffffff' }}
+          style={{ background: 'var(--surface)' }}
         >
           {/* Mobile hamburger */}
           <button
@@ -185,7 +185,7 @@ export function AdminShell({
 
           {/* Role badge */}
           <span className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-100/60 px-3 py-1 text-xs font-bold text-gray-700">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#ec008c]" />
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-magenta" />
             {t('roleAdmin')}
           </span>
 
@@ -196,7 +196,7 @@ export function AdminShell({
             className="flex items-center gap-2.5 rounded-full border border-gray-200 bg-gray-100/60 pl-1 pr-3 py-1 hover:bg-gray-100 transition-colors"
           >
             {/* Avatar circle */}
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#ec008c] text-[10px] font-bold text-white">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-magenta text-[10px] font-bold text-white">
               {initials || '?'}
             </span>
             <span className="hidden sm:flex flex-col items-start leading-tight max-w-[10rem]">
@@ -213,16 +213,16 @@ export function AdminShell({
 
         {/* ── Rainbow brand stripe ── */}
         <div className="flex h-[3px] w-full shrink-0" aria-hidden="true">
-          <div className="flex-1" style={{ background: '#0a6cb9' }} />
-          <div className="flex-1" style={{ background: '#662d91' }} />
-          <div className="flex-1" style={{ background: '#20bec6' }} />
-          <div className="flex-1" style={{ background: '#ffcb05' }} />
-          <div className="flex-1" style={{ background: '#f7901e' }} />
-          <div className="flex-1" style={{ background: '#ec008c' }} />
+          <div className="flex-1 bg-primary" />
+          <div className="flex-1 bg-secondary" />
+          <div className="flex-1 bg-accent" />
+          <div className="flex-1 bg-highlight" />
+          <div className="flex-1 bg-warning" />
+          <div className="flex-1 bg-magenta" />
         </div>
 
         {/* ── Page content with watermark background ── */}
-        <main className="flex-1 overflow-x-hidden bg-[#f5f6fa] relative">
+        <main className="flex-1 overflow-x-hidden bg-canvas relative">
           {/* Bottom-left blurred watermark */}
           <div className="absolute -bottom-24 -left-24 z-0 w-96 h-96 opacity-[0.04] blur-[1px] pointer-events-none">
             <FwdLogo className="w-full h-full" />

@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
-import { useTranslations } from 'next-intl'
+import { CountryRegionFields } from '@/components/features/geo/CountryRegionFields'
+import { useTranslations, useLocale } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ import {
   uploadAndSaveProfilePhoto,
   type StudentProfileView,
 } from '@/lib/portfolio/actions'
+import type { ComboboxOption } from '@/components/ui/combobox'
 import {
   Card,
   CardHeader,
@@ -222,8 +224,12 @@ function SkillForm({
 
 export function PortfolioManager({
   initialProfile,
+  countries = [],
+  initialRegions = [],
 }: {
   initialProfile?: StudentProfileView | null
+  countries?: ComboboxOption[]
+  initialRegions?: ComboboxOption[]
 }) {
   const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -233,6 +239,7 @@ export function PortfolioManager({
   >([])
   const [isSavingVis, setIsSavingVis] = useState(false)
   const [isSavingBio, setIsSavingBio] = useState(false)
+  const [isSavingLocation, setIsSavingLocation] = useState(false)
   const [visibility, setVisibility] = useState<'publico' | 'empresas'>(
     initialProfile?.portafolio_visible_publicamente === false
       ? 'empresas'
@@ -243,6 +250,12 @@ export function PortfolioManager({
   >(undefined)
   const [editingSkill, setEditingSkill] = useState<StudentSkill | undefined>(
     undefined,
+  )
+  const [portfolioCountryName, setPortfolioCountryName] = useState(
+    initialProfile?.paisNombre || '',
+  )
+  const [portfolioRegionName, setPortfolioRegionName] = useState(
+    initialProfile?.regionNombre || '',
   )
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false)
@@ -262,6 +275,7 @@ export function PortfolioManager({
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
 
   const t = useTranslations('Portfolio')
+  const locale = useLocale()
 
   useEffect(() => {
     getActiveTechnologies().then((res) => {
@@ -270,12 +284,7 @@ export function PortfolioManager({
   }, [])
 
   useEffect(() => {
-    if (initialProfile) {
-      const fullName =
-        `${initialProfile.firstName} ${initialProfile.lastName1} ${initialProfile.lastName2}`.trim()
-      console.log('User Full Name:', fullName)
-      console.log('User ID:', initialProfile.id_usuario)
-    }
+    // No-op for analytics/tracking (retained structure)
   }, [initialProfile])
 
   const bioSchema = React.useMemo(() => {
@@ -308,6 +317,43 @@ export function PortfolioManager({
     resetBio({ bio: portfolioBio || '' })
   }, [portfolioBio, resetBio])
 
+  const locationSchema = React.useMemo(() => {
+    return z.object({
+      country: z.string().optional(),
+      region: z.string().optional(),
+    })
+  }, [])
+  type LocationValues = z.infer<typeof locationSchema>
+
+  const [portfolioCountry, setPortfolioCountry] = useState(
+    initialProfile?.paisIsoResidencia || '',
+  )
+  const [portfolioRegion, setPortfolioRegion] = useState(
+    initialProfile?.regionResidencia || '',
+  )
+
+  const {
+    register: registerLocation,
+    handleSubmit: handleLocationSubmit,
+    formState: { errors: locationErrors },
+    watch: watchLocation,
+    setValue: setValueLocation,
+    reset: resetLocation,
+  } = useForm<LocationValues>({
+    resolver: zodResolver(locationSchema),
+    defaultValues: {
+      country: portfolioCountry,
+      region: portfolioRegion,
+    },
+  })
+
+  useEffect(() => {
+    resetLocation({
+      country: portfolioCountry,
+      region: portfolioRegion,
+    })
+  }, [portfolioCountry, portfolioRegion, resetLocation])
+
   const handleVisibilityChange = async (newVis: 'publico' | 'empresas') => {
     setIsSavingVis(true)
     const res = await saveStudentProfile({
@@ -335,6 +381,24 @@ export function PortfolioManager({
       toast.success(t('toastBioSaved'))
     } else {
       toast.error('Error al guardar la biografía')
+    }
+  }
+
+  const handleLocationSave = async (data: LocationValues) => {
+    setIsSavingLocation(true)
+    const res = await saveStudentProfile({
+      paisIsoResidencia: data.country || null,
+      regionResidencia: data.region || null,
+    })
+    setIsSavingLocation(false)
+
+    if (res.ok) {
+      setPortfolioCountry(data.country || '')
+      setPortfolioRegion(data.region || '')
+      toast.success('Ubicación guardada correctamente')
+      router.refresh()
+    } else {
+      toast.error('Error al guardar la ubicación')
     }
   }
 
@@ -495,6 +559,49 @@ export function PortfolioManager({
               </form>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Globe className="h-5 w-5 text-primary" />
+                {t('locationLabel')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form
+                onSubmit={handleLocationSubmit(handleLocationSave)}
+                className="space-y-4"
+              >
+                <CountryRegionFields
+                  countries={countries}
+                  initialRegions={initialRegions}
+                  countryValue={watchLocation('country') ?? ''}
+                  onCountryChange={(code) =>
+                    setValueLocation('country', code, { shouldValidate: true })
+                  }
+                  onCountryNameChange={(name) => setPortfolioCountryName(name)}
+                  regionValue={watchLocation('region') ?? ''}
+                  onRegionChange={(code) =>
+                    setValueLocation('region', code, { shouldValidate: true })
+                  }
+                  onRegionNameChange={(name) => setPortfolioRegionName(name)}
+                  countryLabel={t('countryLabel')}
+                  countryId="portfolio-country"
+                  countryInvalid={Boolean(locationErrors.country)}
+                  regionId="portfolio-region"
+                  regionLabel={t('regionLabel')}
+                  hideRegionOptional={true}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSavingLocation}
+                >
+                  Guardar Ubicación
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right Column: Preview */}
@@ -566,7 +673,7 @@ export function PortfolioManager({
                           </Button>
                         </DialogClose>
                         <Button
-                          className="bg-[#0066cc] hover:bg-[#005bb5] text-white px-6"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6"
                           onClick={() => {
                             fileInputRef.current?.click()
                             setIsPhotoModalOpen(false)
@@ -788,6 +895,24 @@ export function PortfolioManager({
                 )}
               </div>
 
+              {/* === Ubicación === */}
+              {(portfolioCountryName || portfolioRegionName) && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-primary/20"></div>
+                    <div className="text-sm font-semibold tracking-wider text-muted-foreground font-display uppercase">
+                      Ubicación
+                    </div>
+                    <div className="h-px flex-1 bg-primary/20"></div>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    {[portfolioRegionName, portfolioCountryName]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </p>
+                </div>
+              )}
+
               {/* === Proyectos === */}
               <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-4">
@@ -858,7 +983,7 @@ export function PortfolioManager({
                                   <div className="flex items-center gap-2 pl-1">
                                     <DialogClose asChild>
                                       <button
-                                        className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                        className="w-3 h-3 rounded-full bg-magenta hover:bg-magenta/80 focus:outline-none"
                                         aria-label="Cerrar modal"
                                       />
                                     </DialogClose>
@@ -866,7 +991,7 @@ export function PortfolioManager({
                                       href={proj.demoUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                      className="w-3 h-3 rounded-full bg-success hover:bg-success/80 focus:outline-none"
                                       aria-label="Abrir en otra ventana"
                                     />
                                   </div>
@@ -979,7 +1104,7 @@ export function PortfolioManager({
                             <div className="flex items-center gap-2 pl-1">
                               <DialogClose asChild>
                                 <button
-                                  className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                  className="w-3 h-3 rounded-full bg-magenta hover:bg-magenta/80 focus:outline-none"
                                   aria-label="Cerrar modal"
                                 />
                               </DialogClose>
@@ -987,7 +1112,7 @@ export function PortfolioManager({
                                 href={project.demoUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                className="w-3 h-3 rounded-full bg-success hover:bg-success/80 focus:outline-none"
                                 aria-label="Abrir en otra ventana"
                               />
                             </div>

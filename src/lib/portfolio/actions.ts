@@ -1,15 +1,19 @@
 'use server'
 
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { ok, err, type Result } from '@/lib/result'
 import { logger } from '@/lib/logger'
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary'
+import { serverEnv } from '@/lib/env.server'
 import type { Database } from '@/types/database'
+import { getLocale } from 'next-intl/server'
+import { getCountryName, getSubdivisionName } from '@/lib/geo/catalog'
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
-  api_key: process.env.CLOUDINARY_API_KEY || '',
-  api_secret: process.env.CLOUDINARY_API_SECRET || '',
+  cloud_name: serverEnv.CLOUDINARY_CLOUD_NAME ?? '',
+  api_key: serverEnv.CLOUDINARY_API_KEY ?? '',
+  api_secret: serverEnv.CLOUDINARY_API_SECRET ?? '',
 })
 import type { StudentSkill, PortfolioProject } from '@/types'
 
@@ -23,12 +27,22 @@ export interface StudentProfileView {
   lastName2: string
   profilePhoto: string
   tituloFwd: string
+  paisIsoResidencia?: string | null
+  regionResidencia?: string | null
+  paisNombre?: string | null
+  regionNombre?: string | null
   skills: StudentSkill[]
   projects: PortfolioProject[]
 }
 
 export type StudentProfileInput = Partial<
-  Pick<StudentProfileView, 'descripcion' | 'portafolio_visible_publicamente'>
+  Pick<
+    StudentProfileView,
+    | 'descripcion'
+    | 'portafolio_visible_publicamente'
+    | 'paisIsoResidencia'
+    | 'regionResidencia'
+  >
 >
 
 /**
@@ -56,7 +70,9 @@ export async function getStudentProfile(): Promise<
         id_usuario, 
         descripcion, 
         portafolio_visible_publicamente, 
-        titulo_fwd, 
+        titulo_fwd,
+        pais_iso_residencia,
+        region_residencia,
         usuarios!estudiantes_id_usuario_fkey(nombre, apellido_1, apellido_2, foto_perfil),
         habilidades_tecnicas(nivel, id_tecnologia, tecnologias(nombre)),
         proyectos_portafolio(id_portafolio, titulo, descripcion, url_repositorio, url_demo, fecha, portafolio_tecnologias(tecnologias(nombre)))
@@ -116,6 +132,14 @@ export async function getStudentProfile(): Promise<
       lastName2: userInfo?.apellido_2 ?? '',
       profilePhoto: userInfo?.foto_perfil ?? '',
       tituloFwd: estudiante.titulo_fwd ?? '',
+      paisIsoResidencia: estudiante.pais_iso_residencia,
+      regionResidencia: estudiante.region_residencia,
+      paisNombre: estudiante.pais_iso_residencia
+        ? getCountryName(estudiante.pais_iso_residencia, await getLocale())
+        : null,
+      regionNombre: estudiante.region_residencia
+        ? getSubdivisionName(estudiante.region_residencia)
+        : null,
       skills: skillsList,
       projects: projectsList,
     }
@@ -145,13 +169,25 @@ export async function saveStudentProfile(
       return err('unauthorized')
     }
 
-    const estudianteProfile: Database['public']['Tables']['estudiantes']['Insert'] =
-      {
-        id_usuario: user.id,
-        descripcion: profile.descripcion ?? null,
-        portafolio_visible_publicamente:
-          profile.portafolio_visible_publicamente ?? true,
-      }
+    const estudianteProfile: Partial<
+      Database['public']['Tables']['estudiantes']['Update']
+    > & { id_usuario: string } = {
+      id_usuario: user.id,
+    }
+
+    if (profile.descripcion !== undefined) {
+      estudianteProfile.descripcion = profile.descripcion
+    }
+    if (profile.portafolio_visible_publicamente !== undefined) {
+      estudianteProfile.portafolio_visible_publicamente =
+        profile.portafolio_visible_publicamente
+    }
+    if (profile.paisIsoResidencia !== undefined) {
+      estudianteProfile.pais_iso_residencia = profile.paisIsoResidencia
+    }
+    if (profile.regionResidencia !== undefined) {
+      estudianteProfile.region_residencia = profile.regionResidencia
+    }
 
     const { error: estudianteError } = await supabase
       .from('estudiantes')
@@ -475,17 +511,18 @@ export async function getPublicStudentProfile(
   id_estudiante: string,
 ): Promise<Result<StudentProfileView | null>> {
   try {
-    const supabase = await createSupabaseServerClient()
+    const supabaseUser = await createSupabaseServerClient()
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await supabaseUser.auth.getUser()
 
     if (authError || !user) {
       return err('unauthorized')
     }
 
-    const { data: estudiante, error } = await supabase
+    const supabaseAdmin = createSupabaseAdminClient()
+    const { data: estudiante, error } = await supabaseAdmin
       .from('estudiantes')
       .select(
         `
@@ -494,6 +531,8 @@ export async function getPublicStudentProfile(
         descripcion, 
         portafolio_visible_publicamente, 
         titulo_fwd, 
+        pais_iso_residencia,
+        region_residencia,
         usuarios!estudiantes_id_usuario_fkey(nombre, apellido_1, apellido_2, foto_perfil),
         habilidades_tecnicas(nivel, id_tecnologia, tecnologias(nombre)),
         proyectos_portafolio(id_portafolio, titulo, descripcion, url_repositorio, url_demo, fecha, portafolio_tecnologias(tecnologias(nombre)))
@@ -515,7 +554,7 @@ export async function getPublicStudentProfile(
 
     // Verificar permisos RF-12
     if (!estudiante.portafolio_visible_publicamente) {
-      const { data: empresario } = await supabase
+      const { data: empresario } = await supabaseAdmin
         .from('empresarios')
         .select('id_empresario')
         .eq('id_usuario', user.id)
@@ -523,7 +562,7 @@ export async function getPublicStudentProfile(
 
       if (!empresario) return err('unauthorized_private_portfolio')
 
-      const { data: participacion } = await supabase
+      const { data: participacion } = await supabaseAdmin
         .from('participaciones')
         .select('id_participacion, proyectos!inner(id_empresario)')
         .eq('id_estudiante', id_estudiante)
@@ -572,6 +611,14 @@ export async function getPublicStudentProfile(
       lastName2: userInfo?.apellido_2 ?? '',
       profilePhoto: userInfo?.foto_perfil ?? '',
       tituloFwd: estudiante.titulo_fwd ?? '',
+      paisIsoResidencia: estudiante.pais_iso_residencia,
+      regionResidencia: estudiante.region_residencia,
+      paisNombre: estudiante.pais_iso_residencia
+        ? getCountryName(estudiante.pais_iso_residencia, await getLocale())
+        : null,
+      regionNombre: estudiante.region_residencia
+        ? getSubdivisionName(estudiante.region_residencia)
+        : null,
       skills: skillsList,
       projects: projectsList,
     }

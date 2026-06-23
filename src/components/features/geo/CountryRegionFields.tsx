@@ -15,11 +15,17 @@ interface CountryRegionFieldsProps {
   countryValue: string
   regionValue: string
   onCountryChange: (code: string) => void
+  onCountryNameChange?: (name: string) => void
   onRegionChange: (code: string) => void
+  onRegionNameChange?: (name: string) => void
   /** Etiqueta del país, propia de cada formulario ("País" / "País del proyecto"). */
   countryLabel: string
   countryId: string
   regionId: string
+  /** Etiqueta de la región (por defecto usa t('regionLabel')). */
+  regionLabel?: string
+  /** Ocultar la etiqueta "(opcional)" al lado de la región. */
+  hideRegionOptional?: boolean
   disabled?: boolean
   countryInvalid?: boolean
 }
@@ -44,10 +50,14 @@ export function CountryRegionFields({
   countryValue,
   regionValue,
   onCountryChange,
+  onCountryNameChange,
   onRegionChange,
+  onRegionNameChange,
   countryLabel,
   countryId,
   regionId,
+  regionLabel,
+  hideRegionOptional = false,
   disabled = false,
   countryInvalid = false,
 }: CountryRegionFieldsProps) {
@@ -59,7 +69,11 @@ export function CountryRegionFields({
 
   async function handleCountryChange(code: string) {
     onCountryChange(code)
+    const countryName = countries.find((c) => c.value === code)?.label || ''
+    if (onCountryNameChange) onCountryNameChange(countryName)
+
     onRegionChange('') // la región anterior no pertenece al nuevo país
+    if (onRegionNameChange) onRegionNameChange('')
     lastRequested.current = code
 
     if (!code) {
@@ -115,16 +129,23 @@ export function CountryRegionFields({
           htmlFor={regionId}
           className="flex justify-between gap-2 text-sm font-bold"
         >
-          <span>{t('regionLabel')}</span>
-          <span className="text-muted-foreground text-xs font-normal">
-            {t('regionOptional')}
-          </span>
+          <span>{regionLabel || t('regionLabel')}</span>
+          {!hideRegionOptional && (
+            <span className="text-muted-foreground text-xs font-normal">
+              {t('regionOptional')}
+            </span>
+          )}
         </Label>
         <Combobox
           id={regionId}
           options={regions}
           value={regionValue}
-          onValueChange={onRegionChange}
+          onValueChange={(code) => {
+            onRegionChange(code)
+            const regionName =
+              regions.find((r) => r.value === code)?.label || ''
+            if (onRegionNameChange) onRegionNameChange(regionName)
+          }}
           placeholder={regionPlaceholder}
           searchPlaceholder={t('searchRegion')}
           emptyText={t('noRegion')}

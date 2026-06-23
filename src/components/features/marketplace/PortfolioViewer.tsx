@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { ExternalLink, GitBranch, Globe, Lock } from 'lucide-react'
 import type { StudentProfileView } from '@/lib/portfolio/actions'
+import { ReportButton } from '@/components/features/moderation/ReportButton'
 
 interface PortfolioViewerProps {
   profile: StudentProfileView
@@ -21,6 +22,8 @@ interface PortfolioViewerProps {
 
 export function PortfolioViewer({ profile }: PortfolioViewerProps) {
   const t = useTranslations('Portfolio')
+
+  const locale = useLocale()
 
   const {
     firstName,
@@ -30,6 +33,10 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
     profilePhoto,
     portafolio_visible_publicamente: visibilityPublic,
     descripcion: portfolioBio,
+    paisIsoResidencia,
+    regionResidencia,
+    paisNombre,
+    regionNombre,
     skills,
     projects,
   } = profile
@@ -131,6 +138,22 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
           )}
         </div>
 
+        {/* === Ubicación === */}
+        {(paisNombre || regionNombre) && (
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-primary/20"></div>
+              <div className="text-sm font-semibold tracking-wider text-muted-foreground font-display uppercase">
+                {t('locationLabel')}
+              </div>
+              <div className="h-px flex-1 bg-primary/20"></div>
+            </div>
+            <p className="text-sm text-foreground leading-relaxed">
+              {[regionNombre, paisNombre].filter(Boolean).join(', ')}
+            </p>
+          </div>
+        )}
+
         {/* === Proyectos === */}
         <div className="space-y-4 pt-2">
           <div className="flex items-center gap-4">
@@ -151,13 +174,19 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
                   key={proj.id}
                   className="space-y-1 pl-2 border-l-2 border-primary/20"
                 >
-                  <div className="font-semibold text-sm text-foreground flex items-center justify-between">
+                  <div className="font-semibold text-sm text-foreground flex items-center justify-between gap-2">
                     <span>{proj.title}</span>
-                    {proj.completionDate && (
-                      <span className="text-xs text-muted-foreground font-normal">
-                        ({new Date(proj.completionDate).toLocaleDateString()})
-                      </span>
-                    )}
+                    <span className="flex items-center gap-1">
+                      {proj.completionDate && (
+                        <span className="text-xs text-muted-foreground font-normal">
+                          ({new Date(proj.completionDate).toLocaleDateString()})
+                        </span>
+                      )}
+                      <ReportButton
+                        target={{ tipo: 'portafolio', id: proj.id }}
+                        iconOnly
+                      />
+                    </span>
                   </div>
                   {proj.description && (
                     <p className="text-xs text-muted-foreground line-clamp-2">
@@ -196,7 +225,7 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
                             <div className="flex items-center gap-2 pl-1">
                               <DialogClose asChild>
                                 <button
-                                  className="w-3 h-3 rounded-full bg-[#ff5f56] hover:bg-[#ff5f56]/80 focus:outline-none"
+                                  className="w-3 h-3 rounded-full bg-magenta hover:bg-magenta/80 focus:outline-none"
                                   aria-label="Cerrar modal"
                                 />
                               </DialogClose>
@@ -204,7 +233,7 @@ export function PortfolioViewer({ profile }: PortfolioViewerProps) {
                                 href={proj.demoUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-3 h-3 rounded-full bg-[#27c93f] hover:bg-[#27c93f]/80 focus:outline-none"
+                                className="w-3 h-3 rounded-full bg-success hover:bg-success/80 focus:outline-none"
                                 aria-label="Abrir en otra ventana"
                               />
                             </div>
