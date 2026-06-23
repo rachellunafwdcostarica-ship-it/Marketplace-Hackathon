@@ -34,11 +34,19 @@ import {
   actualizarUrlProyecto,
 } from '@/lib/deliverables/actions'
 import { rateCompany } from '@/lib/company/ratings'
+import { addRespuestaEvaluacion } from '@/lib/evaluaciones/actions'
 import { logger } from '@/lib/logger'
 import type {
   MiContratacion,
   EntregablePropio,
 } from '@/lib/deliverables/queries'
+
+interface ReceivedRating {
+  id_evaluacion: string
+  puntuacion: number
+  comentario: string | null
+  respuesta_evaluado: string | null
+}
 
 interface EntregablesClientProps {
   projectId: string
@@ -47,6 +55,7 @@ interface EntregablesClientProps {
   contratacion: MiContratacion
   entregablesIniciales: EntregablePropio[]
   existingRating: { puntuacion: number; comentario: string | null } | null
+  receivedRating?: ReceivedRating | null
 }
 
 const ESTADO_CONFIG = {
@@ -138,6 +147,7 @@ export function EntregablesClient({
   contratacion,
   entregablesIniciales,
   existingRating,
+  receivedRating,
 }: EntregablesClientProps) {
   const tEgresado = useTranslations('Egresado')
   const tCommon = useTranslations('Common')
@@ -156,6 +166,8 @@ export function EntregablesClient({
   const [hoverScore, setHoverScore] = useState(0)
   const [submittingRating, setSubmittingRating] = useState(false)
   const [hasRated, setHasRated] = useState(existingRating !== null)
+  const [replyText, setReplyText] = useState('')
+  const [submittingReply, setSubmittingReply] = useState(false)
   const [urlRepositorio, setUrlRepositorio] = useState(
     contratacion.url_repositorio_proyecto,
   )
@@ -728,6 +740,113 @@ export function EntregablesClient({
                         {tEgresado('submitRating')}
                       </Button>
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Calificación recibida del empresario (RF-49 vista egresado + RF-53 réplica) */}
+            {contratacion.estado_periodo === 'finalizado' && (
+              <Card className="border border-border/80 bg-card/65 backdrop-blur-sm shadow-md overflow-hidden relative">
+                <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-accent to-primary" />
+                <CardContent className="p-6 pt-8 space-y-6">
+                  <div className="space-y-1 text-left">
+                    <h3 className="text-base font-extrabold font-heading text-foreground">
+                      {tEgresado('receivedRatingTitle')}
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {tEgresado('receivedRatingDesc')}
+                    </p>
+                  </div>
+
+                  {receivedRating ? (
+                    <div className="space-y-4 text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-muted-foreground mr-2">
+                          {tEgresado('ratingLabel')}:
+                        </span>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-4 h-4 ${
+                                star <= receivedRating.puntuacion
+                                  ? 'text-highlight fill-highlight'
+                                  : 'text-muted-foreground/25'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {receivedRating.comentario && (
+                        <div className="rounded-lg bg-muted/40 border border-border/60 px-3 py-2 text-xs text-foreground/90">
+                          <span className="font-bold block mb-1 text-muted-foreground uppercase text-[10px]">
+                            {tEgresado('commentLabel')}
+                          </span>
+                          {receivedRating.comentario}
+                        </div>
+                      )}
+                      {receivedRating.respuesta_evaluado ? (
+                        <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2 text-xs text-foreground/90">
+                          <span className="font-bold block mb-1 text-primary uppercase text-[10px]">
+                            {tEgresado('alreadyReplied')}
+                          </span>
+                          {receivedRating.respuesta_evaluado}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <label
+                            htmlFor="reply-comment"
+                            className="block text-xs font-bold text-muted-foreground"
+                          >
+                            {tEgresado('replyLabel')}
+                          </label>
+                          <textarea
+                            id="reply-comment"
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder={tEgresado('replyPlaceholder')}
+                            disabled={submittingReply}
+                            rows={3}
+                            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            maxLength={1000}
+                          />
+                          <Button
+                            type="button"
+                            disabled={
+                              submittingReply || replyText.trim() === ''
+                            }
+                            onClick={async () => {
+                              if (replyText.trim() === '') return
+                              setSubmittingReply(true)
+                              const res = await addRespuestaEvaluacion({
+                                idEvaluacion: receivedRating.id_evaluacion,
+                                respuesta: replyText.trim(),
+                              })
+                              setSubmittingReply(false)
+                              if (res.ok) {
+                                toast.success(tEgresado('replySuccess'))
+                                router.refresh()
+                              } else {
+                                toast.error(tEgresado('replyError'))
+                              }
+                            }}
+                            className="text-xs font-semibold flex items-center gap-1.5"
+                          >
+                            {submittingReply && (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            )}
+                            {submittingReply
+                              ? tEgresado('replySubmitting')
+                              : tEgresado('replySubmit')}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">
+                      {tEgresado('receivedRatingNone')}
+                    </p>
                   )}
                 </CardContent>
               </Card>

@@ -390,7 +390,18 @@
     "estadoEnviado": "Submitted",
     "estadoEnRevision": "Under review",
     "estadoAprobado": "Approved",
-    "estadoConCambios": "Changes requested"
+    "estadoConCambios": "Changes requested",
+    "receivedRatingTitle": "Your Rating",
+    "receivedRatingDesc": "This is the evaluation the company gave your work",
+    "receivedRatingNone": "The company has not rated you yet",
+    "replyLabel": "Your reply",
+    "replyPlaceholder": "Write your reply to this rating...",
+    "replySubmit": "Reply",
+    "replySubmitting": "Sending...",
+    "replySuccess": "Reply sent successfully",
+    "replyError": "Could not send the reply",
+    "alreadyReplied": "Your reply",
+    "viewCompanyProfile": "View company profile"
   },
   "Validation": {
     "emailInvalid": "Please enter a valid email address.",
@@ -793,9 +804,17 @@
     "uploadedAtLabel": "Uploaded on",
     "comentarioEmpresarioLabel": "Business comment",
     "aprobarBtn": "Approve",
-    "solicitarCambiosBtn": "Request changes",
+    "solicitarCambiosBtn": "Suggest changes",
     "confirmarCambiosBtn": "Confirm changes",
     "responderCommentPlaceholder": "Describe the required changes...",
+    "aprobarDialogTitle": "Confirm approval",
+    "aprobarDialogDesc": "Approving will notify the graduate. You can add an optional message.",
+    "aprobarCommentPlaceholder": "Optional message for the graduate...",
+    "aprobarConfirmBtn": "Approve deliverable",
+    "cambiosDialogTitle": "Suggest changes",
+    "cambiosDialogDesc": "Describe the changes the graduate must make. This message will be sent with the notification.",
+    "cambiosConfirmBtn": "Send suggestion",
+    "cambiosDefaultComment": "The employer has requested changes to this deliverable.",
     "responderSuccess": "Response sent.",
     "responderError": "Could not send the response.",
     "comentariosLabel": "Comment history",
@@ -833,7 +852,15 @@
       "ai_failed": "The AI couldn't review the change. Please try again.",
       "ai_not_configured": "AI review isn't available right now.",
       "invalid_input": "Please check the description and try again."
-    }
+    },
+    "rateEgresadoTitle": "Rate the Graduate",
+    "rateEgresadoDesc": "Share your experience working with this professional",
+    "rateEgresadoSuccess": "Rating submitted successfully",
+    "rateEgresadoRatingLabel": "Score",
+    "rateEgresadoCommentLabel": "Comment (optional)",
+    "rateEgresadoCommentPlaceholder": "Share your experience working with this graduate...",
+    "rateEgresadoSubmit": "Submit rating",
+    "rateEgresadoAlreadyRated": "You have already rated this graduate"
   },
   "Admin": {
     "dashboard": "Admin Dashboard",
@@ -1279,7 +1306,29 @@
     "viewEntregables": "View deliverables",
     "backToContrataciones": "Back to Hires",
     "entregablesPageDesc": "Review and manage the deliverables for this project.",
-    "entregablesPageDescEgresado": "Deliverables from {nombre} for this project."
+    "entregablesPageDescEgresado": "Deliverables from {nombre} for this project.",
+    "postuloEl": "Applied on",
+    "contratadoPara": "Hired for",
+    "verMotivacion": "View motivation",
+    "verTituloCompleto": "View full title",
+    "tituloProyectoLabel": "Project Title",
+    "motivacionYSolucion": "Motivation and Solution",
+    "cartaPresentacion": "Cover Letter",
+    "planteamientoSolucionLabel": "Solution Proposal",
+    "sinMotivacion": "The student did not attach a cover letter or solution proposal.",
+    "postulacionDe": "Application from {nombre}",
+    "estadoEnDesarrollo": "In progress",
+    "estadoFinalizado": "Finalized",
+    "tituloFrontend": "Frontend",
+    "tituloBackend": "Backend",
+    "tituloFullstack": "Fullstack",
+    "tituloEgresado": "Graduate",
+    "sinContrataciones": "No hires yet",
+    "sinContratacionesDesc": "You have not hired any graduate for your projects yet.",
+    "filterAll": "All",
+    "filterEnDesarrollo": "In progress",
+    "filterFinalizado": "Finalized",
+    "sinResultadosFiltro": "No hires match this filter."
   },
   "CompanyPostulations": {
     "title": "Applications Management",
@@ -1407,5 +1456,14 @@
     "errorEnvio": "Could not send the message. Please try again.",
     "proyectoLabel": "Project",
     "egresadoLabel": "Graduate"
+  },
+  "EgresadoEmpresa": {
+    "pageTitle": "Company Profile",
+    "sector": "Sector",
+    "descripcion": "Description",
+    "noDesc": "No description available.",
+    "backToContracts": "Back to my contracts",
+    "tipoEmpresa": "Formal company",
+    "tipoEmprendedor": "Individual entrepreneur"
   }
 }
