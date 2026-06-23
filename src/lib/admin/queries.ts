@@ -841,3 +841,80 @@ export async function listStrikeAudit(
 
   return ok(items)
 }
+
+export interface AdminAuditItem {
+  id_auditoria: string
+  ocurrida_at: string
+  accion: string
+  entidad: string
+  id_entidad: string
+  actor_nombre: string | null
+}
+
+export const MAX_AUDIT_ROWS = 100
+
+/**
+ * Lista los eventos más recientes de `auditoria` para el reporte de actividad
+ * (RF-67). Solo un admin puede invocarla. Resuelve el nombre del actor con una
+ * segunda consulta (no embed) y usa el cliente de servicio para bypassear RLS.
+ */
+export async function listAuditoria(
+  limit = MAX_AUDIT_ROWS,
+): Promise<Result<AdminAuditItem[]>> {
+  const authResult = await requireRole('administrador')
+  if (!authResult.ok) return authResult
+
+  const adminClient = createSupabaseAdminClient()
+  const { data, error } = await adminClient
+    .from('auditoria')
+    .select('id_auditoria, ocurrida_at, accion, entidad, id_entidad, id_actor')
+    .order('ocurrida_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    logger.error('listAuditoria: fallo al leer auditoria', {
+      error: error.message,
+    })
+    return err(error.message)
+  }
+
+  const rows = data ?? []
+  if (rows.length === 0) return ok([])
+
+  const actorIds = [
+    ...new Set(
+      rows.map((r) => r.id_actor).filter((id): id is string => id !== null),
+    ),
+  ]
+
+  const actorNameById = new Map<string, string>()
+  if (actorIds.length > 0) {
+    const { data: usuarios, error: usersError } = await adminClient
+      .from('usuarios')
+      .select('id_usuario, nombre, apellido_1')
+      .in('id_usuario', actorIds)
+
+    if (usersError) {
+      logger.error('listAuditoria: fallo al leer actores', {
+        error: usersError.message,
+      })
+      return err(usersError.message)
+    }
+
+    for (const u of usuarios ?? []) {
+      actorNameById.set(u.id_usuario, `${u.nombre} ${u.apellido_1}`)
+    }
+  }
+
+  const items: AdminAuditItem[] = rows.map((r) => ({
+    id_auditoria: r.id_auditoria,
+    ocurrida_at: r.ocurrida_at,
+    accion: r.accion,
+    entidad: r.entidad,
+    id_entidad: r.id_entidad,
+    actor_nombre:
+      r.id_actor === null ? null : (actorNameById.get(r.id_actor) ?? null),
+  }))
+
+  return ok(items)
+}

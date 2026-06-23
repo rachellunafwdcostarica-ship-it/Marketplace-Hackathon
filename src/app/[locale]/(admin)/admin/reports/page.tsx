@@ -12,6 +12,7 @@ import {
   PlayCircle,
   CheckCircle2,
   AlertTriangle,
+  Activity,
 } from 'lucide-react'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import {
@@ -34,7 +35,9 @@ import {
   getProjectStats,
   listUsers,
   listAllProjectsForAdmin,
+  listAuditoria,
   MAX_USERS_PER_QUERY,
+  MAX_AUDIT_ROWS,
   type AdminAccountStatus,
   type AdminUserStats,
   type AdminProjectStats,
@@ -66,13 +69,19 @@ export default async function AdminReportsPage() {
   const tBoard = await getTranslations('ProjectsBoard')
   const locale = await getLocale()
 
-  const [userStatsResult, usersResult, projectStatsResult, projectsResult] =
-    await Promise.all([
-      getUserStats(),
-      listUsers(),
-      getProjectStats(),
-      listAllProjectsForAdmin(),
-    ])
+  const [
+    userStatsResult,
+    usersResult,
+    projectStatsResult,
+    projectsResult,
+    auditResult,
+  ] = await Promise.all([
+    getUserStats(),
+    listUsers(),
+    getProjectStats(),
+    listAllProjectsForAdmin(),
+    listAuditoria(),
+  ])
 
   const userStats = userStatsResult.ok ? userStatsResult.data : EMPTY_USER_STATS
   const users = usersResult.ok ? usersResult.data : []
@@ -80,6 +89,7 @@ export default async function AdminReportsPage() {
     ? projectStatsResult.data
     : EMPTY_PROJECT_STATS
   const projects = projectsResult.ok ? projectsResult.data : []
+  const auditEvents = auditResult.ok ? auditResult.data : []
 
   const userCards: StatItem[] = [
     {
@@ -329,6 +339,65 @@ export default async function AdminReportsPage() {
                 </TableBody>
               </Table>
             </div>
+          </>
+        )}
+      </section>
+
+      {/* ── Actividad: tabla de auditoría reciente ── */}
+      <section className="space-y-6 border-t border-border/40 pt-8">
+        <h2 className="font-heading text-xl font-bold text-foreground">
+          {t('reportActivityTitle')}
+        </h2>
+
+        {auditEvents.length === 0 ? (
+          <EmptyState
+            title={t('reportNoActivity')}
+            description={t('reportNoActivityDesc')}
+            icon={Activity}
+          />
+        ) : (
+          <>
+            <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('reportColDate')}</TableHead>
+                    <TableHead>{t('reportColActor')}</TableHead>
+                    <TableHead>{t('reportColAction')}</TableHead>
+                    <TableHead>{t('reportColEntity')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditEvents.map((event) => (
+                    <TableRow key={event.id_auditoria}>
+                      <TableCell className="whitespace-nowrap text-xs text-ink-muted">
+                        {formatDate(event.ocurrida_at)}
+                      </TableCell>
+                      <TableCell className="text-ink-strong">
+                        {event.actor_nombre ?? t('reportAuditSystem')}
+                      </TableCell>
+                      <TableCell className="text-xs text-ink">
+                        {event.accion}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className="rounded-full px-2 text-[10px] font-semibold"
+                        >
+                          {event.entidad}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {auditEvents.length >= MAX_AUDIT_ROWS && (
+              <p className="text-xs text-ink-muted">
+                {t('reportActivityLimit', { limit: MAX_AUDIT_ROWS })}
+              </p>
+            )}
           </>
         )}
       </section>
