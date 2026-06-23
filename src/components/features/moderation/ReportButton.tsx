@@ -34,6 +34,8 @@ const MAX_DESC = 1000
 
 interface ReportButtonProps {
   target: { tipo: TargetTipo; id: string }
+  /** Modo compacto: solo el icono (para espacios chicos como una burbuja de chat). */
+  iconOnly?: boolean
 }
 
 /**
@@ -41,7 +43,7 @@ interface ReportButtonProps {
  * objetivo (usuario, proyecto, mensaje, entregable, portafolio). El auto-reporte
  * de un usuario lo bloquea el server action.
  */
-export function ReportButton({ target }: ReportButtonProps) {
+export function ReportButton({ target, iconOnly = false }: ReportButtonProps) {
   const t = useTranslations('Admin')
   const tCommon = useTranslations('Common')
 
@@ -80,15 +82,28 @@ export function ReportButton({ target }: ReportButtonProps) {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-ink-muted hover:text-destructive"
-      >
-        <Flag className="h-4 w-4" />
-        {t('reportButton')}
-      </Button>
+      {iconOnly ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setOpen(true)}
+          className="h-7 w-7 text-ink-muted hover:text-destructive"
+          aria-label={t('reportButton')}
+          title={t('reportButton')}
+        >
+          <Flag className="h-3.5 w-3.5" />
+        </Button>
+      ) : (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-1.5 text-ink-muted hover:text-destructive"
+        >
+          <Flag className="h-4 w-4" />
+          {t('reportButton')}
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={close}>
         <DialogContent className="border border-border sm:max-w-md">
