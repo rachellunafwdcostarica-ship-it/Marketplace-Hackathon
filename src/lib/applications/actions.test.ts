@@ -426,12 +426,28 @@ describe('retirarPostulacion', () => {
             select: vi.fn(() => ({
               eq: vi.fn().mockReturnThis(),
               single: vi.fn().mockResolvedValue({
-                data: { id_participacion: PART_UUID, estado: 'enviada' },
+                data: {
+                  id_participacion: PART_UUID,
+                  estado: 'enviada',
+                  id_proyecto: PROJ_UUID,
+                },
                 error: null,
               }),
             })),
             update: vi.fn(() => ({
               eq: vi.fn().mockResolvedValue({ error: null }),
+            })),
+          }
+        }
+        if (table === 'proyectos') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { fecha_cierre: null },
+                  error: null,
+                }),
+              })),
             })),
           }
         }
@@ -441,5 +457,47 @@ describe('retirarPostulacion', () => {
 
     const result = await retirarPostulacion({ id_participacion: PART_UUID })
     expect(result.ok).toBe(true)
+  })
+
+  it('retorna plazo_vencido si la ventana de ofertas ya cerró (RF-31)', async () => {
+    mockedServer.mockResolvedValue(
+      withAuth((table) => {
+        if (table === 'participaciones') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn().mockReturnThis(),
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id_participacion: PART_UUID,
+                  estado: 'enviada',
+                  id_proyecto: PROJ_UUID,
+                },
+                error: null,
+              }),
+            })),
+            update: vi.fn(() => ({
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            })),
+          }
+        }
+        if (table === 'proyectos') {
+          return {
+            select: vi.fn(() => ({
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: { fecha_cierre: '2020-01-01T00:00:00.000Z' },
+                  error: null,
+                }),
+              })),
+            })),
+          }
+        }
+        return {}
+      }) as never,
+    )
+
+    const result = await retirarPostulacion({ id_participacion: PART_UUID })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('plazo_vencido')
   })
 })

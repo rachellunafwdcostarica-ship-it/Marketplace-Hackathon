@@ -47,6 +47,7 @@
     "logout": "Log Out",
     "settings": "System settings",
     "moderation": "Moderation",
+    "support": "Support",
     "adminRegister": "Admin registration",
     "messages": "Messages",
     "myContracts": "My Contracts"
@@ -608,6 +609,7 @@
     "proposalStackLabel": "Suggested stack",
     "acceptAndPublish": "Accept and publish",
     "notVerifiedPublish": "Your company must be verified to publish.",
+    "missingAreaPublish": "The business area is missing. Request changes so the AI assigns one before publishing.",
     "requestChanges": "Request changes",
     "proposalRejected": "Check the chat: the AI explains what's missing to build the proposal.",
     "agentRejection": {
@@ -1112,7 +1114,18 @@
     "statFinishedProjects": "Finished",
     "statFinishedProjectsDesc": "Successfully completed",
     "statCancelledProjects": "Cancelled",
-    "statCancelledProjectsDesc": "Cancelled by company or admin"
+    "statCancelledProjectsDesc": "Cancelled by company or admin",
+    "supportTitle": "Support Tickets",
+    "supportDesc": "Help messages sent by companies. Read-only view.",
+    "supportCount": "{count, plural, one {# ticket} other {# tickets}}",
+    "supportColCompany": "Company",
+    "supportColMessage": "Message",
+    "supportColDate": "Date",
+    "supportNoCompany": "—",
+    "supportEmpty": "No support tickets",
+    "supportEmptyDesc": "When a company sends a help message, it will appear here.",
+    "supportError": "Couldn't load tickets",
+    "supportErrorDesc": "An error occurred while loading support. Please try again."
   },
   "Errors": {
     "forbidden": "Access denied",

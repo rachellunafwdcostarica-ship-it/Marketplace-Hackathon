@@ -47,6 +47,7 @@
     "logout": "Cerrar sesión",
     "settings": "Ajustes del sistema",
     "moderation": "Moderación",
+    "support": "Soporte",
     "adminRegister": "Registro de admin",
     "messages": "Mensajes",
     "myContracts": "Mis Contrataciones"
@@ -609,6 +610,7 @@
     "proposalStackLabel": "Stack sugerido",
     "acceptAndPublish": "Aceptar y publicar",
     "notVerifiedPublish": "Tu empresa debe estar verificada para publicar.",
+    "missingAreaPublish": "Falta el área de negocio. Pedí cambios para que la IA la asigne antes de publicar.",
     "requestChanges": "Pedir cambios",
     "proposalRejected": "Revisá el chat: la IA te explica qué falta para armar la propuesta.",
     "agentRejection": {
@@ -1113,7 +1115,18 @@
     "statFinishedProjects": "Finalizados",
     "statFinishedProjectsDesc": "Completados exitosamente",
     "statCancelledProjects": "Cancelados",
-    "statCancelledProjectsDesc": "Cancelados por empresa o admin"
+    "statCancelledProjectsDesc": "Cancelados por empresa o admin",
+    "supportTitle": "Tickets de Soporte",
+    "supportDesc": "Mensajes de ayuda enviados por las empresas. Consulta de solo lectura.",
+    "supportCount": "{count, plural, one {# ticket} other {# tickets}}",
+    "supportColCompany": "Empresa",
+    "supportColMessage": "Mensaje",
+    "supportColDate": "Fecha",
+    "supportNoCompany": "—",
+    "supportEmpty": "No hay tickets de soporte",
+    "supportEmptyDesc": "Cuando una empresa envíe un mensaje de ayuda, aparecerá acá.",
+    "supportError": "No se pudieron cargar los tickets",
+    "supportErrorDesc": "Ocurrió un error al consultar el soporte. Intentá de nuevo."
   },
   "Errors": {
     "forbidden": "Acceso no autorizado",

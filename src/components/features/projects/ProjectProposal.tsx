@@ -53,6 +53,10 @@ export function ProjectProposal({
 }: ProjectProposalProps) {
   const t = useTranslations('ProjectPublish')
 
+  // RF-20: el área de negocio es obligatoria. Si la propuesta no la trae, no se
+  // puede publicar; el empresario debe pedir cambios para que la IA la asigne.
+  const faltaArea = !propuesta.idArea
+
   return (
     <div className="space-y-5 text-left">
       <Field label={t('proposalTitleLabel')}>
@@ -119,11 +123,16 @@ export function ProjectProposal({
             {t('notVerifiedPublish')}
           </p>
         )}
+        {faltaArea && (
+          <p className="text-xs font-semibold text-warning">
+            {t('missingAreaPublish')}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             onClick={onAceptar}
-            disabled={!isVerified || publicando}
+            disabled={!isVerified || publicando || faltaArea}
             className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CheckCircle2 className="h-4 w-4" />

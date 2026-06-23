@@ -142,9 +142,11 @@ export async function generateProposal(
       const area = resolveCatalog([raw.area], catalogs.areas)[0] ?? null
 
       // Red de seguridad: si la IA no eligió del catálogo, no es publicable.
-      if (categorias.length === 0 || tecnologias.length === 0) {
+      // El área es obligatoria (RF-20), igual que al menos una categoría y una
+      // tecnología.
+      if (!area || categorias.length === 0 || tecnologias.length === 0) {
         ajustes = [
-          'Elegí al menos una categoría y una tecnología del catálogo provisto.',
+          'Elegí un área de negocio, al menos una categoría y una tecnología del catálogo provisto.',
         ]
         ultimasRazones = ajustes
         continue
@@ -164,8 +166,9 @@ export async function generateProposal(
       const propuesta: PropuestaProyecto = {
         titulo: raw.titulo.trim(),
         descripcion: raw.descripcion.trim(),
-        idArea: area?.id ?? null,
-        areaNombre: area?.nombre ?? null,
+        // El guard de arriba garantiza `area` no nula (RF-20).
+        idArea: area.id,
+        areaNombre: area.nombre,
         categorias,
         tecnologias,
         stackSugerido: raw.stackSugerido,
