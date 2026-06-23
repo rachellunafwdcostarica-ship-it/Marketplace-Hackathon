@@ -1,5 +1,11 @@
 import { getLocale, getTranslations } from 'next-intl/server'
-import { AlertTriangle, ShieldAlert, ShieldX, ShieldCheck } from 'lucide-react'
+import {
+  AlertTriangle,
+  ShieldAlert,
+  ShieldX,
+  ShieldCheck,
+  Flag,
+} from 'lucide-react'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { EmptyState } from '@/components/features/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { StrikeActions } from '@/components/features/admin/StrikeActions'
 import { StrikeAuditHistory } from '@/components/features/admin/StrikeAuditHistory'
 import { CreateStrikeButton } from '@/components/features/admin/CreateStrikeButton'
+import { ModerationReportActions } from '@/components/features/admin/ModerationReportActions'
 import { getCurrentUser } from '@/lib/auth/dal'
 import {
   listUsersWithStrikes,
@@ -22,6 +29,7 @@ import {
   type AdminAccountStatus,
   MAX_STRIKES_LIMIT,
 } from '@/lib/admin/queries'
+import { listarColaReportes } from '@/lib/moderation/report-actions'
 
 // ── Risk-level helpers ────────────────────────────────────────────────────────
 
@@ -79,6 +87,9 @@ export default async function AdminModerationPage() {
   const currentUser = await getCurrentUser()
   const currentUserId = currentUser?.id ?? null
 
+  const colaRes = await listarColaReportes()
+  const reportes = colaRes.ok ? colaRes.data : []
+
   const statusLabel = (value: AdminAccountStatus): string => {
     switch (value) {
       case 'pendiente':
@@ -128,6 +139,14 @@ export default async function AdminModerationPage() {
               )}
             </TabsTrigger>
             <TabsTrigger value="audit">Historial de Auditoría</TabsTrigger>
+            <TabsTrigger value="reports">
+              {t('reportQueueTab')}
+              {reportes.length > 0 && (
+                <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive/20 px-1 text-[9px] font-bold text-destructive">
+                  {reportes.length}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           {/* ── Tab: Usuarios Penalizados ── */}
@@ -274,6 +293,81 @@ export default async function AdminModerationPage() {
           {/* ── Tab: Historial de Auditoría ── */}
           <TabsContent value="audit">
             <StrikeAuditHistory />
+          </TabsContent>
+
+          {/* ── Tab: Cola de reportes (RF-69) ── */}
+          <TabsContent value="reports" className="space-y-6">
+            {reportes.length === 0 ? (
+              <EmptyState
+                title={t('reportQueueEmpty')}
+                description={t('reportQueueEmptyDesc')}
+                icon={Flag}
+              />
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+                <div className="border-b border-border px-5 py-3">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                    {t('reportQueueCount', { count: reportes.length })}
+                  </span>
+                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('reportColReporter')}</TableHead>
+                      <TableHead>{t('reportColTarget')}</TableHead>
+                      <TableHead>{t('reportColType')}</TableHead>
+                      <TableHead>{t('reportColDescription')}</TableHead>
+                      <TableHead>{t('reportColDate')}</TableHead>
+                      <TableHead>{t('colActions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {reportes.map((reporte) => (
+                      <TableRow key={reporte.id_reporte}>
+                        <TableCell className="text-ink-strong">
+                          {reporte.reportante_nombre}
+                        </TableCell>
+                        <TableCell className="font-semibold text-ink-strong">
+                          {reporte.target ? (
+                            <span className="flex flex-col">
+                              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+                                {t(`targetTipo_${reporte.target.tipo}`)}
+                              </span>
+                              <span>{reporte.target.nombre}</span>
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="rounded-full px-2 text-[10px] font-semibold"
+                          >
+                            {t(`tipoReporte_${reporte.tipo_reporte}`)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs whitespace-pre-wrap text-sm text-ink">
+                          {reporte.descripcion}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-xs text-ink-muted">
+                          {new Date(reporte.reportado_at).toLocaleDateString(
+                            locale,
+                            { year: 'numeric', month: 'short', day: 'numeric' },
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <ModerationReportActions
+                            reportId={reporte.id_reporte}
+                            canStrike={reporte.target?.tipo === 'usuario'}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
