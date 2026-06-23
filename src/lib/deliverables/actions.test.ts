@@ -19,7 +19,6 @@ vi.mock('@/lib/supabase/admin', () => ({
 vi.mock('@/lib/notifications/create', () => ({
   crearNotificacion: vi.fn().mockResolvedValue({ ok: true, data: undefined }),
 }))
-vi.mock('@/lib/auth/guards', () => ({ requireRole: vi.fn() }))
 vi.mock('@/lib/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }))
