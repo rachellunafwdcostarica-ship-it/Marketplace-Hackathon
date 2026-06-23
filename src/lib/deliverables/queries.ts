@@ -522,7 +522,7 @@ export async function getMisContrataciones(): Promise<
   const idProyectos = participaciones.map((p) => p.id_proyecto)
   const { data: proyectos, error: proyError } = await supabase
     .from('proyectos')
-    .select('id_proyecto, titulo, estado')
+    .select('id_proyecto, titulo, estado, id_empresario')
     .in('id_proyecto', idProyectos)
   if (proyError) {
     logger.error('getMisContrataciones: proyectos query failed', {

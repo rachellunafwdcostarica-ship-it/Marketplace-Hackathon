@@ -38,13 +38,6 @@ const ESTADO_STYLE: Record<string, string> = {
   con_cambios: 'bg-destructive/10 text-destructive border-destructive/20',
 }
 
-const TIPO_COMENTARIO_STYLE: Record<string, string> = {
-  aprobacion: 'bg-accent/10 text-accent border-accent/20',
-  revision_solicitada: 'bg-warning/10 text-warning border-warning/20',
-  aclaracion: 'bg-primary/10 text-primary border-primary/20',
-  rechazo: 'bg-magenta/10 text-magenta border-magenta/20',
-}
-
 function ComentariosList({
   comentarios,
   t,
@@ -66,24 +59,9 @@ function ComentariosList({
           key={c.id_comentario_entregable}
           className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2 space-y-1"
         >
-          <div className="flex items-center justify-between gap-2">
-            <span
-              className={cn(
-                'text-[10px] font-semibold px-2 py-0.5 rounded-full border shrink-0',
-                TIPO_COMENTARIO_STYLE[c.tipo_comentario] ??
-                  'bg-muted text-muted-foreground border-border',
-              )}
-            >
-              {t(
-                `tipoComentario_${c.tipo_comentario}` as Parameters<
-                  typeof t
-                >[0],
-              )}
-            </span>
-            <span className="text-[10px] text-muted-foreground shrink-0">
-              {c.comentado_at.slice(0, 10)}
-            </span>
-          </div>
+          <p className="text-[10px] text-muted-foreground">
+            {c.comentado_at.slice(0, 10)}
+          </p>
           {c.contenido && (
             <p className="text-sm text-foreground leading-snug">
               {c.contenido}
