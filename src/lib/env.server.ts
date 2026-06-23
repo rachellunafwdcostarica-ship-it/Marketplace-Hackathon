@@ -3,7 +3,6 @@ import { z } from 'zod'
 
 const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  RESEND_API_KEY: z.string().min(1).optional(),
   GMAIL_USER: z.string().email().optional(),
   GMAIL_APP_PASSWORD: z.string().min(1).optional(),
 })
@@ -15,7 +14,6 @@ export function parseServerEnv(
 ): ServerEnv {
   const parsed = serverEnvSchema.safeParse({
     SUPABASE_SERVICE_ROLE_KEY: source['SUPABASE_SERVICE_ROLE_KEY'],
-    RESEND_API_KEY: source['RESEND_API_KEY'],
     GMAIL_USER: source['GMAIL_USER'],
     GMAIL_APP_PASSWORD: source['GMAIL_APP_PASSWORD'],
   })
