@@ -39,6 +39,7 @@ import type { EntregableEmpresario } from '@/lib/deliverables/queries'
 import type { Result } from '@/lib/result'
 import {
   getProjectForwardStates,
+  PANEL_FILTER_DETALLE,
   type ProjectForwardTarget,
 } from '@/lib/projects/project-detail-logic'
 import {
@@ -368,6 +369,7 @@ export function ProjectDetailClient({
             </div>
             <ParticipationsPanel
               result={participationsResult}
+              filterConfig={PANEL_FILTER_DETALLE}
               projectId={project.id}
               projectEstado={project.estadoEfectivo}
             />

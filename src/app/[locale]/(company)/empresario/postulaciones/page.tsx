@@ -5,6 +5,7 @@ import { SidebarEmpresaNuevo } from '@/components/layout/SidebarEmpresaNuevo'
 import { PageTitle } from '@/components/features/brand/PageTitle'
 import { ParticipationsPanel } from '@/components/features/projects/ParticipationsPanel'
 import { getEmpresarioParticipations } from '@/lib/projects/project-detail'
+import { PANEL_FILTER_POSTULACIONES } from '@/lib/projects/project-detail-logic'
 import { isCompanyProfileComplete } from '@/lib/company/actions'
 
 /**
@@ -35,7 +36,10 @@ export default async function CompanyPostulationsPage() {
             description={t('subtitle')}
             dotColor="text-primary"
           />
-          <ParticipationsPanel result={result} />
+          <ParticipationsPanel
+            result={result}
+            filterConfig={PANEL_FILTER_POSTULACIONES}
+          />
         </main>
       </div>
     </CompanyShell>
