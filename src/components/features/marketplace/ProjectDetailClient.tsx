@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { rateCompany } from '@/lib/company/ratings'
 import type { MiContratacion } from '@/lib/deliverables/queries'
+import { ReportButton } from '@/components/features/moderation/ReportButton'
 
 interface ProjectDetailClientProps {
   project: Project
@@ -68,7 +69,7 @@ export function ProjectDetailClient({
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <Link
             href="/egresado/projects"
             className="inline-flex items-center text-sm font-semibold text-muted-foreground hover:text-primary transition-colors"
@@ -76,6 +77,7 @@ export function ProjectDetailClient({
             <ArrowLeft className="w-4 h-4 mr-2" />
             {tEgresado('backToMarketplace')}
           </Link>
+          <ReportButton target={{ tipo: 'proyecto', id: project.id }} />
         </div>
 
         <PageTitle

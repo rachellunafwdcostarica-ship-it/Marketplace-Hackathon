@@ -314,7 +314,7 @@ export default async function AdminModerationPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('reportColReporter')}</TableHead>
-                      <TableHead>{t('reportColReported')}</TableHead>
+                      <TableHead>{t('reportColTarget')}</TableHead>
                       <TableHead>{t('reportColType')}</TableHead>
                       <TableHead>{t('reportColDescription')}</TableHead>
                       <TableHead>{t('reportColDate')}</TableHead>
@@ -328,7 +328,16 @@ export default async function AdminModerationPage() {
                           {reporte.reportante_nombre}
                         </TableCell>
                         <TableCell className="font-semibold text-ink-strong">
-                          {reporte.reportado_nombre ?? '—'}
+                          {reporte.target ? (
+                            <span className="flex flex-col">
+                              <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
+                                {t(`targetTipo_${reporte.target.tipo}`)}
+                              </span>
+                              <span>{reporte.target.nombre}</span>
+                            </span>
+                          ) : (
+                            '—'
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -350,7 +359,7 @@ export default async function AdminModerationPage() {
                         <TableCell>
                           <ModerationReportActions
                             reportId={reporte.id_reporte}
-                            canStrike={reporte.id_reportado !== null}
+                            canStrike={reporte.target?.tipo === 'usuario'}
                           />
                         </TableCell>
                       </TableRow>
