@@ -280,7 +280,7 @@ export async function getSignedUrlEntregable(
 
   const { data: signed, error: signErr } = await supabase.storage
     .from('entregables')
-    .createSignedUrl(entregable.archivo_url, 3600)
+    .createSignedUrl(entregable.archivo_url, 3600, { download: true })
   if (signErr) {
     logger.error('getSignedUrlEntregable: storage error', {
       error: signErr.message,

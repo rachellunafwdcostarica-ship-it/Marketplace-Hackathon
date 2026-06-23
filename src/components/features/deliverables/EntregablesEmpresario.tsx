@@ -133,7 +133,12 @@ export function EntregablesEmpresario({
     const res = await getSignedUrlEntregable(idEntregable)
     setDownloadingId(null)
     if (res.ok) {
-      window.open(res.data.url, '_blank')
+      const a = document.createElement('a')
+      a.href = res.data.url
+      a.rel = 'noopener noreferrer'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
       return
     }
     toast.error(t('downloadError'))
