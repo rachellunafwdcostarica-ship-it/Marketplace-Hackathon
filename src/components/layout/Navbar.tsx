@@ -142,8 +142,8 @@ export function Navbar({
     ],
   }
 
-  const navLinks = hideLinksFor === role ? [] : navLinksByRole[role]
-  const activeRole = roleConfig[role]
+  const navLinks = !role || hideLinksFor === role ? [] : navLinksByRole[role]
+  const activeRole = role ? roleConfig[role] : null
 
   const renderIcon = (iconName: string, className = 'w-4 h-4') => {
     switch (iconName) {
