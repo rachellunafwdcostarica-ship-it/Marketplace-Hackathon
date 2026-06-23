@@ -16,7 +16,7 @@ describe('buildAdjudicacionNotificaciones', () => {
     expect(n?.tipoEvento).toBe('participacion_contratada')
     expect(n?.params).toEqual({ titulo: TITULO })
     expect(n?.urlDestino).toBe(URL)
-    expect(n?.mensaje).toBe('content.participacion_contratada')
+    expect(n?.mensaje).toBe(`Fuiste seleccionado para el proyecto "${TITULO}".`)
   })
 
   it('al no seleccionado le asigna participacion_no_seleccionada', () => {
@@ -26,7 +26,9 @@ describe('buildAdjudicacionNotificaciones', () => {
       afectados: [{ idUsuario: OTRO, estado: 'no_seleccionada' }],
     })
     expect(n?.tipoEvento).toBe('participacion_no_seleccionada')
-    expect(n?.mensaje).toBe('content.participacion_no_seleccionada')
+    expect(n?.mensaje).toBe(
+      `Tu propuesta para "${TITULO}" no fue seleccionada.`,
+    )
   })
 
   it('procesa el lote completo (ganador + varios no seleccionados)', () => {

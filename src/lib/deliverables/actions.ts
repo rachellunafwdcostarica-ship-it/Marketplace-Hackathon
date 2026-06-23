@@ -11,6 +11,8 @@ import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { crearNotificacion } from '@/lib/notifications/create'
 import { DEFAULT_LOCALE } from '@/i18n/config'
+import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { buildEntregableEnviadoNotificacion } from './entregable-notificacion-logic'
 import { createHash } from 'node:crypto'
 
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50 MB; coincide con el límite del bucket
@@ -104,6 +106,39 @@ async function registrarEntregable(
 
     if (!insertError) {
       revalidatePath(`/egresado/projects/${input.idProyecto}/entregables`)
+      try {
+        const adminClient = createSupabaseAdminClient()
+        const { data: proyecto } = await adminClient
+          .from('proyectos')
+          .select('titulo, id_empresario')
+          .eq('id_proyecto', input.idProyecto)
+          .maybeSingle()
+        if (proyecto) {
+          const { data: empresario } = await adminClient
+            .from('empresarios')
+            .select('id_usuario')
+            .eq('id_empresario', proyecto.id_empresario)
+            .maybeSingle()
+          if (empresario?.id_usuario) {
+            const notifResult = await crearNotificacion(
+              buildEntregableEnviadoNotificacion({
+                idUsuarioEmpresario: empresario.id_usuario,
+                tituloProyecto: proyecto.titulo,
+                idProyecto: input.idProyecto,
+              }),
+            )
+            if (!notifResult.ok) {
+              logger.error('registrarEntregable: notificacion fallida', {
+                error: notifResult.error,
+              })
+            }
+          }
+        }
+      } catch (e) {
+        logger.error('registrarEntregable: error al notificar empresario', {
+          error: e instanceof Error ? e.message : String(e),
+        })
+      }
       return ok(undefined)
     }
 
