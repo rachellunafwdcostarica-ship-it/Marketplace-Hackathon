@@ -4,6 +4,15 @@ import type { NextConfig } from 'next'
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+    ],
+  },
   experimental: {
     // Los entregables se suben por una server action (FormData). El bucket
     // admite 50MB; damos algo de aire por el overhead de multipart para que un
