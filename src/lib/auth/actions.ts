@@ -34,6 +34,11 @@ import { evaluateAdminManagement } from '@/lib/admin/admin-management'
 import { resolveAdminTargetContext } from '@/lib/admin/admin-management-server'
 import { crearNotificacion } from '@/lib/notifications/create'
 import { DEFAULT_LOCALE } from '@/i18n/config'
+import { ROLE_HOME } from './roles'
+import {
+  accountVerifiedHtml,
+  accountVerifiedSubject,
+} from '@/lib/email/templates/account-verified'
 
 export async function getCurrentUserRole(): Promise<Result<string>> {
   return getUserRole()
@@ -239,7 +244,7 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
 
   const { data: usuario, error: fetchError } = await adminClient
     .from('usuarios')
-    .select('roles(nombre_rol)')
+    .select('correo, nombre, roles(nombre_rol)')
     .eq('id_usuario', parsed.data)
     .maybeSingle()
 
@@ -352,12 +357,11 @@ export async function reactivarUsuario(userId: string): Promise<Result<void>> {
       await transport.sendMail({
         from: getGmailFrom(),
         to: usuario.correo,
-        subject: accountApprovedSubject(),
-        html: accountApprovedHtml({
+        subject: accountVerifiedSubject(),
+        html: accountVerifiedHtml({
           nombre: usuario.nombre ?? 'Usuario',
           rol,
-          accessUrl,
-          isMagicLink,
+          loginUrl: accessUrl,
         }),
       })
     } catch (e) {
