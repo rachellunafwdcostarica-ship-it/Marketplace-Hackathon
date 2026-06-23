@@ -71,6 +71,10 @@ NO INTERROGUES DE MÁS:
 - Antes de marcar completo=true, SOLO en este caso preguntá una vez más: si el empresario mencionó un PROBLEMA de dinero o cobro (ej.: errores de vuelto, cobrar a los clientes, pagos) y NO aclaró si el sistema debe encargarse de eso, hacé UNA sola pregunta de negocio puntual sobre cómo se maneja el cobro antes de cerrar. En cualquier otro caso NO preguntes por esto: si los dos apartados ya están claros, cerrá directo (no inventes preguntas ni re-pidas lo claro). Mostrar precios o un catálogo NO es un problema de cobro.
 - No re-preguntes lo que ya te dieron o podés inferir (ej. el rubro/área si se deduce). Preguntá el rubro/área solo si de verdad no se puede deducir.
 
+ALCANCE DE LA PLATAFORMA — esta plataforma es solo para proyectos de SOFTWARE (apps, webs, sistemas, automatizaciones):
+- Si el empresario pide algo que NO es software (fabricar un objeto físico, hardware, un servicio no digital), decíselo con claridad y en lenguaje de negocio: eso no se puede publicar acá. Si hay una parte de software que sí podés cubrir (ej.: una app para gestionar ese objeto), ofrecésela y seguí SOLO si el empresario la acepta. Si insiste en el objeto físico, NO marques completo=true.
+- Si el pedido es software pero claramente DESPROPORCIONADO para el plazo, el presupuesto o lo que un desarrollador junior puede construir (ej.: "millones de usuarios desde el día uno", infraestructura o red de distribución propia a gran escala), decílo en la conversación y acordá con el empresario un alcance acotado y realista (un MVP). No aceptes en silencio una escala inviable. Un proyecto ambicioso pero construible como MVP NO es desproporcionado: solo lo es la escala extrema.
+
 Solo ayudás a armar propuestas de proyectos de software. Si te preguntan algo no relacionado, decílo en una línea y redirigí al proyecto; no respondas temas fuera de eso. Por ejemplo, ante "quién es un personaje", "cuándo es un feriado" o "cuánto cuesta un producto", respondé que solo podés ayudar con su proyecto. Ojo: "algo como Uber pero para fontaneros" o "un sistema de pedidos para mi juguería" SÍ son del proyecto.
 
 Respondé SIEMPRE en JSON con esta forma exacta, sin texto fuera del JSON:
@@ -99,6 +103,8 @@ Si el empresario aportó detalle útil (entidades o datos que maneja, roles o ti
 
 Si la descripción sirve para cualquier proyecto, está mal.
 
+Si el empresario pidió una escala o un alcance que excede lo realista para el plazo/presupuesto/un junior, generá la propuesta con el alcance ACOTADO (un MVP construible) y declará en "Supuestos y exclusiones" qué se recortó y por qué. El empresario tocó ese tema, así que el recorte se documenta; no prometas en la descripción una escala inviable.
+
 NO INVENTES: no agregues requisitos, modelo de datos, reglas ni endpoints que el empresario no haya dado. INCLUÍ como funcionalidad del sistema solo lo que el empresario pidió o aceptó (lo que sugeriste vos y él no tomó, no se incluye). Podés aclarar como fuera de alcance algo que el empresario decidió dejar afuera. Pero NO menciones —ni para incluir ni para excluir— ningún tema que el empresario nunca tocó: si nadie habló de un canal, una integración o un control, no lo nombres. Lo único que proponés por tu cuenta son las tecnologías y las categorías (del catálogo); todo lo demás se basa en lo que el empresario aportó.
 
 Reglas de los campos estructurados:
@@ -117,10 +123,11 @@ Respondé SOLO con JSON válido, sin texto fuera del JSON, con esta forma:
 // Prompt de Validar (#3). Sus "razones"/"ajustes" pueden mostrarse al empresario
 // en el chat (proposal.ts, rechazo tras reintentos), así que van en su idioma.
 function systemValidar(idioma: string): string {
-  return `Sos un revisor CRÍTICO de propuestas de proyectos de software para FWD Talent. Validá la propuesta contra estos tres criterios; aprobás solo si se cumplen los tres:
+  return `Sos un revisor CRÍTICO de propuestas de proyectos de software para FWD Talent. Validá la propuesta contra estos cuatro criterios; aprobás solo si se cumplen los cuatro:
 1. Es software/digital que un junior puede construir (app, web, sistema, automatización, script, integración). No objetos físicos ni servicios no-software.
 2. Es coherente y posible (el objetivo tiene sentido técnico).
 3. Es apropiada: sin contenido falso, engañoso, ilegal ni ofensivo.
+4. Corresponde al pedido original del empresario (te lo paso abajo): la propuesta resuelve lo que pidió, o un alcance acotado de eso. RECHAZÁ si la propuesta SUSTITUYE el pedido por algo distinto que el empresario no aceptó (ej.: pidió fabricar un objeto físico y la propuesta es una app de gestión que él no aprobó). PERMITÍ los recortes de alcance que estén declarados en la propuesta (acotar una escala desproporcionada a un MVP es válido).
 
 Sé estricto. Escribí "razones" y "ajustes" en ${idioma} (pueden mostrarse al empresario). Respondé SOLO con JSON válido, sin texto fuera del JSON:
 {"valido": <true|false>, "razones": ["<por qué no pasa, si aplica>"], "ajustes": ["<qué cambiar para que pase>"]}`
@@ -150,6 +157,7 @@ export interface AiProvider {
   generarPropuesta(input: GenerarInput): Promise<PropuestaGeneradaRaw>
   validarPropuesta(
     propuesta: PropuestaGeneradaRaw,
+    contextoInicial: string,
     locale: string,
   ): Promise<ValidacionResponse>
 }
@@ -392,12 +400,12 @@ export function getAiProvider(): AiProvider {
       return callJson(messages, propuestaGeneradaSchema, MAX_TOKENS_GENERAR)
     },
 
-    async validarPropuesta(propuesta, locale) {
+    async validarPropuesta(propuesta, contextoInicial, locale) {
       const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: 'system', content: systemValidar(idiomaLabel(locale)) },
         {
           role: 'user',
-          content: `Propuesta a validar (JSON):\n${JSON.stringify(propuesta)}`,
+          content: `Pedido original del empresario:\n${contextoInicial}\n\nPropuesta a validar (JSON):\n${JSON.stringify(propuesta)}`,
         },
       ]
       return callJson(messages, validacionResponseSchema, MAX_TOKENS_VALIDAR)

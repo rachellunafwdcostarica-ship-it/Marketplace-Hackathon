@@ -140,7 +140,11 @@ export async function editProjectDescription(
     let validacion
     try {
       const provider = getAiProvider()
-      validacion = await provider.validarPropuesta(propuesta, locale)
+      validacion = await provider.validarPropuesta(
+        propuesta,
+        proyecto.titulo,
+        locale,
+      )
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'error_desconocido'
       if (msg === 'AI_NOT_CONFIGURED') return err('ai_not_configured')
