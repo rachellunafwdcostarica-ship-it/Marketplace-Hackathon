@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { ok, err, type Result } from '@/lib/result'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth/guards'
+import { requireRole, requireVerifiedEgresado } from '@/lib/auth/guards'
 import { logger } from '@/lib/logger'
 import { revalidatePath } from 'next/cache'
 import { validateApplicationWithAI } from '@/lib/ai-filtro-ofertas/openrouter-validation'
@@ -216,32 +216,17 @@ export async function retirarPostulacion(
     return err('invalid_input')
   }
 
-  const roleResult = await requireRole('egresado')
-  if (!roleResult.ok) {
-    return roleResult
-  }
+  const verified = await requireVerifiedEgresado()
+  if (!verified.ok) return verified
 
   const supabase = await createSupabaseServerClient()
-
-  // Obtener el usuario actual
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  if (userError || !userData.user) return err('unauthenticated')
-
-  // Obtener id_estudiante
-  const { data: estudiante, error: estError } = await supabase
-    .from('estudiantes')
-    .select('id_estudiante')
-    .eq('id_usuario', userData.user.id)
-    .single()
-
-  if (estError || !estudiante) return err('estudiante_not_found')
 
   // Buscar la participación y asegurar que le pertenece y su estado permite retiro
   const { data: participacion, error: partError } = await supabase
     .from('participaciones')
     .select('id_participacion, estado')
     .eq('id_participacion', parsed.data.id_participacion)
-    .eq('id_estudiante', estudiante.id_estudiante)
+    .eq('id_estudiante', verified.data.id_estudiante)
     .single()
 
   if (partError || !participacion) {

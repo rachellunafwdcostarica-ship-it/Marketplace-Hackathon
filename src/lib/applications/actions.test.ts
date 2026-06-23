@@ -3,7 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('@/lib/supabase/server', () => ({
   createSupabaseServerClient: vi.fn(),
 }))
-vi.mock('@/lib/auth/guards', () => ({ requireRole: vi.fn() }))
+vi.mock('@/lib/auth/guards', () => ({
+  requireRole: vi.fn(),
+  requireVerifiedEgresado: vi.fn(),
+}))
 vi.mock('@/lib/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }))
@@ -32,10 +35,11 @@ vi.mock('@/lib/supabase/admin', () => ({
 
 import { postularse, retirarPostulacion } from './actions'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { requireRole } from '@/lib/auth/guards'
+import { requireRole, requireVerifiedEgresado } from '@/lib/auth/guards'
 
 const mockedServer = vi.mocked(createSupabaseServerClient)
 const mockedRequireRole = vi.mocked(requireRole)
+const mockedVerifiedEgresado = vi.mocked(requireVerifiedEgresado)
 
 const PROJ_UUID = 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
 const PART_UUID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
@@ -78,6 +82,10 @@ const validInput = {
 beforeEach(() => {
   vi.clearAllMocks()
   mockedRequireRole.mockResolvedValue({ ok: true, data: 'egresado' })
+  mockedVerifiedEgresado.mockResolvedValue({
+    ok: true,
+    data: { id_estudiante: EST_ID, id_usuario: USER_ID },
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -302,38 +310,27 @@ describe('retirarPostulacion', () => {
     if (!result.ok) expect(result.error).toBe('invalid_input')
   })
 
-  it('propaga error si el rol no es egresado', async () => {
-    mockedRequireRole.mockResolvedValue({ ok: false, error: 'forbidden' })
+  it('propaga cuenta_no_verificada del guard si el egresado no está verificado', async () => {
+    mockedVerifiedEgresado.mockResolvedValue({
+      ok: false,
+      error: 'cuenta_no_verificada',
+    })
+    const result = await retirarPostulacion({ id_participacion: PART_UUID })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toBe('cuenta_no_verificada')
+  })
+
+  it('propaga forbidden del guard si el rol no es egresado', async () => {
+    mockedVerifiedEgresado.mockResolvedValue({ ok: false, error: 'forbidden' })
     const result = await retirarPostulacion({ id_participacion: PART_UUID })
     expect(result.ok).toBe(false)
   })
 
-  it('retorna unauthenticated si no hay usuario', async () => {
-    mockedServer.mockResolvedValue(withNoAuth() as never)
-    const result = await retirarPostulacion({ id_participacion: PART_UUID })
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.error).toBe('unauthenticated')
-  })
-
-  it('retorna estudiante_not_found si no existe el estudiante', async () => {
-    mockedServer.mockResolvedValue(
-      withAuth((table) => {
-        if (table === 'estudiantes') {
-          return {
-            select: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({
-                  data: null,
-                  error: { message: 'not found' },
-                }),
-              })),
-            })),
-          }
-        }
-        return {}
-      }) as never,
-    )
-
+  it('propaga estudiante_not_found del guard', async () => {
+    mockedVerifiedEgresado.mockResolvedValue({
+      ok: false,
+      error: 'estudiante_not_found',
+    })
     const result = await retirarPostulacion({ id_participacion: PART_UUID })
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error).toBe('estudiante_not_found')
