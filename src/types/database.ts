@@ -794,6 +794,7 @@ export type Database = {
           motivo_retiro: string | null
           no_seleccionada_at: string | null
           planteamiento_solucion: string
+          plazo_aviso_enviado_at: string | null
           prototipo_enlaces: string[]
           retirada_at: string | null
           revision_iniciada_at: string | null
@@ -815,6 +816,7 @@ export type Database = {
           motivo_retiro?: string | null
           no_seleccionada_at?: string | null
           planteamiento_solucion: string
+          plazo_aviso_enviado_at?: string | null
           prototipo_enlaces: string[]
           retirada_at?: string | null
           revision_iniciada_at?: string | null
@@ -836,6 +838,7 @@ export type Database = {
           motivo_retiro?: string | null
           no_seleccionada_at?: string | null
           planteamiento_solucion?: string
+          plazo_aviso_enviado_at?: string | null
           prototipo_enlaces?: string[]
           retirada_at?: string | null
           revision_iniciada_at?: string | null
