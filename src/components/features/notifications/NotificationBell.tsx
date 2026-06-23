@@ -5,6 +5,7 @@ import { Bell, CheckCheck, ExternalLink, Loader2, X } from 'lucide-react'
 import { useTranslations, useFormatter } from 'next-intl'
 import { useRouter } from '@/i18n/routing'
 import { cn } from '@/lib/utils/cn'
+import { stripLocalePrefix } from '@/lib/i18n/strip-locale-prefix'
 import {
   getMisNotificaciones,
   getMisNotificacionesNoLeidasCount,
@@ -108,7 +109,11 @@ export function NotificationBell({
   const handleGoToAction = (notification: NotificacionItem) => {
     if (!notification.leida) handleMarkOne(notification.id_notificacion)
     if (notification.url_destino) {
-      router.push(notification.url_destino as Parameters<typeof router.push>[0])
+      router.push(
+        stripLocalePrefix(notification.url_destino) as Parameters<
+          typeof router.push
+        >[0],
+      )
       setIsOpen(false)
     }
   }
