@@ -290,6 +290,8 @@
     "myContractsDesc": "Projects you were selected for. Access your deliverables from here.",
     "emptyContracts": "You have no active contracts yet.",
     "emptyContractsDesc": "When a company selects you for a project, it will appear here.",
+    "contractFilterAll": "All",
+    "contractFilterEmpty": "No contracts match this filter.",
     "contractActive": "Active",
     "contractFinished": "Finished",
     "contractPaused": "Paused",
@@ -892,7 +894,13 @@
     "rateEgresadoCommentLabel": "Comment (optional)",
     "rateEgresadoCommentPlaceholder": "Share your experience working with this graduate...",
     "rateEgresadoSubmit": "Submit rating",
-    "rateEgresadoAlreadyRated": "You have already rated this graduate"
+    "rateEgresadoAlreadyRated": "You have already rated this graduate",
+    "contratacionInicio": "Start date",
+    "contratacionFinEstimada": "Estimated end",
+    "periodoVigente": "Active contract",
+    "periodoPausado": "Paused",
+    "periodoFinalizado": "Finished",
+    "periodoCancelado": "Cancelled"
   },
   "Admin": {
     "dashboard": "Admin Dashboard",

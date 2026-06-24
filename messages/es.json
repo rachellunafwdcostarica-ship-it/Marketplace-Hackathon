@@ -289,6 +289,8 @@
     "myContractsDesc": "Proyectos en los que fuiste seleccionado. Accedé a tus entregables desde aquí.",
     "emptyContracts": "Todavía no tenés contrataciones activas.",
     "emptyContractsDesc": "Cuando una empresa te seleccione para un proyecto, aparecerá aquí.",
+    "contractFilterAll": "Todos",
+    "contractFilterEmpty": "No hay contrataciones en este estado.",
     "contractActive": "Vigente",
     "contractFinished": "Finalizado",
     "contractPaused": "Pausado",
@@ -892,7 +894,13 @@
     "rateEgresadoCommentLabel": "Comentario (opcional)",
     "rateEgresadoCommentPlaceholder": "Compartí tu experiencia trabajando con este egresado...",
     "rateEgresadoSubmit": "Enviar calificacion",
-    "rateEgresadoAlreadyRated": "Ya calificaste a este egresado"
+    "rateEgresadoAlreadyRated": "Ya calificaste a este egresado",
+    "contratacionInicio": "Fecha de inicio",
+    "contratacionFinEstimada": "Fin estimado",
+    "periodoVigente": "Contrato vigente",
+    "periodoPausado": "Pausado",
+    "periodoFinalizado": "Finalizado",
+    "periodoCancelado": "Cancelado"
   },
   "Admin": {
     "dashboard": "Panel Administrador",
