@@ -609,7 +609,7 @@ export function PortfolioManager({
         {/* Right Column: Preview */}
         <div className="lg:col-span-7">
           <Card className="h-full border border-primary/20 bg-surface shadow-sm overflow-hidden">
-            <CardHeader className="relative border-b pb-5 pt-7 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5">
+            <CardHeader className="relative pb-5 pt-7 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5">
               <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary via-secondary to-accent" />
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-4">
