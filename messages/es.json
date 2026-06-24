@@ -1544,7 +1544,9 @@
     "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
     "proyectoLabel": "Proyecto",
     "empresaLabel": "Empresa",
-    "relativeDateYesterday": "Ayer"
+    "relativeDateYesterday": "Ayer",
+    "msgLeido": "Visto",
+    "msgNoLeido": "Enviado"
   },
   "Ranking": {
     "snippetTitle": "Ranking de Talento",
@@ -1583,7 +1585,9 @@
     "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
     "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
     "proyectoLabel": "Proyecto",
-    "egresadoLabel": "Egresado"
+    "egresadoLabel": "Egresado",
+    "msgLeido": "Visto",
+    "msgNoLeido": "Enviado"
   },
   "EgresadoEmpresa": {
     "pageTitle": "Perfil de la Empresa",
