@@ -20,13 +20,11 @@ import {
   Star,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import type { MiContratacion } from '@/lib/deliverables/queries'
 import { ReportButton } from '@/components/features/moderation/ReportButton'
 
 interface ProjectDetailClientProps {
   project: Project
   alreadyApplied: boolean
-  contratacion: MiContratacion | null
   studentCountry?: string | null
   studentRegion?: string | null
 }
@@ -34,7 +32,6 @@ interface ProjectDetailClientProps {
 export function ProjectDetailClient({
   project,
   alreadyApplied,
-  contratacion,
   studentCountry,
   studentRegion,
 }: ProjectDetailClientProps) {
