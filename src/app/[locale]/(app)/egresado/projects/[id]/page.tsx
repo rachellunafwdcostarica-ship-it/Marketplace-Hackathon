@@ -4,7 +4,6 @@ import {
   checkIfApplied,
 } from '@/lib/projects/marketplace'
 import { getMiContratacion } from '@/lib/deliverables/queries'
-import { getCompanyRatingForStudent } from '@/lib/company/ratings'
 import { ProjectDetailClient } from '@/components/features/marketplace/ProjectDetailClient'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 
@@ -29,11 +28,6 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
   const alreadyApplied = appliedResult.ok ? appliedResult.data : false
   const contratacion = contratacionResult.ok ? contratacionResult.data : null
 
-  const ratingResult = await getCompanyRatingForStudent(
-    projectResult.data.companyId,
-  )
-  const existingRating = ratingResult.ok ? ratingResult.data : null
-
   const supabase = await createSupabaseServerClient()
   const { data: userData } = await supabase.auth.getUser()
   let studentCountry: string | null = null
@@ -56,7 +50,6 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
       project={projectResult.data}
       alreadyApplied={alreadyApplied}
       contratacion={contratacion}
-      existingRating={existingRating}
       studentCountry={studentCountry}
       studentRegion={studentRegion}
     />
