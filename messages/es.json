@@ -289,6 +289,8 @@
     "myContractsDesc": "Proyectos en los que fuiste seleccionado. Accedé a tus entregables desde aquí.",
     "emptyContracts": "Todavía no tenés contrataciones activas.",
     "emptyContractsDesc": "Cuando una empresa te seleccione para un proyecto, aparecerá aquí.",
+    "contractFilterAll": "Todos",
+    "contractFilterEmpty": "No hay contrataciones en este estado.",
     "contractActive": "Vigente",
     "contractFinished": "Finalizado",
     "contractPaused": "Pausado",
@@ -370,7 +372,8 @@
     "technicalDocUrlHelp": "Requerido: subí un PDF o ZIP (máx. 5 MB) con la documentación de tu propuesta.",
     "unexpectedError": "Ocurrió un error inesperado",
     "withdrawOffer": "Retirar Oferta",
-    "confirmWithdraw": "¿Estás seguro de que deseas retirar tu postulación?",
+    "withdrawDialogTitle": "Retirar postulación",
+    "confirmWithdraw": "¿Estás seguro de que deseas retirar tu postulación? Esta acción no se puede deshacer.",
     "withdrawSuccess": "Postulación retirada con éxito.",
     "withdrawError": "Error al retirar la postulación.",
     "deliverables": "Entregables del Proyecto",
@@ -390,6 +393,10 @@
     "uploadClickToSelect": "Haz clic para adjuntar",
     "uploadMaxSize": "Máx. 50 MB",
     "uploadRemoveFile": "Quitar archivo",
+    "uploadConfirmTitle": "Confirmar subida",
+    "uploadConfirmDescHito": "¿Confirmás que querés subir este hito? Una vez enviado, no se puede eliminar.",
+    "uploadConfirmDescFinal": "¿Confirmás que querés subir el entregable final? Esta acción no se puede revertir.",
+    "uploadConfirmBtn": "Subir",
     "tipoParcial": "Hito parcial",
     "tipoFinal": "Entregable final",
     "versionLabel": "v{n}",
@@ -892,7 +899,13 @@
     "rateEgresadoCommentLabel": "Comentario (opcional)",
     "rateEgresadoCommentPlaceholder": "Compartí tu experiencia trabajando con este egresado...",
     "rateEgresadoSubmit": "Enviar calificacion",
-    "rateEgresadoAlreadyRated": "Ya calificaste a este egresado"
+    "rateEgresadoAlreadyRated": "Ya calificaste a este egresado",
+    "contratacionInicio": "Fecha de inicio",
+    "contratacionFinEstimada": "Fin estimado",
+    "periodoVigente": "Contrato vigente",
+    "periodoPausado": "Pausado",
+    "periodoFinalizado": "Finalizado",
+    "periodoCancelado": "Cancelado"
   },
   "Admin": {
     "dashboard": "Panel Administrador",
@@ -1524,7 +1537,12 @@
     "errorSkillExists": "Esta habilidad ya existe",
     "cropImageTitle": "Recortar imagen",
     "cropImageDesc": "Ajustá tu imagen para que se vea perfecta.",
-    "cropAndUpload": "Recortar y Subir"
+    "cropAndUpload": "Recortar y Subir",
+    "defaultRole": "Egresado FWD",
+    "ratingsSection": "Calificaciones recibidas",
+    "noRatings": "Aún no tenés calificaciones de empresas.",
+    "ratingAverage": "Promedio",
+    "ratingFrom": "Empresa"
   },
   "EgresadoMensajes": {
     "title": "Mis Mensajes",
@@ -1544,7 +1562,9 @@
     "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
     "proyectoLabel": "Proyecto",
     "empresaLabel": "Empresa",
-    "relativeDateYesterday": "Ayer"
+    "relativeDateYesterday": "Ayer",
+    "msgLeido": "Visto",
+    "msgNoLeido": "Enviado"
   },
   "Ranking": {
     "snippetTitle": "Ranking de Talento",
@@ -1583,7 +1603,9 @@
     "errorCarga": "No se pudieron cargar los mensajes. Intentá de nuevo.",
     "errorEnvio": "No se pudo enviar el mensaje. Intentá de nuevo.",
     "proyectoLabel": "Proyecto",
-    "egresadoLabel": "Egresado"
+    "egresadoLabel": "Egresado",
+    "msgLeido": "Visto",
+    "msgNoLeido": "Enviado"
   },
   "EgresadoEmpresa": {
     "pageTitle": "Perfil de la Empresa",
@@ -1592,6 +1614,15 @@
     "noDesc": "Sin descripción disponible.",
     "backToContracts": "Volver a mis contrataciones",
     "tipoEmpresa": "Empresa formal",
-    "tipoEmprendedor": "Emprendedor individual"
+    "tipoEmprendedor": "Emprendedor individual",
+    "rateTitle": "Calificar experiencia",
+    "rateDesc": "Dejá tu opinión sobre trabajar con esta empresa.",
+    "rateProjectLabel": "Proyecto",
+    "ratingLabel": "Puntuación",
+    "commentLabel": "Comentario (opcional)",
+    "commentPlaceholder": "¿Cómo fue la experiencia?",
+    "submitRating": "Enviar calificación",
+    "alreadyRated": "Ya calificaste tu experiencia con esta empresa.",
+    "rateSuccess": "Calificación enviada con éxito."
   }
 }

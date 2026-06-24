@@ -290,6 +290,8 @@
     "myContractsDesc": "Projects you were selected for. Access your deliverables from here.",
     "emptyContracts": "You have no active contracts yet.",
     "emptyContractsDesc": "When a company selects you for a project, it will appear here.",
+    "contractFilterAll": "All",
+    "contractFilterEmpty": "No contracts match this filter.",
     "contractActive": "Active",
     "contractFinished": "Finished",
     "contractPaused": "Paused",
@@ -371,7 +373,8 @@
     "technicalDocUrlHelp": "Required: upload a PDF or ZIP (max 5 MB) with your proposal's documentation.",
     "unexpectedError": "An unexpected error occurred",
     "withdrawOffer": "Withdraw Offer",
-    "confirmWithdraw": "Are you sure you want to withdraw your application?",
+    "withdrawDialogTitle": "Withdraw application",
+    "confirmWithdraw": "Are you sure you want to withdraw your application? This action cannot be undone.",
     "withdrawSuccess": "Application withdrawn successfully.",
     "withdrawError": "Failed to withdraw the application.",
     "deliverables": "Project Deliverables",
@@ -391,6 +394,10 @@
     "uploadClickToSelect": "Click to attach a file",
     "uploadMaxSize": "Max. 50 MB",
     "uploadRemoveFile": "Remove file",
+    "uploadConfirmTitle": "Confirm upload",
+    "uploadConfirmDescHito": "Are you sure you want to upload this milestone? Once submitted, it cannot be deleted.",
+    "uploadConfirmDescFinal": "Are you sure you want to upload the final deliverable? This action cannot be undone.",
+    "uploadConfirmBtn": "Upload",
     "tipoParcial": "Partial milestone",
     "tipoFinal": "Final deliverable",
     "versionLabel": "v{n}",
@@ -892,7 +899,13 @@
     "rateEgresadoCommentLabel": "Comment (optional)",
     "rateEgresadoCommentPlaceholder": "Share your experience working with this graduate...",
     "rateEgresadoSubmit": "Submit rating",
-    "rateEgresadoAlreadyRated": "You have already rated this graduate"
+    "rateEgresadoAlreadyRated": "You have already rated this graduate",
+    "contratacionInicio": "Start date",
+    "contratacionFinEstimada": "Estimated end",
+    "periodoVigente": "Active contract",
+    "periodoPausado": "Paused",
+    "periodoFinalizado": "Finished",
+    "periodoCancelado": "Cancelled"
   },
   "Admin": {
     "dashboard": "Admin Dashboard",
@@ -1524,7 +1537,12 @@
     "errorSkillExists": "This skill already exists",
     "cropImageTitle": "Crop image",
     "cropImageDesc": "Adjust your image to look perfect.",
-    "cropAndUpload": "Crop and Upload"
+    "cropAndUpload": "Crop and Upload",
+    "defaultRole": "FWD Graduate",
+    "ratingsSection": "Received ratings",
+    "noRatings": "You have no ratings from companies yet.",
+    "ratingAverage": "Average",
+    "ratingFrom": "Company"
   },
   "EgresadoMensajes": {
     "title": "My Messages",
@@ -1544,7 +1562,9 @@
     "errorEnvio": "Could not send the message. Please try again.",
     "proyectoLabel": "Project",
     "empresaLabel": "Company",
-    "relativeDateYesterday": "Yesterday"
+    "relativeDateYesterday": "Yesterday",
+    "msgLeido": "Seen",
+    "msgNoLeido": "Sent"
   },
   "Ranking": {
     "snippetTitle": "Talent Ranking",
@@ -1583,7 +1603,9 @@
     "errorCarga": "Could not load messages. Please try again.",
     "errorEnvio": "Could not send the message. Please try again.",
     "proyectoLabel": "Project",
-    "egresadoLabel": "Graduate"
+    "egresadoLabel": "Graduate",
+    "msgLeido": "Seen",
+    "msgNoLeido": "Sent"
   },
   "EgresadoEmpresa": {
     "pageTitle": "Company Profile",
@@ -1592,6 +1614,15 @@
     "noDesc": "No description available.",
     "backToContracts": "Back to my contracts",
     "tipoEmpresa": "Formal company",
-    "tipoEmprendedor": "Individual entrepreneur"
+    "tipoEmprendedor": "Individual entrepreneur",
+    "rateTitle": "Rate your experience",
+    "rateDesc": "Share your opinion about working with this company.",
+    "rateProjectLabel": "Project",
+    "ratingLabel": "Score",
+    "commentLabel": "Comment (optional)",
+    "commentPlaceholder": "How was the experience?",
+    "submitRating": "Submit rating",
+    "alreadyRated": "You already rated your experience with this company.",
+    "rateSuccess": "Rating submitted successfully."
   }
 }
