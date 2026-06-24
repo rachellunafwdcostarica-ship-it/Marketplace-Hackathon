@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { PortfolioProjectForm } from './PortfolioProjectForm'
 import { CountryRegionFields } from '@/components/features/geo/CountryRegionFields'
-import { useTranslations, useLocale } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
@@ -275,7 +275,6 @@ export function PortfolioManager({
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
 
   const t = useTranslations('Portfolio')
-  const locale = useLocale()
 
   useEffect(() => {
     getActiveTechnologies().then((res) => {
@@ -333,7 +332,6 @@ export function PortfolioManager({
   )
 
   const {
-    register: registerLocation,
     handleSubmit: handleLocationSubmit,
     formState: { errors: locationErrors },
     watch: watchLocation,
