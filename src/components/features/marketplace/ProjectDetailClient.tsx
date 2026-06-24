@@ -33,6 +33,8 @@ interface ProjectDetailClientProps {
   alreadyApplied: boolean
   contratacion: MiContratacion | null
   existingRating: { puntuacion: number; comentario: string | null } | null
+  studentCountry?: string | null
+  studentRegion?: string | null
 }
 
 export function ProjectDetailClient({
@@ -40,6 +42,8 @@ export function ProjectDetailClient({
   alreadyApplied,
   contratacion,
   existingRating,
+  studentCountry,
+  studentRegion,
 }: ProjectDetailClientProps) {
   const tCommon = useTranslations('Common')
   const tEgresado = useTranslations('Egresado')
@@ -349,6 +353,77 @@ export function ProjectDetailClient({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Match Information Card */}
+            {project.matchScore !== undefined && project.matchScore > 0 && (
+              <Card className="border border-border/80 bg-card/60 backdrop-blur-sm overflow-hidden mt-6">
+                <CardContent className="p-6 space-y-4">
+                  <h3 className="text-sm font-bold text-primary flex items-center gap-2">
+                    <Star className="w-4 h-4" />
+                    {tEgresado('matchWithProject') || 'Match con el Proyecto'}
+                  </h3>
+
+                  {project.matchDetalles &&
+                    project.matchDetalles.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide">
+                          {tEgresado('matchingTechs') || 'Habilidades en común'}
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          {project.matchDetalles.map((det) => (
+                            <div
+                              key={det.id_tecnologia}
+                              className="text-xs flex items-center justify-between border-b border-border/40 pb-1"
+                            >
+                              <span>
+                                <span className="font-semibold text-highlight">
+                                  {det.nombre_tecnologia || det.id_tecnologia}
+                                </span>{' '}
+                                (
+                                <span className="text-primary uppercase text-[10px]">
+                                  {det.nivel}
+                                </span>
+                                )
+                              </span>
+                              <span className="font-bold text-primary">
+                                +{det.puntos} pts
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {project.countryIso === studentCountry &&
+                    studentCountry != null && (
+                      <div className="pt-2">
+                        <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide">
+                          {tEgresado('matchingLocation') ||
+                            'Ubicación en común'}
+                        </p>
+                        <div className="text-xs flex items-center gap-2 mt-1">
+                          <MapPin className="w-3 h-3 text-primary" />
+                          <span>
+                            {project.region === studentRegion &&
+                            studentRegion != null
+                              ? tEgresado('sameCountryAndRegion')
+                              : tEgresado('sameCountry')}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                  <div className="pt-3 border-t border-border/60 flex justify-between items-center">
+                    <span className="text-xs font-bold text-muted-foreground">
+                      Puntaje Total
+                    </span>
+                    <span className="text-lg font-extrabold text-primary">
+                      {project.matchScore} pts
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>

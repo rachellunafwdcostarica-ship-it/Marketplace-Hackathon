@@ -511,18 +511,18 @@ export async function getPublicStudentProfile(
   id_estudiante: string,
 ): Promise<Result<StudentProfileView | null>> {
   try {
-    const supabaseUser = await createSupabaseServerClient()
+    const supabase = await createSupabaseServerClient()
     const {
       data: { user },
       error: authError,
-    } = await supabaseUser.auth.getUser()
+    } = await supabase.auth.getUser()
 
     if (authError || !user) {
       return err('unauthorized')
     }
 
-    const supabaseAdmin = createSupabaseAdminClient()
-    const { data: estudiante, error } = await supabaseAdmin
+    const adminClient = await createSupabaseAdminClient()
+    const { data: estudiante, error } = await adminClient
       .from('estudiantes')
       .select(
         `
@@ -554,7 +554,7 @@ export async function getPublicStudentProfile(
 
     // Verificar permisos RF-12
     if (!estudiante.portafolio_visible_publicamente) {
-      const { data: empresario } = await supabaseAdmin
+      const { data: empresario } = await supabase
         .from('empresarios')
         .select('id_empresario')
         .eq('id_usuario', user.id)
@@ -562,7 +562,7 @@ export async function getPublicStudentProfile(
 
       if (!empresario) return err('unauthorized_private_portfolio')
 
-      const { data: participacion } = await supabaseAdmin
+      const { data: participacion } = await supabase
         .from('participaciones')
         .select('id_participacion, proyectos!inner(id_empresario)')
         .eq('id_estudiante', id_estudiante)
