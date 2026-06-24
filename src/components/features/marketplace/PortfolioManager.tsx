@@ -47,8 +47,10 @@ import {
   Lock,
   BookOpen,
   Loader2,
+  Star,
 } from 'lucide-react'
 import type { PortfolioProject, StudentSkill } from '@/types'
+import type { CalificacionRecibida } from '@/lib/evaluaciones/actions'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -226,10 +228,12 @@ export function PortfolioManager({
   initialProfile,
   countries = [],
   initialRegions = [],
+  calificaciones = [],
 }: {
   initialProfile?: StudentProfileView | null
   countries?: ComboboxOption[]
   initialRegions?: ComboboxOption[]
+  calificaciones?: CalificacionRecibida[]
 }) {
   const router = useRouter()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -816,8 +820,23 @@ export function PortfolioManager({
                       {initialProfile?.lastName2}
                     </CardTitle>
                     <p className="text-sm font-medium text-primary mt-0.5 capitalize">
-                      {initialProfile?.tituloFwd || 'Estudiante FWD'}
+                      {initialProfile?.tituloFwd || t('defaultRole')}
                     </p>
+                    {initialProfile?.reputacion !== null &&
+                      initialProfile?.reputacion !== undefined &&
+                      initialProfile.reputacion > 0 && (
+                        <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`w-3 h-3 ${s <= Math.round(initialProfile.reputacion!) ? 'fill-highlight text-highlight' : 'text-muted-foreground/30'}`}
+                            />
+                          ))}
+                          <span className="font-semibold text-foreground ml-0.5">
+                            {Number(initialProfile.reputacion).toFixed(1)}
+                          </span>
+                        </p>
+                      )}
                     <p className="text-xs text-muted-foreground mt-1">
                       {t('visibilityText')}{' '}
                       <span className="font-semibold text-primary">
@@ -1145,6 +1164,70 @@ export function PortfolioManager({
                     <Trash2 className="mr-2 h-4 w-4" /> {t('delete')}
                   </Button>
                 </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Calificaciones recibidas */}
+      <div className="space-y-6 pt-8 border-t">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">
+            {t('ratingsSection')}
+          </h2>
+          {initialProfile?.reputacion !== null &&
+            initialProfile?.reputacion !== undefined &&
+            initialProfile.reputacion > 0 && (
+              <div className="flex items-center gap-2 bg-highlight/10 border border-highlight/30 rounded-full px-4 py-1.5">
+                <Star className="w-4 h-4 fill-highlight text-highlight" />
+                <span className="text-sm font-bold text-foreground">
+                  {Number(initialProfile.reputacion).toFixed(1)}
+                </span>
+                <span className="text-xs text-muted-foreground">/ 5.0</span>
+              </div>
+            )}
+        </div>
+
+        {calificaciones.length === 0 ? (
+          <div className="flex h-28 items-center justify-center rounded-xl border border-dashed">
+            <p className="text-sm text-muted-foreground">{t('noRatings')}</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {calificaciones.map((cal) => (
+              <Card
+                key={cal.id_evaluacion}
+                className="border border-border/80 bg-card/60"
+              >
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {cal.tituloProyecto}
+                      </p>
+                      <p className="text-xs text-primary font-medium">
+                        {cal.nombreEmpresa}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`w-3.5 h-3.5 ${s <= cal.puntuacion ? 'fill-highlight text-highlight' : 'text-muted-foreground/30'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {cal.comentario && (
+                    <p className="text-xs text-muted-foreground leading-relaxed italic border-t border-border/40 pt-2">
+                      &quot;{cal.comentario}&quot;
+                    </p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground/60">
+                    {new Date(cal.evaluado_at).toLocaleDateString()}
+                  </p>
+                </CardContent>
               </Card>
             ))}
           </div>

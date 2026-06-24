@@ -1537,7 +1537,12 @@
     "errorSkillExists": "This skill already exists",
     "cropImageTitle": "Crop image",
     "cropImageDesc": "Adjust your image to look perfect.",
-    "cropAndUpload": "Crop and Upload"
+    "cropAndUpload": "Crop and Upload",
+    "defaultRole": "FWD Graduate",
+    "ratingsSection": "Received ratings",
+    "noRatings": "You have no ratings from companies yet.",
+    "ratingAverage": "Average",
+    "ratingFrom": "Company"
   },
   "EgresadoMensajes": {
     "title": "My Messages",

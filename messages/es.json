@@ -1537,7 +1537,12 @@
     "errorSkillExists": "Esta habilidad ya existe",
     "cropImageTitle": "Recortar imagen",
     "cropImageDesc": "Ajustá tu imagen para que se vea perfecta.",
-    "cropAndUpload": "Recortar y Subir"
+    "cropAndUpload": "Recortar y Subir",
+    "defaultRole": "Egresado FWD",
+    "ratingsSection": "Calificaciones recibidas",
+    "noRatings": "Aún no tenés calificaciones de empresas.",
+    "ratingAverage": "Promedio",
+    "ratingFrom": "Empresa"
   },
   "EgresadoMensajes": {
     "title": "Mis Mensajes",
