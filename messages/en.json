@@ -1614,6 +1614,15 @@
     "noDesc": "No description available.",
     "backToContracts": "Back to my contracts",
     "tipoEmpresa": "Formal company",
-    "tipoEmprendedor": "Individual entrepreneur"
+    "tipoEmprendedor": "Individual entrepreneur",
+    "rateTitle": "Rate your experience",
+    "rateDesc": "Share your opinion about working with this company.",
+    "rateProjectLabel": "Project",
+    "ratingLabel": "Score",
+    "commentLabel": "Comment (optional)",
+    "commentPlaceholder": "How was the experience?",
+    "submitRating": "Submit rating",
+    "alreadyRated": "You already rated your experience with this company.",
+    "rateSuccess": "Rating submitted successfully."
   }
 }

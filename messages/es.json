@@ -1614,6 +1614,15 @@
     "noDesc": "Sin descripción disponible.",
     "backToContracts": "Volver a mis contrataciones",
     "tipoEmpresa": "Empresa formal",
-    "tipoEmprendedor": "Emprendedor individual"
+    "tipoEmprendedor": "Emprendedor individual",
+    "rateTitle": "Calificar experiencia",
+    "rateDesc": "Dejá tu opinión sobre trabajar con esta empresa.",
+    "rateProjectLabel": "Proyecto",
+    "ratingLabel": "Puntuación",
+    "commentLabel": "Comentario (opcional)",
+    "commentPlaceholder": "¿Cómo fue la experiencia?",
+    "submitRating": "Enviar calificación",
+    "alreadyRated": "Ya calificaste tu experiencia con esta empresa.",
+    "rateSuccess": "Calificación enviada con éxito."
   }
 }
