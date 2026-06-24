@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import Image from 'next/image'
 import { FwdLogo } from '@/components/features/brand/FwdLogo'
 import { NotificationBell } from '@/components/features/notifications/NotificationBell'
 import {
@@ -58,7 +59,17 @@ export function Navbar({
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
-  const { userRole: role, resetAuth } = useAuth()
+  const { userRole: role, resetAuth, displayName, avatarUrl } = useAuth()
+
+  const initials = displayName
+    ? displayName
+        .split(' ')
+        .map((w) => w[0] ?? '')
+        .filter(Boolean)
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : null
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -302,13 +313,37 @@ export function Navbar({
               </button>
             ) : (
               <div className="relative group shrink-0">
-                <button
-                  type="button"
-                  className={`flex items-center justify-center w-9 h-9 rounded-full shadow-sm transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'bg-white/15 hover:bg-white/25 border border-white/25 text-white' : 'bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground'}`}
-                  aria-label={t('profile')}
-                >
-                  <User className="w-5 h-5" />
-                </button>
+                {role === 'empresario' ? (
+                  <Link
+                    href="/empresario/perfil"
+                    className={`flex items-center justify-center w-9 h-9 rounded-full shadow-sm overflow-hidden transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'bg-white/15 hover:bg-white/25 border border-white/25 text-white' : 'bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground'}`}
+                    aria-label={t('profile')}
+                  >
+                    {avatarUrl ? (
+                      <Image
+                        src={avatarUrl}
+                        alt={displayName ?? ''}
+                        width={36}
+                        height={36}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : initials ? (
+                      <span className="text-xs font-bold leading-none">
+                        {initials}
+                      </span>
+                    ) : (
+                      <User className="w-5 h-5" />
+                    )}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className={`flex items-center justify-center w-9 h-9 rounded-full shadow-sm transition-all duration-500 hover:scale-105 active:scale-95 ${isHero ? 'bg-white/15 hover:bg-white/25 border border-white/25 text-white' : 'bg-muted hover:bg-muted-foreground/10 border border-border text-muted-foreground'}`}
+                    aria-label={t('profile')}
+                  >
+                    <User className="w-5 h-5" />
+                  </button>
+                )}
               </div>
             )}
           </div>
