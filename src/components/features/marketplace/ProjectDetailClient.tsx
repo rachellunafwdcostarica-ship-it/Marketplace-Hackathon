@@ -113,7 +113,7 @@ export function ProjectDetailClient({
                       <Badge
                         key={tech}
                         variant="secondary"
-                        className="text-sm bg-secondary/10 text-secondary-foreground border border-border"
+                        className="text-sm bg-accent/15 text-accent border border-accent/40"
                       >
                         {tech}
                       </Badge>
