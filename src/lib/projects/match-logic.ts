@@ -9,12 +9,12 @@ export interface MatchStudentSkill {
 
 export interface MatchProjectTech {
   id_tecnologia: string
-  nombre_tecnologia?: string
+  nombre_tecnologia?: string | undefined
 }
 
 export interface MatchDetail {
   id_tecnologia: string
-  nombre_tecnologia?: string
+  nombre_tecnologia?: string | undefined
   puntos: number
   nivel: NivelHabilidad
 }
